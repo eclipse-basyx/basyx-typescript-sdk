@@ -1,15 +1,16 @@
 {
   "name": "basyx-typescript-sdk",
   "version": "0.0.1",
+  "description": "BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)",
   "main": "index.ts",
   "repository": "https://github.com/eclipse-basyx/basyx-typescript-sdk.git",
   "author": "Aaron Zielstorff <aaron.zielstorff@iese.fraunhofer.de>",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
-    "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,md}'"
+    "lint:check": "eslint ./",
+    "lint:fix": "eslint --fix ./",
+    "test": "jest"
   },
   "dependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
@@ -21,9 +22,11 @@
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "jest": "^29.7.0",
     "prettier": "^3.4.2",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
   }
 }
