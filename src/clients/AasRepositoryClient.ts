@@ -1,50 +1,117 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { AssetAdministrationShell } from '@aas-core-works/aas-core3.0-typescript/types';
-import { getAssetAdministrationShellById } from '@/generated/aas-repository';
+import type { AssetAdministrationShell } from '@aas-core-works/aas-core3.0-typescript/types';
+import * as AasRepository from '@/generated/aas-repository';
+import { convertApiAasToCoreAas, convertCoreAasToApiAas } from '@/lib/convertAasTypes';
 import { createCustomClient } from '@/lib/createAasRepoClient';
+import { GetAllAssetAdministrationShellsResponse } from '@/models/aas-repository';
 
 export class AasRepositoryClient {
     /**
-     * Returns a specific Asset Administration Shell
-     *
-     * @param aasIdentifier The AAS’s unique id
-     * @param baseURL       The API base URL
-     * @param headers       Optional request headers
+     * Returns all Asset Administration Shells
+     * @param baseURL The API base URL
+     * @param headers Optional request headers
+     * @param assetIds Optional list of asset ids
+     * @param idShort Optional idShort
+     * @param limit Optional limit
+     * @param cursor Optional cursor
+     * @returns A list of Asset Administration Shells
      */
-    async getAssetAdministrationShellById(
-        aasIdentifier: string,
+    async getAllAssetAdministrationShells(
         baseURL: string,
-        headers: Headers = new Headers()
-    ): Promise<AssetAdministrationShell> {
+        headers?: Headers,
+        assetIds?: string[],
+        idShort?: string,
+        limit?: number,
+        cursor?: string
+    ): Promise<GetAllAssetAdministrationShellsResponse> {
         try {
-            // 1) Create the custom client
             const client = createCustomClient(baseURL, headers);
 
-            // 2) Call the generated function with:
-            //    - client
-            //    - path parameter: { aasIdentifier }
-            const { data, error } = await getAssetAdministrationShellById({
+            const { data, error } = await AasRepository.getAllAssetAdministrationShells({
                 client,
-                // The route is /shells/{aasIdentifier}, so we must set path:
-                path: { aasIdentifier },
-                // Optionally: throwOnError: false or true
+                query: {
+                    assetIds,
+                    idShort,
+                    limit,
+                    cursor,
+                },
             });
 
             if (error) {
-                // The library returns an `error` if there's a server or client error
                 console.error('Error from server:', error);
                 throw new Error(JSON.stringify(error.messages));
             }
 
-            // 3) Data is presumably the raw object from the response
-            let aas = JSON.stringify(data);
-            aas = JSON.parse(aas);
-            const instanceOrError = jsonization.assetAdministrationShellFromJsonable(aas);
-            if (instanceOrError.error !== null) {
-                throw instanceOrError.error;
+            const shells = (data.result ?? []).map(convertApiAasToCoreAas);
+
+            return {
+                pagedResult: data.paging_metadata,
+                result: shells,
+            };
+        } catch (error) {
+            console.error('Error fetching Asset Administration Shells:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Creates a new Asset Administration Shell
+     * @param baseURL The API base URL
+     * @param assetAdministrationShell The Asset Administration Shell to create
+     * @param headers Optional request headers
+     * @returns The created Asset Administration Shell
+     */
+    async postAssetAdministrationShell(
+        baseURL: string,
+        aas: AssetAdministrationShell,
+        headers?: Headers
+    ): Promise<AssetAdministrationShell> {
+        try {
+            const client = createCustomClient(baseURL, headers);
+
+            const { data, error } = await AasRepository.postAssetAdministrationShell({
+                client,
+                body: convertCoreAasToApiAas(aas),
+            });
+
+            if (error) {
+                console.error('Error from server:', error);
+                throw new Error(JSON.stringify(error.messages));
             }
 
-            return instanceOrError.mustValue();
+            return convertApiAasToCoreAas(data);
+        } catch (error) {
+            console.error('Error creating Asset Administration Shell:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Returns a specific Asset Administration Shell
+     *
+     * @param aasIdentifier The AAS’s unique id
+     * @param baseURL The API base URL
+     * @param headers Optional request headers
+     * @returns The Asset Administration Shell
+     */
+    async getAssetAdministrationShellById(
+        baseURL: string,
+        aasIdentifier: string,
+        headers?: Headers
+    ): Promise<AssetAdministrationShell> {
+        try {
+            const client = createCustomClient(baseURL, headers);
+
+            const { data, error } = await AasRepository.getAssetAdministrationShellById({
+                client,
+                path: { aasIdentifier },
+            });
+
+            if (error) {
+                console.error('Error from server:', error);
+                throw new Error(JSON.stringify(error.messages));
+            }
+
+            return convertApiAasToCoreAas(data);
         } catch (error) {
             console.error('Error fetching Asset Administration Shell:', error);
             throw error;
