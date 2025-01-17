@@ -3,7 +3,7 @@ import { AasRepositoryClient } from './clients/AasRepositoryClient';
 
 (async () => {
     const client = new AasRepositoryClient();
-    const aasId = 'aas-123'; // Replace with a valid AAS ID
+    const aasId = 'L2lkcy9hYXMvMjk3OF83NjkyXzY5ODdfMzQwMQ'; // Replace with a valid AAS ID
 
     try {
         const fetchedAAS: AssetAdministrationShell = await client.getAssetAdministrationShellById(aasId);

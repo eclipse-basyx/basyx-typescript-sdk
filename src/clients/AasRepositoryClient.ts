@@ -1,20 +1,12 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript/.';
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { AssetAdministrationShell } from '@aas-core-works/aas-core3.0-typescript/types';
-import {
-    AssetAdministrationShell as GeneratedAssetAdministrationShell,
-    AssetAdministrationShellRepositoryAPIApi,
-    Configuration,
-} from '@/generated/aas-repository';
+import { AssetAdministrationShellRepositoryApiService } from '@/generated/aas-repository';
 
 export class AasRepositoryClient {
-    private api: AssetAdministrationShellRepositoryAPIApi;
+    private api: AssetAdministrationShellRepositoryApiService;
 
     constructor() {
-        const config = new Configuration({
-            basePath: 'http://localhost:8081',
-            // Further configuration options can be added here
-        });
-        this.api = new AssetAdministrationShellRepositoryAPIApi(config);
+        this.api = new AssetAdministrationShellRepositoryApiService();
     }
 
     /**
@@ -26,8 +18,8 @@ export class AasRepositoryClient {
     async createAssetAdministrationShell(shell: AssetAdministrationShell): Promise<AssetAdministrationShell> {
         try {
             // Convert the Asset Administration Shell to the correct format for the API
-            const apiShell = shell as any as GeneratedAssetAdministrationShell;
-            const response = await this.api.postAssetAdministrationShell(apiShell);
+            const apiShell = shell as any;
+            const response = await AssetAdministrationShellRepositoryApiService.postAssetAdministrationShell(apiShell);
             const jsonResponse = JSON.stringify(response);
             const instanceOrError = jsonization.assetAdministrationShellFromJsonable(jsonResponse);
             if (instanceOrError.error !== null) {
@@ -49,13 +41,20 @@ export class AasRepositoryClient {
      * @throws {RequiredError}
      */
     async getAssetAdministrationShellById(aasIdentifier: string): Promise<AssetAdministrationShell> {
-        const response = await this.api.getAssetAdministrationShellById(aasIdentifier);
-        const jsonResponse = JSON.stringify(response);
-        const instanceOrError = jsonization.assetAdministrationShellFromJsonable(jsonResponse);
-        if (instanceOrError.error !== null) {
-            throw instanceOrError.error;
+        try {
+            const response =
+                await AssetAdministrationShellRepositoryApiService.getAssetAdministrationShellById(aasIdentifier);
+            const jsonResponse = JSON.stringify(response);
+            const parsedJson = JSON.parse(jsonResponse);
+            const instanceOrError = jsonization.assetAdministrationShellFromJsonable(parsedJson);
+            if (instanceOrError.error !== null) {
+                throw instanceOrError.error;
+            }
+            const receivedShell = instanceOrError.mustValue();
+            return receivedShell;
+        } catch (error) {
+            console.error('Error fetching Asset Administration Shell:', error);
+            throw error;
         }
-        const receivedShell = instanceOrError.mustValue();
-        return receivedShell;
     }
 }

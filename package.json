@@ -7,10 +7,12 @@
   "author": "Aaron Zielstorff <aaron.zielstorff@iese.fraunhofer.de>",
   "license": "MIT",
   "scripts": {
+    "gen:aasrepository": "openapi --input ./openapi/Plattform_i40-AssetAdministrationShellRepositoryServiceSpecification-V3.0.3_SSP-001-resolved.json --output ./src/generated/aas-repository --client fetch",
     "build": "tsc",
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",
-    "test": "jest"
+    "test": "jest",
+    "start": "ts-node -r tsconfig-paths/register src/test-fetch.ts"
   },
   "dependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
@@ -25,8 +27,11 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "jest": "^29.7.0",
     "jiti": "^2.4.2",
+    "openapi-typescript-codegen": "^0.29.0",
     "prettier": "^3.4.2",
     "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   }
