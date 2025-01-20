@@ -8,5 +8,9 @@ module.exports = {
     transform: {
         '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     },
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    coverageReporters: ['json', 'lcov', 'text', 'clover'],
+    coveragePathIgnorePatterns: ['<rootDir>/src/generated/'],
     testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/'],
 };

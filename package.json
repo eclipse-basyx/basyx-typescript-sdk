@@ -11,7 +11,7 @@
     "build": "tsc",
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",
-    "test": "jest",
+    "test": "jest --coverage",
     "start": "ts-node -r tsconfig-paths/register src/testFunctions.ts"
   },
   "dependencies": {

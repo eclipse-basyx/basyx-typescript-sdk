@@ -1,6 +1,6 @@
-import { AasRepositoryClient } from '@/clients/AasRepositoryClient';
-import * as AasRepository from '@/generated/aas-repository';
-import { createCustomClient } from '@/lib/createAasRepoClient';
+import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
+import * as AasRepository from '../../generated/aas-repository';
+import { createCustomClient } from '../../lib/createAasRepoClient';
 
 jest.mock('@/generated/aas-repository'); // mock the entire module
 jest.mock('@/lib/createAasRepoClient'); // mock the client creation
