@@ -60,7 +60,7 @@ export type Key = {
     value: string;
 };
 
-export type KeyTypes = 'AnnotatedRelationshipElement' | 'AssetAdministrationShell' | 'BasicEventElement' | 'Blob' | 'Capability' | 'ConceptDescription' | 'DataElement' | 'Entity' | 'EventElement' | 'File' | 'FragmentReference' | 'GlobalReference' | 'Identifiable' | 'MultiLanguageProperty' | 'Operation' | 'Property' | 'Range' | 'Referable' | 'ReferenceElement' | 'RelationshipElement' | 'Submodel' | 'SubmodelElement' | 'SubmodelElementCollection' | 'SubmodelElementList';
+export type KeyTypes = 'AnnotatedRelationshipElement' | 'AssetAdministrationShell' | 'BasicEventElement' | 'AasBlob' | 'Capability' | 'ConceptDescription' | 'DataElement' | 'Entity' | 'EventElement' | 'AasFile' | 'FragmentReference' | 'GlobalReference' | 'Identifiable' | 'MultiLanguageProperty' | 'Operation' | 'Property' | 'Range' | 'Referable' | 'ReferenceElement' | 'RelationshipElement' | 'Submodel' | 'SubmodelElement' | 'SubmodelElementCollection' | 'SubmodelElementList';
 
 export type DataTypeDefXsd = 'xs:anyURI' | 'xs:base64Binary' | 'xs:boolean' | 'xs:byte' | 'xs:date' | 'xs:dateTime' | 'xs:decimal' | 'xs:double' | 'xs:duration' | 'xs:float' | 'xs:gDay' | 'xs:gMonth' | 'xs:gMonthDay' | 'xs:gYear' | 'xs:gYearMonth' | 'xs:hexBinary' | 'xs:int' | 'xs:integer' | 'xs:long' | 'xs:negativeInteger' | 'xs:nonNegativeInteger' | 'xs:nonPositiveInteger' | 'xs:positiveInteger' | 'xs:short' | 'xs:string' | 'xs:time' | 'xs:unsignedByte' | 'xs:unsignedInt' | 'xs:unsignedLong' | 'xs:unsignedShort';
 
@@ -77,7 +77,7 @@ export type LangStringTextType = AbstractLangString & {
     text?: unknown;
 };
 
-export type ModelType = 'AnnotatedRelationshipElement' | 'AssetAdministrationShell' | 'BasicEventElement' | 'Blob' | 'Capability' | 'ConceptDescription' | 'DataSpecificationIec61360' | 'Entity' | 'File' | 'MultiLanguageProperty' | 'Operation' | 'Property' | 'Range' | 'ReferenceElement' | 'RelationshipElement' | 'Submodel' | 'SubmodelElementCollection' | 'SubmodelElementList';
+export type ModelType = 'AnnotatedRelationshipElement' | 'AssetAdministrationShell' | 'BasicEventElement' | 'AasBlob' | 'Capability' | 'ConceptDescription' | 'DataSpecificationIec61360' | 'Entity' | 'AasFile' | 'MultiLanguageProperty' | 'Operation' | 'Property' | 'Range' | 'ReferenceElement' | 'RelationshipElement' | 'Submodel' | 'SubmodelElementCollection' | 'SubmodelElementList';
 
 export type AdministrativeInformation = HasDataSpecification & {
     version?: unknown;
@@ -210,7 +210,7 @@ export type Qualifier = HasSemantics & {
 
 export type QualifierKind = 'ConceptQualifier' | 'TemplateQualifier' | 'ValueQualifier';
 
-export type SubmodelElementChoice = RelationshipElement | AnnotatedRelationshipElement | BasicEventElement | Blob | Capability | Entity | File | MultiLanguageProperty | Operation | Property | Range | ReferenceElement | SubmodelElementCollection | SubmodelElementList;
+export type SubmodelElementChoice = RelationshipElement | AnnotatedRelationshipElement | BasicEventElement | AasBlob | Capability | Entity | AasFile | MultiLanguageProperty | Operation | Property | Range | ReferenceElement | SubmodelElementCollection | SubmodelElementList;
 
 export type RelationshipElement = RelationshipElementAbstract & {
     modelType?: string;
@@ -228,9 +228,9 @@ export type AnnotatedRelationshipElement = RelationshipElementAbstract & {
     modelType?: string;
 };
 
-export type DataElementChoice = Blob | File | MultiLanguageProperty | Property | Range | ReferenceElement;
+export type DataElementChoice = AasBlob | AasFile | MultiLanguageProperty | Property | Range | ReferenceElement;
 
-export type Blob = DataElement & {
+export type AasBlob = DataElement & {
     value?: string;
     contentType: unknown;
     modelType?: string;
@@ -238,7 +238,7 @@ export type Blob = DataElement & {
 
 export type DataElement = Referable & HasSemantics & Qualifiable & HasDataSpecification;
 
-export type File = DataElement & {
+export type AasFile = DataElement & {
     value?: string;
     contentType: unknown;
     modelType?: string;
@@ -326,7 +326,7 @@ export type SubmodelElementList = SubmodelElement & {
     modelType?: string;
 };
 
-export type AasSubmodelElements = 'AnnotatedRelationshipElement' | 'BasicEventElement' | 'Blob' | 'Capability' | 'DataElement' | 'Entity' | 'EventElement' | 'File' | 'MultiLanguageProperty' | 'Operation' | 'Property' | 'Range' | 'ReferenceElement' | 'RelationshipElement' | 'SubmodelElement' | 'SubmodelElementCollection' | 'SubmodelElementList';
+export type AasSubmodelElements = 'AnnotatedRelationshipElement' | 'BasicEventElement' | 'AasBlob' | 'Capability' | 'DataElement' | 'Entity' | 'EventElement' | 'AasFile' | 'MultiLanguageProperty' | 'Operation' | 'Property' | 'Range' | 'ReferenceElement' | 'RelationshipElement' | 'SubmodelElement' | 'SubmodelElementCollection' | 'SubmodelElementList';
 
 export type SubmodelMetadata = Identifiable & HasDataSpecification & Qualifiable & HasSemantics & HasKind;
 
