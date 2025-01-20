@@ -1,10 +1,12 @@
 import type {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
+    Reference as ApiReference,
 } from '@/generated/aas-repository/types.gen';
 import type {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
+    Reference as CoreReference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 
@@ -54,4 +56,26 @@ export function convertCoreAssetInformationToApiAssetInformation(
     const asset = JSON.stringify(jsonableAsset);
     // then parse
     return JSON.parse(asset) as ApiAssetInformation;
+}
+
+export function convertApiReferenceToCoreReference(reference: ApiReference): CoreReference {
+    // first stringify
+    let ref = JSON.stringify(reference);
+    // then parse
+    ref = JSON.parse(ref);
+    // then jsonize
+    const instanceOrError = jsonization.referenceFromJsonable(ref);
+    if (instanceOrError.error !== null) {
+        throw instanceOrError.error;
+    }
+    return instanceOrError.mustValue();
+}
+
+export function convertCoreReferenceToApiReference(reference: CoreReference): ApiReference {
+    // first jsonize
+    const jsonableRef = jsonization.toJsonable(reference);
+    // then stringify
+    const ref = JSON.stringify(jsonableRef);
+    // then parse
+    return JSON.parse(ref) as ApiReference;
 }

@@ -1,6 +1,7 @@
 // import * as fs from 'fs';
 // import * as path from 'path';
 // import { AasRepositoryClient } from '@/clients/AasRepositoryClient';
+// import { getAllSubmodelReferencesResponse } from '@/models/aas-repository';
 // import { AssetinformationThumbnailBody } from '@/generated/aas-repository/types.gen';
 
 // async function fetchThumbnail() {
@@ -40,5 +41,24 @@
 //     }
 // }
 
-// updateThumbnail();
+// async function fetchAllSubmodelReferences() {
+//     const baseURL = 'http://localhost:8081';
+//     const aasIdentifier = 'L2lkcy9hYXMvMjk3OF83NjkyXzY5ODdfMzQwMQ';
+
+//     const client = new AasRepositoryClient();
+
+//     try {
+//         const response: getAllSubmodelReferencesResponse = await client.getAllSubmodelReferences(
+//             baseURL,
+//             aasIdentifier
+//         );
+//         console.log('Submodel references fetched successfully:', response);
+//         // You can now use the response as needed
+//     } catch (error) {
+//         console.error('Error fetching submodel references:', error);
+//     }
+// }
+
 // fetchThumbnail();
+// updateThumbnail();
+// fetchAllSubmodelReferences();

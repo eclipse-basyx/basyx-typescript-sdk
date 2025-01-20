@@ -1,14 +1,20 @@
-import type { AssetAdministrationShell, AssetInformation } from '@aas-core-works/aas-core3.0-typescript/types';
+import type {
+    AssetAdministrationShell,
+    AssetInformation,
+    Reference,
+} from '@aas-core-works/aas-core3.0-typescript/types';
 import * as AasRepository from '@/generated/aas-repository';
 import { AssetinformationThumbnailBody } from '@/generated/aas-repository/types.gen';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
+    convertApiReferenceToCoreReference,
     convertCoreAasToApiAas,
     convertCoreAssetInformationToApiAssetInformation,
+    convertCoreReferenceToApiReference,
 } from '@/lib/convertAasTypes';
 import { createCustomClient } from '@/lib/createAasRepoClient';
-import { GetAllAssetAdministrationShellsResponse } from '@/models/aas-repository';
+import { GetAllAssetAdministrationShellsResponse, getAllSubmodelReferencesResponse } from '@/models/aas-repository';
 
 export class AasRepositoryClient {
     /**
@@ -96,7 +102,7 @@ export class AasRepositoryClient {
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
-     * @returns Asset Administration Shell deleted successfully
+     * @returns {Promise<void>} Asset Administration Shell deleted successfully
      */
     async deleteAssetAdministrationShellById(baseURL: string, aasIdentifier: string, headers?: Headers): Promise<void> {
         try {
@@ -157,7 +163,7 @@ export class AasRepositoryClient {
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param assetAdministrationShell Asset Administration Shell object
      * @param headers Request headers
-     * @returns Asset Administration Shell updated successfully
+     * @returns {Promise<void>} Asset Administration Shell updated successfully
      */
     async putAssetAdministrationShellById(
         baseURL: string,
@@ -220,7 +226,7 @@ export class AasRepositoryClient {
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param assetInformation Asset Information object
      * @param headers Request headers
-     * @returns Asset Information updated successfully
+     * @returns {Promise<void>} Asset Information updated successfully
      */
     async putAssetInformation(
         baseURL: string,
@@ -254,7 +260,7 @@ export class AasRepositoryClient {
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
-     * @returns Thumbnail deletion successful
+     * @returns {Promise<void>} Thumbnail deletion successful
      */
     async deleteThumbnail(baseURL: string, aasIdentifier: string, headers?: Headers): Promise<void> {
         try {
@@ -311,7 +317,7 @@ export class AasRepositoryClient {
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param thumbnail Thumbnail to upload
      * @param headers Request headers
-     * @returns Thumbnail updated successfully
+     * @returns {Promise<void>} Thumbnail updated successfully
      */
     async putThumbnail(
         baseURL: string,
@@ -336,6 +342,120 @@ export class AasRepositoryClient {
             return;
         } catch (error) {
             console.error('Error updating Thumbnail:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Returns all submodel references
+     * @param baseURL The API base URL
+     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param limit The maximum number of elements in the response array
+     * @param cursor A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     * @param headers Request headers
+     * @returns {Promise<getAllSubmodelReferencesResponse>} Requested submodel references
+     */
+    async getAllSubmodelReferences(
+        baseURL: string,
+        aasIdentifier: string,
+        limit?: number,
+        cursor?: string,
+        headers?: Headers
+    ): Promise<getAllSubmodelReferencesResponse> {
+        try {
+            const client = createCustomClient(baseURL, headers);
+
+            const { data, error } = await AasRepository.getAllSubmodelReferencesAasRepository({
+                client,
+                path: { aasIdentifier },
+                query: {
+                    limit,
+                    cursor,
+                },
+            });
+
+            if (error) {
+                console.error('Error from server:', error);
+                throw new Error(JSON.stringify(error.messages));
+            }
+
+            const submodelReferences = (data.result ?? []).map(convertApiReferenceToCoreReference);
+
+            return {
+                pagedResult: data.paging_metadata,
+                result: submodelReferences,
+            };
+        } catch (error) {
+            console.error('Error fetching submodel references:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Creates a submodel reference at the Asset Administration Shell
+     * @param baseURL The API base URL
+     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param submodelReference Reference to the Submodel
+     * @param headers Request headers
+     * @returns {promise<Reference>} Submodel reference created successfully
+     */
+    async postSubmodelReference(
+        baseURL: string,
+        aasIdentifier: string,
+        submodelReference: Reference,
+        headers?: Headers
+    ): Promise<Reference> {
+        try {
+            const client = createCustomClient(baseURL, headers);
+
+            const { data, error } = await AasRepository.postSubmodelReferenceAasRepository({
+                client,
+                path: { aasIdentifier },
+                body: convertCoreReferenceToApiReference(submodelReference),
+            });
+
+            if (error) {
+                console.error('Error from server:', error);
+                throw new Error(JSON.stringify(error.messages));
+            }
+
+            return convertApiReferenceToCoreReference(data);
+        } catch (error) {
+            console.error('Error creating submodel reference:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Deletes the submodel reference from the Asset Administration Shell. Does not delete the submodel itself!
+     * @param baseURL The API base URL
+     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param submodelIdentifier The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     * @param headers Request headers
+     * @returns {Promise<void>} Submodel reference deleted successfully
+     */
+    async deleteSubmodelReferenceById(
+        baseURL: string,
+        aasIdentifier: string,
+        submodelIdentifier: string,
+        headers?: Headers
+    ): Promise<void> {
+        try {
+            const client = createCustomClient(baseURL, headers);
+
+            const { error } = await AasRepository.deleteSubmodelReferenceByIdAasRepository({
+                client,
+                path: { aasIdentifier, submodelIdentifier },
+            });
+
+            if (error) {
+                console.error('Error from server:', error);
+                throw new Error(JSON.stringify(error.messages));
+            }
+
+            return;
+        } catch (error) {
+            console.error('Error deleting submodel reference:', error);
             throw error;
         }
     }
