@@ -40,28 +40,22 @@ const API_AAS: ApiAssetAdministrationShell = {
     modelType: 'AssetAdministrationShell',
     assetInformation: { assetKind: 'Instance' },
 };
-
 const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
     'https://example.com/ids/aas/7600_5912_3951_6917',
     new CoreAssetInformation(AssetKind.Instance)
 );
-
 const JSONABLE_AAS: jsonization.JsonObject = {
     id: 'https://example.com/ids/aas/7600_5912_3951_6917',
     modelType: 'AssetAdministrationShell',
     assetInformation: { assetKind: 'Instance' },
 };
-
 const API_ASSET_INFO: ApiAssetInformation = {
     assetKind: 'Instance',
 };
-
 const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(AssetKind.Instance);
-
 const JSONABLE_ASSET_INFO: jsonization.JsonObject = {
     assetKind: 'Instance',
 };
-
 const API_REFERENCE: ApiReference = {
     type: 'ExternalReference',
     keys: [
@@ -71,11 +65,9 @@ const API_REFERENCE: ApiReference = {
         },
     ],
 };
-
 const CORE_REFERENCE: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
     new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6917'),
 ]);
-
 const JSONABLE_REFERENCE: jsonization.JsonObject = {
     type: 'ExternalReference',
     keys: [
