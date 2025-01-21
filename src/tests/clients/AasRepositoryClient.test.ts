@@ -47,6 +47,7 @@ describe('AasRepositoryClient', () => {
     const mockCreateCustomClient = createCustomClient as jest.Mock;
     const mockGetAllAssetAdministrationShells = AasRepository.getAllAssetAdministrationShells as jest.Mock;
     const mockPostAssetAdministrationShell = AasRepository.postAssetAdministrationShell as jest.Mock;
+    const mockDeleteAssetAdministrationShellById = AasRepository.deleteAssetAdministrationShellById as jest.Mock;
     const mockConvertApiAasToCoreAas = convertApiAasToCoreAas as jest.Mock;
     const mockConvertCoreAasToApiAas = convertCoreAasToApiAas as jest.Mock;
 
@@ -218,5 +219,52 @@ describe('AasRepositoryClient', () => {
         );
 
         expect(console.error).toHaveBeenCalledWith('Error creating Asset Administration Shell:', mockException);
+    });
+
+    it('should delete an Asset Administration Shell successfully', async () => {
+        // Arrange
+        mockDeleteAssetAdministrationShellById.mockResolvedValue({ data: null, error: null });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        await clientInstance.deleteAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.deleteAssetAdministrationShellById).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+        });
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockDeleteAssetAdministrationShellById.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.deleteAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockDeleteAssetAdministrationShellById.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.deleteAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)
+        ).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error deleting Asset Administration Shell:', mockException);
     });
 });
