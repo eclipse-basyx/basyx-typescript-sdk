@@ -59,6 +59,20 @@
 //     }
 // }
 
+// async function getAllShells() {
+//     const baseURL = 'http://localhost:8081';
+//     const client = new AasRepositoryClient();
+
+//     try {
+//         const response = await client.getAllAssetAdministrationShells(baseURL);
+//         console.log('Asset Administration Shells fetched successfully:', response);
+//         // You can now use the response as needed
+//     } catch (error) {
+//         console.error('Error fetching Asset Administration Shells:', error);
+//     }
+// }
+
 // fetchThumbnail();
 // updateThumbnail();
 // fetchAllSubmodelReferences();
+// getAllShells();

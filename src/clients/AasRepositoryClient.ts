@@ -19,6 +19,9 @@ import { GetAllAssetAdministrationShellsResponse, getAllSubmodelReferencesRespon
 export class AasRepositoryClient {
     /**
      * Returns all Asset Administration Shells
+     *
+     * @async
+     * @function getAllAssetAdministrationShells
      * @param baseURL The API base URL
      * @param headers Request headers
      * @param assetIds A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded
@@ -67,6 +70,9 @@ export class AasRepositoryClient {
 
     /**
      * Creates a new Asset Administration Shell
+     *
+     * @async
+     * @function postAssetAdministrationShell
      * @param baseURL The API base URL
      * @param assetAdministrationShell Asset Administration Shell object
      * @param headers Request headers
@@ -99,6 +105,9 @@ export class AasRepositoryClient {
 
     /**
      * Deletes an Asset Administration Shell
+     *
+     * @async
+     * @function deleteAssetAdministrationShellById
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
@@ -127,6 +136,9 @@ export class AasRepositoryClient {
 
     /**
      * Returns a specific Asset Administration Shell
+     *
+     * @async
+     * @function getAssetAdministrationShellById
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
@@ -159,6 +171,9 @@ export class AasRepositoryClient {
 
     /**
      * Updates an existing Asset Administration Shell
+     *
+     * @async
+     * @function putAssetAdministrationShellById
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param assetAdministrationShell Asset Administration Shell object
@@ -194,6 +209,9 @@ export class AasRepositoryClient {
 
     /**
      * Returns the Asset Information
+     *
+     * @async
+     * @function getAssetInformation
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
@@ -222,6 +240,9 @@ export class AasRepositoryClient {
 
     /**
      * Updates the Asset Information
+     *
+     * @async
+     * @function putAssetInformation
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param assetInformation Asset Information object
@@ -257,6 +278,9 @@ export class AasRepositoryClient {
 
     /**
      * Deletes the Thumbnail
+     *
+     * @async
+     * @function deleteThumbnail
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
@@ -285,6 +309,9 @@ export class AasRepositoryClient {
 
     /**
      * Returns the Thumbnail
+     *
+     * @async
+     * @function getThumbnail
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param headers Request headers
@@ -313,6 +340,9 @@ export class AasRepositoryClient {
 
     /**
      * Updates the Thumbnail
+     *
+     * @async
+     * @function putThumbnail
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param thumbnail Thumbnail to upload
@@ -348,6 +378,9 @@ export class AasRepositoryClient {
 
     /**
      * Returns all submodel references
+     *
+     * @async
+     * @function getAllSubmodelReferences
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param limit The maximum number of elements in the response array
@@ -393,6 +426,9 @@ export class AasRepositoryClient {
 
     /**
      * Creates a submodel reference at the Asset Administration Shell
+     *
+     * @async
+     * @function postSubmodelReference
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param submodelReference Reference to the Submodel
@@ -428,6 +464,9 @@ export class AasRepositoryClient {
 
     /**
      * Deletes the submodel reference from the Asset Administration Shell. Does not delete the submodel itself!
+     *
+     * @async
+     * @function deleteSubmodelReferenceById
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      * @param submodelIdentifier The Submodel’s unique id (UTF8-BASE64-URL-encoded)
