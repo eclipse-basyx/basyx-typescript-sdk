@@ -1,3 +1,8 @@
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/eclipse-basyx/basyx-typescript-sdk/publish.yml)
+![NPM Downloads](https://img.shields.io/npm/dw/basyx-typescript-sdk)
+![NPM Version](https://img.shields.io/npm/v/basyx-typescript-sdk)
+![GitHub License](https://img.shields.io/github/license/eclipse-basyx/basyx-typescript-sdk)
+
 # basyx-typescript-sdk
 
 BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)
