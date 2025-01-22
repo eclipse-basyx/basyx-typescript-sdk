@@ -30,34 +30,9 @@ jobs:
       - name: Run tests
         run: yarn test
 
-      - name: Update package.json version
-        id: version
-        run: |
-          # Extract the version from the release tag
-          TAG_VERSION=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG_VERSION#v} # Remove 'v' prefix if present
-          
-          # Update package.json version
-          yarn version --new-version $VERSION --no-git-tag-version
-          
-          # Output the version for later steps
-          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
-        env:
-          GITHUB_REF: ${{ github.ref }}
-
-      - name: Commit updated package.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json yarn.lock
-          git commit -m "chore: update package.json to version $PACKAGE_VERSION" || echo "No changes to commit"
-          git push origin ${{ github.ref }} || echo "Nothing to push"
-
-      # 8. Build the project
       - name: Build project
         run: yarn build
 
-      # 9. Publish to npm
       - name: Publish to npm
         run: yarn publish
         env:
