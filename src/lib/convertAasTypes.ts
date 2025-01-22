@@ -1,13 +1,13 @@
 import type {
-    AssetAdministrationShell as ApiAssetAdministrationShell,
-    AssetInformation as ApiAssetInformation,
-    Reference as ApiReference,
-} from '@/generated/aas-repository/types.gen';
-import type {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
+import type {
+    AssetAdministrationShell as ApiAssetAdministrationShell,
+    AssetInformation as ApiAssetInformation,
+    Reference as ApiReference,
+} from '../generated/aas-repository/types.gen';
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 
 /**
