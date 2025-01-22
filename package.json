@@ -1,11 +1,17 @@
 {
   "name": "basyx-typescript-sdk",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "repository": "https://github.com/eclipse-basyx/basyx-typescript-sdk.git",
   "author": "Aaron Zielstorff <aaron.zielstorff@iese.fraunhofer.de>",
   "license": "MIT",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "gen:aasrepository": "openapi-ts -c @hey-api/client-fetch -i ./openapi/Plattform_i40-AssetAdministrationShellRepositoryServiceSpecification-V3.0.3_SSP-001-resolved.json -o ./src/generated/aas-repository",
     "build": "tsc",
