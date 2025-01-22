@@ -1,0 +1,1 @@
+export { AasRepositoryClient } from './AasRepositoryClient';
