@@ -27,6 +27,8 @@ Utility functions for working with AAS data:
 npm install basyx-typescript-sdk
 ```
 
+> See https://www.npmjs.com/package/basyx-typescript-sdk
+
 ## Usage
 
 ```typescript
