@@ -48,6 +48,8 @@ describe('AasRepositoryClient', () => {
     const mockGetAllAssetAdministrationShells = AasRepository.getAllAssetAdministrationShells as jest.Mock;
     const mockPostAssetAdministrationShell = AasRepository.postAssetAdministrationShell as jest.Mock;
     const mockDeleteAssetAdministrationShellById = AasRepository.deleteAssetAdministrationShellById as jest.Mock;
+    const mockGetAssetAdministrationShellById = AasRepository.getAssetAdministrationShellById as jest.Mock;
+    const mockPutAssetAdministrationShellById = AasRepository.putAssetAdministrationShellById as jest.Mock;
     const mockConvertApiAasToCoreAas = convertApiAasToCoreAas as jest.Mock;
     const mockConvertCoreAasToApiAas = convertCoreAasToApiAas as jest.Mock;
 
@@ -266,5 +268,117 @@ describe('AasRepositoryClient', () => {
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error deleting Asset Administration Shell:', mockException);
+    });
+
+    it('should get an Asset Administration Shell successfully', async () => {
+        // Arrange
+        mockGetAssetAdministrationShellById.mockResolvedValue({ data: API_AAS1, error: null });
+
+        // Mock convert function to return core AAS
+        mockConvertApiAasToCoreAas.mockImplementation((aas: ApiAssetAdministrationShell) => {
+            if (aas.id === API_AAS1.id) return CORE_AAS1;
+            if (aas.id === API_AAS2.id) return CORE_AAS2;
+            throw new Error('Unknown AAS ID');
+        });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        const result = await clientInstance.getAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.getAssetAdministrationShellById).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+        });
+        expect(convertApiAasToCoreAas).toHaveBeenCalledWith(API_AAS1);
+        expect(result).toEqual(CORE_AAS1);
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockGetAssetAdministrationShellById.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            JSON.stringify(mockError.messages)
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockGetAssetAdministrationShellById.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            'Network error'
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shell:', mockException);
+    });
+
+    it('should update an Asset Administration Shell successfully', async () => {
+        // Arrange
+        mockPutAssetAdministrationShellById.mockResolvedValue({ data: API_AAS1, error: null });
+
+        // Mock convert function to return API AAS
+        mockConvertCoreAasToApiAas.mockImplementation((aas: CoreAssetAdministrationShell) => {
+            if (aas.id === CORE_AAS1.id) return API_AAS1;
+            if (aas.id === CORE_AAS2.id) return API_AAS2;
+            throw new Error('Unknown AAS ID');
+        });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        await clientInstance.putAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, CORE_AAS1, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.putAssetAdministrationShellById).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+            body: API_AAS1,
+        });
+        expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockPutAssetAdministrationShellById.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.putAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, CORE_AAS1, HEADERS)
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockPutAssetAdministrationShellById.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.putAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, CORE_AAS1, HEADERS)
+        ).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error updating Asset Administration Shell:', mockException);
     });
 });
