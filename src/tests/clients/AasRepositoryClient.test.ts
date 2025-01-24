@@ -6,9 +6,17 @@ import {
     AssetKind,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
-import { AssetAdministrationShell as ApiAssetAdministrationShell } from '../../generated/aas-repository';
+import {
+    AssetAdministrationShell as ApiAssetAdministrationShell,
+    AssetInformation as ApiAssetInformation,
+} from '../../generated/aas-repository';
 import * as AasRepository from '../../generated/aas-repository';
-import { convertApiAasToCoreAas, convertCoreAasToApiAas } from '../../lib/convertAasTypes';
+import {
+    convertApiAasToCoreAas,
+    convertApiAssetInformationToCoreAssetInformation,
+    convertCoreAasToApiAas,
+    convertCoreAssetInformationToApiAssetInformation,
+} from '../../lib/convertAasTypes';
 import { createCustomClient } from '../../lib/createAasRepoClient';
 
 // Mock the dependencies
@@ -41,6 +49,10 @@ const CORE_AAS2: CoreAssetAdministrationShell = new CoreAssetAdministrationShell
     'https://example.com/ids/aas/7600_5912_3951_6918',
     new CoreAssetInformation(AssetKind.Instance)
 );
+const API_ASSET_INFO: ApiAssetInformation = {
+    assetKind: 'Instance',
+};
+const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(AssetKind.Instance);
 
 describe('AasRepositoryClient', () => {
     const client = {}; // Mock client object
@@ -50,8 +62,14 @@ describe('AasRepositoryClient', () => {
     const mockDeleteAssetAdministrationShellById = AasRepository.deleteAssetAdministrationShellById as jest.Mock;
     const mockGetAssetAdministrationShellById = AasRepository.getAssetAdministrationShellById as jest.Mock;
     const mockPutAssetAdministrationShellById = AasRepository.putAssetAdministrationShellById as jest.Mock;
+    const mockGetAssetInformation = AasRepository.getAssetInformationAasRepository as jest.Mock;
+    const mockPutAssetInformation = AasRepository.putAssetInformationAasRepository as jest.Mock;
     const mockConvertApiAasToCoreAas = convertApiAasToCoreAas as jest.Mock;
     const mockConvertCoreAasToApiAas = convertCoreAasToApiAas as jest.Mock;
+    const mockConvertApiAssetInformationToCoreAssetInformation =
+        convertApiAssetInformationToCoreAssetInformation as jest.Mock;
+    const mockConvertCoreAssetInformationToApiAssetInformation =
+        convertCoreAssetInformationToApiAssetInformation as jest.Mock;
 
     // Mock console.error to prevent actual logging during tests
     beforeAll(() => {
@@ -380,5 +398,109 @@ describe('AasRepositoryClient', () => {
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error updating Asset Administration Shell:', mockException);
+    });
+
+    it('should get Asset Information successfully', async () => {
+        // Arrange
+        mockGetAssetInformation.mockResolvedValue({ data: API_ASSET_INFO, error: null });
+
+        // Mock convert function to return core asset information
+        mockConvertApiAssetInformationToCoreAssetInformation.mockReturnValue(CORE_ASSET_INFO);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        const result = await clientInstance.getAssetInformation(BASE_URL, CORE_AAS1.id, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.getAssetInformationAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+        });
+        expect(convertApiAssetInformationToCoreAssetInformation).toHaveBeenCalledWith(API_ASSET_INFO);
+        expect(result).toEqual(CORE_ASSET_INFO);
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockGetAssetInformation.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getAssetInformation(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            JSON.stringify(mockError.messages)
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockGetAssetInformation.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getAssetInformation(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            'Network error'
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error fetching Asset Information:', mockException);
+    });
+
+    it('should update Asset Information successfully', async () => {
+        // Arrange
+        mockPutAssetInformation.mockResolvedValue({ data: API_ASSET_INFO, error: null });
+
+        // Mock convert function to return API asset information
+        mockConvertCoreAssetInformationToApiAssetInformation.mockReturnValue(API_ASSET_INFO);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        await clientInstance.putAssetInformation(BASE_URL, CORE_AAS1.id, CORE_ASSET_INFO, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.putAssetInformationAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+            body: API_ASSET_INFO,
+        });
+        expect(convertCoreAssetInformationToApiAssetInformation).toHaveBeenCalledWith(CORE_ASSET_INFO);
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockPutAssetInformation.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.putAssetInformation(BASE_URL, CORE_AAS1.id, CORE_ASSET_INFO, HEADERS)
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockPutAssetInformation.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.putAssetInformation(BASE_URL, CORE_AAS1.id, CORE_ASSET_INFO, HEADERS)
+        ).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error updating Asset Information:', mockException);
     });
 });
