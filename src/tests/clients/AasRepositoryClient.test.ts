@@ -9,6 +9,7 @@ import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
+    AssetinformationThumbnailBody,
 } from '../../generated/aas-repository';
 import * as AasRepository from '../../generated/aas-repository';
 import {
@@ -53,6 +54,11 @@ const API_ASSET_INFO: ApiAssetInformation = {
     assetKind: 'Instance',
 };
 const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(AssetKind.Instance);
+const MOCK_BLOB = new Blob();
+const MOCK_THUMBNAIL_BODY: AssetinformationThumbnailBody = {
+    fileName: 'thumbnail.png',
+    file: MOCK_BLOB,
+};
 
 describe('AasRepositoryClient', () => {
     const client = {}; // Mock client object
@@ -64,6 +70,9 @@ describe('AasRepositoryClient', () => {
     const mockPutAssetAdministrationShellById = AasRepository.putAssetAdministrationShellById as jest.Mock;
     const mockGetAssetInformation = AasRepository.getAssetInformationAasRepository as jest.Mock;
     const mockPutAssetInformation = AasRepository.putAssetInformationAasRepository as jest.Mock;
+    const mockDeleteThumbnail = AasRepository.deleteThumbnailAasRepository as jest.Mock;
+    const mockGetThumbnail = AasRepository.getThumbnailAasRepository as jest.Mock;
+    const mockPutThumbnail = AasRepository.putThumbnailAasRepository as jest.Mock;
     const mockConvertApiAasToCoreAas = convertApiAasToCoreAas as jest.Mock;
     const mockConvertCoreAasToApiAas = convertCoreAasToApiAas as jest.Mock;
     const mockConvertApiAssetInformationToCoreAssetInformation =
@@ -502,5 +511,144 @@ describe('AasRepositoryClient', () => {
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error updating Asset Information:', mockException);
+    });
+
+    it('should delete a thumbnail successfully', async () => {
+        // Arrange
+        mockDeleteThumbnail.mockResolvedValue({ data: null, error: null });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        await clientInstance.deleteThumbnail(BASE_URL, CORE_AAS1.id, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.deleteThumbnailAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+        });
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockDeleteThumbnail.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.deleteThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            JSON.stringify(mockError.messages)
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockDeleteThumbnail.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.deleteThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error deleting Thumbnail:', mockException);
+    });
+
+    it('should get a thumbnail successfully', async () => {
+        // Arrange
+        mockGetThumbnail.mockResolvedValue({ data: MOCK_BLOB, error: null });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        const result = await clientInstance.getThumbnail(BASE_URL, CORE_AAS1.id, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.getThumbnailAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+        });
+        expect(result).toBe(MOCK_BLOB);
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockGetThumbnail.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            JSON.stringify(mockError.messages)
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockGetThumbnail.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error fetching Thumbnail:', mockException);
+    });
+
+    it('should put a thumbnail successfully', async () => {
+        // Arrange
+        mockPutThumbnail.mockResolvedValue({ data: null, error: null });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        await clientInstance.putThumbnail(BASE_URL, CORE_AAS1.id, MOCK_THUMBNAIL_BODY, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.putThumbnailAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+            body: MOCK_THUMBNAIL_BODY,
+        });
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockPutThumbnail.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.putThumbnail(BASE_URL, CORE_AAS1.id, MOCK_THUMBNAIL_BODY, HEADERS)).rejects.toThrow(
+            JSON.stringify(mockError.messages)
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockPutThumbnail.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.putThumbnail(BASE_URL, CORE_AAS1.id, MOCK_THUMBNAIL_BODY, HEADERS)).rejects.toThrow(
+            'Network error'
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error updating Thumbnail:', mockException);
     });
 });
