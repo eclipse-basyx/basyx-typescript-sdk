@@ -383,17 +383,17 @@ export class AasRepositoryClient {
      * @function getAllSubmodelReferences
      * @param baseURL The API base URL
      * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param headers Request headers
      * @param limit The maximum number of elements in the response array
      * @param cursor A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-     * @param headers Request headers
      * @returns {Promise<getAllSubmodelReferencesResponse>} Requested submodel references
      */
     async getAllSubmodelReferences(
         baseURL: string,
         aasIdentifier: string,
+        headers?: Headers,
         limit?: number,
-        cursor?: string,
-        headers?: Headers
+        cursor?: string
     ): Promise<getAllSubmodelReferencesResponse> {
         try {
             const client = createCustomClient(baseURL, headers);
@@ -419,7 +419,7 @@ export class AasRepositoryClient {
                 result: submodelReferences,
             };
         } catch (error) {
-            console.error('Error fetching submodel references:', error);
+            console.error('Error fetching Submodel References:', error);
             throw error;
         }
     }
@@ -457,7 +457,7 @@ export class AasRepositoryClient {
 
             return convertApiReferenceToCoreReference(data);
         } catch (error) {
-            console.error('Error creating submodel reference:', error);
+            console.error('Error creating Submodel Reference:', error);
             throw error;
         }
     }
@@ -494,7 +494,7 @@ export class AasRepositoryClient {
 
             return;
         } catch (error) {
-            console.error('Error deleting submodel reference:', error);
+            console.error('Error deleting Submodel Reference:', error);
             throw error;
         }
     }
