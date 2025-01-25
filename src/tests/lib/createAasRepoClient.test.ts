@@ -1,5 +1,5 @@
 import { createClient } from '@hey-api/client-fetch';
-import { createCustomClient } from '../../lib/createAasRepoClient';
+import { createCustomClient } from '../../lib/createCustomClient';
 
 // Mock the createClient function from @hey-api/client-fetch
 jest.mock('@hey-api/client-fetch', () => ({

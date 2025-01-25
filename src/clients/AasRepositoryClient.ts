@@ -13,7 +13,7 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
-import { createCustomClient } from '../lib/createAasRepoClient';
+import { createCustomClient } from '../lib/createCustomClient';
 import { GetAllAssetAdministrationShellsResponse, getAllSubmodelReferencesResponse } from '../models/aas-repository';
 
 export class AasRepositoryClient {
