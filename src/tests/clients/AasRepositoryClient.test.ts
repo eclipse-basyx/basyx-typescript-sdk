@@ -4,19 +4,26 @@ import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     AssetKind,
+    Key as CoreKey,
+    KeyTypes,
+    Reference as CoreReference,
+    ReferenceTypes,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     AssetinformationThumbnailBody,
+    Reference as ApiReference,
 } from '../../generated/aas-repository';
 import * as AasRepository from '../../generated/aas-repository';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
+    convertApiReferenceToCoreReference,
     convertCoreAasToApiAas,
     convertCoreAssetInformationToApiAssetInformation,
+    convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
 import { createCustomClient } from '../../lib/createAasRepoClient';
 
@@ -59,6 +66,30 @@ const MOCK_THUMBNAIL_BODY: AssetinformationThumbnailBody = {
     fileName: 'thumbnail.png',
     file: MOCK_BLOB,
 };
+const API_REFERENCE1: ApiReference = {
+    type: 'ExternalReference',
+    keys: [
+        {
+            type: 'GlobalReference',
+            value: 'https://example.com/ids/submodel/7600_5912_3951_6917',
+        },
+    ],
+};
+const CORE_REFERENCE1: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
+    new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6917'),
+]);
+const API_REFERENCE2: ApiReference = {
+    type: 'ExternalReference',
+    keys: [
+        {
+            type: 'GlobalReference',
+            value: 'https://example.com/ids/submodel/7600_5912_3951_6918',
+        },
+    ],
+};
+const CORE_REFERENCE2: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
+    new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6918'),
+]);
 
 describe('AasRepositoryClient', () => {
     const client = {}; // Mock client object
@@ -73,12 +104,17 @@ describe('AasRepositoryClient', () => {
     const mockDeleteThumbnail = AasRepository.deleteThumbnailAasRepository as jest.Mock;
     const mockGetThumbnail = AasRepository.getThumbnailAasRepository as jest.Mock;
     const mockPutThumbnail = AasRepository.putThumbnailAasRepository as jest.Mock;
+    const mockGetAllSubmodelReferences = AasRepository.getAllSubmodelReferencesAasRepository as jest.Mock;
+    const mockPostSubmodelReference = AasRepository.postSubmodelReferenceAasRepository as jest.Mock;
+    const mockDeleteSubmodelReferenceById = AasRepository.deleteSubmodelReferenceByIdAasRepository as jest.Mock;
     const mockConvertApiAasToCoreAas = convertApiAasToCoreAas as jest.Mock;
     const mockConvertCoreAasToApiAas = convertCoreAasToApiAas as jest.Mock;
     const mockConvertApiAssetInformationToCoreAssetInformation =
         convertApiAssetInformationToCoreAssetInformation as jest.Mock;
     const mockConvertCoreAssetInformationToApiAssetInformation =
         convertCoreAssetInformationToApiAssetInformation as jest.Mock;
+    const mockConvertApiReferenceToCoreReference = convertApiReferenceToCoreReference as jest.Mock;
+    const mockConvertCoreReferenceToApiReference = convertCoreReferenceToApiReference as jest.Mock;
 
     // Mock console.error to prevent actual logging during tests
     beforeAll(() => {
@@ -650,5 +686,180 @@ describe('AasRepositoryClient', () => {
         );
 
         expect(console.error).toHaveBeenCalledWith('Error updating Thumbnail:', mockException);
+    });
+
+    it('should get all submodel references successfully', async () => {
+        // Arrange
+        const apiResponse = {
+            paging_metadata: {
+                cursor: 'cursor123',
+            },
+            result: [API_REFERENCE1, API_REFERENCE2],
+        };
+        mockGetAllSubmodelReferences.mockResolvedValue({ data: apiResponse, error: null });
+
+        // Mock convert function to return core reference
+        mockConvertApiReferenceToCoreReference.mockImplementation((apiReference: ApiReference) => {
+            if (apiReference === API_REFERENCE1) return CORE_REFERENCE1;
+            if (apiReference === API_REFERENCE2) return CORE_REFERENCE2;
+            throw new Error('Unknown reference');
+        });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        const result = await clientInstance.getAllSubmodelReferences(BASE_URL, CORE_AAS1.id, HEADERS, LIMIT, CURSOR);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.getAllSubmodelReferencesAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+            query: {
+                limit: LIMIT,
+                cursor: CURSOR,
+            },
+        });
+        expect(convertApiReferenceToCoreReference).toHaveBeenCalledTimes(apiResponse.result.length);
+        expect(result).toEqual({
+            pagedResult: apiResponse.paging_metadata,
+            result: [CORE_REFERENCE1, CORE_REFERENCE2],
+        });
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockGetAllSubmodelReferences.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getAllSubmodelReferences(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            JSON.stringify(mockError.messages)
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockGetAllSubmodelReferences.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(clientInstance.getAllSubmodelReferences(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
+            'Network error'
+        );
+
+        expect(console.error).toHaveBeenCalledWith('Error fetching Submodel References:', mockException);
+    });
+
+    it('should post a submodel reference successfully', async () => {
+        // Arrange
+        mockPostSubmodelReference.mockResolvedValue({ data: API_REFERENCE1, error: null });
+
+        // Mock convert function to return API reference
+        mockConvertCoreReferenceToApiReference.mockReturnValue(API_REFERENCE1);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        const result = await clientInstance.postSubmodelReference(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1, HEADERS);
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.postSubmodelReferenceAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id },
+            body: API_REFERENCE1,
+        });
+        expect(convertCoreReferenceToApiReference).toHaveBeenCalledWith(CORE_REFERENCE1);
+        expect(convertApiReferenceToCoreReference).toHaveBeenCalledWith(API_REFERENCE1);
+        expect(result).toEqual(CORE_REFERENCE1);
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockPostSubmodelReference.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.postSubmodelReference(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1, HEADERS)
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockPostSubmodelReference.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.postSubmodelReference(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1, HEADERS)
+        ).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error creating Submodel Reference:', mockException);
+    });
+
+    it('should delete a submodel reference successfully', async () => {
+        // Arrange
+        mockDeleteSubmodelReferenceById.mockResolvedValue({ data: null, error: null });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act
+        await clientInstance.deleteSubmodelReferenceById(
+            BASE_URL,
+            CORE_AAS1.id,
+            CORE_REFERENCE1.keys[0].value,
+            HEADERS
+        );
+
+        // Assert
+        expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
+        expect(AasRepository.deleteSubmodelReferenceByIdAasRepository).toHaveBeenCalledWith({
+            client,
+            path: { aasIdentifier: CORE_AAS1.id, submodelIdentifier: CORE_REFERENCE1.keys[0].value },
+        });
+    });
+
+    it('should throw an error when server returns an error', async () => {
+        // Arrange
+        const mockError = { messages: ['Invalid request'] };
+        mockDeleteSubmodelReferenceById.mockResolvedValue({ data: null, error: mockError });
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.deleteSubmodelReferenceById(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1.keys[0].value, HEADERS)
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
+
+        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+    });
+
+    it('should throw an error when AasRepository throws an exception', async () => {
+        // Arrange
+        const mockException = new Error('Network error');
+        mockDeleteSubmodelReferenceById.mockRejectedValue(mockException);
+
+        const clientInstance = new AasRepositoryClient();
+
+        // Act & Assert
+        await expect(
+            clientInstance.deleteSubmodelReferenceById(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1.keys[0].value, HEADERS)
+        ).rejects.toThrow('Network error');
+
+        expect(console.error).toHaveBeenCalledWith('Error deleting Submodel Reference:', mockException);
     });
 });
