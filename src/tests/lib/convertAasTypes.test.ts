@@ -12,7 +12,7 @@ import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Reference as ApiReference,
-} from '../../generated/aas-repository/types.gen';
+} from '../../generated/types.gen';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,

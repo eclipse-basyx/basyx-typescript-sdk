@@ -1,5 +1,5 @@
 // Import necessary types
-import type { GetAssetAdministrationShellsResult } from '../../generated/aas-repository/types.gen';
+import type { GetAssetAdministrationShellsResult } from '../../generated/types.gen';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
@@ -15,8 +15,8 @@ import {
     AssetInformation as ApiAssetInformation,
     AssetinformationThumbnailBody,
     Reference as ApiReference,
-} from '../../generated/aas-repository';
-import * as AasRepository from '../../generated/aas-repository';
+} from '../../generated';
+import * as AasRepository from '../../generated';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -29,7 +29,7 @@ import { createCustomClient } from '../../lib/createAasRepoClient';
 
 // Mock the dependencies
 jest.mock('../../lib/createAasRepoClient');
-jest.mock('../../generated/aas-repository');
+jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
 
 // Define mock constants

@@ -12,7 +12,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "gen:aasrepository": "openapi-ts -c @hey-api/client-fetch -i ./openapi/Plattform_i40-AssetAdministrationShellRepositoryServiceSpecification-V3.0.3_SSP-001-resolved.json -o ./src/generated/aas-repository",
+    "openapi-ts": "openapi-ts",
     "build": "tsc",
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",

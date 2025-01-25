@@ -3,8 +3,8 @@ import type {
     AssetInformation,
     Reference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import * as AasRepository from '../generated/aas-repository';
-import { AssetinformationThumbnailBody } from '../generated/aas-repository/types.gen';
+import * as AasRepository from '../generated';
+import { AssetinformationThumbnailBody } from '../generated/types.gen';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
