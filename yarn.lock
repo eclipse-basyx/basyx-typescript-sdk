@@ -356,9 +356,9 @@
     levn "^0.4.1"
 
 "@hey-api/client-fetch@^0.7.0":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@hey-api/client-fetch/-/client-fetch-0.7.2.tgz#eb0622a8a3268f1bbf94ecbda53466621895d0bf"
-  integrity sha512-4H9HohKQsAZnopV6cyAUuJOIYKMHi0WBaF+GJ7WZ45Tm3zubREe7pQAjaLlg8hHgjASHOOXU93ZqcgSn29sB7w==
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@hey-api/client-fetch/-/client-fetch-0.7.3.tgz#a0659a4a2e1ec46475fc42bc3cf3fcc7e9b1100b"
+  integrity sha512-nysIXMag9nr5ENy+47G0AYsegdT7vT6S4KLfY7NVgM6HsyZ0DrhCZvz5nP70M16x9i860SrnXhjpcuHx0g5sDQ==
 
 "@hey-api/json-schema-ref-parser@1.0.1":
   version "1.0.1"
