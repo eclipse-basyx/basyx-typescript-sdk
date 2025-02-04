@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
-    "@hey-api/client-fetch": "^0.7.0"
+    "@hey-api/client-fetch": "^0.8.0"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.64.1",
