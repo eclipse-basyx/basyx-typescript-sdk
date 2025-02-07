@@ -6,9 +6,8 @@ export default {
     input: 'dist/index.js',
     output: {
         file: 'bundle/index.js',
-        format: 'cjs', // CommonJS module format
+        format: 'esm',
         sourcemap: true,
-        exports: 'named',
     },
     plugins: [
         resolve(), // helps Rollup find node_modules packages
