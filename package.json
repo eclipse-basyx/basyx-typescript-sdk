@@ -28,10 +28,13 @@
     "start": "ts-node -r tsconfig-paths/register src/testFunctions.ts"
   },
   "dependencies": {
-    "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
     "@hey-api/client-fetch": "^0.7.0"
   },
+  "peerDependencies": {
+    "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
+  },
   "devDependencies": {
+    "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
     "@hey-api/openapi-ts": "^0.64.1",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
