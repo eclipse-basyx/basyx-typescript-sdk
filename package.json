@@ -1,6 +1,6 @@
 {
   "name": "basyx-typescript-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)",
   "main": "dist/index.js",
   "repository": "https://github.com/eclipse-basyx/basyx-typescript-sdk.git",
