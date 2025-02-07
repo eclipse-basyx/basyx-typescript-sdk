@@ -1,6 +1,7 @@
 # Ignore build output directories
 build/
 dist/
+bundle/
 
 # Ignore node modules
 node_modules/
