@@ -3,13 +3,11 @@ import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
-    Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Reference as ApiReference,
-    Submodel as ApiSubmodel,
 } from '../generated/types.gen';
 
 /**
