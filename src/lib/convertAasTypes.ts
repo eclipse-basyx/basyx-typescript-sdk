@@ -1,14 +1,16 @@
-import type {
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
+    Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import type {
+import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Reference as ApiReference,
+    Submodel as ApiSubmodel,
 } from '../generated/types.gen';
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 
 /**
  * Convert an API AssetAdministrationShell to a Core Works AssetAdministrationShell
@@ -27,7 +29,10 @@ export function convertApiAasToCoreAas(aas: ApiAssetAdministrationShell): CoreAs
     if (instanceOrError.error !== null) {
         throw instanceOrError.error;
     }
-    return instanceOrError.mustValue();
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreAssetAdministrationShell.prototype);
+    return instance;
 }
 
 /**
@@ -65,7 +70,10 @@ export function convertApiAssetInformationToCoreAssetInformation(
     if (instanceOrError.error !== null) {
         throw instanceOrError.error;
     }
-    return instanceOrError.mustValue();
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreAssetInformation.prototype);
+    return instance;
 }
 
 /**
@@ -103,7 +111,10 @@ export function convertApiReferenceToCoreReference(reference: ApiReference): Cor
     if (instanceOrError.error !== null) {
         throw instanceOrError.error;
     }
-    return instanceOrError.mustValue();
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreReference.prototype);
+    return instance;
 }
 
 /**
@@ -120,4 +131,43 @@ export function convertCoreReferenceToApiReference(reference: CoreReference): Ap
     const ref = JSON.stringify(jsonableRef);
     // then parse
     return JSON.parse(ref) as ApiReference;
+}
+
+/**
+ * Convert an API Submodel to a Core Works Submodel
+ *
+ * @function convertApiSubmodelToCoreSubmodel
+ * @param {ApiSubmodel} submodel - The API Submodel to convert
+ * @returns {CoreSubmodel} The Core Works Submodel
+ */
+export function convertApiSubmodelToCoreSubmodel(submodel: ApiSubmodel): CoreSubmodel {
+    // first stringify
+    let sm = JSON.stringify(submodel);
+    // then parse
+    sm = JSON.parse(sm);
+    // then jsonize
+    const instanceOrError = jsonization.submodelFromJsonable(sm);
+    if (instanceOrError.error !== null) {
+        throw instanceOrError.error;
+    }
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreSubmodel.prototype);
+    return instance;
+}
+
+/**
+ * Convert a Core Works Submodel to an API Submodel
+ *
+ * @function convertCoreSubmodelToApiSubmodel
+ * @param {CoreSubmodel} submodel - The Core Works Submodel to convert
+ * @returns {ApiSubmodel} The API Submodel
+ */
+export function convertCoreSubmodelToApiSubmodel(submodel: CoreSubmodel): ApiSubmodel {
+    // first jsonize
+    const jsonableSm = jsonization.toJsonable(submodel);
+    // then stringify
+    const sm = JSON.stringify(jsonableSm);
+    // then parse
+    return JSON.parse(sm) as ApiSubmodel;
 }
