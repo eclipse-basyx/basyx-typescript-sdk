@@ -1,1 +1,1 @@
-export * from './clients/index.ts';
+export * from './clients/index.js';

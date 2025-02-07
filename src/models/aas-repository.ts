@@ -1,5 +1,5 @@
 import type { AssetAdministrationShell, Reference } from '@aas-core-works/aas-core3.0-typescript/types';
-import type { PagedResultPagingMetadata } from '../generated/types.gen.ts';
+import type { PagedResultPagingMetadata } from '../generated/types.gen.js';
 
 export interface GetAllAssetAdministrationShellsResponse {
     pagedResult: PagedResultPagingMetadata | undefined;
