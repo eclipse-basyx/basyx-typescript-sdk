@@ -8,6 +8,7 @@ export default {
         file: 'bundle/index.js',
         format: 'cjs', // CommonJS module format
         sourcemap: true,
+        exports: 'named',
     },
     plugins: [
         resolve(), // helps Rollup find node_modules packages
