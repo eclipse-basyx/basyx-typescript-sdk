@@ -36,7 +36,6 @@
   "devDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
     "@hey-api/openapi-ts": "^0.64.1",
-    "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
