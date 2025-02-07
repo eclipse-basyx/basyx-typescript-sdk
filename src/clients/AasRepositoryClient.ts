@@ -3,8 +3,8 @@ import type {
     AssetInformation,
     Reference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import * as AasRepository from '../generated';
-import { AssetinformationThumbnailBody } from '../generated/types.gen';
+import * as AasRepository from '../generated/index.ts';
+import { AssetinformationThumbnailBody } from '../generated/types.gen.ts';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -12,9 +12,9 @@ import {
     convertCoreAasToApiAas,
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
-} from '../lib/convertAasTypes';
-import { createCustomClient } from '../lib/createAasRepoClient';
-import { GetAllAssetAdministrationShellsResponse, getAllSubmodelReferencesResponse } from '../models/aas-repository';
+} from '../lib/convertAasTypes.ts';
+import { createCustomClient } from '../lib/createAasRepoClient.ts';
+import { GetAllAssetAdministrationShellsResponse, getAllSubmodelReferencesResponse } from '../models/aas-repository.ts';
 
 export class AasRepositoryClient {
     /**
