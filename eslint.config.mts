@@ -6,7 +6,7 @@ import ts from 'typescript-eslint';
 
 export default [
     {
-        ignores: ['node_modules', 'dist', 'src/generated'],
+        ignores: ['node_modules', 'dist', 'src/generated', 'bundle'],
     },
 
     {

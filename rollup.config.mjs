@@ -14,8 +14,5 @@ export default {
         commonjs(), // converts CommonJS modules to ES6, so they can be included in a Rollup bundle
     ],
     // Externalize dependencies that shouldn't be bundled
-    external: [
-        '@aas-core-works/aas-core3.0-typescript',
-        '@hey-api/client-fetch',
-    ],
+    external: ['@aas-core-works/aas-core3.0-typescript', '@hey-api/client-fetch'],
 };
