@@ -618,7 +618,7 @@ import type {
     GetDescriptionData,
     GetDescriptionResponse,
     GetDescriptionError,
-} from './types.gen.js';
+} from './types.gen';
 
 export const client = createClient(createConfig());
 

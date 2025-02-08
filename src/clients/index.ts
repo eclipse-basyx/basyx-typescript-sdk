@@ -1,1 +1,1 @@
-export { AasRepositoryClient } from './AasRepositoryClient.js';
+export { AasRepositoryClient } from './AasRepositoryClient';

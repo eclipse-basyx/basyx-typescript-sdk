@@ -3,5 +3,17 @@
   "compilerOptions": {
     "baseUrl": ".",
   },
-  "include": ["src/**/*.test.ts"]
+  "include": [
+    "src/**/*.test.ts",
+    "src/generated/**/*",
+    "src/clients/**/*",
+    "src/lib/**/*",
+    "src/models/**/*",
+    "src/index.ts" 
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "bundle",
+  ]
 }
