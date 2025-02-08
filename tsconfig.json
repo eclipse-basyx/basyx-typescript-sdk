@@ -1,16 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "target": "esnext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "useDefineForClassFields": true,
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
     "declaration": true,
     "outDir": "./dist",
     "strict": true,
+    "sourceMap": false,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "lib": ["esnext", "dom"],
     "esModuleInterop": true,
     "baseUrl": ".",
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "**/*.test.ts", "src/generated/**/*"]
+  "exclude": ["node_modules", "**/*.test.ts", "dist", "bundle"]
 }
