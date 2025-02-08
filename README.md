@@ -25,9 +25,22 @@ Utility functions for working with AAS data:
 
 ```bash
 npm install basyx-typescript-sdk
+# or
+yarn add basyx-typescript-sdk
 ```
 
 > See https://www.npmjs.com/package/basyx-typescript-sdk
+
+---
+
+> [!IMPORTANT]
+> Make sure to install `@aas-core-works/aas-core3.0-typescript` in your project:
+
+```bash
+npm install @aas-core-works/aas-core3.0-typescript
+# or
+yarn add @aas-core-works/aas-core3.0-typescript
+```
 
 ## Usage
 

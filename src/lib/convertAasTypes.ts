@@ -1,16 +1,16 @@
-import type {
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import type {
+import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Reference as ApiReference,
     Submodel as ApiSubmodel,
 } from '../generated/types.gen';
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 
 /**
  * Convert an API AssetAdministrationShell to a Core Works AssetAdministrationShell
@@ -29,7 +29,10 @@ export function convertApiAasToCoreAas(aas: ApiAssetAdministrationShell): CoreAs
     if (instanceOrError.error !== null) {
         throw instanceOrError.error;
     }
-    return instanceOrError.mustValue();
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreAssetAdministrationShell.prototype);
+    return instance;
 }
 
 /**
@@ -67,7 +70,10 @@ export function convertApiAssetInformationToCoreAssetInformation(
     if (instanceOrError.error !== null) {
         throw instanceOrError.error;
     }
-    return instanceOrError.mustValue();
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreAssetInformation.prototype);
+    return instance;
 }
 
 /**
@@ -105,7 +111,10 @@ export function convertApiReferenceToCoreReference(reference: ApiReference): Cor
     if (instanceOrError.error !== null) {
         throw instanceOrError.error;
     }
-    return instanceOrError.mustValue();
+    const instance = instanceOrError.mustValue();
+    // set the prototype
+    Object.setPrototypeOf(instance, CoreReference.prototype);
+    return instance;
 }
 
 /**

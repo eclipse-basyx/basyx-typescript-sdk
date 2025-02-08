@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -32,8 +32,11 @@ jobs:
 
       - name: Build project
         run: yarn build
+      
+      - name: Bundle project
+        run: yarn bundle
 
       - name: Publish to npm
-        run: yarn publish
+        run: yarn publish  --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
