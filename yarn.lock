@@ -355,10 +355,10 @@
     "@eslint/core" "^0.12.0"
     levn "^0.4.1"
 
-"@hey-api/client-fetch@^0.7.0":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@hey-api/client-fetch/-/client-fetch-0.7.2.tgz#eb0622a8a3268f1bbf94ecbda53466621895d0bf"
-  integrity sha512-4H9HohKQsAZnopV6cyAUuJOIYKMHi0WBaF+GJ7WZ45Tm3zubREe7pQAjaLlg8hHgjASHOOXU93ZqcgSn29sB7w==
+"@hey-api/client-fetch@^0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@hey-api/client-fetch/-/client-fetch-0.8.1.tgz#4c52b96e44f96e31c620e2a05b772cea84e775a0"
+  integrity sha512-AaVNVLBl7N9Fun7QDnb00YDubAFjB9ICi5U6kmzcJSnnQTQGRMsuBBRupQV5ERdMMFt71zjSDym7Z+gLVe8m3A==
 
 "@hey-api/json-schema-ref-parser@1.0.2":
   version "1.0.2"
