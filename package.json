@@ -30,7 +30,7 @@
     "start": "ts-node -r tsconfig-paths/register src/testFunctions.ts"
   },
   "dependencies": {
-    "@hey-api/client-fetch": "^0.7.0"
+    "@hey-api/client-fetch": "^0.8.2"
   },
   "peerDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
