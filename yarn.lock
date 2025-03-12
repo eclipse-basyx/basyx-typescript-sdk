@@ -375,9 +375,9 @@
     js-yaml "^4.1.0"
 
 "@hey-api/openapi-ts@^0.64.1":
-  version "0.64.10"
-  resolved "https://registry.yarnpkg.com/@hey-api/openapi-ts/-/openapi-ts-0.64.10.tgz#84107890594e8e983608ad6e535045d6986f92b9"
-  integrity sha512-mTTD4DtOt68OmrZ6VXM4+sCma+JxhqDjiqdaUCpLIS8yWNWAmgBCRS5LE3i8AS8HUN1dsCetTGFAIUT2rElDVg==
+  version "0.64.11"
+  resolved "https://registry.yarnpkg.com/@hey-api/openapi-ts/-/openapi-ts-0.64.11.tgz#f0a3fc77ff1a9cbc5ea56b1d354eb254f3f95265"
+  integrity sha512-ehvi2P3cJY7GC5768N+OvYK8Pak0N3oSjosDmjUjc+W7C8JTbabiCLwszxLefCtqFyv2G2mLl0vqlCj6Bpy+DQ==
   dependencies:
     "@hey-api/json-schema-ref-parser" "1.0.2"
     c12 "2.0.1"
