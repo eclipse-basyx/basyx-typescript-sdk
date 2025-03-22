@@ -1,4 +1,4 @@
-name: Test SDK
+name: Unit Tests
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-latest
 
     steps:
