@@ -52,7 +52,7 @@ async function getAllShells() {
     const client = new AasRepositoryClient();
 
     try {
-        const response = await client.getAllAssetAdministrationShells(baseURL);
+        const response = await client.getAllAssetAdministrationShells({ baseUrl: baseURL });
         console.log('Asset Administration Shells fetched successfully:', response);
         // You can now use the response as needed
     } catch (error) {
