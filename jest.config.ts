@@ -7,6 +7,7 @@ module.exports = {
             displayName: 'unit-tests',
             preset: 'ts-jest',
             testEnvironment: 'node',
+            testMatch: ['**/unit-tests/**/*.test.ts'],
             moduleNameMapper: {
                 '^@/(.*)$': '<rootDir>/src/$1',
             },
@@ -15,12 +16,7 @@ module.exports = {
                 '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
             },
             coveragePathIgnorePatterns: ['<rootDir>/src/generated/'],
-            testPathIgnorePatterns: [
-                '<rootDir>/dist/',
-                '<rootDir>/node_modules/',
-                '<rootDir>/bundle/',
-                '<rootDir>/src/integration-tests/', // Ignore integration tests in unit test runs
-            ],
+            testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/', '<rootDir>/bundle/'],
         },
         {
             displayName: 'integration-tests',
@@ -36,6 +32,8 @@ module.exports = {
             transform: {
                 '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
             },
+            coveragePathIgnorePatterns: ['<rootDir>/src/generated/'],
+            testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/', '<rootDir>/bundle/'],
         },
     ],
 };
