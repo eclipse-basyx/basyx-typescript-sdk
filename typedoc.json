@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["src/index.ts", "src/models", "src/lib"],
+  "entryPoints": ["src/index.ts"],
   "entryPointStrategy": "expand",
   "out": "docs",
   "excludePrivate": true,
