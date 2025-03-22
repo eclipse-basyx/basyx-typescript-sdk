@@ -1,4 +1,9 @@
-import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import {
+    AssetAdministrationShell,
+    AssetInformation,
+    AssetKind,
+    LangStringTextType,
+} from '@aas-core-works/aas-core3.0-typescript/types';
 
 export function createTestShell(): AssetAdministrationShell {
     const demoAas = new AssetAdministrationShell(
@@ -6,4 +11,12 @@ export function createTestShell(): AssetAdministrationShell {
         new AssetInformation(AssetKind.Instance)
     );
     return demoAas;
+}
+
+export function createDescription(): LangStringTextType {
+    return new LangStringTextType('en', 'Test Description');
+}
+
+export function createGlobalAssetId(): string {
+    return 'https://example.com/ids/asset/7600_5912_3951_6917';
 }
