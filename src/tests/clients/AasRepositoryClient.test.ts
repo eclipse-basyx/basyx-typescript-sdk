@@ -25,10 +25,10 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
-import { createCustomClient } from '../../lib/createAasRepoClient';
+import { createCustomClient } from '../../lib/createCustomClient';
 
 // Mock the dependencies
-jest.mock('../../lib/createAasRepoClient');
+jest.mock('../../lib/createCustomClient');
 jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
 
