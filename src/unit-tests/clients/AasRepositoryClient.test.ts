@@ -17,6 +17,7 @@ import {
     Reference as ApiReference,
 } from '../../generated';
 import * as AasRepository from '../../generated';
+import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -31,6 +32,7 @@ import { createCustomClient } from '../../lib/createAasRepoClient';
 jest.mock('../../lib/createAasRepoClient');
 jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
+jest.mock('../../lib/base64Url');
 
 // Define mock constants
 const BASE_URL = 'https://api.example.com';
@@ -115,6 +117,7 @@ describe('AasRepositoryClient', () => {
         convertCoreAssetInformationToApiAssetInformation as jest.Mock;
     const mockConvertApiReferenceToCoreReference = convertApiReferenceToCoreReference as jest.Mock;
     const mockConvertCoreReferenceToApiReference = convertCoreReferenceToApiReference as jest.Mock;
+    const mockBase64Encode = base64Encode as jest.Mock;
 
     // Mock console.error to prevent actual logging during tests
     beforeAll(() => {
@@ -126,6 +129,7 @@ describe('AasRepositoryClient', () => {
     });
 
     beforeEach(() => {
+        (mockBase64Encode as jest.Mock).mockImplementation((id: string) => id);
         jest.clearAllMocks(); // Clears call history without resetting implementations
         mockCreateCustomClient.mockReturnValue(client);
     });

@@ -5,6 +5,7 @@ import type {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import * as AasRepository from '../generated';
 import { AssetinformationThumbnailBody } from '../generated/types.gen';
+import { base64Encode } from '../lib/base64Url';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -109,7 +110,7 @@ export class AasRepositoryClient {
      * @async
      * @function deleteAssetAdministrationShellById
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param headers Request headers
      * @returns {Promise<void>} Asset Administration Shell deleted successfully
      */
@@ -117,9 +118,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { error } = await AasRepository.deleteAssetAdministrationShellById({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
             });
 
             if (error) {
@@ -140,7 +143,7 @@ export class AasRepositoryClient {
      * @async
      * @function getAssetAdministrationShellById
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param headers Request headers
      * @returns {Promise<AssetAdministrationShell>} Requested Asset Administration Shell
      */
@@ -152,9 +155,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { data, error } = await AasRepository.getAssetAdministrationShellById({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
             });
 
             if (error) {
@@ -175,7 +180,7 @@ export class AasRepositoryClient {
      * @async
      * @function putAssetAdministrationShellById
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param assetAdministrationShell Asset Administration Shell object
      * @param headers Request headers
      * @returns {Promise<void>} Asset Administration Shell updated successfully
@@ -189,9 +194,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { error } = await AasRepository.putAssetAdministrationShellById({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
                 body: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
@@ -213,7 +220,7 @@ export class AasRepositoryClient {
      * @async
      * @function getAssetInformation
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param headers Request headers
      * @returns {Promise<AssetInformation>} Requested Asset Information
      */
@@ -221,9 +228,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { data, error } = await AasRepository.getAssetInformationAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
             });
 
             if (error) {
@@ -244,7 +253,7 @@ export class AasRepositoryClient {
      * @async
      * @function putAssetInformation
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param assetInformation Asset Information object
      * @param headers Request headers
      * @returns {Promise<void>} Asset Information updated successfully
@@ -258,9 +267,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { error } = await AasRepository.putAssetInformationAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
                 body: convertCoreAssetInformationToApiAssetInformation(assetInformation),
             });
 
@@ -282,7 +293,7 @@ export class AasRepositoryClient {
      * @async
      * @function deleteThumbnail
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param headers Request headers
      * @returns {Promise<void>} Thumbnail deletion successful
      */
@@ -290,9 +301,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { error } = await AasRepository.deleteThumbnailAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
             });
 
             if (error) {
@@ -313,7 +326,7 @@ export class AasRepositoryClient {
      * @async
      * @function getThumbnail
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param headers Request headers
      * @returns {Promise<Blob | File>} The thumbnail of the Asset Information.
      */
@@ -321,9 +334,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { data, error } = await AasRepository.getThumbnailAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
             });
 
             if (error) {
@@ -344,7 +359,7 @@ export class AasRepositoryClient {
      * @async
      * @function putThumbnail
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param thumbnail Thumbnail to upload
      * @param headers Request headers
      * @returns {Promise<void>} Thumbnail updated successfully
@@ -358,9 +373,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { error } = await AasRepository.putThumbnailAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
                 body: thumbnail,
             });
 
@@ -382,7 +399,7 @@ export class AasRepositoryClient {
      * @async
      * @function getAllSubmodelReferences
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param headers Request headers
      * @param limit The maximum number of elements in the response array
      * @param cursor A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
@@ -398,9 +415,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { data, error } = await AasRepository.getAllSubmodelReferencesAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
                 query: {
                     limit,
                     cursor,
@@ -430,7 +449,7 @@ export class AasRepositoryClient {
      * @async
      * @function postSubmodelReference
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
      * @param submodelReference Reference to the Submodel
      * @param headers Request headers
      * @returns {promise<Reference>} Submodel reference created successfully
@@ -444,9 +463,11 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
             const { data, error } = await AasRepository.postSubmodelReferenceAasRepository({
                 client,
-                path: { aasIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier },
                 body: convertCoreReferenceToApiReference(submodelReference),
             });
 
@@ -468,8 +489,8 @@ export class AasRepositoryClient {
      * @async
      * @function deleteSubmodelReferenceById
      * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
-     * @param submodelIdentifier The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     * @param aasIdentifier The Asset Administration Shell’s unique id
+     * @param submodelIdentifier The Submodel’s unique id
      * @param headers Request headers
      * @returns {Promise<void>} Submodel reference deleted successfully
      */
@@ -482,9 +503,12 @@ export class AasRepositoryClient {
         try {
             const client = createCustomClient(baseURL, headers);
 
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
             const { error } = await AasRepository.deleteSubmodelReferenceByIdAasRepository({
                 client,
-                path: { aasIdentifier, submodelIdentifier },
+                path: { aasIdentifier: encodedAasIdentifier, submodelIdentifier: encodedSubmodelIdentifier },
             });
 
             if (error) {
