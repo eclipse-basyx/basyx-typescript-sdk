@@ -30,7 +30,7 @@
     "docs": "typedoc --options typedoc.json"
   },
   "dependencies": {
-    "@hey-api/client-fetch": "^0.7.0"
+    "@hey-api/client-fetch": "^0.8.3"
   },
   "peerDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
