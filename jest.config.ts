@@ -1,4 +1,7 @@
 module.exports = {
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    coverageReporters: ['json', 'lcov', 'text', 'clover'],
     projects: [
         {
             displayName: 'unit-tests',
@@ -11,9 +14,6 @@ module.exports = {
             transform: {
                 '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
             },
-            collectCoverage: true,
-            coverageDirectory: 'coverage',
-            coverageReporters: ['json', 'lcov', 'text', 'clover'],
             coveragePathIgnorePatterns: ['<rootDir>/src/generated/'],
             testPathIgnorePatterns: [
                 '<rootDir>/dist/',
@@ -36,11 +36,6 @@ module.exports = {
             transform: {
                 '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
             },
-            collectCoverage: false, // Disable coverage for integration tests
-            coverageDirectory: 'coverage',
-            coverageReporters: ['json', 'lcov', 'text', 'clover'],
-            coveragePathIgnorePatterns: ['<rootDir>/src/generated/'],
-            testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/', '<rootDir>/bundle/'],
         },
     ],
 };
