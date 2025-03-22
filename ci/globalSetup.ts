@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import path from 'path';
 
-async function waitForContainer(containerName: string, timeoutMs = 60000, intervalMs = 1000): Promise<void> {
+async function waitForContainer(containerName: string, timeoutMs = 300000, intervalMs = 1000): Promise<void> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
         try {
