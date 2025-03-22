@@ -26,8 +26,7 @@
     "bundle": "rollup -c",
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",
-    "test": "jest --coverage",
-    "start": "ts-node -r tsconfig-paths/register src/testFunctions.ts"
+    "test": "jest --coverage"
   },
   "dependencies": {
     "@hey-api/client-fetch": "^0.7.0"
