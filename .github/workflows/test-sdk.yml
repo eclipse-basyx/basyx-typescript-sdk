@@ -12,20 +12,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    - name: Install Yarn
-      run: npm install -g yarn
+      - name: Install Yarn
+        run: npm install -g yarn
 
-    - name: Install Dependencies
-      run: |
-        yarn install
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update && sudo apt-get install -y docker-compose
 
-    - name: Build
-      run: |
-        yarn test
+      - name: Restore Docker Image Cache
+        id: restore-cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/docker-image-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/ci/docker-compose.yml') }}
+
+      - name: Load Cached Docker Images
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "Loading cached Docker images..."
+          for tar in /tmp/docker-image-cache/*.tar; do
+            echo "Loading $tar"
+            docker load -i "$tar"
+          done
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Pull Docker Images
+        run: docker-compose -f ci/docker-compose.yml pull
+
+      - name: Save Docker Images to Cache
+        run: |
+          mkdir -p /tmp/docker-image-cache
+          echo "Saving Docker images to cache..."
+          # List images related to your project; adjust the grep pattern as needed.
+          docker images --format '{{.Repository}}:{{.Tag}}' | grep "eclipsebasyx" > /tmp/docker-image-cache/images.txt
+          while IFS= read -r img; do
+            tarname=$(echo $img | tr '/:' '_').tar
+            echo "Saving image $img to /tmp/docker-image-cache/$tarname"
+            docker save "$img" -o /tmp/docker-image-cache/"$tarname"
+          done < /tmp/docker-image-cache/images.txt
+
+      - name: Run Tests
+        run: yarn test

@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["node", "jest"]
   },
   "include": [
     "src/**/*.test.ts",
@@ -9,7 +10,7 @@
     "src/clients/**/*",
     "src/lib/**/*",
     "src/models/**/*",
-    "src/index.ts" 
+    "src/index.ts"
   ],
   "exclude": [
     "node_modules",
