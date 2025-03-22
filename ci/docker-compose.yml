@@ -1,0 +1,54 @@
+services:
+  # AAS Environment
+  aas-env:
+    image: eclipsebasyx/aas-environment:2.0.0-milestone-05
+    container_name: aas-env
+    ports:
+      - '8081:8081'
+    environment:
+      # Service Configuration
+      SERVER_PORT: 8081
+      BASYX_BACKEND: "InMemory"
+      BASYX_CORS_ALLOWED_ORIGINS: "*"
+      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+    depends_on:
+      aas-registry:
+        condition: service_healthy
+      sm-registry:
+        condition: service_healthy
+      aas-discovery:
+        condition: service_healthy
+  
+  # AAS Registry
+  aas-registry:
+    image: eclipsebasyx/aas-registry-log-mem:2.0.0-milestone-05
+    container_name: aas-registry
+    ports:
+      - '8082:8080'
+    environment:
+      SERVER_PORT: 8080
+      BASYX_CORS_ALLOWED_ORIGINS: "*"
+      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+
+  # Submodel Registry
+  sm-registry:
+    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-milestone-05
+    container_name: sm-registry
+    ports:
+      - '8083:8080'
+    environment:
+      SERVER_PORT: 8080
+      BASYX_CORS_ALLOWED_ORIGINS: "*"
+      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+
+  # AAS Discovery
+  aas-discovery:
+    image: eclipsebasyx/aas-discovery:2.0.0-milestone-05
+    container_name: aas-discovery
+    ports:
+      - '8084:8081'
+    environment:
+      SERVER_PORT: 8081
+      BASYX_BACKEND: "InMemory"
+      BASYX_CORS_ALLOWED_ORIGINS: "*"
+      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"

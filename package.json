@@ -27,6 +27,7 @@
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",
     "test": "jest --coverage",
+    "test:integration": "jest --config jest.integration.config.ts",
     "start": "ts-node -r tsconfig-paths/register src/testFunctions.ts"
   },
   "dependencies": {
