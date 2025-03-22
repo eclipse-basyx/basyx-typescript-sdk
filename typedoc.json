@@ -1,0 +1,7 @@
+{
+  "entryPoints": ["src/index.ts", "src/models", "src/lib"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "excludePrivate": true,
+  "includeVersion": true
+}

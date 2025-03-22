@@ -32,7 +32,6 @@ export class AasRepositoryClient {
     /**
      * Returns all Asset Administration Shells
      *
-     * @async
      * @function getAllAssetAdministrationShells
      * @param {GetAllAssetAdministrationShellsOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -79,7 +78,6 @@ export class AasRepositoryClient {
     /**
      * Creates a new Asset Administration Shell
      *
-     * @async
      * @function postAssetAdministrationShell
      * @param {PostAssetAdministrationShellOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -115,7 +113,6 @@ export class AasRepositoryClient {
     /**
      * Deletes an Asset Administration Shell
      *
-     * @async
      * @function deleteAssetAdministrationShellById
      * @param {AasIdentifierOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -149,7 +146,6 @@ export class AasRepositoryClient {
     /**
      * Returns a specific Asset Administration Shell
      *
-     * @async
      * @function getAssetAdministrationShellById
      * @param {AasIdentifierOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -187,7 +183,6 @@ export class AasRepositoryClient {
     /**
      * Updates an existing Asset Administration Shell
      *
-     * @async
      * @function putAssetAdministrationShellById
      * @param {PutAssetAdministrationShellOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -228,7 +223,6 @@ export class AasRepositoryClient {
     /**
      * Returns the Asset Information
      *
-     * @async
      * @function getAssetInformation
      * @param {AasIdentifierOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -262,7 +256,6 @@ export class AasRepositoryClient {
     /**
      * Updates the Asset Information
      *
-     * @async
      * @function putAssetInformation
      * @param {PutAssetInformationOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -303,7 +296,6 @@ export class AasRepositoryClient {
     /**
      * Deletes the Thumbnail
      *
-     * @async
      * @function deleteThumbnail
      * @param {AasIdentifierOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -337,7 +329,6 @@ export class AasRepositoryClient {
     /**
      * Returns the Thumbnail
      *
-     * @async
      * @function getThumbnail
      * @param {AasIdentifierOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -371,7 +362,6 @@ export class AasRepositoryClient {
     /**
      * Updates the Thumbnail
      *
-     * @async
      * @function putThumbnail
      * @param {PutThumbnailOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -407,7 +397,6 @@ export class AasRepositoryClient {
     /**
      * Returns all submodel references
      *
-     * @async
      * @function getAllSubmodelReferences
      * @param {GetAllSubmodelReferencesOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -458,7 +447,6 @@ export class AasRepositoryClient {
     /**
      * Creates a submodel reference at the Asset Administration Shell
      *
-     * @async
      * @function postSubmodelReference
      * @param {PostSubmodelReferenceOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
@@ -499,7 +487,6 @@ export class AasRepositoryClient {
     /**
      * Deletes the submodel reference from the Asset Administration Shell. Does not delete the submodel itself!
      *
-     * @async
      * @function deleteSubmodelReferenceById
      * @param {DeleteSubmodelReferenceByIdOptions} options - Options object.
      * @param {string} options.baseUrl - The API base URL
