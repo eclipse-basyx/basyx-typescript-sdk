@@ -4,7 +4,6 @@ import type {
     Reference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import * as AasRepository from '../generated';
-import { AssetinformationThumbnailBody } from '../generated/types.gen';
 import { base64Encode } from '../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -15,7 +14,19 @@ import {
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
 import { createCustomClient } from '../lib/createAasRepoClient';
-import { GetAllAssetAdministrationShellsResponse, getAllSubmodelReferencesResponse } from '../models/aas-repository';
+import {
+    AasIdentifierOptions,
+    DeleteSubmodelReferenceByIdOptions,
+    GetAllAssetAdministrationShellsOptions,
+    GetAllAssetAdministrationShellsResponse,
+    GetAllSubmodelReferencesOptions,
+    GetAllSubmodelReferencesResponse,
+    PostAssetAdministrationShellOptions,
+    PostSubmodelReferenceOptions,
+    PutAssetAdministrationShellOptions,
+    PutAssetInformationOptions,
+    PutThumbnailOptions,
+} from '../models/aas-repository';
 
 export class AasRepositoryClient {
     /**
@@ -23,33 +34,29 @@ export class AasRepositoryClient {
      *
      * @async
      * @function getAllAssetAdministrationShells
-     * @param baseURL The API base URL
-     * @param headers Request headers
-     * @param assetIds A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded
-     * @param idShort The Asset Administration Shell’s IdShort
-     * @param limit The maximum number of elements in the response array
-     * @param cursor A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     * @param {GetAllAssetAdministrationShellsOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {Headers} [options.headers] - Request headers
+     * @param {string[]} [options.assetIds] - A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded
+     * @param {string} [options.idShort] - The Asset Administration Shell's IdShort
+     * @param {number} [options.limit] - The maximum number of elements in the response array
+     * @param {string} [options.cursor] - A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      * @returns {Promise<GetAllAssetAdministrationShellsResponse>} Requested Asset Administration Shells
      */
-    async getAllAssetAdministrationShells(
-        baseURL: string,
-        headers?: Headers,
-        assetIds?: string[],
-        idShort?: string,
-        limit?: number,
-        cursor?: string
-    ): Promise<GetAllAssetAdministrationShellsResponse> {
+    async getAllAssetAdministrationShells({
+        baseUrl,
+        headers,
+        assetIds,
+        idShort,
+        limit,
+        cursor,
+    }: GetAllAssetAdministrationShellsOptions): Promise<GetAllAssetAdministrationShellsResponse> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const { data, error } = await AasRepository.getAllAssetAdministrationShells({
                 client,
-                query: {
-                    assetIds,
-                    idShort,
-                    limit,
-                    cursor,
-                },
+                query: { assetIds, idShort, limit, cursor },
             });
 
             if (error) {
@@ -74,18 +81,19 @@ export class AasRepositoryClient {
      *
      * @async
      * @function postAssetAdministrationShell
-     * @param baseURL The API base URL
-     * @param assetAdministrationShell Asset Administration Shell object
-     * @param headers Request headers
+     * @param {PostAssetAdministrationShellOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {AssetAdministrationShell} options.assetAdministrationShell - Asset Administration Shell object
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<AssetAdministrationShell>} Asset Administration Shell created successfully
      */
-    async postAssetAdministrationShell(
-        baseURL: string,
-        assetAdministrationShell: AssetAdministrationShell,
-        headers?: Headers
-    ): Promise<AssetAdministrationShell> {
+    async postAssetAdministrationShell({
+        baseUrl,
+        assetAdministrationShell,
+        headers,
+    }: PostAssetAdministrationShellOptions): Promise<AssetAdministrationShell> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const { data, error } = await AasRepository.postAssetAdministrationShell({
                 client,
@@ -109,14 +117,15 @@ export class AasRepositoryClient {
      *
      * @async
      * @function deleteAssetAdministrationShellById
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param headers Request headers
+     * @param {AasIdentifierOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<void>} Asset Administration Shell deleted successfully
      */
-    async deleteAssetAdministrationShellById(baseURL: string, aasIdentifier: string, headers?: Headers): Promise<void> {
+    async deleteAssetAdministrationShellById({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<void> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -142,18 +151,19 @@ export class AasRepositoryClient {
      *
      * @async
      * @function getAssetAdministrationShellById
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param headers Request headers
+     * @param {AasIdentifierOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<AssetAdministrationShell>} Requested Asset Administration Shell
      */
-    async getAssetAdministrationShellById(
-        baseURL: string,
-        aasIdentifier: string,
-        headers?: Headers
-    ): Promise<AssetAdministrationShell> {
+    async getAssetAdministrationShellById({
+        baseUrl,
+        aasIdentifier,
+        headers,
+    }: AasIdentifierOptions): Promise<AssetAdministrationShell> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -179,20 +189,21 @@ export class AasRepositoryClient {
      *
      * @async
      * @function putAssetAdministrationShellById
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param assetAdministrationShell Asset Administration Shell object
-     * @param headers Request headers
+     * @param {PutAssetAdministrationShellOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {AssetAdministrationShell} options.assetAdministrationShell - Asset Administration Shell object
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<void>} Asset Administration Shell updated successfully
      */
-    async putAssetAdministrationShellById(
-        baseURL: string,
-        aasIdentifier: string,
-        assetAdministrationShell: AssetAdministrationShell,
-        headers?: Headers
-    ): Promise<void> {
+    async putAssetAdministrationShellById({
+        baseUrl,
+        aasIdentifier,
+        assetAdministrationShell,
+        headers,
+    }: PutAssetAdministrationShellOptions): Promise<void> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -219,14 +230,15 @@ export class AasRepositoryClient {
      *
      * @async
      * @function getAssetInformation
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param headers Request headers
+     * @param {AasIdentifierOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<AssetInformation>} Requested Asset Information
      */
-    async getAssetInformation(baseURL: string, aasIdentifier: string, headers?: Headers): Promise<AssetInformation> {
+    async getAssetInformation({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<AssetInformation> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -252,20 +264,21 @@ export class AasRepositoryClient {
      *
      * @async
      * @function putAssetInformation
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param assetInformation Asset Information object
-     * @param headers Request headers
+     * @param {PutAssetInformationOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {AssetInformation} options.assetInformation - Asset Information object
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<void>} Asset Information updated successfully
      */
-    async putAssetInformation(
-        baseURL: string,
-        aasIdentifier: string,
-        assetInformation: AssetInformation,
-        headers?: Headers
-    ): Promise<void> {
+    async putAssetInformation({
+        baseUrl,
+        aasIdentifier,
+        assetInformation,
+        headers,
+    }: PutAssetInformationOptions): Promise<void> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -292,14 +305,15 @@ export class AasRepositoryClient {
      *
      * @async
      * @function deleteThumbnail
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param headers Request headers
+     * @param {AasIdentifierOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<void>} Thumbnail deletion successful
      */
-    async deleteThumbnail(baseURL: string, aasIdentifier: string, headers?: Headers): Promise<void> {
+    async deleteThumbnail({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<void> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -325,14 +339,15 @@ export class AasRepositoryClient {
      *
      * @async
      * @function getThumbnail
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param headers Request headers
+     * @param {AasIdentifierOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<Blob | File>} The thumbnail of the Asset Information.
      */
-    async getThumbnail(baseURL: string, aasIdentifier: string, headers?: Headers): Promise<Blob | File> {
+    async getThumbnail({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<Blob | File> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -358,20 +373,16 @@ export class AasRepositoryClient {
      *
      * @async
      * @function putThumbnail
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param thumbnail Thumbnail to upload
-     * @param headers Request headers
+     * @param {PutThumbnailOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {AssetinformationThumbnailBody} options.thumbnail - Thumbnail to upload
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<void>} Thumbnail updated successfully
      */
-    async putThumbnail(
-        baseURL: string,
-        aasIdentifier: string,
-        thumbnail: AssetinformationThumbnailBody,
-        headers?: Headers
-    ): Promise<void> {
+    async putThumbnail({ baseUrl, aasIdentifier, thumbnail, headers }: PutThumbnailOptions): Promise<void> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -398,22 +409,23 @@ export class AasRepositoryClient {
      *
      * @async
      * @function getAllSubmodelReferences
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param headers Request headers
-     * @param limit The maximum number of elements in the response array
-     * @param cursor A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-     * @returns {Promise<getAllSubmodelReferencesResponse>} Requested submodel references
+     * @param {GetAllSubmodelReferencesOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Headers} [options.headers] - Request headers
+     * @param {number} [options.limit] - The maximum number of elements in the response array
+     * @param {string} [options.cursor] - A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     * @returns {Promise<GetAllSubmodelReferencesResponse>} Requested submodel references
      */
-    async getAllSubmodelReferences(
-        baseURL: string,
-        aasIdentifier: string,
-        headers?: Headers,
-        limit?: number,
-        cursor?: string
-    ): Promise<getAllSubmodelReferencesResponse> {
+    async getAllSubmodelReferences({
+        baseUrl,
+        aasIdentifier,
+        headers,
+        limit,
+        cursor,
+    }: GetAllSubmodelReferencesOptions): Promise<GetAllSubmodelReferencesResponse> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -448,20 +460,21 @@ export class AasRepositoryClient {
      *
      * @async
      * @function postSubmodelReference
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param submodelReference Reference to the Submodel
-     * @param headers Request headers
-     * @returns {promise<Reference>} Submodel reference created successfully
+     * @param {PostSubmodelReferenceOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {Reference} options.submodelReference - Reference to the Submodel
+     * @param {Headers} [options.headers] - Request headers
+     * @returns {Promise<Reference>} Submodel reference created successfully
      */
-    async postSubmodelReference(
-        baseURL: string,
-        aasIdentifier: string,
-        submodelReference: Reference,
-        headers?: Headers
-    ): Promise<Reference> {
+    async postSubmodelReference({
+        baseUrl,
+        aasIdentifier,
+        submodelReference,
+        headers,
+    }: PostSubmodelReferenceOptions): Promise<Reference> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -488,20 +501,21 @@ export class AasRepositoryClient {
      *
      * @async
      * @function deleteSubmodelReferenceById
-     * @param baseURL The API base URL
-     * @param aasIdentifier The Asset Administration Shell’s unique id
-     * @param submodelIdentifier The Submodel’s unique id
-     * @param headers Request headers
+     * @param {DeleteSubmodelReferenceByIdOptions} options - Options object.
+     * @param {string} options.baseUrl - The API base URL
+     * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
+     * @param {string} options.submodelIdentifier - The Submodel's unique id
+     * @param {Headers} [options.headers] - Request headers
      * @returns {Promise<void>} Submodel reference deleted successfully
      */
-    async deleteSubmodelReferenceById(
-        baseURL: string,
-        aasIdentifier: string,
-        submodelIdentifier: string,
-        headers?: Headers
-    ): Promise<void> {
+    async deleteSubmodelReferenceById({
+        baseUrl,
+        aasIdentifier,
+        submodelIdentifier,
+        headers,
+    }: DeleteSubmodelReferenceByIdOptions): Promise<void> {
         try {
-            const client = createCustomClient(baseURL, headers);
+            const client = createCustomClient(baseUrl, headers);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);

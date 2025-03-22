@@ -154,14 +154,14 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAllAssetAdministrationShells(
-            BASE_URL,
-            HEADERS,
-            ASSET_IDS,
-            ID_SHORT,
-            LIMIT,
-            CURSOR
-        );
+        const result = await clientInstance.getAllAssetAdministrationShells({
+            baseUrl: BASE_URL,
+            headers: HEADERS,
+            assetIds: ASSET_IDS,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -189,9 +189,9 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAllAssetAdministrationShells(BASE_URL, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -204,9 +204,9 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAllAssetAdministrationShells(BASE_URL, HEADERS)).rejects.toThrow(
-            'Network error'
-        );
+        await expect(
+            clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shells:', mockException);
     });
@@ -224,7 +224,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAllAssetAdministrationShells(BASE_URL, HEADERS);
+        const result = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
 
         // Assert
         expect(result).toEqual({
@@ -247,7 +247,11 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.postAssetAdministrationShell(BASE_URL, CORE_AAS1, HEADERS);
+        const result = await clientInstance.postAssetAdministrationShell({
+            baseUrl: BASE_URL,
+            assetAdministrationShell: CORE_AAS1,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -268,9 +272,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.postAssetAdministrationShell(BASE_URL, CORE_AAS1, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.postAssetAdministrationShell({
+                baseUrl: BASE_URL,
+                assetAdministrationShell: CORE_AAS1,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -283,9 +291,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.postAssetAdministrationShell(BASE_URL, CORE_AAS1, HEADERS)).rejects.toThrow(
-            'Network error'
-        );
+        await expect(
+            clientInstance.postAssetAdministrationShell({
+                baseUrl: BASE_URL,
+                assetAdministrationShell: CORE_AAS1,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error creating Asset Administration Shell:', mockException);
     });
@@ -297,7 +309,11 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.deleteAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS);
+        await clientInstance.deleteAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -316,7 +332,11 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.deleteAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)
+            clientInstance.deleteAssetAdministrationShellById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
         ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
@@ -331,7 +351,11 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.deleteAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)
+            clientInstance.deleteAssetAdministrationShellById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error deleting Asset Administration Shell:', mockException);
@@ -351,7 +375,11 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS);
+        const result = await clientInstance.getAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -371,9 +399,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.getAssetAdministrationShellById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -386,9 +418,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            'Network error'
-        );
+        await expect(
+            clientInstance.getAssetAdministrationShellById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shell:', mockException);
     });
@@ -407,7 +443,12 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.putAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, CORE_AAS1, HEADERS);
+        await clientInstance.putAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            assetAdministrationShell: CORE_AAS1,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -428,7 +469,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.putAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, CORE_AAS1, HEADERS)
+            clientInstance.putAssetAdministrationShellById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                assetAdministrationShell: CORE_AAS1,
+                headers: HEADERS,
+            })
         ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
@@ -443,7 +489,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.putAssetAdministrationShellById(BASE_URL, CORE_AAS1.id, CORE_AAS1, HEADERS)
+            clientInstance.putAssetAdministrationShellById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                assetAdministrationShell: CORE_AAS1,
+                headers: HEADERS,
+            })
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error updating Asset Administration Shell:', mockException);
@@ -459,7 +510,11 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAssetInformation(BASE_URL, CORE_AAS1.id, HEADERS);
+        const result = await clientInstance.getAssetInformation({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -479,9 +534,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAssetInformation(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.getAssetInformation({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -494,9 +553,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAssetInformation(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            'Network error'
-        );
+        await expect(
+            clientInstance.getAssetInformation({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error fetching Asset Information:', mockException);
     });
@@ -511,7 +574,12 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.putAssetInformation(BASE_URL, CORE_AAS1.id, CORE_ASSET_INFO, HEADERS);
+        await clientInstance.putAssetInformation({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            assetInformation: CORE_ASSET_INFO,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -532,7 +600,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.putAssetInformation(BASE_URL, CORE_AAS1.id, CORE_ASSET_INFO, HEADERS)
+            clientInstance.putAssetInformation({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                assetInformation: CORE_ASSET_INFO,
+                headers: HEADERS,
+            })
         ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
@@ -547,7 +620,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.putAssetInformation(BASE_URL, CORE_AAS1.id, CORE_ASSET_INFO, HEADERS)
+            clientInstance.putAssetInformation({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                assetInformation: CORE_ASSET_INFO,
+                headers: HEADERS,
+            })
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error updating Asset Information:', mockException);
@@ -560,7 +638,11 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.deleteThumbnail(BASE_URL, CORE_AAS1.id, HEADERS);
+        await clientInstance.deleteThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -578,9 +660,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.deleteThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.deleteThumbnail({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -593,7 +679,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.deleteThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow('Network error');
+        await expect(
+            clientInstance.deleteThumbnail({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error deleting Thumbnail:', mockException);
     });
@@ -605,7 +697,11 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getThumbnail(BASE_URL, CORE_AAS1.id, HEADERS);
+        const result = await clientInstance.getThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -624,9 +720,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.getThumbnail({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -639,7 +739,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getThumbnail(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow('Network error');
+        await expect(
+            clientInstance.getThumbnail({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error fetching Thumbnail:', mockException);
     });
@@ -651,7 +757,12 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.putThumbnail(BASE_URL, CORE_AAS1.id, MOCK_THUMBNAIL_BODY, HEADERS);
+        await clientInstance.putThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            thumbnail: MOCK_THUMBNAIL_BODY,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -670,9 +781,14 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.putThumbnail(BASE_URL, CORE_AAS1.id, MOCK_THUMBNAIL_BODY, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.putThumbnail({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                thumbnail: MOCK_THUMBNAIL_BODY,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -685,9 +801,14 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.putThumbnail(BASE_URL, CORE_AAS1.id, MOCK_THUMBNAIL_BODY, HEADERS)).rejects.toThrow(
-            'Network error'
-        );
+        await expect(
+            clientInstance.putThumbnail({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                thumbnail: MOCK_THUMBNAIL_BODY,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error updating Thumbnail:', mockException);
     });
@@ -712,7 +833,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAllSubmodelReferences(BASE_URL, CORE_AAS1.id, HEADERS, LIMIT, CURSOR);
+        const result = await clientInstance.getAllSubmodelReferences({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -739,9 +866,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAllSubmodelReferences(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            JSON.stringify(mockError.messages)
-        );
+        await expect(
+            clientInstance.getAllSubmodelReferences({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
@@ -754,9 +885,13 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act & Assert
-        await expect(clientInstance.getAllSubmodelReferences(BASE_URL, CORE_AAS1.id, HEADERS)).rejects.toThrow(
-            'Network error'
-        );
+        await expect(
+            clientInstance.getAllSubmodelReferences({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                headers: HEADERS,
+            })
+        ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error fetching Submodel References:', mockException);
     });
@@ -771,7 +906,12 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.postSubmodelReference(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1, HEADERS);
+        const result = await clientInstance.postSubmodelReference({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            submodelReference: CORE_REFERENCE1,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -794,7 +934,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.postSubmodelReference(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1, HEADERS)
+            clientInstance.postSubmodelReference({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                submodelReference: CORE_REFERENCE1,
+                headers: HEADERS,
+            })
         ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
@@ -809,7 +954,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.postSubmodelReference(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1, HEADERS)
+            clientInstance.postSubmodelReference({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                submodelReference: CORE_REFERENCE1,
+                headers: HEADERS,
+            })
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error creating Submodel Reference:', mockException);
@@ -822,12 +972,12 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.deleteSubmodelReferenceById(
-            BASE_URL,
-            CORE_AAS1.id,
-            CORE_REFERENCE1.keys[0].value,
-            HEADERS
-        );
+        await clientInstance.deleteSubmodelReferenceById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            submodelIdentifier: CORE_REFERENCE1.keys[0].value,
+            headers: HEADERS,
+        });
 
         // Assert
         expect(createCustomClient).toHaveBeenCalledWith(BASE_URL, HEADERS);
@@ -846,7 +996,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.deleteSubmodelReferenceById(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1.keys[0].value, HEADERS)
+            clientInstance.deleteSubmodelReferenceById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                submodelIdentifier: CORE_REFERENCE1.keys[0].value,
+                headers: HEADERS,
+            })
         ).rejects.toThrow(JSON.stringify(mockError.messages));
 
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
@@ -861,7 +1016,12 @@ describe('AasRepositoryClient', () => {
 
         // Act & Assert
         await expect(
-            clientInstance.deleteSubmodelReferenceById(BASE_URL, CORE_AAS1.id, CORE_REFERENCE1.keys[0].value, HEADERS)
+            clientInstance.deleteSubmodelReferenceById({
+                baseUrl: BASE_URL,
+                aasIdentifier: CORE_AAS1.id,
+                submodelIdentifier: CORE_REFERENCE1.keys[0].value,
+                headers: HEADERS,
+            })
         ).rejects.toThrow('Network error');
 
         expect(console.error).toHaveBeenCalledWith('Error deleting Submodel Reference:', mockException);

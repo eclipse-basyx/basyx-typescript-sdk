@@ -10,7 +10,10 @@ describe('AAS Repository Integration Tests', () => {
 
     test('should create a new Asset Administration Shell', async () => {
         try {
-            const createdShell = await client.postAssetAdministrationShell(baseURL, testShell);
+            const createdShell = await client.postAssetAdministrationShell({
+                baseUrl: baseURL,
+                assetAdministrationShell: testShell,
+            });
             console.log('Created Shell:', JSON.stringify(createdShell, null, 2));
 
             expect(createdShell).toBeDefined();
@@ -23,7 +26,10 @@ describe('AAS Repository Integration Tests', () => {
 
     test('should fetch an Asset Administration Shell by ID', async () => {
         try {
-            const shell = await client.getAssetAdministrationShellById(baseURL, testShell.id);
+            const shell = await client.getAssetAdministrationShellById({
+                baseUrl: baseURL,
+                aasIdentifier: testShell.id,
+            });
             console.log('Fetched Shell:', JSON.stringify(shell, null, 2));
 
             expect(shell).toBeDefined();
