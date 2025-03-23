@@ -154,7 +154,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAllAssetAdministrationShells({
+        const response = await clientInstance.getAllAssetAdministrationShells({
             baseUrl: BASE_URL,
             headers: HEADERS,
             assetIds: ASSET_IDS,
@@ -175,39 +175,47 @@ describe('AasRepositoryClient', () => {
             },
         });
         expect(convertApiAasToCoreAas).toHaveBeenCalledTimes(apiResponse.result!.length);
-        expect(result).toEqual({
+        expect(response.result).toEqual({
             pagedResult: apiResponse.paging_metadata,
             result: [CORE_AAS1, CORE_AAS2],
         });
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockGetAllAssetAdministrationShells.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockGetAllAssetAdministrationShells.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shells:', mockException);
     });
 
@@ -224,13 +232,14 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
+        const response = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
 
         // Assert
-        expect(result).toEqual({
+        expect(response.result).toEqual({
             pagedResult: apiResponse.paging_metadata,
             result: [],
         });
+        expect(response.error).toBeUndefined();
     });
 
     it('should create an Asset Administration Shell successfully', async () => {
@@ -247,7 +256,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.postAssetAdministrationShell({
+        const response = await clientInstance.postAssetAdministrationShell({
             baseUrl: BASE_URL,
             assetAdministrationShell: CORE_AAS1,
             headers: HEADERS,
@@ -261,44 +270,52 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
         expect(convertApiAasToCoreAas).toHaveBeenCalledWith(API_AAS1);
-        expect(result).toEqual(convertApiAasToCoreAas(API_AAS1));
+        expect(response.result).toEqual(convertApiAasToCoreAas(API_AAS1));
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockPostAssetAdministrationShell.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.postAssetAdministrationShell({
-                baseUrl: BASE_URL,
-                assetAdministrationShell: CORE_AAS1,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.postAssetAdministrationShell({
+            baseUrl: BASE_URL,
+            assetAdministrationShell: CORE_AAS1,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockPostAssetAdministrationShell.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.postAssetAdministrationShell({
-                baseUrl: BASE_URL,
-                assetAdministrationShell: CORE_AAS1,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.postAssetAdministrationShell({
+            baseUrl: BASE_URL,
+            assetAdministrationShell: CORE_AAS1,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error creating Asset Administration Shell:', mockException);
     });
 
@@ -309,7 +326,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.deleteAssetAdministrationShellById({
+        const response = await clientInstance.deleteAssetAdministrationShellById({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             headers: HEADERS,
@@ -321,43 +338,52 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id },
         });
+        expect(response.error).toBeUndefined();
+        expect(response.result).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockDeleteAssetAdministrationShellById.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.deleteAssetAdministrationShellById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.deleteAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockDeleteAssetAdministrationShellById.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.deleteAssetAdministrationShellById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.deleteAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error deleting Asset Administration Shell:', mockException);
     });
 
@@ -375,7 +401,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAssetAdministrationShellById({
+        const response = await clientInstance.getAssetAdministrationShellById({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             headers: HEADERS,
@@ -388,44 +414,52 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
         });
         expect(convertApiAasToCoreAas).toHaveBeenCalledWith(API_AAS1);
-        expect(result).toEqual(CORE_AAS1);
+        expect(response.result).toEqual(CORE_AAS1);
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockGetAssetAdministrationShellById.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAssetAdministrationShellById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.getAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockGetAssetAdministrationShellById.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAssetAdministrationShellById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.getAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shell:', mockException);
     });
 
@@ -443,7 +477,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.putAssetAdministrationShellById({
+        const response = await clientInstance.putAssetAdministrationShellById({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             assetAdministrationShell: CORE_AAS1,
@@ -458,45 +492,54 @@ describe('AasRepositoryClient', () => {
             body: API_AAS1,
         });
         expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
+        expect(response.error).toBeUndefined();
+        expect(response.result).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockPutAssetAdministrationShellById.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.putAssetAdministrationShellById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                assetAdministrationShell: CORE_AAS1,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.putAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            assetAdministrationShell: CORE_AAS1,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockPutAssetAdministrationShellById.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.putAssetAdministrationShellById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                assetAdministrationShell: CORE_AAS1,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.putAssetAdministrationShellById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            assetAdministrationShell: CORE_AAS1,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error updating Asset Administration Shell:', mockException);
     });
 
@@ -510,7 +553,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAssetInformation({
+        const response = await clientInstance.getAssetInformation({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             headers: HEADERS,
@@ -523,44 +566,52 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
         });
         expect(convertApiAssetInformationToCoreAssetInformation).toHaveBeenCalledWith(API_ASSET_INFO);
-        expect(result).toEqual(CORE_ASSET_INFO);
+        expect(response.result).toEqual(CORE_ASSET_INFO);
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockGetAssetInformation.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAssetInformation({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.getAssetInformation({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockGetAssetInformation.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAssetInformation({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.getAssetInformation({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error fetching Asset Information:', mockException);
     });
 
@@ -574,7 +625,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.putAssetInformation({
+        const response = await clientInstance.putAssetInformation({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             assetInformation: CORE_ASSET_INFO,
@@ -589,45 +640,54 @@ describe('AasRepositoryClient', () => {
             body: API_ASSET_INFO,
         });
         expect(convertCoreAssetInformationToApiAssetInformation).toHaveBeenCalledWith(CORE_ASSET_INFO);
+        expect(response.error).toBeUndefined();
+        expect(response.result).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockPutAssetInformation.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.putAssetInformation({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                assetInformation: CORE_ASSET_INFO,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.putAssetInformation({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            assetInformation: CORE_ASSET_INFO,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockPutAssetInformation.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.putAssetInformation({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                assetInformation: CORE_ASSET_INFO,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.putAssetInformation({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            assetInformation: CORE_ASSET_INFO,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error updating Asset Information:', mockException);
     });
 
@@ -638,7 +698,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.deleteThumbnail({
+        const response = await clientInstance.deleteThumbnail({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             headers: HEADERS,
@@ -650,43 +710,52 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id },
         });
+        expect(response.error).toBeUndefined();
+        expect(response.result).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockDeleteThumbnail.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.deleteThumbnail({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.deleteThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockDeleteThumbnail.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.deleteThumbnail({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.deleteThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error deleting Thumbnail:', mockException);
     });
 
@@ -697,7 +766,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getThumbnail({
+        const response = await clientInstance.getThumbnail({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             headers: HEADERS,
@@ -709,44 +778,52 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id },
         });
-        expect(result).toBe(MOCK_BLOB);
+        expect(response.result).toBe(MOCK_BLOB);
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockGetThumbnail.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getThumbnail({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.getThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockGetThumbnail.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getThumbnail({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.getThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error fetching Thumbnail:', mockException);
     });
 
@@ -757,7 +834,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.putThumbnail({
+        const response = await clientInstance.putThumbnail({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             thumbnail: MOCK_THUMBNAIL_BODY,
@@ -771,45 +848,54 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
             body: MOCK_THUMBNAIL_BODY,
         });
+        expect(response.error).toBeUndefined();
+        expect(response.result).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockPutThumbnail.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.putThumbnail({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                thumbnail: MOCK_THUMBNAIL_BODY,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.putThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            thumbnail: MOCK_THUMBNAIL_BODY,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockPutThumbnail.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.putThumbnail({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                thumbnail: MOCK_THUMBNAIL_BODY,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.putThumbnail({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            thumbnail: MOCK_THUMBNAIL_BODY,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error updating Thumbnail:', mockException);
     });
 
@@ -833,7 +919,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.getAllSubmodelReferences({
+        const response = await clientInstance.getAllSubmodelReferences({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             headers: HEADERS,
@@ -852,47 +938,55 @@ describe('AasRepositoryClient', () => {
             },
         });
         expect(convertApiReferenceToCoreReference).toHaveBeenCalledTimes(apiResponse.result.length);
-        expect(result).toEqual({
+        expect(response.result).toEqual({
             pagedResult: apiResponse.paging_metadata,
             result: [CORE_REFERENCE1, CORE_REFERENCE2],
         });
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockGetAllSubmodelReferences.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAllSubmodelReferences({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.getAllSubmodelReferences({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockGetAllSubmodelReferences.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.getAllSubmodelReferences({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.getAllSubmodelReferences({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error fetching Submodel References:', mockException);
     });
 
@@ -906,7 +1000,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        const result = await clientInstance.postSubmodelReference({
+        const response = await clientInstance.postSubmodelReference({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             submodelReference: CORE_REFERENCE1,
@@ -922,46 +1016,54 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertCoreReferenceToApiReference).toHaveBeenCalledWith(CORE_REFERENCE1);
         expect(convertApiReferenceToCoreReference).toHaveBeenCalledWith(API_REFERENCE1);
-        expect(result).toEqual(CORE_REFERENCE1);
+        expect(response.result).toEqual(CORE_REFERENCE1);
+        expect(response.error).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockPostSubmodelReference.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.postSubmodelReference({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                submodelReference: CORE_REFERENCE1,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.postSubmodelReference({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            submodelReference: CORE_REFERENCE1,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockPostSubmodelReference.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.postSubmodelReference({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                submodelReference: CORE_REFERENCE1,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.postSubmodelReference({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            submodelReference: CORE_REFERENCE1,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error creating Submodel Reference:', mockException);
     });
 
@@ -972,7 +1074,7 @@ describe('AasRepositoryClient', () => {
         const clientInstance = new AasRepositoryClient();
 
         // Act
-        await clientInstance.deleteSubmodelReferenceById({
+        const response = await clientInstance.deleteSubmodelReferenceById({
             baseUrl: BASE_URL,
             aasIdentifier: CORE_AAS1.id,
             submodelIdentifier: CORE_REFERENCE1.keys[0].value,
@@ -985,45 +1087,54 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id, submodelIdentifier: CORE_REFERENCE1.keys[0].value },
         });
+        expect(response.error).toBeUndefined();
+        expect(response.result).toBeUndefined();
     });
 
-    it('should throw an error when server returns an error', async () => {
+    it('should return an error when server returns an error', async () => {
         // Arrange
         const mockError = { messages: ['Invalid request'] };
         mockDeleteSubmodelReferenceById.mockResolvedValue({ data: null, error: mockError });
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.deleteSubmodelReferenceById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                submodelIdentifier: CORE_REFERENCE1.keys[0].value,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow(JSON.stringify(mockError.messages));
+        // Act
+        const response = await clientInstance.deleteSubmodelReferenceById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            submodelIdentifier: CORE_REFERENCE1.keys[0].value,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBe(mockError);
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
     });
 
-    it('should throw an error when AasRepository throws an exception', async () => {
+    it('should return an error when AasRepository throws an exception', async () => {
         // Arrange
         const mockException = new Error('Network error');
         mockDeleteSubmodelReferenceById.mockRejectedValue(mockException);
 
         const clientInstance = new AasRepositoryClient();
 
-        // Act & Assert
-        await expect(
-            clientInstance.deleteSubmodelReferenceById({
-                baseUrl: BASE_URL,
-                aasIdentifier: CORE_AAS1.id,
-                submodelIdentifier: CORE_REFERENCE1.keys[0].value,
-                headers: HEADERS,
-            })
-        ).rejects.toThrow('Network error');
+        // Act
+        const response = await clientInstance.deleteSubmodelReferenceById({
+            baseUrl: BASE_URL,
+            aasIdentifier: CORE_AAS1.id,
+            submodelIdentifier: CORE_REFERENCE1.keys[0].value,
+            headers: HEADERS,
+        });
 
+        // Assert
+        expect(response.error).toBeDefined();
+        expect(response.error).toBeInstanceOf(Error);
+        if (response.error instanceof Error) {
+            expect(response.error.message).toBe('Network error');
+        }
+        expect(response.result).toBeUndefined();
         expect(console.error).toHaveBeenCalledWith('Error deleting Submodel Reference:', mockException);
     });
 });
