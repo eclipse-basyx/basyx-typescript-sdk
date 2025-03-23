@@ -3,6 +3,8 @@ import type {
     AssetInformation,
     Reference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ApiResult } from '../models/api';
+import type { AssetId } from '../models/AssetId';
 import * as AasRepository from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -15,13 +17,6 @@ import {
 } from '../lib/convertAasTypes';
 import { createCustomClient } from '../lib/createAasRepoClient';
 
-/**
- * A union for "no-throw" style responses:
- * Success => { success: true; data: T }
- * Failure => { success: false; error: E }
- */
-type ApiResult<T, E> = { success: true; data: T } | { success: false; error: E };
-
 export class AasRepositoryClient {
     /**
      * Returns all Asset Administration Shells.
@@ -29,7 +24,7 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - baseUrl: The API base URL
      *  - headers?: Optional Request headers
-     *  - assetIds?: A list of base64-url-encoded asset identifiers
+     *  - assetIds?: A list of asset identifiers
      *  - idShort?: The AAS's idShort
      *  - limit?: Max number of elements to return
      *  - cursor?: A paging cursor from previous responses
@@ -39,7 +34,7 @@ export class AasRepositoryClient {
     async getAllAssetAdministrationShells(options: {
         baseUrl: string;
         headers?: Headers;
-        assetIds?: string[];
+        assetIds?: AssetId[];
         idShort?: string;
         limit?: number;
         cursor?: string;
@@ -55,9 +50,11 @@ export class AasRepositoryClient {
         const { baseUrl, headers, assetIds, idShort, limit, cursor } = options;
         try {
             const client = createCustomClient(baseUrl, headers);
+            const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
+
             const { data, error } = await AasRepository.getAllAssetAdministrationShells({
                 client,
-                query: { assetIds, idShort, limit, cursor },
+                query: { assetIds: encodedAssetIds, idShort, limit, cursor },
             });
 
             if (error) {

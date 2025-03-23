@@ -37,7 +37,10 @@ jest.mock('../../lib/base64Url');
 // Define mock constants
 const BASE_URL = 'https://api.example.com';
 const HEADERS = new Headers({ Authorization: 'Bearer token' });
-const ASSET_IDS = ['asset1', 'asset2'];
+const ASSET_IDS = [
+    { name: 'globalAssetId', value: 'https://example.com/ids/asset/7600_5912_3951_6917' },
+    { name: 'globalAssetId', value: 'https://example.com/ids/asset/7600_5912_3951_6918' },
+];
 const ID_SHORT = 'shellIdShort';
 const LIMIT = 10;
 const CURSOR = 'cursor123';
@@ -168,7 +171,7 @@ describe('AasRepositoryClient', () => {
         expect(AasRepository.getAllAssetAdministrationShells).toHaveBeenCalledWith({
             client,
             query: {
-                assetIds: ASSET_IDS,
+                assetIds: ASSET_IDS.map((id) => JSON.stringify(id)),
                 idShort: ID_SHORT,
                 limit: LIMIT,
                 cursor: CURSOR,
