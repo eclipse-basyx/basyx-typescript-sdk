@@ -13,9 +13,11 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: testShell,
         });
 
-        expect(response.error).toBeUndefined();
-        expect(response.result).toBeDefined();
-        expect(response.result).toEqual(testShell);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data).toEqual(testShell);
+        }
     });
 
     test('should fetch an Asset Administration Shell by ID', async () => {
@@ -24,9 +26,11 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: testShell.id,
         });
 
-        expect(response.error).toBeUndefined();
-        expect(response.result).toBeDefined();
-        expect(response.result).toEqual(testShell);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data).toEqual(testShell);
+        }
     });
 
     test('should update an Asset Administration Shell', async () => {
@@ -41,17 +45,21 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: updatedShell,
         });
 
-        expect(updateResponse.error).toBeUndefined();
-        expect(updateResponse.result).toBeDefined();
+        expect(updateResponse.success).toBe(true);
+        if (updateResponse.success) {
+            expect(updateResponse.data).toBeDefined();
+        }
 
         const fetchResponse = await client.getAssetAdministrationShellById({
             baseUrl: baseURL,
             aasIdentifier: testShell.id,
         });
 
-        expect(fetchResponse.error).toBeUndefined();
-        expect(fetchResponse.result).toBeDefined();
-        expect(fetchResponse.result).toEqual(updatedShell);
+        expect(fetchResponse.success).toBe(true);
+        if (fetchResponse.success) {
+            expect(fetchResponse.data).toBeDefined();
+            expect(fetchResponse.data).toEqual(updatedShell);
+        }
     });
 
     test('should get the Asset Information of an Asset Administration Shell', async () => {
@@ -60,9 +68,11 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: testShell.id,
         });
 
-        expect(response.error).toBeUndefined();
-        expect(response.result).toBeDefined();
-        expect(response.result).toEqual(testShell.assetInformation);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data).toEqual(testShell.assetInformation);
+        }
     });
 
     test('should update the Asset Information of an Asset Administration Shell', async () => {
@@ -75,17 +85,21 @@ describe('AAS Repository Integration Tests', () => {
             assetInformation: updatedAssetInfo,
         });
 
-        expect(updateResponse.error).toBeUndefined();
-        expect(updateResponse.result).toBeDefined();
+        expect(updateResponse.success).toBe(true);
+        if (updateResponse.success) {
+            expect(updateResponse.data).toBeDefined();
+        }
 
         const fetchResponse = await client.getAssetInformation({
             baseUrl: baseURL,
             aasIdentifier: testShell.id,
         });
 
-        expect(fetchResponse.error).toBeUndefined();
-        expect(fetchResponse.result).toBeDefined();
-        expect(fetchResponse.result).toEqual(updatedAssetInfo);
+        expect(fetchResponse.success).toBe(true);
+        if (fetchResponse.success) {
+            expect(fetchResponse.data).toBeDefined();
+            expect(fetchResponse.data).toEqual(updatedAssetInfo);
+        }
     });
 
     test('should add a thumbnail to an Asset Administration Shell', async () => {
@@ -100,16 +114,20 @@ describe('AAS Repository Integration Tests', () => {
             thumbnail,
         });
 
-        expect(updateResponse.error).toBeUndefined();
-        expect(updateResponse.result).toBeDefined();
+        expect(updateResponse.success).toBe(true);
+        if (updateResponse.success) {
+            expect(updateResponse.data).toBeDefined();
+        }
 
         const fetchResponse = await client.getThumbnail({
             baseUrl: baseURL,
             aasIdentifier: testShell.id,
         });
 
-        expect(fetchResponse.error).toBeUndefined();
-        expect(fetchResponse.result).toBeDefined();
-        expect(fetchResponse.result).toEqual(thumbnail.file);
+        expect(fetchResponse.success).toBe(true);
+        if (fetchResponse.success) {
+            expect(fetchResponse.data).toBeDefined();
+            expect(fetchResponse.data).toEqual(thumbnail.file);
+        }
     });
 });
