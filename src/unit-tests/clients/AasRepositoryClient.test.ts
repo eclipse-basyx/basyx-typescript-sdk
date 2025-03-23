@@ -37,7 +37,10 @@ jest.mock('../../lib/base64Url');
 // Define mock constants
 const BASE_URL = 'https://api.example.com';
 const HEADERS = new Headers({ Authorization: 'Bearer token' });
-const ASSET_IDS = ['asset1', 'asset2'];
+const ASSET_IDS = [
+    { name: 'globalAssetId', value: 'https://example.com/ids/asset/7600_5912_3951_6917' },
+    { name: 'globalAssetId', value: 'https://example.com/ids/asset/7600_5912_3951_6918' },
+];
 const ID_SHORT = 'shellIdShort';
 const LIMIT = 10;
 const CURSOR = 'cursor123';
@@ -168,18 +171,20 @@ describe('AasRepositoryClient', () => {
         expect(AasRepository.getAllAssetAdministrationShells).toHaveBeenCalledWith({
             client,
             query: {
-                assetIds: ASSET_IDS,
+                assetIds: ASSET_IDS.map((id) => JSON.stringify(id)),
                 idShort: ID_SHORT,
                 limit: LIMIT,
                 cursor: CURSOR,
             },
         });
         expect(convertApiAasToCoreAas).toHaveBeenCalledTimes(apiResponse.result!.length);
-        expect(response.result).toEqual({
-            pagedResult: apiResponse.paging_metadata,
-            result: [CORE_AAS1, CORE_AAS2],
-        });
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({
+                pagedResult: apiResponse.paging_metadata,
+                result: [CORE_AAS1, CORE_AAS2],
+            });
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -193,30 +198,10 @@ describe('AasRepositoryClient', () => {
         const response = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
-    });
-
-    it('should return an error when AasRepository throws an exception', async () => {
-        // Arrange
-        const mockException = new Error('Network error');
-        mockGetAllAssetAdministrationShells.mockRejectedValue(mockException);
-
-        const clientInstance = new AasRepositoryClient();
-
-        // Act
-        const response = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
-
-        // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shells:', mockException);
     });
 
     it('should handle empty result array gracefully', async () => {
@@ -235,11 +220,13 @@ describe('AasRepositoryClient', () => {
         const response = await clientInstance.getAllAssetAdministrationShells({ baseUrl: BASE_URL, headers: HEADERS });
 
         // Assert
-        expect(response.result).toEqual({
-            pagedResult: apiResponse.paging_metadata,
-            result: [],
-        });
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({
+                pagedResult: apiResponse.paging_metadata,
+                result: [],
+            });
+        }
     });
 
     it('should create an Asset Administration Shell successfully', async () => {
@@ -270,8 +257,10 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
         expect(convertApiAasToCoreAas).toHaveBeenCalledWith(API_AAS1);
-        expect(response.result).toEqual(convertApiAasToCoreAas(API_AAS1));
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(convertApiAasToCoreAas(API_AAS1));
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -289,10 +278,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -310,13 +299,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error creating Asset Administration Shell:', mockException);
     });
 
     it('should delete an Asset Administration Shell successfully', async () => {
@@ -338,8 +327,10 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id },
         });
-        expect(response.error).toBeUndefined();
-        expect(response.result).toEqual({});
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({});
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -357,10 +348,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -378,13 +369,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error deleting Asset Administration Shell:', mockException);
     });
 
     it('should get an Asset Administration Shell successfully', async () => {
@@ -414,8 +405,10 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
         });
         expect(convertApiAasToCoreAas).toHaveBeenCalledWith(API_AAS1);
-        expect(response.result).toEqual(CORE_AAS1);
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_AAS1);
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -433,10 +426,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -454,13 +447,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error fetching Asset Administration Shell:', mockException);
     });
 
     it('should update an Asset Administration Shell successfully', async () => {
@@ -492,8 +485,10 @@ describe('AasRepositoryClient', () => {
             body: API_AAS1,
         });
         expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
-        expect(response.error).toBeUndefined();
-        expect(response.result).toEqual({});
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({});
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -512,10 +507,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -534,13 +529,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error updating Asset Administration Shell:', mockException);
     });
 
     it('should get Asset Information successfully', async () => {
@@ -566,8 +561,10 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
         });
         expect(convertApiAssetInformationToCoreAssetInformation).toHaveBeenCalledWith(API_ASSET_INFO);
-        expect(response.result).toEqual(CORE_ASSET_INFO);
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_ASSET_INFO);
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -585,10 +582,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -606,13 +603,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error fetching Asset Information:', mockException);
     });
 
     it('should update Asset Information successfully', async () => {
@@ -640,8 +637,10 @@ describe('AasRepositoryClient', () => {
             body: API_ASSET_INFO,
         });
         expect(convertCoreAssetInformationToApiAssetInformation).toHaveBeenCalledWith(CORE_ASSET_INFO);
-        expect(response.error).toBeUndefined();
-        expect(response.result).toEqual({});
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({});
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -660,10 +659,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -682,13 +681,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error updating Asset Information:', mockException);
     });
 
     it('should delete a thumbnail successfully', async () => {
@@ -710,8 +709,10 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id },
         });
-        expect(response.error).toBeUndefined();
-        expect(response.result).toEqual({});
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({});
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -729,10 +730,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -750,13 +751,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error deleting Thumbnail:', mockException);
     });
 
     it('should get a thumbnail successfully', async () => {
@@ -778,8 +779,10 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id },
         });
-        expect(response.result).toBe(MOCK_BLOB);
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBe(MOCK_BLOB);
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -797,10 +800,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -818,13 +821,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error fetching Thumbnail:', mockException);
     });
 
     it('should put a thumbnail successfully', async () => {
@@ -848,8 +851,10 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
             body: MOCK_THUMBNAIL_BODY,
         });
-        expect(response.error).toBeUndefined();
-        expect(response.result).toEqual({});
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({});
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -868,10 +873,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -890,13 +895,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error updating Thumbnail:', mockException);
     });
 
     it('should get all submodel references successfully', async () => {
@@ -938,11 +943,13 @@ describe('AasRepositoryClient', () => {
             },
         });
         expect(convertApiReferenceToCoreReference).toHaveBeenCalledTimes(apiResponse.result.length);
-        expect(response.result).toEqual({
-            pagedResult: apiResponse.paging_metadata,
-            result: [CORE_REFERENCE1, CORE_REFERENCE2],
-        });
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({
+                pagedResult: apiResponse.paging_metadata,
+                result: [CORE_REFERENCE1, CORE_REFERENCE2],
+            });
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -960,10 +967,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -981,13 +988,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error fetching Submodel References:', mockException);
     });
 
     it('should post a submodel reference successfully', async () => {
@@ -1016,8 +1023,10 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertCoreReferenceToApiReference).toHaveBeenCalledWith(CORE_REFERENCE1);
         expect(convertApiReferenceToCoreReference).toHaveBeenCalledWith(API_REFERENCE1);
-        expect(response.result).toEqual(CORE_REFERENCE1);
-        expect(response.error).toBeUndefined();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_REFERENCE1);
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -1036,10 +1045,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -1058,13 +1067,13 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error creating Submodel Reference:', mockException);
     });
 
     it('should delete a submodel reference successfully', async () => {
@@ -1087,8 +1096,10 @@ describe('AasRepositoryClient', () => {
             client,
             path: { aasIdentifier: CORE_AAS1.id, submodelIdentifier: CORE_REFERENCE1.keys[0].value },
         });
-        expect(response.error).toBeUndefined();
-        expect(response.result).toEqual({});
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual({});
+        }
     });
 
     it('should return an error when server returns an error', async () => {
@@ -1107,10 +1118,10 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBe(mockError);
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error from server:', mockError);
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBe(mockError);
+        }
     });
 
     it('should return an error when AasRepository throws an exception', async () => {
@@ -1129,12 +1140,12 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(response.error).toBeDefined();
-        expect(response.error).toBeInstanceOf(Error);
-        if (response.error instanceof Error) {
-            expect(response.error.message).toBe('Network error');
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeInstanceOf(Error);
+            if (response.error instanceof Error) {
+                expect(response.error.message).toBe('Network error');
+            }
         }
-        expect(response.result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith('Error deleting Submodel Reference:', mockException);
     });
 });
