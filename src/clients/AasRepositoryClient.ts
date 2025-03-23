@@ -34,19 +34,7 @@ export class AasRepositoryClient {
      *  - limit?: Max number of elements to return
      *  - cursor?: A paging cursor from previous responses
      *
-     * @returns A discriminated union:
-     *  {
-     *    success: true;
-     *    data: {
-     *      pagedResult: AasRepository.PagingMetadata | undefined;
-     *      result: AssetAdministrationShell[];
-     *    };
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.GetAllAssetAdministrationShellsError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetAdministrationShells(options: {
         baseUrl: string;
@@ -100,16 +88,7 @@ export class AasRepositoryClient {
      *  - assetAdministrationShell: The AAS to create
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AssetAdministrationShell;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.PostAssetAdministrationShellError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAssetAdministrationShell(options: {
         baseUrl: string;
@@ -141,16 +120,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The unique ID for the AAS
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AasRepository.DeleteAssetAdministrationShellByIdResponse;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.DeleteAssetAdministrationShellByIdError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellById(options: {
         baseUrl: string;
@@ -189,16 +159,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The unique ID
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AssetAdministrationShell;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.GetAssetAdministrationShellByIdError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetAdministrationShellById(options: {
         baseUrl: string;
@@ -233,16 +194,7 @@ export class AasRepositoryClient {
      *  - assetAdministrationShell: The updated AAS object
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AasRepository.PutAssetAdministrationShellByIdResponse;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.PutAssetAdministrationShellByIdError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetAdministrationShellById(options: {
         baseUrl: string;
@@ -283,16 +235,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The unique ID
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AssetInformation;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.GetAssetInformationAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetInformation(options: {
         baseUrl: string;
@@ -330,16 +273,7 @@ export class AasRepositoryClient {
      *  - assetInformation: The updated AssetInformation object
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AasRepository.PutAssetInformationAasRepositoryResponse;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.PutAssetInformationAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetInformation(options: {
         baseUrl: string;
@@ -380,16 +314,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The unique ID
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AasRepository.DeleteThumbnailAasRepositoryResponses;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.DeleteThumbnailAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteThumbnail(options: {
         baseUrl: string;
@@ -431,16 +356,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The unique ID
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: Blob | File;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.GetThumbnailAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getThumbnail(options: {
         baseUrl: string;
@@ -475,16 +391,7 @@ export class AasRepositoryClient {
      *  - thumbnail: The thumbnail data to upload
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AasRepository.PutThumbnailAasRepositoryResponse;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.PutThumbnailAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putThumbnail(options: {
         baseUrl: string;
@@ -524,19 +431,7 @@ export class AasRepositoryClient {
      *  - limit?: Max number of elements
      *  - cursor?: Paging cursor
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: {
-     *      pagedResult: AasRepository.PagingMetadata | undefined;
-     *      result: Reference[];
-     *    };
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.GetAllSubmodelReferencesAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelReferences(options: {
         baseUrl: string;
@@ -590,16 +485,7 @@ export class AasRepositoryClient {
      *  - submodelReference: The Reference to the submodel
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: Reference;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.PostSubmodelReferenceAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelReference(options: {
         baseUrl: string;
@@ -636,16 +522,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The submodel's unique ID
      *  - headers?: Optional request headers
      *
-     * @returns A union:
-     *  {
-     *    success: true;
-     *    data: AasRepository.DeleteSubmodelReferenceByIdAasRepositoryResponse;
-     *  }
-     *  OR
-     *  {
-     *    success: false;
-     *    error: AasRepository.DeleteSubmodelReferenceByIdAasRepositoryError | Error;
-     *  }
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelReferenceById(options: {
         baseUrl: string;

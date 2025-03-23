@@ -33,6 +33,19 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    test('should fetch all Asset Administration Shells', async () => {
+        const response = await client.getAllAssetAdministrationShells({
+            baseUrl: baseURL,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.result.length).toBeGreaterThan(0);
+            expect(response.data.result).toContainEqual(testShell);
+        }
+    });
+
     test('should update an Asset Administration Shell', async () => {
         const updatedShell = testShell;
         const description = createDescription();
