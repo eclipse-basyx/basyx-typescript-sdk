@@ -52,20 +52,20 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
-            const { data, error } = await AasRepository.getAllAssetAdministrationShells({
+            const result = await AasRepository.getAllAssetAdministrationShells({
                 client,
                 query: { assetIds: encodedAssetIds, idShort, limit, cursor },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
 
-            const shells = (data.result ?? []).map(convertApiAasToCoreAas);
+            const shells = (result.data.result ?? []).map(convertApiAasToCoreAas);
             return {
                 success: true,
                 data: {
-                    pagedResult: data.paging_metadata,
+                    pagedResult: result.data.paging_metadata,
                     result: shells,
                 },
             };
@@ -95,15 +95,15 @@ export class AasRepositoryClient {
         const { baseUrl, assetAdministrationShell, headers } = options;
         try {
             const client = createCustomClient(baseUrl, headers);
-            const { data, error } = await AasRepository.postAssetAdministrationShell({
+            const result = await AasRepository.postAssetAdministrationShell({
                 client,
                 body: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data: convertApiAasToCoreAas(data) };
+            return { success: true, data: convertApiAasToCoreAas(result.data) };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -134,15 +134,15 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.deleteAssetAdministrationShellById({
+            const result = await AasRepository.deleteAssetAdministrationShellById({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data };
+            return { success: true, data: result.data };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -168,15 +168,19 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.getAssetAdministrationShellById({
+            const result = await AasRepository.getAssetAdministrationShellById({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                // Return the complete error object with status code
+                return {
+                    success: false,
+                    error: result.error,
+                };
             }
-            return { success: true, data: convertApiAasToCoreAas(data) };
+            return { success: true, data: convertApiAasToCoreAas(result.data) };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -209,16 +213,16 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.putAssetAdministrationShellById({
+            const result = await AasRepository.putAssetAdministrationShellById({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
                 body: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data };
+            return { success: true, data: result.data };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -244,17 +248,17 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.getAssetInformationAasRepository({
+            const result = await AasRepository.getAssetInformationAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
             return {
                 success: true,
-                data: convertApiAssetInformationToCoreAssetInformation(data),
+                data: convertApiAssetInformationToCoreAssetInformation(result.data),
             };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
@@ -288,16 +292,16 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.putAssetInformationAasRepository({
+            const result = await AasRepository.putAssetInformationAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
                 body: convertCoreAssetInformationToApiAssetInformation(assetInformation),
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data };
+            return { success: true, data: result.data };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -328,17 +332,17 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.deleteThumbnailAasRepository({
+            const result = await AasRepository.deleteThumbnailAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
             return {
                 success: true,
-                data: data as AasRepository.DeleteThumbnailAasRepositoryResponses,
+                data: result.data as AasRepository.DeleteThumbnailAasRepositoryResponses,
             };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
@@ -365,15 +369,15 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.getThumbnailAasRepository({
+            const result = await AasRepository.getThumbnailAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data };
+            return { success: true, data: result.data };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -403,16 +407,16 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.putThumbnailAasRepository({
+            const result = await AasRepository.putThumbnailAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
                 body: thumbnail,
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data };
+            return { success: true, data: result.data };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -450,21 +454,21 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.getAllSubmodelReferencesAasRepository({
+            const result = await AasRepository.getAllSubmodelReferencesAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
                 query: { limit, cursor },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
 
-            const submodelReferences = (data.result ?? []).map(convertApiReferenceToCoreReference);
+            const submodelReferences = (result.data.result ?? []).map(convertApiReferenceToCoreReference);
             return {
                 success: true,
                 data: {
-                    pagedResult: data.paging_metadata,
+                    pagedResult: result.data.paging_metadata,
                     result: submodelReferences,
                 },
             };
@@ -495,16 +499,16 @@ export class AasRepositoryClient {
             const client = createCustomClient(baseUrl, headers);
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const { data, error } = await AasRepository.postSubmodelReferenceAasRepository({
+            const result = await AasRepository.postSubmodelReferenceAasRepository({
                 client,
                 path: { aasIdentifier: encodedAasIdentifier },
                 body: convertCoreReferenceToApiReference(submodelReference),
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data: convertApiReferenceToCoreReference(data) };
+            return { success: true, data: convertApiReferenceToCoreReference(result.data) };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
@@ -538,7 +542,7 @@ export class AasRepositoryClient {
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const { data, error } = await AasRepository.deleteSubmodelReferenceByIdAasRepository({
+            const result = await AasRepository.deleteSubmodelReferenceByIdAasRepository({
                 client,
                 path: {
                     aasIdentifier: encodedAasIdentifier,
@@ -546,10 +550,10 @@ export class AasRepositoryClient {
                 },
             });
 
-            if (error) {
-                return { success: false, error };
+            if (result.error) {
+                return { success: false, error: result.error };
             }
-            return { success: true, data };
+            return { success: true, data: result.data };
         } catch (err) {
             return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
         }
