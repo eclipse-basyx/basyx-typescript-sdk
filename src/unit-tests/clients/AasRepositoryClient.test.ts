@@ -321,7 +321,7 @@ describe('AasRepositoryClient', () => {
 
     it('should delete an Asset Administration Shell successfully', async () => {
         // Arrange
-        mockDeleteAssetAdministrationShellById.mockResolvedValue({ data: null, error: null });
+        mockDeleteAssetAdministrationShellById.mockResolvedValue({ data: {}, error: null });
 
         const clientInstance = new AasRepositoryClient();
 
@@ -339,7 +339,7 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
         });
         expect(response.error).toBeUndefined();
-        expect(response.result).toBeUndefined();
+        expect(response.result).toEqual({});
     });
 
     it('should return an error when server returns an error', async () => {
@@ -465,7 +465,7 @@ describe('AasRepositoryClient', () => {
 
     it('should update an Asset Administration Shell successfully', async () => {
         // Arrange
-        mockPutAssetAdministrationShellById.mockResolvedValue({ data: API_AAS1, error: null });
+        mockPutAssetAdministrationShellById.mockResolvedValue({ data: {}, error: null });
 
         // Mock convert function to return API AAS
         mockConvertCoreAasToApiAas.mockImplementation((aas: CoreAssetAdministrationShell) => {
@@ -493,7 +493,7 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
         expect(response.error).toBeUndefined();
-        expect(response.result).toBeUndefined();
+        expect(response.result).toEqual({});
     });
 
     it('should return an error when server returns an error', async () => {
@@ -617,7 +617,7 @@ describe('AasRepositoryClient', () => {
 
     it('should update Asset Information successfully', async () => {
         // Arrange
-        mockPutAssetInformation.mockResolvedValue({ data: API_ASSET_INFO, error: null });
+        mockPutAssetInformation.mockResolvedValue({ data: {}, error: null });
 
         // Mock convert function to return API asset information
         mockConvertCoreAssetInformationToApiAssetInformation.mockReturnValue(API_ASSET_INFO);
@@ -641,7 +641,7 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertCoreAssetInformationToApiAssetInformation).toHaveBeenCalledWith(CORE_ASSET_INFO);
         expect(response.error).toBeUndefined();
-        expect(response.result).toBeUndefined();
+        expect(response.result).toEqual({});
     });
 
     it('should return an error when server returns an error', async () => {
@@ -693,7 +693,7 @@ describe('AasRepositoryClient', () => {
 
     it('should delete a thumbnail successfully', async () => {
         // Arrange
-        mockDeleteThumbnail.mockResolvedValue({ data: null, error: null });
+        mockDeleteThumbnail.mockResolvedValue({ data: {}, error: null });
 
         const clientInstance = new AasRepositoryClient();
 
@@ -711,7 +711,7 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id },
         });
         expect(response.error).toBeUndefined();
-        expect(response.result).toBeUndefined();
+        expect(response.result).toEqual({});
     });
 
     it('should return an error when server returns an error', async () => {
@@ -829,7 +829,7 @@ describe('AasRepositoryClient', () => {
 
     it('should put a thumbnail successfully', async () => {
         // Arrange
-        mockPutThumbnail.mockResolvedValue({ data: null, error: null });
+        mockPutThumbnail.mockResolvedValue({ data: {}, error: null });
 
         const clientInstance = new AasRepositoryClient();
 
@@ -849,7 +849,7 @@ describe('AasRepositoryClient', () => {
             body: MOCK_THUMBNAIL_BODY,
         });
         expect(response.error).toBeUndefined();
-        expect(response.result).toBeUndefined();
+        expect(response.result).toEqual({});
     });
 
     it('should return an error when server returns an error', async () => {
@@ -1069,7 +1069,7 @@ describe('AasRepositoryClient', () => {
 
     it('should delete a submodel reference successfully', async () => {
         // Arrange
-        mockDeleteSubmodelReferenceById.mockResolvedValue({ data: null, error: null });
+        mockDeleteSubmodelReferenceById.mockResolvedValue({ data: {}, error: null });
 
         const clientInstance = new AasRepositoryClient();
 
@@ -1088,7 +1088,7 @@ describe('AasRepositoryClient', () => {
             path: { aasIdentifier: CORE_AAS1.id, submodelIdentifier: CORE_REFERENCE1.keys[0].value },
         });
         expect(response.error).toBeUndefined();
-        expect(response.result).toBeUndefined();
+        expect(response.result).toEqual({});
     });
 
     it('should return an error when server returns an error', async () => {

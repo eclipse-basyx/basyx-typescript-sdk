@@ -42,6 +42,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(updateResponse.error).toBeUndefined();
+        expect(updateResponse.result).toBeDefined();
 
         const fetchResponse = await client.getAssetAdministrationShellById({
             baseUrl: baseURL,
@@ -75,6 +76,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(updateResponse.error).toBeUndefined();
+        expect(updateResponse.result).toBeDefined();
 
         const fetchResponse = await client.getAssetInformation({
             baseUrl: baseURL,
@@ -99,6 +101,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(updateResponse.error).toBeUndefined();
+        expect(updateResponse.result).toBeDefined();
 
         const fetchResponse = await client.getThumbnail({
             baseUrl: baseURL,
