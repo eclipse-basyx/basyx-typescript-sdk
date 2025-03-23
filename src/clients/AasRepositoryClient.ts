@@ -28,72 +28,6 @@ import {
     PutThumbnailOptions,
 } from '../models/aas-repository';
 
-// Define specific response types for each operation
-export type GetAllAssetAdministrationShellsResult = {
-    result?: GetAllAssetAdministrationShellsResponse;
-    error?: Error | AasRepository.GetAllAssetAdministrationShellsError;
-};
-
-export type PostAssetAdministrationShellResult = {
-    result?: AssetAdministrationShell;
-    error?: Error | AasRepository.PostAssetAdministrationShellError;
-};
-
-export type DeleteAssetAdministrationShellResult = {
-    result?: AasRepository.DeleteAssetAdministrationShellByIdResponse;
-    error?: Error | AasRepository.DeleteAssetAdministrationShellByIdError;
-};
-
-export type GetAssetAdministrationShellResult = {
-    result?: AssetAdministrationShell;
-    error?: Error | AasRepository.GetAssetAdministrationShellByIdError;
-};
-
-export type PutAssetAdministrationShellResult = {
-    result?: AasRepository.PutAssetAdministrationShellByIdResponse;
-    error?: Error | AasRepository.PutAssetAdministrationShellByIdError;
-};
-
-export type GetAssetInformationResult = {
-    result?: AssetInformation;
-    error?: Error | AasRepository.GetAssetInformationAasRepositoryError;
-};
-
-export type PutAssetInformationResult = {
-    result?: AasRepository.PutAssetInformationAasRepositoryResponse;
-    error?: Error | AasRepository.PutAssetInformationAasRepositoryError;
-};
-
-export type DeleteThumbnailResult = {
-    result?: AasRepository.DeleteThumbnailAasRepositoryResponses;
-    error?: Error | AasRepository.DeleteThumbnailAasRepositoryError;
-};
-
-export type GetThumbnailResult = {
-    result?: Blob | File;
-    error?: Error | AasRepository.GetThumbnailAasRepositoryError;
-};
-
-export type PutThumbnailResult = {
-    result?: AasRepository.PutThumbnailAasRepositoryResponse;
-    error?: Error | AasRepository.PutThumbnailAasRepositoryError;
-};
-
-export type GetAllSubmodelReferencesResult = {
-    result?: GetAllSubmodelReferencesResponse;
-    error?: Error | AasRepository.GetAllSubmodelReferencesAasRepositoryError;
-};
-
-export type PostSubmodelReferenceResult = {
-    result?: Reference;
-    error?: Error | AasRepository.PostSubmodelReferenceAasRepositoryError;
-};
-
-export type DeleteSubmodelReferenceResult = {
-    result?: AasRepository.DeleteSubmodelReferenceByIdAasRepositoryResponse;
-    error?: Error | AasRepository.DeleteSubmodelReferenceByIdAasRepositoryError;
-};
-
 export class AasRepositoryClient {
     /**
      * Returns all Asset Administration Shells
@@ -106,7 +40,7 @@ export class AasRepositoryClient {
      * @param {string} [options.idShort] - The Asset Administration Shell's IdShort
      * @param {number} [options.limit] - The maximum number of elements in the response array
      * @param {string} [options.cursor] - A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-     * @returns {Promise<GetAllAssetAdministrationShellsResult>} Requested Asset Administration Shells or error
+     * @returns {Promise<{result?: GetAllAssetAdministrationShellsResponse, error?: Error | AasRepository.GetAllAssetAdministrationShellsError}>} Requested Asset Administration Shells or error
      */
     async getAllAssetAdministrationShells({
         baseUrl,
@@ -115,7 +49,10 @@ export class AasRepositoryClient {
         idShort,
         limit,
         cursor,
-    }: GetAllAssetAdministrationShellsOptions): Promise<GetAllAssetAdministrationShellsResult> {
+    }: GetAllAssetAdministrationShellsOptions): Promise<{
+        result?: GetAllAssetAdministrationShellsResponse;
+        error?: Error | AasRepository.GetAllAssetAdministrationShellsError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -151,13 +88,16 @@ export class AasRepositoryClient {
      * @param {string} options.baseUrl - The API base URL
      * @param {AssetAdministrationShell} options.assetAdministrationShell - Asset Administration Shell object
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<PostAssetAdministrationShellResult>} Asset Administration Shell created successfully or error
+     * @returns {Promise<{result?: AssetAdministrationShell, error?: Error | AasRepository.PostAssetAdministrationShellError}>} Asset Administration Shell created successfully or error
      */
     async postAssetAdministrationShell({
         baseUrl,
         assetAdministrationShell,
         headers,
-    }: PostAssetAdministrationShellOptions): Promise<PostAssetAdministrationShellResult> {
+    }: PostAssetAdministrationShellOptions): Promise<{
+        result?: AssetAdministrationShell;
+        error?: Error | AasRepository.PostAssetAdministrationShellError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -186,13 +126,12 @@ export class AasRepositoryClient {
      * @param {string} options.baseUrl - The API base URL
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<DeleteAssetAdministrationShellResult>} Asset Administration Shell deleted successfully or error
+     * @returns {Promise<{result?: AasRepository.DeleteAssetAdministrationShellByIdResponse, error?: Error | AasRepository.DeleteAssetAdministrationShellByIdError}>} Asset Administration Shell deleted successfully or error
      */
-    async deleteAssetAdministrationShellById({
-        baseUrl,
-        aasIdentifier,
-        headers,
-    }: AasIdentifierOptions): Promise<DeleteAssetAdministrationShellResult> {
+    async deleteAssetAdministrationShellById({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<{
+        result?: AasRepository.DeleteAssetAdministrationShellByIdResponse;
+        error?: Error | AasRepository.DeleteAssetAdministrationShellByIdError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -223,13 +162,12 @@ export class AasRepositoryClient {
      * @param {string} options.baseUrl - The API base URL
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<GetAssetAdministrationShellResult>} Requested Asset Administration Shell or error
+     * @returns {Promise<{result?: AssetAdministrationShell, error?: Error | AasRepository.GetAssetAdministrationShellByIdError}>} Requested Asset Administration Shell or error
      */
-    async getAssetAdministrationShellById({
-        baseUrl,
-        aasIdentifier,
-        headers,
-    }: AasIdentifierOptions): Promise<GetAssetAdministrationShellResult> {
+    async getAssetAdministrationShellById({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<{
+        result?: AssetAdministrationShell;
+        error?: Error | AasRepository.GetAssetAdministrationShellByIdError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -261,14 +199,17 @@ export class AasRepositoryClient {
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {AssetAdministrationShell} options.assetAdministrationShell - Asset Administration Shell object
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<PutAssetAdministrationShellResult>} Asset Administration Shell updated successfully or error
+     * @returns {Promise<{result?: AasRepository.PutAssetAdministrationShellByIdResponse, error?: Error | AasRepository.PutAssetAdministrationShellByIdError}>} Asset Administration Shell updated successfully or error
      */
     async putAssetAdministrationShellById({
         baseUrl,
         aasIdentifier,
         assetAdministrationShell,
         headers,
-    }: PutAssetAdministrationShellOptions): Promise<PutAssetAdministrationShellResult> {
+    }: PutAssetAdministrationShellOptions): Promise<{
+        result?: AasRepository.PutAssetAdministrationShellByIdResponse;
+        error?: Error | AasRepository.PutAssetAdministrationShellByIdError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -300,13 +241,12 @@ export class AasRepositoryClient {
      * @param {string} options.baseUrl - The API base URL
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<GetAssetInformationResult>} Requested Asset Information or error
+     * @returns {Promise<{result?: AssetInformation, error?: Error | AasRepository.GetAssetInformationAasRepositoryError}>} Requested Asset Information or error
      */
-    async getAssetInformation({
-        baseUrl,
-        aasIdentifier,
-        headers,
-    }: AasIdentifierOptions): Promise<GetAssetInformationResult> {
+    async getAssetInformation({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<{
+        result?: AssetInformation;
+        error?: Error | AasRepository.GetAssetInformationAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -338,14 +278,17 @@ export class AasRepositoryClient {
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {AssetInformation} options.assetInformation - Asset Information object
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<PutAssetInformationResult>} Asset Information updated successfully or error
+     * @returns {Promise<{result?: AasRepository.PutAssetInformationAasRepositoryResponse, error?: Error | AasRepository.PutAssetInformationAasRepositoryError}>} Asset Information updated successfully or error
      */
     async putAssetInformation({
         baseUrl,
         aasIdentifier,
         assetInformation,
         headers,
-    }: PutAssetInformationOptions): Promise<PutAssetInformationResult> {
+    }: PutAssetInformationOptions): Promise<{
+        result?: AasRepository.PutAssetInformationAasRepositoryResponse;
+        error?: Error | AasRepository.PutAssetInformationAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -377,9 +320,12 @@ export class AasRepositoryClient {
      * @param {string} options.baseUrl - The API base URL
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<DeleteThumbnailResult>} Thumbnail deletion successful or error
+     * @returns {Promise<{result?: AasRepository.DeleteThumbnailAasRepositoryResponses, error?: Error | AasRepository.DeleteThumbnailAasRepositoryError}>} Thumbnail deletion successful or error
      */
-    async deleteThumbnail({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<DeleteThumbnailResult> {
+    async deleteThumbnail({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<{
+        result?: AasRepository.DeleteThumbnailAasRepositoryResponses;
+        error?: Error | AasRepository.DeleteThumbnailAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -410,9 +356,12 @@ export class AasRepositoryClient {
      * @param {string} options.baseUrl - The API base URL
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<GetThumbnailResult>} The thumbnail of the Asset Information or error
+     * @returns {Promise<{result?: Blob | File, error?: Error | AasRepository.GetThumbnailAasRepositoryError}>} The thumbnail of the Asset Information or error
      */
-    async getThumbnail({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<GetThumbnailResult> {
+    async getThumbnail({ baseUrl, aasIdentifier, headers }: AasIdentifierOptions): Promise<{
+        result?: Blob | File;
+        error?: Error | AasRepository.GetThumbnailAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -444,14 +393,12 @@ export class AasRepositoryClient {
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {AssetinformationThumbnailBody} options.thumbnail - Thumbnail to upload
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<PutThumbnailResult>} Thumbnail updated successfully or error
+     * @returns {Promise<{result?: AasRepository.PutThumbnailAasRepositoryResponse, error?: Error | AasRepository.PutThumbnailAasRepositoryError}>} Thumbnail updated successfully or error
      */
-    async putThumbnail({
-        baseUrl,
-        aasIdentifier,
-        thumbnail,
-        headers,
-    }: PutThumbnailOptions): Promise<PutThumbnailResult> {
+    async putThumbnail({ baseUrl, aasIdentifier, thumbnail, headers }: PutThumbnailOptions): Promise<{
+        result?: AasRepository.PutThumbnailAasRepositoryResponse;
+        error?: Error | AasRepository.PutThumbnailAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -485,7 +432,7 @@ export class AasRepositoryClient {
      * @param {Headers} [options.headers] - Request headers
      * @param {number} [options.limit] - The maximum number of elements in the response array
      * @param {string} [options.cursor] - A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-     * @returns {Promise<GetAllSubmodelReferencesResult>} Requested submodel references or error
+     * @returns {Promise<{result?: GetAllSubmodelReferencesResponse, error?: Error | AasRepository.GetAllSubmodelReferencesAasRepositoryError}>} Requested submodel references or error
      */
     async getAllSubmodelReferences({
         baseUrl,
@@ -493,7 +440,10 @@ export class AasRepositoryClient {
         headers,
         limit,
         cursor,
-    }: GetAllSubmodelReferencesOptions): Promise<GetAllSubmodelReferencesResult> {
+    }: GetAllSubmodelReferencesOptions): Promise<{
+        result?: GetAllSubmodelReferencesResponse;
+        error?: Error | AasRepository.GetAllSubmodelReferencesAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -536,14 +486,17 @@ export class AasRepositoryClient {
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {Reference} options.submodelReference - Reference to the Submodel
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<PostSubmodelReferenceResult>} Submodel reference created successfully or error
+     * @returns {Promise<{result?: Reference, error?: Error | AasRepository.PostSubmodelReferenceAasRepositoryError}>} Submodel reference created successfully or error
      */
     async postSubmodelReference({
         baseUrl,
         aasIdentifier,
         submodelReference,
         headers,
-    }: PostSubmodelReferenceOptions): Promise<PostSubmodelReferenceResult> {
+    }: PostSubmodelReferenceOptions): Promise<{
+        result?: Reference;
+        error?: Error | AasRepository.PostSubmodelReferenceAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
@@ -576,14 +529,17 @@ export class AasRepositoryClient {
      * @param {string} options.aasIdentifier - The Asset Administration Shell's unique id
      * @param {string} options.submodelIdentifier - The Submodel's unique id
      * @param {Headers} [options.headers] - Request headers
-     * @returns {Promise<DeleteSubmodelReferenceResult>} Submodel reference deleted successfully or error
+     * @returns {Promise<{result?: AasRepository.DeleteSubmodelReferenceByIdAasRepositoryResponse, error?: Error | AasRepository.DeleteSubmodelReferenceByIdAasRepositoryError}>} Submodel reference deleted successfully or error
      */
     async deleteSubmodelReferenceById({
         baseUrl,
         aasIdentifier,
         submodelIdentifier,
         headers,
-    }: DeleteSubmodelReferenceByIdOptions): Promise<DeleteSubmodelReferenceResult> {
+    }: DeleteSubmodelReferenceByIdOptions): Promise<{
+        result?: AasRepository.DeleteSubmodelReferenceByIdAasRepositoryResponse;
+        error?: Error | AasRepository.DeleteSubmodelReferenceByIdAasRepositoryError;
+    }> {
         try {
             const client = createCustomClient(baseUrl, headers);
 
