@@ -7,5 +7,5 @@ export default defineConfig({
         lint: 'eslint',
         path: './src/generated',
     },
-    plugins: ['@hey-api/client-fetch'],
+    plugins: ['legacy/fetch'],
 });
