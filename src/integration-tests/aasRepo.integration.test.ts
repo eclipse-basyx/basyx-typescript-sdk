@@ -33,6 +33,19 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    test('should fetch an Asset Administration Shell by non-existing ID', async () => {
+        const nonExistingId = 'non-existing-id';
+        const response = await client.getAssetAdministrationShellById({
+            baseUrl: baseURL,
+            aasIdentifier: nonExistingId,
+        });
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+            console.log('Error:', response.error);
+        }
+    });
+
     test('should fetch all Asset Administration Shells', async () => {
         const response = await client.getAllAssetAdministrationShells({
             baseUrl: baseURL,

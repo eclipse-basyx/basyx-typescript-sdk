@@ -15,7 +15,7 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
-import { createCustomClient } from '../lib/createAasRepoClient';
+import { client } from '../generated/client.gen';
 
 export class AasRepositoryClient {
     /**
@@ -49,7 +49,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, headers, assetIds, idShort, limit, cursor } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
             const result = await AasRepository.getAllAssetAdministrationShells({
@@ -94,7 +97,10 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<AssetAdministrationShell, AasRepository.PostAssetAdministrationShellError | Error>> {
         const { baseUrl, assetAdministrationShell, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const result = await AasRepository.postAssetAdministrationShell({
                 client,
                 body: convertCoreAasToApiAas(assetAdministrationShell),
@@ -131,7 +137,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.deleteAssetAdministrationShellById({
@@ -165,7 +174,10 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<AssetAdministrationShell, AasRepository.GetAssetAdministrationShellByIdError | Error>> {
         const { baseUrl, aasIdentifier, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.getAssetAdministrationShellById({
@@ -210,7 +222,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, assetAdministrationShell, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.putAssetAdministrationShellById({
@@ -245,7 +260,10 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<AssetInformation, AasRepository.GetAssetInformationAasRepositoryError | Error>> {
         const { baseUrl, aasIdentifier, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.getAssetInformationAasRepository({
@@ -289,7 +307,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, assetInformation, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.putAssetInformationAasRepository({
@@ -329,7 +350,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.deleteThumbnailAasRepository({
@@ -366,7 +390,10 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<Blob | File, AasRepository.GetThumbnailAasRepositoryError | Error>> {
         const { baseUrl, aasIdentifier, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.getThumbnailAasRepository({
@@ -404,7 +431,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, thumbnail, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.putThumbnailAasRepository({
@@ -451,7 +481,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, headers, limit, cursor } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.getAllSubmodelReferencesAasRepository({
@@ -496,7 +529,10 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<Reference, AasRepository.PostSubmodelReferenceAasRepositoryError | Error>> {
         const { baseUrl, aasIdentifier, submodelReference, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await AasRepository.postSubmodelReferenceAasRepository({
@@ -538,7 +574,10 @@ export class AasRepositoryClient {
     > {
         const { baseUrl, aasIdentifier, submodelIdentifier, headers } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            client.setConfig({
+                baseUrl,
+                headers,
+            })
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 

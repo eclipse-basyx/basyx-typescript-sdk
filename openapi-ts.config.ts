@@ -1,4 +1,4 @@
-import { defaultPlugins, defineConfig } from '@hey-api/openapi-ts';
+import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
     input: './openapi/Plattform_i40-Entire-API-Collection-V3.0.3-resolved.yaml',
@@ -7,12 +7,5 @@ export default defineConfig({
         lint: 'eslint',
         path: './src/generated',
     },
-    plugins: [
-        ...defaultPlugins,
-        '@hey-api/schemas',
-        {
-            name: '@hey-api/sdk',
-            transformer: true,
-        },
-    ],
+    plugins: ['@hey-api/client-fetch'],
 });

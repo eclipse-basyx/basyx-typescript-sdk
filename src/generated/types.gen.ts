@@ -12449,3 +12449,7 @@ export type GetDescriptionResponses = {
 };
 
 export type GetDescriptionResponse = GetDescriptionResponses[keyof GetDescriptionResponses];
+
+export type ClientOptions = {
+    baseUrl: '{protocol}://{host_name}:{port}/api/{version_prefix}' | (string & {});
+};
