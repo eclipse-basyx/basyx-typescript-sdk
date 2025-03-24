@@ -23,11 +23,11 @@ import {
 
 export class AasRepositoryClient {
     /**
-     * Returns all Asset Administration Shells.
+     * Returns all Asset Administration Shells
      *
      * @param options Object containing:
-     *  - configuration: The http request options.
-     *  - assetIds?: A list of specific Asset identifiers.
+     *  - configuration: The http request options
+     *  - assetIds?: A list of specific Asset identifiers
      *  - idShort?: The Asset Administration Shell’s IdShort
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
@@ -50,6 +50,7 @@ export class AasRepositoryClient {
         >
     > {
         const { configuration, assetIds, idShort, limit, cursor } = options;
+
         try {
             const apiInstance = new AasRepository(configuration);
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
@@ -59,99 +60,74 @@ export class AasRepositoryClient {
             const shells = (result.result ?? []).map(convertApiAasToCoreAas);
             return {
                 success: true,
-                data: {
-                    pagedResult: result.pagingMetadata,
-                    result: shells,
-                },
+                data: { pagedResult: result.pagingMetadata, result: shells },
             };
         } catch (err) {
-            return {
-                success: false,
-                error: err as RequiredError,
-            };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Creates a new Asset Administration Shell.
+     * Creates a new Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - assetAdministrationShell: The AAS to create
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options.
+     *  - assetAdministrationShell: Asset Administration Shell object
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAssetAdministrationShell(options: {
-        baseUrl: string;
-        headers?: Headers;
+        configuration: ConfigurationParameters;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<AssetAdministrationShell, AasRepository.PostAssetAdministrationShellError | Error>> {
-        const { baseUrl, assetAdministrationShell, headers } = options;
-        try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
-            const result = await AasRepository.postAssetAdministrationShell({
-                body: convertCoreAasToApiAas(assetAdministrationShell),
-            });
+    }): Promise<ApiResult<AssetAdministrationShell, RequiredError>> {
+        const { configuration, assetAdministrationShell } = options;
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: convertApiAasToCoreAas(result.data) };
+        try {
+            const apiInstance = new AasRepository(configuration);
+
+            const result = await apiInstance.postAssetAdministrationShell(
+                convertCoreAasToApiAas(assetAdministrationShell)
+            );
+
+            return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Deletes an Asset Administration Shell by its unique identifier.
+     * Deletes an Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID for the AAS
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellById(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.DeleteAssetAdministrationShellByIdResponse,
-            AasRepository.DeleteAssetAdministrationShellByIdError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<Response, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.deleteAssetAdministrationShellById({
-                path: { aasIdentifier: encodedAasIdentifier },
-            });
+            const result = await apiInstance.deleteAssetAdministrationShellById(encodedAasIdentifier);
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns a specific Asset Administration Shell by its unique identifier.
+     * Returns a specific Asset Administration Shell
      *
      * @param options Object containing:
-     *  - configuration: The API configuration
+     *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
@@ -161,8 +137,10 @@ export class AasRepositoryClient {
         aasIdentifier: string;
     }): Promise<ApiResult<AssetAdministrationShell, RequiredError>> {
         const { configuration, aasIdentifier } = options;
+
         try {
             const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
             const result = await apiInstance.getAssetAdministrationShellById(encodedAasIdentifier);
@@ -174,173 +152,126 @@ export class AasRepositoryClient {
     }
 
     /**
-     * Updates an existing Asset Administration Shell by ID (PUT).
+     * Updates an existing Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - assetAdministrationShell: The updated AAS object
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - assetAdministrationShell: Asset Administration Shell object
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetAdministrationShellById(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.PutAssetAdministrationShellByIdResponse,
-            AasRepository.PutAssetAdministrationShellByIdError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, assetAdministrationShell, headers } = options;
+    }): Promise<ApiResult<Response, RequiredError>> {
+        const { configuration, aasIdentifier, assetAdministrationShell } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.putAssetAdministrationShellById({
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: convertCoreAasToApiAas(assetAdministrationShell),
-            });
+            const result = await apiInstance.putAssetAdministrationShellById(
+                convertCoreAasToApiAas(assetAdministrationShell),
+                encodedAasIdentifier
+            );
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns the AssetInformation for the given AAS.
+     * Returns the Asset Information
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetInformation(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<ApiResult<AssetInformation, AasRepository.GetAssetInformationAasRepositoryError | Error>> {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<AssetInformation, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getAssetInformationAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-            });
+            const result = await apiInstance.getAssetInformationAasRepository(encodedAasIdentifier);
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
             return {
                 success: true,
-                data: convertApiAssetInformationToCoreAssetInformation(result.data),
+                data: convertApiAssetInformationToCoreAssetInformation(result),
             };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Updates the AssetInformation for the given AAS.
+     * Updates the Asset Information
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - assetInformation: The updated AssetInformation object
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - assetInformation: Asset Information object
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetInformation(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
         assetInformation: AssetInformation;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.PutAssetInformationAasRepositoryResponse,
-            AasRepository.PutAssetInformationAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, assetInformation, headers } = options;
+    }): Promise<ApiResult<Response, RequiredError>> {
+        const { configuration, aasIdentifier, assetInformation } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.putAssetInformationAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: convertCoreAssetInformationToApiAssetInformation(assetInformation),
-            });
+            const result = await apiInstance.putAssetInformationAasRepository(
+                convertCoreAssetInformationToApiAssetInformation(assetInformation),
+                encodedAasIdentifier
+            );
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Deletes the Thumbnail associated with the given AAS.
+     * Deletes the Thumbnail associated with the given AAS
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteThumbnail(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.DeleteThumbnailAasRepositoryResponses,
-            AasRepository.DeleteThumbnailAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<Response, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.deleteThumbnailAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-            });
+            const result = await apiInstance.deleteThumbnailAasRepository(encodedAasIdentifier);
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return {
-                success: true,
-                data: result.data as AasRepository.DeleteThumbnailAasRepositoryResponses,
-            };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
@@ -348,35 +279,27 @@ export class AasRepositoryClient {
      * Returns the Thumbnail associated with an AAS, if any.
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
+     *  - configuration: The http request options
      *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getThumbnail(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<ApiResult<Blob | File, AasRepository.GetThumbnailAasRepositoryError | Error>> {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<Blob, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getThumbnailAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-            });
+            const result = await apiInstance.getThumbnailAasRepository(encodedAasIdentifier);
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
