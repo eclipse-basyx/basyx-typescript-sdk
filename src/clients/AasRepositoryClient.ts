@@ -276,11 +276,11 @@ export class AasRepositoryClient {
     }
 
     /**
-     * Returns the Thumbnail associated with an AAS, if any.
+     * Returns the Thumbnail associated with an AAS, if any
      *
      * @param options Object containing:
      *  - configuration: The http request options
-     *  - aasIdentifier: The unique ID
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -304,139 +304,106 @@ export class AasRepositoryClient {
     }
 
     /**
-     * Updates (or creates) the Thumbnail for the given AAS.
+     * Updates (or creates) the Thumbnail for the given AAS
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - thumbnail: The thumbnail data to upload
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - fileName: The name of the file
+     *  - file: The file to upload
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putThumbnail(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
-        thumbnail: AasRepository.AssetinformationThumbnailBody;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<AasRepository.PutThumbnailAasRepositoryResponse, AasRepository.PutThumbnailAasRepositoryError | Error>
-    > {
-        const { baseUrl, aasIdentifier, thumbnail, headers } = options;
+        fileName: string;
+        file: Blob;
+    }): Promise<ApiResult<Response, RequiredError>> {
+        const { configuration, aasIdentifier, fileName, file } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.putThumbnailAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: thumbnail,
-            });
+            const result = await apiInstance.putThumbnailAasRepository(fileName, file, encodedAasIdentifier);
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns all submodel references for the given AAS.
+     * Returns all submodel references
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
-     *  - limit?: Max number of elements
-     *  - cursor?: Paging cursor
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelReferences(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
-        headers?: Headers;
         limit?: number;
         cursor?: string;
-    }): Promise<
-        ApiResult<
-            {
-                pagedResult: AasRepository.PagedResultPagingMetadata | undefined;
-                result: Reference[];
-            },
-            AasRepository.GetAllSubmodelReferencesAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, headers, limit, cursor } = options;
+    }): Promise<ApiResult<{ pagedResult: PagedResultPagingMetadata | undefined; result: Reference[] }, RequiredError>> {
+        const { configuration, aasIdentifier, limit, cursor } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getAllSubmodelReferencesAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-                query: { limit, cursor },
-            });
+            const result = await apiInstance.getAllSubmodelReferencesAasRepository(encodedAasIdentifier, limit, cursor);
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-
-            const submodelReferences = (result.data.result ?? []).map(convertApiReferenceToCoreReference);
+            const submodelReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
             return {
                 success: true,
                 data: {
-                    pagedResult: result.data.paging_metadata,
+                    pagedResult: result.pagingMetadata,
                     result: submodelReferences,
                 },
             };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Creates a submodel reference at the given AAS.
+     * Creates a submodel reference at the Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID of the AAS
-     *  - submodelReference: The Reference to the submodel
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - submodelReference: Reference to the Submodel
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelReference(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
         submodelReference: Reference;
-        headers?: Headers;
-    }): Promise<ApiResult<Reference, AasRepository.PostSubmodelReferenceAasRepositoryError | Error>> {
-        const { baseUrl, aasIdentifier, submodelReference, headers } = options;
+    }): Promise<ApiResult<Reference, RequiredError>> {
+        const { configuration, aasIdentifier, submodelReference } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.postSubmodelReferenceAasRepository({
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: convertCoreReferenceToApiReference(submodelReference),
-            });
+            const result = await apiInstance.postSubmodelReferenceAasRepository(
+                convertCoreReferenceToApiReference(submodelReference),
+                encodedAasIdentifier
+            );
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: convertApiReferenceToCoreReference(result.data) };
+            return { success: true, data: convertApiReferenceToCoreReference(result) };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
@@ -444,46 +411,33 @@ export class AasRepositoryClient {
      * Deletes a submodel reference from the given AAS (does not delete the submodel itself).
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
+     *  - configuration: The http request options
      *  - aasIdentifier: Unique ID of the AAS
      *  - submodelIdentifier: The submodel's unique ID
-     *  - headers?: Optional request headers
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelReferenceById(options: {
-        baseUrl: string;
+        configuration: ConfigurationParameters;
         aasIdentifier: string;
         submodelIdentifier: string;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.DeleteSubmodelReferenceByIdAasRepositoryResponse,
-            AasRepository.DeleteSubmodelReferenceByIdAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, submodelIdentifier, headers } = options;
+    }): Promise<ApiResult<Response, RequiredError>> {
+        const { configuration, aasIdentifier, submodelIdentifier } = options;
+
         try {
-            OpenAPI.setConfig({
-                baseUrl,
-                headers,
-            });
+            const apiInstance = new AasRepository(configuration);
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const result = await AasRepository.deleteSubmodelReferenceByIdAasRepository({
-                path: {
-                    aasIdentifier: encodedAasIdentifier,
-                    submodelIdentifier: encodedSubmodelIdentifier,
-                },
-            });
+            const result = await apiInstance.deleteSubmodelReferenceByIdAasRepository(
+                encodedAasIdentifier,
+                encodedSubmodelIdentifier
+            );
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 }

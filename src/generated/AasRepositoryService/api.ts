@@ -4910,7 +4910,7 @@ export const AssetAdministrationShellRepositoryAPIApiFetchParamCreator = functio
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        putThumbnailAasRepository(fileName: string, file: Blob, aasIdentifier: string, options: any = {}): FetchArgs {
+        putThumbnailAasRepository(fileName: string, file: globalThis.Blob, aasIdentifier: string, options: any = {}): FetchArgs {
             // verify required parameter 'fileName' is not null or undefined
             if (fileName === null || fileName === undefined) {
                 throw new RequiredError('fileName','Required parameter fileName was null or undefined when calling putThumbnailAasRepository.');
@@ -5627,7 +5627,7 @@ export const AssetAdministrationShellRepositoryAPIApiFp = function(configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getThumbnailAasRepository(aasIdentifier: string, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Blob> {
+        getThumbnailAasRepository(aasIdentifier: string, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<globalThis.Blob> {
             const localVarFetchArgs = AssetAdministrationShellRepositoryAPIApiFetchParamCreator(configuration).getThumbnailAasRepository(aasIdentifier, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
@@ -6056,7 +6056,7 @@ export const AssetAdministrationShellRepositoryAPIApiFp = function(configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        putThumbnailAasRepository(fileName: string, file: Blob, aasIdentifier: string, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+        putThumbnailAasRepository(fileName: string, file: globalThis.Blob, aasIdentifier: string, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
             const localVarFetchArgs = AssetAdministrationShellRepositoryAPIApiFetchParamCreator(configuration).putThumbnailAasRepository(fileName, file, aasIdentifier, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
@@ -6713,7 +6713,7 @@ export const AssetAdministrationShellRepositoryAPIApiFactory = function (configu
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        putThumbnailAasRepository(fileName: string, file: Blob, aasIdentifier: string, options?: any) {
+        putThumbnailAasRepository(fileName: string, file: globalThis.Blob, aasIdentifier: string, options?: any) {
             return AssetAdministrationShellRepositoryAPIApiFp(configuration).putThumbnailAasRepository(fileName, file, aasIdentifier, options)(fetch, basePath);
         },
     };
@@ -7465,7 +7465,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof AssetAdministrationShellRepositoryAPIApi
      */
-    public putThumbnailAasRepository(fileName: string, file: Blob, aasIdentifier: string, options?: any) {
+    public putThumbnailAasRepository(fileName: string, file: globalThis.Blob, aasIdentifier: string, options?: any) {
         return AssetAdministrationShellRepositoryAPIApiFp(this.configuration).putThumbnailAasRepository(fileName, file, aasIdentifier, options)(this.fetch, this.basePath);
     }
 
