@@ -28,6 +28,9 @@
     "test": "jest --coverage",
     "docs": "typedoc --options typedoc.json"
   },
+  "dependencies": {
+    "isomorphic-fetch": "^3.0.0"
+  },
   "peerDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
   },
