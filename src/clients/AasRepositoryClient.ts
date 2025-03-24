@@ -5,12 +5,12 @@ import type {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
-import { ConfigurationParameters } from '../generated/configuration';
+import { ConfigurationParameters } from '../generated/AasRepositoryService';
 import {
     AssetAdministrationShellRepositoryAPIApi as AasRepository,
     PagedResultPagingMetadata,
     RequiredError,
-} from '../generated/index';
+} from '../generated/AasRepositoryService';
 import { base64Encode } from '../lib/base64Url';
 import {
     convertApiAasToCoreAas,
