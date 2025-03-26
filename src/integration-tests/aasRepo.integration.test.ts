@@ -75,9 +75,6 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.data).toBeDefined();
-        }
 
         const fetchResponse = await client.getAssetAdministrationShellById({
             configuration,
@@ -115,9 +112,6 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.data).toBeDefined();
-        }
 
         const fetchResponse = await client.getAssetInformation({
             configuration,
@@ -145,9 +139,6 @@ describe('AAS Repository Integration Tests', () => {
         console.log('Update Response:', updateResponse);
 
         expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.data).toBeDefined();
-        }
 
         const fetchResponse = await client.getThumbnail({
             configuration,

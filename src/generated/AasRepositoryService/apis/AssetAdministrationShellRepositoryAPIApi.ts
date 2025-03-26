@@ -36,48 +36,6 @@ import type {
   SubmodelElementValue,
   SubmodelMetadata,
 } from '../models/index';
-import {
-    AssetAdministrationShellFromJSON,
-    AssetAdministrationShellToJSON,
-    AssetInformationFromJSON,
-    AssetInformationToJSON,
-    BaseOperationResultFromJSON,
-    BaseOperationResultToJSON,
-    GetAssetAdministrationShellsResultFromJSON,
-    GetAssetAdministrationShellsResultToJSON,
-    GetPathItemsResultFromJSON,
-    GetPathItemsResultToJSON,
-    GetReferencesResultFromJSON,
-    GetReferencesResultToJSON,
-    GetSubmodelElementsMetadataResultFromJSON,
-    GetSubmodelElementsMetadataResultToJSON,
-    GetSubmodelElementsResultFromJSON,
-    GetSubmodelElementsResultToJSON,
-    GetSubmodelElementsValueResultFromJSON,
-    GetSubmodelElementsValueResultToJSON,
-    OperationRequestFromJSON,
-    OperationRequestToJSON,
-    OperationRequestValueOnlyFromJSON,
-    OperationRequestValueOnlyToJSON,
-    OperationResultFromJSON,
-    OperationResultToJSON,
-    OperationResultValueOnlyFromJSON,
-    OperationResultValueOnlyToJSON,
-    ReferenceFromJSON,
-    ReferenceToJSON,
-    ResultFromJSON,
-    ResultToJSON,
-    SubmodelFromJSON,
-    SubmodelToJSON,
-    SubmodelElementFromJSON,
-    SubmodelElementToJSON,
-    SubmodelElementMetadataFromJSON,
-    SubmodelElementMetadataToJSON,
-    SubmodelElementValueFromJSON,
-    SubmodelElementValueToJSON,
-    SubmodelMetadataFromJSON,
-    SubmodelMetadataToJSON,
-} from '../models/index';
 
 export interface DeleteAssetAdministrationShellByIdRequest {
     aasIdentifier: string;
@@ -677,7 +635,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetAssetAdministrationShellsResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -719,7 +677,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetReferencesResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -775,7 +733,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetSubmodelElementsResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -823,7 +781,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetSubmodelElementsMetadataResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -879,7 +837,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetPathItemsResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -931,7 +889,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetReferencesResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -983,7 +941,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetSubmodelElementsValueResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1024,7 +982,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetReferencesResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1057,7 +1015,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AssetAdministrationShellFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1090,7 +1048,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReferenceFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1123,7 +1081,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AssetInformationFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1224,7 +1182,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => OperationResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1278,7 +1236,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => OperationResultValueOnlyFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1332,7 +1290,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BaseOperationResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1380,7 +1338,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1420,7 +1378,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelMetadataFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1504,7 +1462,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReferenceFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1607,7 +1565,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelElementFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1654,7 +1612,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelElementMetadataFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1756,7 +1714,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReferenceFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1811,7 +1769,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelElementValueFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1896,10 +1854,10 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: OperationRequestToJSON(requestParameters['operationRequest']),
+            body: requestParameters['operationRequest'],
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => OperationResultFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -1953,7 +1911,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: OperationRequestToJSON(requestParameters['operationRequest']),
+            body: requestParameters['operationRequest'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2009,7 +1967,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: OperationRequestValueOnlyToJSON(requestParameters['operationRequestValueOnly']),
+            body: requestParameters['operationRequestValueOnly'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2065,10 +2023,10 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: OperationRequestValueOnlyToJSON(requestParameters['operationRequestValueOnly']),
+            body: requestParameters['operationRequestValueOnly'],
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => OperationResultValueOnlyFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -2119,7 +2077,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelToJSON(requestParameters['submodel']),
+            body: requestParameters['submodel'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2168,7 +2126,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelMetadataToJSON(requestParameters['submodelMetadata']),
+            body: requestParameters['submodelMetadata'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2281,7 +2239,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelElementToJSON(requestParameters['submodelElement']),
+            body: requestParameters['submodelElement'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2337,7 +2295,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelElementMetadataToJSON(requestParameters['submodelElementMetadata']),
+            body: requestParameters['submodelElementMetadata'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2397,7 +2355,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelElementValueToJSON(requestParameters['submodelElementValue']),
+            body: requestParameters['submodelElementValue'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2432,10 +2390,10 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: AssetAdministrationShellToJSON(requestParameters['assetAdministrationShell']),
+            body: requestParameters['assetAdministrationShell'],
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AssetAdministrationShellFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -2482,10 +2440,10 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelElementToJSON(requestParameters['submodelElement']),
+            body: requestParameters['submodelElement'],
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelElementFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -2539,10 +2497,10 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelElementToJSON(requestParameters['submodelElement']),
+            body: requestParameters['submodelElement'],
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SubmodelElementFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -2582,10 +2540,10 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: ReferenceToJSON(requestParameters['reference']),
+            body: requestParameters['reference'],
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReferenceFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**
@@ -2625,7 +2583,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: AssetAdministrationShellToJSON(requestParameters['assetAdministrationShell']),
+            body: requestParameters['assetAdministrationShell'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2667,7 +2625,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: AssetInformationToJSON(requestParameters['assetInformation']),
+            body: requestParameters['assetInformation'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2787,7 +2745,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelToJSON(requestParameters['submodel']),
+            body: requestParameters['submodel'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -2843,7 +2801,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: SubmodelElementToJSON(requestParameters['submodelElement']),
+            body: requestParameters['submodelElement'],
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);

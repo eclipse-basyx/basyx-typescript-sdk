@@ -18,12 +18,6 @@ import type {
   Result,
   ServiceDescription,
 } from '../models/index';
-import {
-    ResultFromJSON,
-    ResultToJSON,
-    ServiceDescriptionFromJSON,
-    ServiceDescriptionToJSON,
-} from '../models/index';
 
 /**
  * 
@@ -45,7 +39,7 @@ export class DescriptionAPIApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ServiceDescriptionFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response);
     }
 
     /**

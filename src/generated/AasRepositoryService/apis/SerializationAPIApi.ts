@@ -18,12 +18,6 @@ import type {
   Environment,
   Result,
 } from '../models/index';
-import {
-    EnvironmentFromJSON,
-    EnvironmentToJSON,
-    ResultFromJSON,
-    ResultToJSON,
-} from '../models/index';
 
 export interface GenerateSerializationByIdsRequest {
     aasIds?: Array<string>;
