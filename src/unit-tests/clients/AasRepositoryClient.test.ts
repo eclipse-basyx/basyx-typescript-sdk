@@ -1,5 +1,5 @@
 // Import necessary types
-import type { GetAssetAdministrationShellsResult } from '../../generated/types.gen';
+import type { GetAssetAdministrationShellsResult } from '../../generated';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
@@ -13,7 +13,6 @@ import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
-    AssetinformationThumbnailBody,
     Reference as ApiReference,
 } from '../../generated';
 import * as AasRepository from '../../generated';

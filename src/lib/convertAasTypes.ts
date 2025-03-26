@@ -8,7 +8,7 @@ import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Reference as ApiReference,
-} from '../generated/AasRepositoryService';
+} from '../generated';
 
 /**
  * Convert an API AssetAdministrationShell to a Core Works AssetAdministrationShell

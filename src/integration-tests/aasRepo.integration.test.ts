@@ -1,5 +1,5 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
-import { Configuration, ConfigurationParameters } from '../generated/AasRepositoryService';
+import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 
 describe('AAS Repository Integration Tests', () => {
@@ -7,7 +7,8 @@ describe('AAS Repository Integration Tests', () => {
     const testShell = createTestShell();
     const configuration = new Configuration({
         basePath: 'http://localhost:8081',
-    } as ConfigurationParameters);
+        fetchApi: globalThis.fetch,
+    });
 
     test('should create a new Asset Administration Shell', async () => {
         const response = await client.postAssetAdministrationShell({

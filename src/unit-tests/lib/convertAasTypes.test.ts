@@ -16,7 +16,7 @@ import {
     ModelType,
     Reference as ApiReference,
     ReferenceTypes as ApiReferenceTypes,
-} from '../../generated/AasRepositoryService';
+} from '../../generated';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,

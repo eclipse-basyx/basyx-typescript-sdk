@@ -26,16 +26,15 @@
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",
     "test": "jest --coverage",
-    "docs": "typedoc --options typedoc.json"
-  },
-  "dependencies": {
-    "isomorphic-fetch": "^3.0.0"
+    "docs": "typedoc --options typedoc.json",
+    "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true"
   },
   "peerDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
   },
   "devDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
+    "@openapitools/openapi-generator-cli": "^2.18.4",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
