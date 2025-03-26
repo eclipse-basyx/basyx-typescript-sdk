@@ -45,14 +45,16 @@ yarn add @aas-core-works/aas-core3.0-typescript
 ## Usage
 
 ```typescript
-import { AasRepositoryClient } from 'basyx-typescript-sdk';
+import { AasRepositoryClient, Configuration } from 'basyx-typescript-sdk';
 
 async function getAllShells() {
-    const baseURL = 'http://localhost:8081';
     const client = new AasRepositoryClient();
+    const configuration = new Configuration({
+        basePath: 'http://localhost:8081',
+    });
 
     try {
-        const response = await client.getAllAssetAdministrationShells({ baseUrl: baseURL });
+        const response = await client.getAllAssetAdministrationShells({ configuration });
         console.log('Asset Administration Shells fetched successfully:', response);
         // You can now use the response as needed
     } catch (error) {
