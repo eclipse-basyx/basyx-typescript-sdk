@@ -7,7 +7,6 @@ describe('AAS Repository Integration Tests', () => {
     const testShell = createTestShell();
     const configuration = new Configuration({
         basePath: 'http://localhost:8081',
-        fetchApi: globalThis.fetch,
     });
 
     test('should create a new Asset Administration Shell', async () => {

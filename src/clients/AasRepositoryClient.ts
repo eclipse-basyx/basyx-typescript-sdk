@@ -11,6 +11,7 @@ import {
     PagedResultPagingMetadata,
     RequiredError,
 } from '../generated';
+import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -52,7 +53,7 @@ export class AasRepositoryClient {
         const { configuration, assetIds, idShort, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
             const result = await apiInstance.getAllAssetAdministrationShells({
@@ -88,7 +89,7 @@ export class AasRepositoryClient {
         const { configuration, assetAdministrationShell } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const result = await apiInstance.postAssetAdministrationShell({
                 assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
@@ -116,7 +117,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -146,7 +147,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -178,7 +179,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, assetAdministrationShell } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -209,7 +210,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -244,7 +245,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, assetInformation } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -274,7 +275,7 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<void, RequiredError>> {
         const { configuration, aasIdentifier } = options;
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -304,7 +305,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -338,7 +339,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, fileName, file } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -374,7 +375,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -415,7 +416,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelReference } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -448,7 +449,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
