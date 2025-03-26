@@ -52,7 +52,7 @@ export class AasRepositoryClient {
         const { configuration, assetIds, idShort, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
             const result = await apiInstance.getAllAssetAdministrationShells(encodedAssetIds, idShort, limit, cursor);
@@ -83,7 +83,7 @@ export class AasRepositoryClient {
         const { configuration, assetAdministrationShell } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const result = await apiInstance.postAssetAdministrationShell(
                 convertCoreAasToApiAas(assetAdministrationShell)
@@ -111,7 +111,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -139,7 +139,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -169,7 +169,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, assetAdministrationShell } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -200,7 +200,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -233,7 +233,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, assetInformation } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -263,7 +263,7 @@ export class AasRepositoryClient {
     }): Promise<ApiResult<Response, RequiredError>> {
         const { configuration, aasIdentifier } = options;
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -291,7 +291,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -323,7 +323,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, fileName, file } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -355,7 +355,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -392,7 +392,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelReference } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -425,7 +425,7 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(configuration);
+            const apiInstance = new AasRepository(configuration, undefined, global.fetch);
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);

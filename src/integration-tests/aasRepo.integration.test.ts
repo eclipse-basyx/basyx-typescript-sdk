@@ -141,6 +141,8 @@ describe('AAS Repository Integration Tests', () => {
             file,
         });
 
+        console.log('Update Response:', updateResponse);
+
         expect(updateResponse.success).toBe(true);
         if (updateResponse.success) {
             expect(updateResponse.data).toBeDefined();
