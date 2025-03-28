@@ -28,7 +28,7 @@ jobs:
 
       - name: Restore Docker Image Cache
         id: restore-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/docker-image-cache
           key: ${{ runner.os }}-docker-${{ hashFiles('**/ci/docker-compose.yml') }}
