@@ -2,17 +2,21 @@ import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
-    AssetKind,
+    AssetKind as CoreAssetKind,
     Key as CoreKey,
-    KeyTypes,
+    KeyTypes as CoreKeyTypes,
     Reference as CoreReference,
-    ReferenceTypes,
+    ReferenceTypes as CoreReferenceTypes,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
+    AssetKind as ApiAssetKind,
+    KeyTypes as ApiKeyTypes,
+    ModelType,
     Reference as ApiReference,
-} from '../../generated/types.gen';
+    ReferenceTypes as ApiReferenceTypes,
+} from '../../generated';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -37,12 +41,12 @@ jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
 // Define mock constants
 const API_AAS: ApiAssetAdministrationShell = {
     id: 'https://example.com/ids/aas/7600_5912_3951_6917',
-    modelType: 'AssetAdministrationShell',
-    assetInformation: { assetKind: 'Instance' },
+    modelType: ModelType.AssetAdministrationShell,
+    assetInformation: { assetKind: ApiAssetKind.Instance },
 };
 const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
     'https://example.com/ids/aas/7600_5912_3951_6917',
-    new CoreAssetInformation(AssetKind.Instance)
+    new CoreAssetInformation(CoreAssetKind.Instance)
 );
 const JSONABLE_AAS: jsonization.JsonObject = {
     id: 'https://example.com/ids/aas/7600_5912_3951_6917',
@@ -50,23 +54,23 @@ const JSONABLE_AAS: jsonization.JsonObject = {
     assetInformation: { assetKind: 'Instance' },
 };
 const API_ASSET_INFO: ApiAssetInformation = {
-    assetKind: 'Instance',
+    assetKind: ApiAssetKind.Instance,
 };
-const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(AssetKind.Instance);
+const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(CoreAssetKind.Instance);
 const JSONABLE_ASSET_INFO: jsonization.JsonObject = {
     assetKind: 'Instance',
 };
 const API_REFERENCE: ApiReference = {
-    type: 'ExternalReference',
+    type: ApiReferenceTypes.ExternalReference,
     keys: [
         {
-            type: 'GlobalReference',
+            type: ApiKeyTypes.GlobalReference,
             value: 'https://example.com/ids/submodel/7600_5912_3951_6917',
         },
     ],
 };
-const CORE_REFERENCE: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
-    new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6917'),
+const CORE_REFERENCE: CoreReference = new CoreReference(CoreReferenceTypes.ExternalReference, [
+    new CoreKey(CoreKeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6917'),
 ]);
 const JSONABLE_REFERENCE: jsonization.JsonObject = {
     type: 'ExternalReference',

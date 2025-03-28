@@ -1,3 +1,3 @@
 export * from './clients';
-export * as AasTypes from './generated/types.gen';
+export * from './generated';
 export * as Models from './models';

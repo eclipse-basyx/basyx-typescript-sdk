@@ -8,7 +8,7 @@ import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Reference as ApiReference,
-} from '../generated/types.gen';
+} from '../generated';
 
 /**
  * Convert an API AssetAdministrationShell to a Core Works AssetAdministrationShell

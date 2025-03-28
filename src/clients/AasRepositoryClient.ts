@@ -5,7 +5,13 @@ import type {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
-import * as AasRepository from '../generated';
+import {
+    AssetAdministrationShellRepositoryAPIApi as AasRepository,
+    Configuration,
+    PagedResultPagingMetadata,
+    RequiredError,
+} from '../generated';
+import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -15,25 +21,22 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
-import { createCustomClient } from '../lib/createAasRepoClient';
 
 export class AasRepositoryClient {
     /**
-     * Returns all Asset Administration Shells.
+     * Returns all Asset Administration Shells
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - headers?: Optional Request headers
-     *  - assetIds?: A list of asset identifiers
-     *  - idShort?: The AAS's idShort
-     *  - limit?: Max number of elements to return
-     *  - cursor?: A paging cursor from previous responses
+     *  - configuration: The http request options
+     *  - assetIds?: A list of specific Asset identifiers
+     *  - idShort?: The Asset Administration Shell’s IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetAdministrationShells(options: {
-        baseUrl: string;
-        headers?: Headers;
+        configuration: Configuration;
         assetIds?: AssetId[];
         idShort?: string;
         limit?: number;
@@ -41,476 +44,390 @@ export class AasRepositoryClient {
     }): Promise<
         ApiResult<
             {
-                pagedResult: AasRepository.PagedResultPagingMetadata | undefined;
+                pagedResult: PagedResultPagingMetadata | undefined;
                 result: AssetAdministrationShell[];
             },
-            AasRepository.GetAllAssetAdministrationShellsError | Error
+            RequiredError
         >
     > {
-        const { baseUrl, headers, assetIds, idShort, limit, cursor } = options;
+        const { configuration, assetIds, idShort, limit, cursor } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
-            const result = await AasRepository.getAllAssetAdministrationShells({
-                client,
-                query: { assetIds: encodedAssetIds, idShort, limit, cursor },
+            const result = await apiInstance.getAllAssetAdministrationShells({
+                assetIds: encodedAssetIds,
+                idShort: idShort,
+                limit: limit,
+                cursor: cursor,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-
-            const shells = (result.data.result ?? []).map(convertApiAasToCoreAas);
+            const shells = (result.result ?? []).map(convertApiAasToCoreAas);
             return {
                 success: true,
-                data: {
-                    pagedResult: result.data.paging_metadata,
-                    result: shells,
-                },
+                data: { pagedResult: result.pagingMetadata, result: shells },
             };
         } catch (err) {
-            return {
-                success: false,
-                error: err instanceof Error ? err : new Error(String(err)),
-            };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Creates a new Asset Administration Shell.
+     * Creates a new Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - assetAdministrationShell: The AAS to create
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options.
+     *  - assetAdministrationShell: Asset Administration Shell object
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAssetAdministrationShell(options: {
-        baseUrl: string;
-        headers?: Headers;
+        configuration: Configuration;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<AssetAdministrationShell, AasRepository.PostAssetAdministrationShellError | Error>> {
-        const { baseUrl, assetAdministrationShell, headers } = options;
+    }): Promise<ApiResult<AssetAdministrationShell, RequiredError>> {
+        const { configuration, assetAdministrationShell } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
-            const result = await AasRepository.postAssetAdministrationShell({
-                client,
-                body: convertCoreAasToApiAas(assetAdministrationShell),
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
+            const result = await apiInstance.postAssetAdministrationShell({
+                assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: convertApiAasToCoreAas(result.data) };
+            return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Deletes an Asset Administration Shell by its unique identifier.
+     * Deletes an Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID for the AAS
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellById(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.DeleteAssetAdministrationShellByIdResponse,
-            AasRepository.DeleteAssetAdministrationShellByIdError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<void, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.deleteAssetAdministrationShellById({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
+            const result = await apiInstance.deleteAssetAdministrationShellById({
+                aasIdentifier: encodedAasIdentifier,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns a specific Asset Administration Shell by its unique identifier.
+     * Returns a specific Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetAdministrationShellById(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<ApiResult<AssetAdministrationShell, AasRepository.GetAssetAdministrationShellByIdError | Error>> {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<AssetAdministrationShell, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getAssetAdministrationShellById({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
+            const result = await apiInstance.getAssetAdministrationShellById({
+                aasIdentifier: encodedAasIdentifier,
             });
 
-            if (result.error) {
-                // Return the complete error object with status code
-                return {
-                    success: false,
-                    error: result.error,
-                };
-            }
-            return { success: true, data: convertApiAasToCoreAas(result.data) };
+            return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Updates an existing Asset Administration Shell by ID (PUT).
+     * Updates an existing Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - assetAdministrationShell: The updated AAS object
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - assetAdministrationShell: Asset Administration Shell object
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetAdministrationShellById(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.PutAssetAdministrationShellByIdResponse,
-            AasRepository.PutAssetAdministrationShellByIdError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, assetAdministrationShell, headers } = options;
+    }): Promise<ApiResult<void, RequiredError>> {
+        const { configuration, aasIdentifier, assetAdministrationShell } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.putAssetAdministrationShellById({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: convertCoreAasToApiAas(assetAdministrationShell),
+            const result = await apiInstance.putAssetAdministrationShellById({
+                aasIdentifier: encodedAasIdentifier,
+                assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns the AssetInformation for the given AAS.
+     * Returns the Asset Information
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetInformation(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<ApiResult<AssetInformation, AasRepository.GetAssetInformationAasRepositoryError | Error>> {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<AssetInformation, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getAssetInformationAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
+            const result = await apiInstance.getAssetInformationAasRepository({
+                aasIdentifier: encodedAasIdentifier,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
             return {
                 success: true,
-                data: convertApiAssetInformationToCoreAssetInformation(result.data),
+                data: convertApiAssetInformationToCoreAssetInformation(result),
             };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Updates the AssetInformation for the given AAS.
+     * Updates the Asset Information
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - assetInformation: The updated AssetInformation object
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - assetInformation: Asset Information object
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetInformation(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.PutAssetInformationAasRepositoryResponse,
-            AasRepository.PutAssetInformationAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, assetInformation, headers } = options;
+    }): Promise<ApiResult<void, RequiredError>> {
+        const { configuration, aasIdentifier, assetInformation } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.putAssetInformationAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: convertCoreAssetInformationToApiAssetInformation(assetInformation),
+            const result = await apiInstance.putAssetInformationAasRepository({
+                aasIdentifier: encodedAasIdentifier,
+                assetInformation: convertCoreAssetInformationToApiAssetInformation(assetInformation),
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Deletes the Thumbnail associated with the given AAS.
+     * Deletes the Thumbnail associated with the given AAS
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteThumbnail(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.DeleteThumbnailAasRepositoryResponses,
-            AasRepository.DeleteThumbnailAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<void, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.deleteThumbnailAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
+            const result = await apiInstance.deleteThumbnailAasRepository({
+                aasIdentifier: encodedAasIdentifier,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return {
-                success: true,
-                data: result.data as AasRepository.DeleteThumbnailAasRepositoryResponses,
-            };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns the Thumbnail associated with an AAS, if any.
+     * Returns the Thumbnail associated with an AAS, if any
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getThumbnail(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        headers?: Headers;
-    }): Promise<ApiResult<Blob | File, AasRepository.GetThumbnailAasRepositoryError | Error>> {
-        const { baseUrl, aasIdentifier, headers } = options;
+    }): Promise<ApiResult<Blob, RequiredError>> {
+        const { configuration, aasIdentifier } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getThumbnailAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
+            const result = await apiInstance.getThumbnailAasRepository({
+                aasIdentifier: encodedAasIdentifier,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Updates (or creates) the Thumbnail for the given AAS.
+     * Updates (or creates) the Thumbnail for the given AAS
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - thumbnail: The thumbnail data to upload
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - fileName: The name of the file
+     *  - file: The file to upload
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putThumbnail(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        thumbnail: AasRepository.AssetinformationThumbnailBody;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<AasRepository.PutThumbnailAasRepositoryResponse, AasRepository.PutThumbnailAasRepositoryError | Error>
-    > {
-        const { baseUrl, aasIdentifier, thumbnail, headers } = options;
+        fileName: string;
+        file: Blob;
+    }): Promise<ApiResult<void, RequiredError>> {
+        const { configuration, aasIdentifier, fileName, file } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.putThumbnailAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: thumbnail,
+            const result = await apiInstance.putThumbnailAasRepository({
+                aasIdentifier: encodedAasIdentifier,
+                fileName: fileName,
+                file: file,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Returns all submodel references for the given AAS.
+     * Returns all submodel references
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID
-     *  - headers?: Optional request headers
-     *  - limit?: Max number of elements
-     *  - cursor?: Paging cursor
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelReferences(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
-        headers?: Headers;
         limit?: number;
         cursor?: string;
-    }): Promise<
-        ApiResult<
-            {
-                pagedResult: AasRepository.PagedResultPagingMetadata | undefined;
-                result: Reference[];
-            },
-            AasRepository.GetAllSubmodelReferencesAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, headers, limit, cursor } = options;
+    }): Promise<ApiResult<{ pagedResult: PagedResultPagingMetadata | undefined; result: Reference[] }, RequiredError>> {
+        const { configuration, aasIdentifier, limit, cursor } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.getAllSubmodelReferencesAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
-                query: { limit, cursor },
+            const result = await apiInstance.getAllSubmodelReferencesAasRepository({
+                aasIdentifier: encodedAasIdentifier,
+                limit: limit,
+                cursor: cursor,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-
-            const submodelReferences = (result.data.result ?? []).map(convertApiReferenceToCoreReference);
+            const submodelReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
             return {
                 success: true,
                 data: {
-                    pagedResult: result.data.paging_metadata,
+                    pagedResult: result.pagingMetadata,
                     result: submodelReferences,
                 },
             };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
     /**
-     * Creates a submodel reference at the given AAS.
+     * Creates a submodel reference at the Asset Administration Shell
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
-     *  - aasIdentifier: The unique ID of the AAS
-     *  - submodelReference: The Reference to the submodel
-     *  - headers?: Optional request headers
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - submodelReference: Reference to the Submodel
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelReference(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
-        headers?: Headers;
-    }): Promise<ApiResult<Reference, AasRepository.PostSubmodelReferenceAasRepositoryError | Error>> {
-        const { baseUrl, aasIdentifier, submodelReference, headers } = options;
+    }): Promise<ApiResult<Reference, RequiredError>> {
+        const { configuration, aasIdentifier, submodelReference } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await AasRepository.postSubmodelReferenceAasRepository({
-                client,
-                path: { aasIdentifier: encodedAasIdentifier },
-                body: convertCoreReferenceToApiReference(submodelReference),
+            const result = await apiInstance.postSubmodelReferenceAasRepository({
+                aasIdentifier: encodedAasIdentifier,
+                reference: convertCoreReferenceToApiReference(submodelReference),
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: convertApiReferenceToCoreReference(result.data) };
+            return { success: true, data: convertApiReferenceToCoreReference(result) };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 
@@ -518,44 +435,33 @@ export class AasRepositoryClient {
      * Deletes a submodel reference from the given AAS (does not delete the submodel itself).
      *
      * @param options Object containing:
-     *  - baseUrl: The API base URL
+     *  - configuration: The http request options
      *  - aasIdentifier: Unique ID of the AAS
      *  - submodelIdentifier: The submodel's unique ID
-     *  - headers?: Optional request headers
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelReferenceById(options: {
-        baseUrl: string;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
-        headers?: Headers;
-    }): Promise<
-        ApiResult<
-            AasRepository.DeleteSubmodelReferenceByIdAasRepositoryResponse,
-            AasRepository.DeleteSubmodelReferenceByIdAasRepositoryError | Error
-        >
-    > {
-        const { baseUrl, aasIdentifier, submodelIdentifier, headers } = options;
+    }): Promise<ApiResult<void, RequiredError>> {
+        const { configuration, aasIdentifier, submodelIdentifier } = options;
+
         try {
-            const client = createCustomClient(baseUrl, headers);
+            const apiInstance = new AasRepository(applyDefaults(configuration));
+
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const result = await AasRepository.deleteSubmodelReferenceByIdAasRepository({
-                client,
-                path: {
-                    aasIdentifier: encodedAasIdentifier,
-                    submodelIdentifier: encodedSubmodelIdentifier,
-                },
+            const result = await apiInstance.deleteSubmodelReferenceByIdAasRepository({
+                aasIdentifier: encodedAasIdentifier,
+                submodelIdentifier: encodedSubmodelIdentifier,
             });
 
-            if (result.error) {
-                return { success: false, error: result.error };
-            }
-            return { success: true, data: result.data };
+            return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+            return { success: false, error: err as RequiredError };
         }
     }
 }

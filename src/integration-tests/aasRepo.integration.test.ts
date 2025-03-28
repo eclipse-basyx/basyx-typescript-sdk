@@ -1,15 +1,17 @@
-import type { AssetinformationThumbnailBody } from '../generated/types.gen';
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
+import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 
 describe('AAS Repository Integration Tests', () => {
-    const baseURL = 'http://localhost:8081';
     const client = new AasRepositoryClient();
     const testShell = createTestShell();
+    const configuration = new Configuration({
+        basePath: 'http://localhost:8081',
+    });
 
     test('should create a new Asset Administration Shell', async () => {
         const response = await client.postAssetAdministrationShell({
-            baseUrl: baseURL,
+            configuration,
             assetAdministrationShell: testShell,
         });
 
@@ -22,7 +24,7 @@ describe('AAS Repository Integration Tests', () => {
 
     test('should fetch an Asset Administration Shell by ID', async () => {
         const response = await client.getAssetAdministrationShellById({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
         });
 
@@ -33,9 +35,22 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    test('should fetch an Asset Administration Shell by non-existing ID', async () => {
+        const nonExistingId = 'non-existing-id';
+        const response = await client.getAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: nonExistingId,
+        });
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+            console.log('Error:', response.error);
+        }
+    });
+
     test('should fetch all Asset Administration Shells', async () => {
         const response = await client.getAllAssetAdministrationShells({
-            baseUrl: baseURL,
+            configuration,
         });
 
         expect(response.success).toBe(true);
@@ -53,18 +68,15 @@ describe('AAS Repository Integration Tests', () => {
         updatedShell.description = [description];
 
         const updateResponse = await client.putAssetAdministrationShellById({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
             assetAdministrationShell: updatedShell,
         });
 
         expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.data).toBeDefined();
-        }
 
         const fetchResponse = await client.getAssetAdministrationShellById({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
         });
 
@@ -77,7 +89,7 @@ describe('AAS Repository Integration Tests', () => {
 
     test('should get the Asset Information of an Asset Administration Shell', async () => {
         const response = await client.getAssetInformation({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
         });
 
@@ -93,18 +105,15 @@ describe('AAS Repository Integration Tests', () => {
         updatedAssetInfo.globalAssetId = createGlobalAssetId();
 
         const updateResponse = await client.putAssetInformation({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
             assetInformation: updatedAssetInfo,
         });
 
         expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.data).toBeDefined();
-        }
 
         const fetchResponse = await client.getAssetInformation({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
         });
 
@@ -116,31 +125,29 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should add a thumbnail to an Asset Administration Shell', async () => {
-        const thumbnail = {
-            fileName: 'test_thumbnail.png',
-            file: new Blob(['base64_encoded_image_data'], { type: 'image/png' }),
-        } as AssetinformationThumbnailBody;
+        const fileName = 'test_thumbnail.png';
+        const file = new Blob(['base64_encoded_image_data'], { type: 'image/png' });
 
         const updateResponse = await client.putThumbnail({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
-            thumbnail,
+            fileName,
+            file,
         });
 
+        console.log('Update Response:', updateResponse);
+
         expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.data).toBeDefined();
-        }
 
         const fetchResponse = await client.getThumbnail({
-            baseUrl: baseURL,
+            configuration,
             aasIdentifier: testShell.id,
         });
 
         expect(fetchResponse.success).toBe(true);
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
-            expect(fetchResponse.data).toEqual(thumbnail.file);
+            expect(fetchResponse.data).toEqual(file);
         }
     });
 });
