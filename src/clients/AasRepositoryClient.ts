@@ -69,7 +69,32 @@ export class AasRepositoryClient {
                 data: { pagedResult: result.pagingMetadata, result: shells },
             };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = "";
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -97,7 +122,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = "";
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -127,7 +177,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+           // return { success: false, error: err as RequiredError };
         }
     }
 
@@ -145,7 +220,7 @@ export class AasRepositoryClient {
         aasIdentifier: string;
     }): Promise<ApiResult<AssetAdministrationShell, RequiredError>> {
         const { configuration, aasIdentifier } = options;
-
+        
         try {
             const apiInstance = new AasRepository(applyDefaults(configuration));
 
@@ -154,10 +229,35 @@ export class AasRepositoryClient {
             const result = await apiInstance.getAssetAdministrationShellById({
                 aasIdentifier: encodedAasIdentifier,
             });
-
+            
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -190,7 +290,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = "";
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+           // return { success: false, error: err as RequiredError };
         }
     }
 
@@ -223,7 +348,32 @@ export class AasRepositoryClient {
                 data: convertApiAssetInformationToCoreAssetInformation(result),
             };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -256,7 +406,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = "";
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -285,7 +460,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -315,7 +515,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -351,7 +576,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -394,7 +644,32 @@ export class AasRepositoryClient {
                 },
             };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = aasIdentifier;
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -427,7 +702,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiReferenceToCoreReference(result) };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = "";
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 
@@ -461,7 +761,32 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            let message = "Unknown error";
+            let statusCode = "N/A";
+            let field = "";
+            
+            if (err instanceof RequiredError) {
+                field = err.field;
+                message = err.message;
+            }
+            else if (err instanceof Error) {
+                
+                message = err.toString().split('\n')[0];
+            }
+            // Try to extract HTTP status code if available
+            const response = (err as any)?.response;
+            if (response?.status) {
+                statusCode = response.status;
+                message = `HTTP ${statusCode} - ${message}`;
+            }
+            
+            const customError = new RequiredError(
+               field, 
+               message
+            );
+            console.log('Error:', customError);
+            return { success: false, error: customError };
+            //return { success: false, error: err as RequiredError };
         }
     }
 }
