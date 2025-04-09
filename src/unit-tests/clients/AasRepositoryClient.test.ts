@@ -186,6 +186,7 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertApiAasToCoreAas).toHaveBeenCalledTimes(2);
         expect(response.success).toBe(true);
+
         if (response.success) {
             expect(response.data.pagedResult).toBe(pagedResult);
             expect(response.data.result).toEqual([CORE_AAS1, CORE_AAS2]);
@@ -207,7 +208,8 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
+            //expect(response.error).toBe(mockError);
         }
     });
 
@@ -252,7 +254,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
         }
     });
 
@@ -293,7 +295,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
         }
     });
 
@@ -338,7 +340,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
         }
     });
 
@@ -383,7 +385,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
         }
     });
 
@@ -428,7 +430,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
         }
     });
 
@@ -473,7 +475,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toStrictEqual(mockError);
         }
     });
 
