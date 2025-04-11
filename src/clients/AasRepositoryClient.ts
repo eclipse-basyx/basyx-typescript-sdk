@@ -21,6 +21,7 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
+import { handleApiError } from '../lib/errorHandler';
 
 export class AasRepositoryClient {
     /**
@@ -69,7 +70,9 @@ export class AasRepositoryClient {
                 data: { pagedResult: result.pagingMetadata, result: shells },
             };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -97,7 +100,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -127,7 +132,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -157,7 +164,10 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            //console.log('Error:', customError);
+            console.log(`Error: field: ${customError.field}, message: ${customError.message}`);
+            return { success: false, error: customError };
         }
     }
 
@@ -190,7 +200,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -223,7 +235,9 @@ export class AasRepositoryClient {
                 data: convertApiAssetInformationToCoreAssetInformation(result),
             };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -256,7 +270,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -285,7 +301,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -315,7 +333,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -351,7 +371,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -394,7 +416,9 @@ export class AasRepositoryClient {
                 },
             };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -427,7 +451,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiReferenceToCoreReference(result) };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 
@@ -461,7 +487,9 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            return { success: false, error: err as RequiredError };
+            const customError = handleApiError(err);
+            console.log('Error:', customError);
+            return { success: false, error: customError };
         }
     }
 }
