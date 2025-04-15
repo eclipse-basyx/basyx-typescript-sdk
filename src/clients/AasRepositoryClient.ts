@@ -71,7 +71,6 @@ export class AasRepositoryClient {
             };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -101,7 +100,6 @@ export class AasRepositoryClient {
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -133,7 +131,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -165,8 +162,6 @@ export class AasRepositoryClient {
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
             const customError = handleApiError(err);
-            //console.log('Error:', customError);
-            console.log(`Error: field: ${customError.field}, message: ${customError.message}`);
             return { success: false, error: customError };
         }
     }
@@ -201,7 +196,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -236,7 +230,6 @@ export class AasRepositoryClient {
             };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -271,7 +264,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -302,7 +294,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -334,7 +325,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -372,7 +362,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -417,7 +406,6 @@ export class AasRepositoryClient {
             };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -452,7 +440,6 @@ export class AasRepositoryClient {
             return { success: true, data: convertApiReferenceToCoreReference(result) };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }
@@ -488,7 +475,6 @@ export class AasRepositoryClient {
             return { success: true, data: result };
         } catch (err) {
             const customError = handleApiError(err);
-            console.log('Error:', customError);
             return { success: false, error: customError };
         }
     }

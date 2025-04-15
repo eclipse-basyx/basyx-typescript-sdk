@@ -44,21 +44,9 @@ describe('AAS Repository Integration Tests', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toBeDefined();
-
-            //console.log('Error:', response.error);
-            //console.log(`❌ Error fetching AAS with ID '${nonExistingId}':`, response.error.message || response.error);
-            
-            let errorMessage = "Unknown error occurred.";
-            if (response.error?.field) {
-                errorMessage = ` Missing required field: ${response.error.field} - ${response.error.message}`;
-            } else if (response.error?.message) {
-                errorMessage = `${response.error.message}`;
-            } 
-            console.log(
-                `❌ Failed to fetch AAS with AAS ID: ${nonExistingId}, Error: ${errorMessage}` );
-                       
-         }
-     });
+            console.log('Error:', response.error);
+        }
+    });
 
     test('should fetch all Asset Administration Shells', async () => {
         const response = await client.getAllAssetAdministrationShells({
