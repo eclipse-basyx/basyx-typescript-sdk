@@ -15,7 +15,6 @@ import {
     AssetInformation as ApiAssetInformation,
     Configuration,
     Reference as ApiReference,
-    RequiredError,
 } from '../../generated';
 import { base64Encode } from '../../lib/base64Url';
 import {
@@ -26,6 +25,7 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
+import { ApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
 jest.mock('../../generated');
@@ -195,7 +195,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when fetching Asset Administration Shells', async () => {
         // Arrange
-        const mockError = new RequiredError('assetIds', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'assetIds',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.getAllAssetAdministrationShells.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();
@@ -240,7 +243,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when creating an Asset Administration Shell', async () => {
         // Arrange
-        const mockError = new RequiredError('assetAdministrationShell', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'assetAdministrationShell',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.postAssetAdministrationShell.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();
@@ -281,7 +287,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when deleting an Asset Administration Shell', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'aasIdentifier',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.deleteAssetAdministrationShellById.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();
@@ -326,7 +335,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when getting an Asset Administration Shell by ID', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'aasIdentifier',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.getAssetAdministrationShellById.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();
@@ -370,7 +382,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when updating an Asset Administration Shell', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'aasIdentifier',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.putAssetAdministrationShellById.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();
@@ -416,7 +431,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when getting Asset Information', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'aasIdentifier',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.getAssetInformationAasRepository.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();
@@ -460,7 +478,10 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when updating Asset Information', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
+        const mockError = new ApiError('Required parameter missing', {
+            field: 'aasIdentifier',
+            errorType: 'RequiredError',
+        });
         mockApiInstance.putAssetInformationAasRepository.mockRejectedValue(mockError);
 
         const client = new AasRepositoryClient();

@@ -15,6 +15,8 @@
  * @returns {string} The Base64 encoded string, converted to URL-safe format if requested.
  */
 export function base64Encode(string: string, urlSafe: boolean = true): string {
+    if (string === null || string === undefined) return '';
+
     string = string.trim();
 
     if (string === '') return '';
@@ -49,6 +51,8 @@ export function base64Encode(string: string, urlSafe: boolean = true): string {
  * @returns {string} The decoded string.
  */
 export function base64Decode(urlSafeBase64String: string): string {
+    if (urlSafeBase64String === null || urlSafeBase64String === undefined) return '';
+
     urlSafeBase64String = urlSafeBase64String.trim();
 
     if (urlSafeBase64String === '') return '';
