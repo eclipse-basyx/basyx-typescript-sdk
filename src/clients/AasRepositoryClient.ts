@@ -9,6 +9,7 @@ import {
     AssetAdministrationShellRepositoryAPIApi as AasRepository,
     Configuration,
     PagedResultPagingMetadata,
+    Result,
 } from '../generated';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
@@ -20,7 +21,7 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
-import { ApiError, handleApiError } from '../lib/errorHandler';
+import { handleApiError } from '../lib/errorHandler';
 
 export class AasRepositoryClient {
     /**
@@ -47,7 +48,7 @@ export class AasRepositoryClient {
                 pagedResult: PagedResultPagingMetadata | undefined;
                 result: AssetAdministrationShell[];
             },
-            ApiError
+            Result
         >
     > {
         const { configuration, assetIds, idShort, limit, cursor } = options;
@@ -69,7 +70,7 @@ export class AasRepositoryClient {
                 data: { pagedResult: result.pagingMetadata, result: shells },
             };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -86,7 +87,7 @@ export class AasRepositoryClient {
     async postAssetAdministrationShell(options: {
         configuration: Configuration;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<AssetAdministrationShell, ApiError>> {
+    }): Promise<ApiResult<AssetAdministrationShell, Result>> {
         const { configuration, assetAdministrationShell } = options;
 
         try {
@@ -98,7 +99,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -115,7 +116,7 @@ export class AasRepositoryClient {
     async deleteAssetAdministrationShellById(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<void, ApiError>> {
+    }): Promise<ApiResult<void, Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
@@ -129,7 +130,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -146,7 +147,7 @@ export class AasRepositoryClient {
     async getAssetAdministrationShellById(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetAdministrationShell, ApiError>> {
+    }): Promise<ApiResult<AssetAdministrationShell, Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
@@ -160,7 +161,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiAasToCoreAas(result) };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -179,7 +180,7 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<void, ApiError>> {
+    }): Promise<ApiResult<void, Result>> {
         const { configuration, aasIdentifier, assetAdministrationShell } = options;
 
         try {
@@ -194,7 +195,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -211,7 +212,7 @@ export class AasRepositoryClient {
     async getAssetInformation(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetInformation, ApiError>> {
+    }): Promise<ApiResult<AssetInformation, Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
@@ -228,7 +229,7 @@ export class AasRepositoryClient {
                 data: convertApiAssetInformationToCoreAssetInformation(result),
             };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -247,7 +248,7 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
-    }): Promise<ApiResult<void, ApiError>> {
+    }): Promise<ApiResult<void, Result>> {
         const { configuration, aasIdentifier, assetInformation } = options;
 
         try {
@@ -262,7 +263,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -279,7 +280,7 @@ export class AasRepositoryClient {
     async deleteThumbnail(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<void, ApiError>> {
+    }): Promise<ApiResult<void, Result>> {
         const { configuration, aasIdentifier } = options;
         try {
             const apiInstance = new AasRepository(applyDefaults(configuration));
@@ -292,7 +293,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -309,7 +310,7 @@ export class AasRepositoryClient {
     async getThumbnail(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<Blob, ApiError>> {
+    }): Promise<ApiResult<Blob, Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
@@ -323,7 +324,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -344,7 +345,7 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         fileName: string;
         file: Blob;
-    }): Promise<ApiResult<void, ApiError>> {
+    }): Promise<ApiResult<void, Result>> {
         const { configuration, aasIdentifier, fileName, file } = options;
 
         try {
@@ -360,7 +361,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -381,7 +382,7 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
-    }): Promise<ApiResult<{ pagedResult: PagedResultPagingMetadata | undefined; result: Reference[] }, ApiError>> {
+    }): Promise<ApiResult<{ pagedResult: PagedResultPagingMetadata | undefined; result: Reference[] }, Result>> {
         const { configuration, aasIdentifier, limit, cursor } = options;
 
         try {
@@ -404,7 +405,7 @@ export class AasRepositoryClient {
                 },
             };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -423,7 +424,7 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
-    }): Promise<ApiResult<Reference, ApiError>> {
+    }): Promise<ApiResult<Reference, Result>> {
         const { configuration, aasIdentifier, submodelReference } = options;
 
         try {
@@ -438,7 +439,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: convertApiReferenceToCoreReference(result) };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }
@@ -457,7 +458,7 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
-    }): Promise<ApiResult<void, ApiError>> {
+    }): Promise<ApiResult<void, Result>> {
         const { configuration, aasIdentifier, submodelIdentifier } = options;
 
         try {
@@ -473,7 +474,7 @@ export class AasRepositoryClient {
 
             return { success: true, data: result };
         } catch (err) {
-            const customError = handleApiError(err);
+            const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
     }

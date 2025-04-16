@@ -1,90 +1,99 @@
-import { FetchError, RequiredError, ResponseError } from '../generated';
+import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
 
-export class ApiError extends Error {
-    statusCode: string | number;
-    field: string;
-    errorType: string;
-
-    constructor(
-        message: string,
-        options: {
-            statusCode?: string | number;
-            field?: string;
-            errorType?: string;
-        } = {}
-    ) {
-        super(message);
-        this.name = 'ApiError';
-        this.statusCode = options.statusCode || 'N/A';
-        this.field = options.field || 'N/A';
-        this.errorType = options.errorType || 'UnknownError';
-
-        // Make properties enumerable so they appear in serialized output
-        Object.defineProperty(this, 'statusCode', { enumerable: true });
-        Object.defineProperty(this, 'message', { enumerable: true, value: message });
-        Object.defineProperty(this, 'field', { enumerable: true });
-        Object.defineProperty(this, 'errorType', { enumerable: true });
-    }
-}
-
-export function handleApiError(err: unknown): ApiError {
-    let message = 'Unknown error';
-    let statusCode: string | number = 'N/A';
-    let field = 'N/A';
-    let errorType = 'UnknownError';
-
+/**
+ * Processes errors from API calls and standardizes them to a Result object
+ * with a consistent messages array following the API spec guidelines.
+ *
+ * @param err The error thrown during an API call
+ * @returns A standardized Result object containing error messages
+ */
+export async function handleApiError(err: unknown): Promise<Result> {
     try {
+        // Check if the error already has the expected format with messages array
+        const errorAny = err as any;
+        if (errorAny?.messages && Array.isArray(errorAny.messages)) {
+            return { messages: errorAny.messages };
+        }
+
+        // Get current timestamp with millisecond precision as a string
+        const timestamp = (new Date().getTime() / 1000).toString();
+
+        let message: Message = {
+            code: '500',
+            messageType: 'Exception',
+            timestamp: timestamp,
+            text: 'Unknown error',
+        };
+
         // Handle different error types
         if (err instanceof RequiredError) {
-            field = err.field || 'N/A';
-            message = err.message || 'Required field error';
-            errorType = 'RequiredError';
+            message = {
+                code: '400',
+                messageType: 'Exception',
+                text: err.message || `Required parameter missing: ${err.field}`,
+                timestamp: timestamp,
+            };
         } else if (err instanceof ResponseError) {
-            statusCode = err.response.status;
-            message = err.message || 'Response returned an error code';
-            errorType = 'ResponseError';
+            // Try to parse response body for messages
+            const responseBody = err.response;
+
+            try {
+                // Check if the response already contains a messages array
+                const responseData = responseBody && responseBody.json ? await responseBody.json() : null;
+
+                if (responseData?.messages && Array.isArray(responseData.messages)) {
+                    return { messages: responseData.messages };
+                }
+
+                // Otherwise, create a message with the status code
+                message = {
+                    code: err.response.status.toString(),
+                    messageType: 'Exception',
+                    text: err.message || `HTTP ${err.response.status} - Response returned an error code`,
+                    timestamp: timestamp,
+                };
+            } catch {
+                // If we can't parse the body, create a basic message
+                message = {
+                    code: err.response.status.toString(),
+                    messageType: 'Exception',
+                    text: `HTTP ${err.response.status} - Response returned an error code`,
+                    timestamp: timestamp,
+                };
+            }
         } else if (err instanceof FetchError) {
-            message = err.message || 'Network request failed';
-            errorType = 'FetchError';
+            message = {
+                code: '0',
+                messageType: 'Exception',
+                text: err.message || 'Network request failed',
+                timestamp: timestamp,
+            };
         } else if (err instanceof Error) {
-            message = err.message || 'Unknown error occurred';
-            errorType = err.name || 'Error';
+            message = {
+                code: '500',
+                messageType: 'Exception',
+                text: err.message || 'Unknown error occurred',
+                timestamp: timestamp,
+            };
         }
 
-        // Extract additional response details if available
-        const response = (err as any)?.response;
-        if (response?.status) {
-            statusCode = response.status;
-
-            // Try to get more detailed error information from response body
-            if (response.data?.error) {
-                message = response.data.error;
-            }
-
-            message = `HTTP ${statusCode} - ${message}`;
-        }
-
-        // Extra safeguard for message handling
-        let safeMessage = 'Unknown error';
-
-        if (message !== null && message !== undefined) {
-            if (typeof message === 'string') {
-                safeMessage = message.trim();
-            } else {
-                safeMessage = String(message);
-            }
-        }
-
-        return new ApiError(safeMessage, {
-            statusCode,
-            field,
-            errorType,
-        });
+        return { messages: [message] };
     } catch (handlerError) {
         // If our error handler throws an error, capture that and return a fallback error
         console.error('Error in error handler:', handlerError);
-        return new ApiError('An error occurred while processing another error', {
-            errorType: 'ErrorHandlerError',
-        });
+
+        // Get current timestamp with millisecond precision as a string for the fallback error
+        const timestamp = (new Date().getTime() / 1000).toString();
+
+        return {
+            messages: [
+                {
+                    code: '500',
+                    messageType: 'Exception',
+                    text: 'An error occurred while processing another error',
+                    timestamp: timestamp,
+                },
+            ],
+        };
     }
 }
