@@ -1,5 +1,5 @@
 // Import necessary types
-import type { PagedResultPagingMetadata } from '../../generated';
+import type { PagedResultPagingMetadata, Result } from '../../generated';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
@@ -14,8 +14,8 @@ import {
     AssetAdministrationShell as ApiAssetAdministrationShell,
     AssetInformation as ApiAssetInformation,
     Configuration,
+    Message,
     Reference as ApiReference,
-    RequiredError,
 } from '../../generated';
 import { base64Encode } from '../../lib/base64Url';
 import {
@@ -26,11 +26,13 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
+import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
 jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
 jest.mock('../../lib/base64Url');
+jest.mock('../../lib/errorHandler');
 
 // Define mock constants
 const ASSET_IDS = [
@@ -144,6 +146,23 @@ describe('AasRepositoryClient', () => {
             if (ref === CORE_REFERENCE2) return API_REFERENCE2;
             return null;
         });
+
+        // Mock the error handler to return a standardized Result
+        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+            // If the error already has messages, return it as is
+            if (err?.messages) return err;
+
+            // Create a standard Result with messages
+            const timestamp = (1744752054.63186).toString();
+            const message: Message = {
+                code: '400',
+                messageType: 'Exception',
+                text: err.message || 'Error occurred',
+                timestamp: timestamp,
+            };
+
+            return { messages: [message] };
+        });
     });
 
     // Mock console.error to prevent logging during tests
@@ -186,6 +205,7 @@ describe('AasRepositoryClient', () => {
         });
         expect(convertApiAasToCoreAas).toHaveBeenCalledTimes(2);
         expect(response.success).toBe(true);
+
         if (response.success) {
             expect(response.data.pagedResult).toBe(pagedResult);
             expect(response.data.result).toEqual([CORE_AAS1, CORE_AAS2]);
@@ -194,8 +214,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when fetching Asset Administration Shells', async () => {
         // Arrange
-        const mockError = new RequiredError('assetIds', 'Required parameter missing');
-        mockApiInstance.getAllAssetAdministrationShells.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getAllAssetAdministrationShells.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -207,7 +237,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
@@ -238,8 +268,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when creating an Asset Administration Shell', async () => {
         // Arrange
-        const mockError = new RequiredError('assetAdministrationShell', 'Required parameter missing');
-        mockApiInstance.postAssetAdministrationShell.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.postAssetAdministrationShell.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -252,7 +292,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
@@ -279,8 +319,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when deleting an Asset Administration Shell', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
-        mockApiInstance.deleteAssetAdministrationShellById.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.deleteAssetAdministrationShellById.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -293,7 +343,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
@@ -324,8 +374,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when getting an Asset Administration Shell by ID', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
-        mockApiInstance.getAssetAdministrationShellById.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getAssetAdministrationShellById.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -338,7 +398,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
@@ -368,8 +428,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when updating an Asset Administration Shell', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
-        mockApiInstance.putAssetAdministrationShellById.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.putAssetAdministrationShellById.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -383,7 +453,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
@@ -414,8 +484,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when getting Asset Information', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
-        mockApiInstance.getAssetInformationAasRepository.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getAssetInformationAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -428,7 +508,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
@@ -458,8 +538,18 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when updating Asset Information', async () => {
         // Arrange
-        const mockError = new RequiredError('aasIdentifier', 'Required parameter missing');
-        mockApiInstance.putAssetInformationAasRepository.mockRejectedValue(mockError);
+        const errorResult: Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.putAssetInformationAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -473,7 +563,7 @@ describe('AasRepositoryClient', () => {
         // Assert
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.error).toBe(mockError);
+            expect(response.error).toEqual(errorResult);
         }
     });
 
