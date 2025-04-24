@@ -1,5 +1,5 @@
 // Import necessary types
-import type { PagedResultPagingMetadata, Result } from '../../generated';
+//import type { PagedResultPagingMetadata, Result } from '../../generated';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
@@ -10,13 +10,14 @@ import {
     ReferenceTypes,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
-import {
-    AssetAdministrationShell as ApiAssetAdministrationShell,
-    AssetInformation as ApiAssetInformation,
-    Configuration,
-    Message,
-    Reference as ApiReference,
-} from '../../generated';
+import { AasRepositoryService } from '../../index';
+// import {
+//     AssetAdministrationShell as ApiAssetAdministrationShell,
+//     AssetInformation as ApiAssetInformation,
+//     Configuration,
+//     Message,
+//     Reference as ApiReference,
+// } from '../../generated';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -29,7 +30,8 @@ import {
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
-jest.mock('../../generated');
+//jest.mock('../../generated');
+jest.mock('../../index');
 jest.mock('../../lib/convertAasTypes');
 jest.mock('../../lib/base64Url');
 jest.mock('../../lib/errorHandler');
@@ -42,12 +44,12 @@ const ASSET_IDS = [
 const ID_SHORT = 'shellIdShort';
 const LIMIT = 10;
 const CURSOR = 'cursor123';
-const API_AAS1: ApiAssetAdministrationShell = {
+const API_AAS1: AasRepositoryService.AssetAdministrationShell = {
     id: 'https://example.com/ids/aas/7600_5912_3951_6917',
     modelType: 'AssetAdministrationShell',
     assetInformation: { assetKind: 'Instance' },
 };
-const API_AAS2: ApiAssetAdministrationShell = {
+const API_AAS2: AasRepositoryService.AssetAdministrationShell = {
     id: 'https://example.com/ids/aas/7600_5912_3951_6918',
     modelType: 'AssetAdministrationShell',
     assetInformation: { assetKind: 'Instance' },
@@ -60,12 +62,12 @@ const CORE_AAS2: CoreAssetAdministrationShell = new CoreAssetAdministrationShell
     'https://example.com/ids/aas/7600_5912_3951_6918',
     new CoreAssetInformation(AssetKind.Instance)
 );
-const API_ASSET_INFO: ApiAssetInformation = {
+const API_ASSET_INFO: AasRepositoryService.AssetInformation = {
     assetKind: 'Instance',
 };
 const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(AssetKind.Instance);
 const MOCK_BLOB = new Blob(['test data'], { type: 'application/octet-stream' });
-const API_REFERENCE1: ApiReference = {
+const API_REFERENCE1: AasRepositoryService.Reference = {
     type: 'ExternalReference',
     keys: [
         {
@@ -77,7 +79,7 @@ const API_REFERENCE1: ApiReference = {
 const CORE_REFERENCE1: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
     new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6917'),
 ]);
-const API_REFERENCE2: ApiReference = {
+const API_REFERENCE2: AasRepositoryService.Reference = {
     type: 'ExternalReference',
     keys: [
         {
@@ -89,7 +91,7 @@ const API_REFERENCE2: ApiReference = {
 const CORE_REFERENCE2: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
     new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6918'),
 ]);
-const TEST_CONFIGURATION = new Configuration({
+const TEST_CONFIGURATION = new AasRepositoryService.Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
 });
@@ -120,9 +122,9 @@ describe('AasRepositoryClient', () => {
         // Setup mock for base64Encode
         (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (jest.requireMock('../../generated').AssetAdministrationShellRepositoryAPIApi as jest.Mock).mockImplementation(
-            MockAasRepository
-        );
+        (
+            jest.requireMock('../../index').AasRepositoryService.AssetAdministrationShellRepositoryAPIApi as jest.Mock
+        ).mockImplementation(MockAasRepository);
         // Setup mocks for conversion functions
         (convertApiAasToCoreAas as jest.Mock).mockImplementation((aas) => {
             if (aas.id === API_AAS1.id) return CORE_AAS1;
@@ -154,7 +156,7 @@ describe('AasRepositoryClient', () => {
 
             // Create a standard Result with messages
             const timestamp = (1744752054.63186).toString();
-            const message: Message = {
+            const message: AasRepositoryService.Message = {
                 code: '400',
                 messageType: 'Exception',
                 text: err.message || 'Error occurred',
@@ -176,7 +178,7 @@ describe('AasRepositoryClient', () => {
 
     it('should return Asset Administration Shells on successful response', async () => {
         // Arrange
-        const pagedResult: PagedResultPagingMetadata = {
+        const pagedResult: AasRepositoryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
         mockApiInstance.getAllAssetAdministrationShells.mockResolvedValue({
@@ -214,7 +216,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when fetching Asset Administration Shells', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -268,7 +270,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when creating an Asset Administration Shell', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -319,7 +321,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when deleting an Asset Administration Shell', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -374,7 +376,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when getting an Asset Administration Shell by ID', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -428,7 +430,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when updating an Asset Administration Shell', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -484,7 +486,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when getting Asset Information', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -538,7 +540,7 @@ describe('AasRepositoryClient', () => {
 
     it('should handle errors when updating Asset Information', async () => {
         // Arrange
-        const errorResult: Result = {
+        const errorResult: AasRepositoryService.Result = {
             messages: [
                 {
                     code: '400',
@@ -640,7 +642,7 @@ describe('AasRepositoryClient', () => {
 
     it('should get all submodel references', async () => {
         // Arrange
-        const pagedResult: PagedResultPagingMetadata = {
+        const pagedResult: AasRepositoryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelReferencesAasRepository.mockResolvedValue({

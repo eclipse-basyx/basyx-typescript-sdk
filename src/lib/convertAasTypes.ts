@@ -4,11 +4,12 @@ import {
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import {
-    AssetAdministrationShell as ApiAssetAdministrationShell,
-    AssetInformation as ApiAssetInformation,
-    Reference as ApiReference,
-} from '../generated';
+import { AasRepositoryService } from '../index';
+// import {
+//     AssetAdministrationShell as ApiAssetAdministrationShell,
+//     AssetInformation as ApiAssetInformation,
+//     Reference as ApiReference,
+// } from '../generated';
 
 /**
  * Convert an API AssetAdministrationShell to a Core Works AssetAdministrationShell
@@ -17,7 +18,9 @@ import {
  * @param {ApiAssetAdministrationShell} aas - The API AssetAdministrationShell to convert
  * @returns {CoreAssetAdministrationShell} The Core Works AssetAdministrationShell
  */
-export function convertApiAasToCoreAas(aas: ApiAssetAdministrationShell): CoreAssetAdministrationShell {
+export function convertApiAasToCoreAas(
+    aas: AasRepositoryService.AssetAdministrationShell
+): CoreAssetAdministrationShell {
     // first stringify
     let shell = JSON.stringify(aas);
     // then parse
@@ -40,13 +43,15 @@ export function convertApiAasToCoreAas(aas: ApiAssetAdministrationShell): CoreAs
  * @param {CoreAssetAdministrationShell} aas - The Core Works AssetAdministrationShell to convert
  * @returns {ApiAssetAdministrationShell} The API AssetAdministrationShell
  */
-export function convertCoreAasToApiAas(aas: CoreAssetAdministrationShell): ApiAssetAdministrationShell {
+export function convertCoreAasToApiAas(
+    aas: CoreAssetAdministrationShell
+): AasRepositoryService.AssetAdministrationShell {
     // first jsonize
     const jsonableAas = jsonization.toJsonable(aas);
     // then stringify
     const shell = JSON.stringify(jsonableAas);
     // then parse
-    return JSON.parse(shell) as ApiAssetAdministrationShell;
+    return JSON.parse(shell) as AasRepositoryService.AssetAdministrationShell;
 }
 
 /**
@@ -57,7 +62,7 @@ export function convertCoreAasToApiAas(aas: CoreAssetAdministrationShell): ApiAs
  * @returns {CoreAssetInformation} The Core Works AssetInformation
  */
 export function convertApiAssetInformationToCoreAssetInformation(
-    assetInformation: ApiAssetInformation
+    assetInformation: AasRepositoryService.AssetInformation
 ): CoreAssetInformation {
     // first stringify
     let asset = JSON.stringify(assetInformation);
@@ -83,13 +88,13 @@ export function convertApiAssetInformationToCoreAssetInformation(
  */
 export function convertCoreAssetInformationToApiAssetInformation(
     assetInformation: CoreAssetInformation
-): ApiAssetInformation {
+): AasRepositoryService.AssetInformation {
     // first jsonize
     const jsonableAsset = jsonization.toJsonable(assetInformation);
     // then stringify
     const asset = JSON.stringify(jsonableAsset);
     // then parse
-    return JSON.parse(asset) as ApiAssetInformation;
+    return JSON.parse(asset) as AasRepositoryService.AssetInformation;
 }
 
 /**
@@ -99,7 +104,7 @@ export function convertCoreAssetInformationToApiAssetInformation(
  * @param {ApiReference} reference - The API Reference to convert
  * @returns {CoreReference} The Core Works Reference
  */
-export function convertApiReferenceToCoreReference(reference: ApiReference): CoreReference {
+export function convertApiReferenceToCoreReference(reference: AasRepositoryService.Reference): CoreReference {
     // first stringify
     let ref = JSON.stringify(reference);
     // then parse
@@ -122,11 +127,11 @@ export function convertApiReferenceToCoreReference(reference: ApiReference): Cor
  * @param {CoreReference} reference - The Core Works Reference to convert
  * @returns {ApiReference} The API Reference
  */
-export function convertCoreReferenceToApiReference(reference: CoreReference): ApiReference {
+export function convertCoreReferenceToApiReference(reference: CoreReference): AasRepositoryService.Reference {
     // first jsonize
     const jsonableRef = jsonization.toJsonable(reference);
     // then stringify
     const ref = JSON.stringify(jsonableRef);
     // then parse
-    return JSON.parse(ref) as ApiReference;
+    return JSON.parse(ref) as AasRepositoryService.Reference;
 }
