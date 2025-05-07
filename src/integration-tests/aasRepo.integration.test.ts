@@ -1,6 +1,6 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 //import { Configuration } from '../generated';
-import { AasRepositoryService } from '../index';
+import { AasRepositoryService } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 
 describe('AAS Repository Integration Tests', () => {

@@ -1,5 +1,5 @@
 //import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
-import { AasRepositoryService, SubmodelRepositoryService } from '../index';
+import { AasRepositoryService, SubmodelRepositoryService } from '../generated';
 /**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.

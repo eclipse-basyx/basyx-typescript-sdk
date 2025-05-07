@@ -10,7 +10,7 @@ import {
     ReferenceTypes,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
-import { AasRepositoryService } from '../../index';
+import { AasRepositoryService } from '../../generated';
 // import {
 //     AssetAdministrationShell as ApiAssetAdministrationShell,
 //     AssetInformation as ApiAssetInformation,
@@ -31,7 +31,7 @@ import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
 //jest.mock('../../generated');
-jest.mock('../../index');
+jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
 jest.mock('../../lib/base64Url');
 jest.mock('../../lib/errorHandler');
@@ -123,7 +123,7 @@ describe('AasRepositoryClient', () => {
         (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
         (
-            jest.requireMock('../../index').AasRepositoryService.AssetAdministrationShellRepositoryAPIApi as jest.Mock
+            jest.requireMock('../../generated').AasRepositoryService.AssetAdministrationShellRepositoryAPIApi as jest.Mock
         ).mockImplementation(MockAasRepository);
         // Setup mocks for conversion functions
         (convertApiAasToCoreAas as jest.Mock).mockImplementation((aas) => {

@@ -1,15 +1,20 @@
 // Import necessary types
 //import type { PagedResultPagingMetadata, Result } from '../../generated';
-import { Submodel as CoreSubmodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import { Submodel as CoreSubmodel,
+    ISubmodelElement as CoreSubmodelElement,
+    SubmodelElementList as CoreSubmodelElementList,
+    SubmodelElementCollection as CoreSubmodelElementCollection
+ } from '@aas-core-works/aas-core3.0-typescript/types';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
-import { SubmodelRepositoryService } from '../../index';
+import { SubmodelRepositoryService } from '../../generated';
 import { base64Encode } from '../../lib/base64Url';
-import { convertApiSubmodelToCoreSubmodel, convertCoreSubmodelToApiSubmodel } from '../../lib/convertSubmodelTypes';
+import { convertApiSubmodelElementToCoreSubmodelElement, convertApiSubmodelToCoreSubmodel, convertCoreSubmodelElementToApiSubmodelElement, convertCoreSubmodelToApiSubmodel } from '../../lib/convertSubmodelTypes';
 import { handleApiError } from '../../lib/errorHandler';
+import { ModelType } from '../../generated/SubmodelRepositoryService';
 
 // Mock the dependencies
 //jest.mock('../../generated');
-jest.mock('../../index');
+jest.mock('../../generated');
 jest.mock('../../lib/convertSubmodelTypes');
 jest.mock('../../lib/base64Url');
 jest.mock('../../lib/errorHandler');
@@ -26,10 +31,11 @@ const SEMANTIC_ID = JSON.stringify({
     ],
 });
 const ID_SHORT = 'submodelIdShort';
+const ID_SHORT_PATH = '';
 const LIMIT = 10;
 const CURSOR = 'cursor123';
-const LEVEL = SubmodelRepositoryService.GetAllSubmodelsLevelEnum.Deep;
-const EXTENT = SubmodelRepositoryService.GetAllSubmodelsExtentEnum.WithBlobValue;
+const LEVEL_SUBMODELS = SubmodelRepositoryService.GetAllSubmodelsLevelEnum.Deep;
+const EXTENT_SUBMODELS = SubmodelRepositoryService.GetAllSubmodelsExtentEnum.WithBlobValue;
 const API_SUBMODEL1: SubmodelRepositoryService.Submodel = {
     id: 'https://example.com/ids/submodel/123',
     modelType: 'Submodel',
@@ -38,6 +44,55 @@ const API_SUBMODEL2: SubmodelRepositoryService.Submodel = {
     id: 'https://example.com/ids/submodel/234',
     modelType: 'Submodel',
 };
+const LEVEL_SUBMODEL = SubmodelRepositoryService.GetSubmodelByIdLevelEnum.Deep;
+const EXTENT_SUBMODEL = SubmodelRepositoryService.GetSubmodelByIdExtentEnum.WithBlobValue;
+
+const API_SUBMODELELEMENT1: SubmodelRepositoryService.SubmodelElement = {
+    //id: 'https://example.com/ids/submodel/123',
+    modelType: ModelType.SubmodelElementList,
+    // ., fix this part
+};
+const API_SUBMODELELEMENT2: SubmodelRepositoryService.SubmodelElement = {
+    //id: 'https://example.com/ids/submodel/123',
+    modelType: ModelType.SubmodelElementCollection,
+    // ., fix this part
+};
+const CORE_SUBMODELELEMENT1: CoreSubmodelElement = {} as CoreSubmodelElement;
+//const CORE_SUBMODELELEMENT1: CoreSubmodelElement = new CoreSubmodelElementList();
+const CORE_SUBMODELELEMENT2: CoreSubmodelElement = {} as CoreSubmodelElement;
+
+const LEVEL_SUBMODELELEMENT = SubmodelRepositoryService.GetAllSubmodelElementsLevelEnum.Deep;
+const EXTENT_SUBMODELELEMENT = SubmodelRepositoryService.GetAllSubmodelElementsExtentEnum.WithBlobValue;
+
+const API_SUBMODEL_METADATA: SubmodelRepositoryService.SubmodelMetadata = {
+    id: 'https://example.com/ids/submodel/123',
+    modelType: ModelType.Submodel,
+    // other metadata properties..., fix this part
+};
+const LEVEL_SUBMODEL_VALUE = SubmodelRepositoryService.GetSubmodelByIdValueOnlyLevelEnum.Deep;
+const EXTENT_SUBMODEL_VALUE = SubmodelRepositoryService.GetSubmodelByIdValueOnlyExtentEnum.WithBlobValue;
+const API_SUBMODEL_VALUE = {
+    // Sample value-only representation of a submodel
+    propertyA: 'value1',
+    propertyB: 42,
+    nestedProperty: {
+        propertyC: true
+    }
+};
+const LEVEL_SUBMODEL_VALUE1 = SubmodelRepositoryService.PatchSubmodelByIdValueOnlyLevelEnum.Core;
+const BODY = {
+    propertyA: 'sample value',
+    propertyB: 99,
+    nestedProperty: {
+        propertyC: false
+    }
+};
+const LEVEL_SUBMODELELEMENT_VALUE_BY_PATH = SubmodelRepositoryService.GetSubmodelElementByPathValueOnlySubmodelRepoLevelEnum.Deep;
+const EXTENT_SUBMODELELEMENT_VALUE_BY_PATH = SubmodelRepositoryService.GetSubmodelElementByPathValueOnlySubmodelRepoExtentEnum.WithBlobValue;
+// const API_SUBMODELELEMENT_VALUE =SubmodelRepositoryService.Submodel = {
+//     id: 'https://example.com/ids/submodel/123',
+//     modelType: 'Submodel',
+// };
 
 const CORE_SUBMODEL1: CoreSubmodel = new CoreSubmodel('https://example.com/ids/submodel/123');
 const CORE_SUBMODEL2: CoreSubmodel = new CoreSubmodel('https://example.com/ids/submodel/234');
@@ -55,7 +110,18 @@ describe('SubmodelRepositoryClient', () => {
         deleteSubmodelById: jest.fn(),
         getSubmodelById: jest.fn(),
         putSubmodelById: jest.fn(),
-        patchSubmodelById: jest.fn(),
+        getAllSubmodelElements: jest.fn(),
+        postSubmodelElementSubmodelRepo: jest.fn(),
+        getSubmodelElementByPathSubmodelRepo: jest.fn(),
+        postSubmodelElementByPathSubmodelRepo: jest.fn(),
+        deleteSubmodelElementByPathSubmodelRepo: jest.fn(),
+        putSubmodelElementByPathSubmodelRepo: jest.fn(),
+        getSubmodelByIdMetadata : jest.fn(),
+        getSubmodelByIdValueOnly : jest.fn(),
+        patchSubmodelByIdValueOnly: jest.fn(),
+        getSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
+        patchSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
+        invokeOperationSubmodelRepo: jest.fn(),
     };
 
     // Mock constructor
@@ -67,7 +133,7 @@ describe('SubmodelRepositoryClient', () => {
         (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
         (
-            jest.requireMock('../../index').SubmodelRepositoryService.SubmodelRepositoryAPIApi as jest.Mock
+            jest.requireMock('../../generated').SubmodelRepositoryService.SubmodelRepositoryAPIApi as jest.Mock
         ).mockImplementation(MockSubmodelRepository);
         // Setup mocks for conversion functions
         (convertApiSubmodelToCoreSubmodel as jest.Mock).mockImplementation((submodel) => {
@@ -78,6 +144,16 @@ describe('SubmodelRepositoryClient', () => {
         (convertCoreSubmodelToApiSubmodel as jest.Mock).mockImplementation((submodel) => {
             if (submodel.id === CORE_SUBMODEL1.id) return API_SUBMODEL1;
             if (submodel.id === CORE_SUBMODEL2.id) return API_SUBMODEL2;
+            return null;
+        });
+        (convertApiSubmodelElementToCoreSubmodelElement as jest.Mock).mockImplementation((submodelElement) => {
+            if (submodelElement === API_SUBMODELELEMENT1) return CORE_SUBMODELELEMENT1;
+            if (submodelElement === API_SUBMODELELEMENT2) return CORE_SUBMODELELEMENT2;
+            return null;
+        });
+        (convertCoreSubmodelElementToApiSubmodelElement as jest.Mock).mockImplementation((submodelElement) => {
+            if (submodelElement === CORE_SUBMODELELEMENT1) return API_SUBMODELELEMENT1;
+            if (submodelElement === CORE_SUBMODELELEMENT2) return API_SUBMODELELEMENT2;
             return null;
         });
 
@@ -126,8 +202,8 @@ describe('SubmodelRepositoryClient', () => {
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
-            level: LEVEL,
-            extent: EXTENT,
+            level: LEVEL_SUBMODELS,
+            extent: EXTENT_SUBMODELS,
         });
 
         // Assert
@@ -137,8 +213,8 @@ describe('SubmodelRepositoryClient', () => {
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
-            level: LEVEL,
-            extent: EXTENT,
+            level: LEVEL_SUBMODELS,
+            extent: EXTENT_SUBMODELS,
         });
         expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledTimes(2);
         expect(response.success).toBe(true);
@@ -294,8 +370,8 @@ describe('SubmodelRepositoryClient', () => {
         const response = await client.getSubmodelById({
             configuration: TEST_CONFIGURATION,
             submodelIdentifier: CORE_SUBMODEL1.id,
-            level: LEVEL,
-            extent: EXTENT,
+            level: LEVEL_SUBMODEL,
+            extent: EXTENT_SUBMODEL,
         });
 
         // Assert
@@ -303,8 +379,8 @@ describe('SubmodelRepositoryClient', () => {
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
-            level: LEVEL,
-            extent: EXTENT,
+            level: LEVEL_SUBMODEL,
+            extent: EXTENT_SUBMODEL,
         });
         expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
         expect(response.success).toBe(true);
@@ -397,4 +473,442 @@ describe('SubmodelRepositoryClient', () => {
             expect(response.error).toEqual(errorResult);
         }
     });
+
+    it('should get a Submodel metadata by ID', async () => {
+        // Arrange
+        mockApiInstance.getSubmodelByIdMetadata.mockResolvedValue(API_SUBMODEL_METADATA);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getSubmodelByIdMetadata({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.getSubmodelByIdMetadata).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+        });
+        //expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(API_SUBMODEL_METADATA);
+            //expect(response.data).toEqual(CORE_SUBMODEL1);
+        }
+    });
+
+    it('should handle errors when getting a Submodel metadata by ID', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSubmodelByIdMetadata.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getSubmodelByIdMetadata({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should get a Submodel value by ID', async () => {
+        // Arrange
+        mockApiInstance.getSubmodelByIdValueOnly.mockResolvedValue(API_SUBMODEL_VALUE);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getSubmodelByIdValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            level: LEVEL_SUBMODEL_VALUE,
+            extent: EXTENT_SUBMODEL_VALUE,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.getSubmodelByIdValueOnly).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            level: LEVEL_SUBMODEL_VALUE,
+            extent: EXTENT_SUBMODEL_VALUE,
+        });
+        //expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(API_SUBMODEL_VALUE);
+            //expect(response.data).toEqual(CORE_SUBMODEL1);
+        }
+    });
+
+    it('should handle errors when getting a Submodel value-only representation by ID', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSubmodelByIdValueOnly.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getSubmodelByIdValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should update the value-only representation by ID', async () => {
+        // Arrange
+        mockApiInstance.patchSubmodelByIdValueOnly.mockResolvedValue(undefined);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.patchSubmodelByIdValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            body: BODY,
+            level: LEVEL_SUBMODEL_VALUE1,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.patchSubmodelByIdValueOnly).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            body: BODY,
+            level: LEVEL_SUBMODEL_VALUE1,
+        });
+        //expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
+        expect(response.success).toBe(true);
+    });
+
+    it('should handle errors when updating a Submodel value-only representation by ID', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.patchSubmodelByIdValueOnly.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.patchSubmodelByIdValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            body: BODY,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    // it('should get a specific submodel element from the Submodel at a specified path in the ValueOnly representation', async () => {
+    //     // Arrange
+    //     mockApiInstance.getSubmodelElementByPathValueOnlySubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT_VALUE);
+
+    //     const client = new SubmodelRepositoryClient();
+
+    //     // Act
+    //     const response = await client.getSubmodelElementByPathValueOnly({
+    //         configuration: TEST_CONFIGURATION,
+    //         submodelIdentifier: CORE_SUBMODEL1.id,
+    //         idShortPath: ID_SHORT_PATH,
+    //         level: LEVEL_SUBMODELELEMENT_VALUE_BY_PATH,
+    //         extent: EXTENT_SUBMODELELEMENT_VALUE_BY_PATH,
+    //     });
+
+    //     // Assert
+    //     expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+    //     expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+    //     expect(mockApiInstance.getSubmodelElementByPathValueOnlySubmodelRepo).toHaveBeenCalledWith({
+    //         submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+    //         idShortPath: ID_SHORT_PATH,
+    //         level: LEVEL_SUBMODELELEMENT_VALUE_BY_PATH,
+    //         extent: EXTENT_SUBMODELELEMENT_VALUE_BY_PATH,
+    //     });
+    //     //expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
+    //     expect(response.success).toBe(true);
+    //     if (response.success) {
+    //         expect(response.data).toEqual(API_SUBMODELELEMENT_VALUE);
+    //         //expect(response.data).toEqual(CORE_SUBMODEL1);
+    //     }
+    // });
+
+    it('should handle errors when getting a submodel element from the Submodel at a specified path in the ValueOnly representation', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSubmodelElementByPathValueOnlySubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getSubmodelElementByPathValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+
+    it('should return SubmodelElements on successful response', async () => {
+        // Arrange
+        const pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata = {
+            cursor: CURSOR,
+        };
+        mockApiInstance.getAllSubmodelElements.mockResolvedValue({
+            pagingMetadata: pagedResult,
+            result: [API_SUBMODELELEMENT1, API_SUBMODELELEMENT2],
+        });
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getAllSubmodelElements({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: LEVEL_SUBMODELELEMENT,
+            extent: EXTENT_SUBMODELELEMENT,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.getAllSubmodelElements).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: LEVEL_SUBMODELELEMENT,
+            extent: EXTENT_SUBMODELELEMENT,
+        });
+        expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledTimes(2);
+        expect(response.success).toBe(true);
+
+        if (response.success) {
+            expect(response.data.pagedResult).toBe(pagedResult);
+            expect(response.data.result).toEqual([CORE_SUBMODELELEMENT1, CORE_SUBMODELELEMENT2]);
+        }
+    });
+
+    it('should handle errors when fetching SubmodelElements', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getAllSubmodelElements.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.getAllSubmodelElements({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should create a new SubmodelElement', async () => {
+        // Arrange
+        mockApiInstance.postSubmodelElementSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT1);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postSubmodelElement({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            submodelElement: CORE_SUBMODELELEMENT1,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.postSubmodelElementSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            submodelElement: API_SUBMODELELEMENT1,
+        });
+        expect(convertCoreSubmodelElementToApiSubmodelElement).toHaveBeenCalledWith(CORE_SUBMODELELEMENT1);
+        expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT1);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_SUBMODELELEMENT1);
+        }
+    });
+
+    it('should handle errors when creating a SubmodelElement', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.postSubmodelElementSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postSubmodelElement({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            submodelElement: CORE_SUBMODELELEMENT1,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    // it('should return a submodel element from the Submodel at a specified path on successful response', async () => {
+    //     // Arrange
+    //     const pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata = {
+    //         cursor: CURSOR,
+    //     };
+    //     mockApiInstance.getSubmodelElementByPathSubmodelRepo.mockResolvedValue({
+    //         pagingMetadata: pagedResult,
+    //         result: [API_SUBMODELELEMENTBYPATH1, API_SUBMODELELEMENT2],
+    //     });
+
+    //     const client = new SubmodelRepositoryClient();
+
+    //     // Act
+    //     const response = await client.getSubmodelElementByPath({
+    //         configuration: TEST_CONFIGURATION,
+    //         submodelIdentifier: CORE_SUBMODEL1.id,
+    //         idShortPath: ID_SHORT_PATH,
+    //         cursor: CURSOR,
+    //         level: LEVEL_SUBMODELELEMENTBYPATH,
+    //         extent: EXTENT_SUBMODELELEMENTBYPATH,
+    //     });
+
+    //     // Assert
+    //     expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+    //     expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+    //     expect(mockApiInstance.getSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+    //         submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+    //         idShortPath: ID_SHORT_PATH,
+    //         level: LEVEL_SUBMODELELEMENTBYPATH,
+    //         extent: EXTENT_SUBMODELELEMENTBYPATH,
+    //     });
+    //     expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledTimes(2);
+    //     expect(response.success).toBe(true);
+
+    //     if (response.success) {
+    //         expect(response.data.pagedResult).toBe(pagedResult);
+    //         expect(response.data.result).toEqual([CORE_SUBMODELELEMENT1, CORE_SUBMODELELEMENT2]);
+    //     }
+    // });
+
+    // it('should handle errors when fetching SubmodelElements', async () => {
+    //     // Arrange
+    //     const errorResult: SubmodelRepositoryService.Result = {
+    //         messages: [
+    //             {
+    //                 code: '400',
+    //                 messageType: 'Exception',
+    //                 text: 'Required parameter missing',
+    //                 timestamp: '1744752054.63186',
+    //             },
+    //         ],
+    //     };
+    //     mockApiInstance.getAllSubmodelElements.mockRejectedValue(new Error('Required parameter missing'));
+    //     (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+    //     const client = new SubmodelRepositoryClient();
+
+    //     // Act
+    //     const response = await client.getAllSubmodelElements({
+    //         configuration: TEST_CONFIGURATION,
+    //         submodelIdentifier: CORE_SUBMODEL1.id,
+    //     });
+
+    //     // Assert
+    //     expect(response.success).toBe(false);
+    //     if (!response.success) {
+    //         expect(response.error).toEqual(errorResult);
+    //     }
+    // });
+
 });

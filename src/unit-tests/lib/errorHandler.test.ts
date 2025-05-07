@@ -1,5 +1,5 @@
 //import { FetchError, RequiredError, ResponseError } from '../../generated';
-import { AasRepositoryService, SubmodelRepositoryService } from '../../index';
+import { AasRepositoryService, SubmodelRepositoryService } from '../../generated';
 import { handleApiError } from '../../lib/errorHandler';
 
 describe('handleApiError', () => {

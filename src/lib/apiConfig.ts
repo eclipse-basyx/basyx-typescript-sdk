@@ -1,5 +1,5 @@
 //import { Configuration } from '../generated';
-import { AasRepositoryService, SubmodelRepositoryService } from '../index';
+import { AasRepositoryService, SubmodelRepositoryService } from '../generated';
 //export function applyDefaults(configuration: AAS.Configuration): AAS.Configuration {
 export function applyDefaults<T extends AasRepositoryService.Configuration | SubmodelRepositoryService.Configuration>(
     configuration: T

@@ -5,7 +5,7 @@ import type {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
-import { AasRepositoryService } from '../index'; // Updated import
+import { AasRepositoryService } from '../generated'; // Updated import
 //import {
 // AssetAdministrationShellRepositoryAPIApi as AasRepository,
 //Configuration,

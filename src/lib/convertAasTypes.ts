@@ -4,7 +4,7 @@ import {
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import { AasRepositoryService } from '../index';
+import { AasRepositoryService } from '../generated';
 // import {
 //     AssetAdministrationShell as ApiAssetAdministrationShell,
 //     AssetInformation as ApiAssetInformation,

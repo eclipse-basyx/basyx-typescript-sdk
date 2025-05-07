@@ -1,7 +1,12 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { Submodel as CoreSubmodel } from '@aas-core-works/aas-core3.0-typescript/types';
-import { SubmodelRepositoryService } from '../../index';
-import { convertApiSubmodelToCoreSubmodel, convertCoreSubmodelToApiSubmodel } from '../../lib/convertSubmodelTypes';
+import { Submodel as CoreSubmodel,
+    ISubmodelElement as CoreSubmodelElement,
+    SubmodelElementList as CoreSubmodelElementList
+ } from '@aas-core-works/aas-core3.0-typescript/types';
+import { SubmodelRepositoryService } from '../../generated';
+import { convertApiSubmodelToCoreSubmodel, convertCoreSubmodelToApiSubmodel,
+convertApiSubmodelElementToCoreSubmodelElement, convertCoreSubmodelElementToApiSubmodelElement
+ } from '../../lib/convertSubmodelTypes';
 
 /**
  * Mock the jsonization methods used in convertSubmodelTypes.ts
@@ -10,6 +15,7 @@ jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
     jsonization: {
         submodelFromJsonable: jest.fn(),
         toJsonable: jest.fn(),
+        submodelElementFromJsonable: jest.fn(),
     },
 }));
 
@@ -22,6 +28,13 @@ const CORE_SUBMODEL: CoreSubmodel = new CoreSubmodel('https://example.com/submod
 const JSONABLE_SUBMODEL: jsonization.JsonObject = {
     id: 'https://example.com/submodel/123',
     modelType: 'Submodel',
+};
+const API_SUBMODELELEMENT: SubmodelRepositoryService.SubmodelElement = {
+    modelType: SubmodelRepositoryService.ModelType.Property,
+};
+const CORE_SUBMODELELEMENT: CoreSubmodelElement = {} as CoreSubmodelElement;
+const JSONABLE_SUBMODELELEMENT: jsonization.JsonObject = {
+    modelType: 'Property',
 };
 
 describe('convertSubmodelTypes', () => {
@@ -62,6 +75,42 @@ describe('convertSubmodelTypes', () => {
 
             expect(jsonization.toJsonable).toHaveBeenCalledWith(CORE_SUBMODEL);
             expect(result).toEqual(API_SUBMODEL);
+        });
+    });
+
+    describe('convertApiSubmodelElementToCoreSubmodelElement', () => {
+        it('should convert ApiSubmodelElement to CoreSubmodelElement successfully', () => {
+            (jsonization.submodelElementFromJsonable as jest.Mock).mockReturnValue({
+                error: null,
+                mustValue: () => CORE_SUBMODELELEMENT,
+            });
+
+            const result = convertApiSubmodelElementToCoreSubmodelElement(API_SUBMODELELEMENT);
+
+            expect(jsonization.submodelElementFromJsonable).toHaveBeenCalledWith(JSON.parse(JSON.stringify(API_SUBMODELELEMENT)));
+            expect(result).toBe(CORE_SUBMODELELEMENT);
+        });
+
+        it('should throw an error if jsonization.submodelElementFromJsonable returns an error', () => {
+            const error = new Error('Conversion failed');
+
+            (jsonization.submodelElementFromJsonable as jest.Mock).mockReturnValue({
+                error: error,
+            });
+
+            expect(() => convertApiSubmodelElementToCoreSubmodelElement(API_SUBMODELELEMENT)).toThrow(error);
+            expect(jsonization.submodelElementFromJsonable).toHaveBeenCalledWith(JSON.parse(JSON.stringify(API_SUBMODELELEMENT)));
+        });
+    });
+
+    describe('convertCoreSubmodelElementToApiSubmodelElement', () => {
+        it('should convert CoreSubmodelElement to ApiSubmodelElement successfully', () => {
+            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_SUBMODELELEMENT);
+
+            const result = convertCoreSubmodelElementToApiSubmodelElement(CORE_SUBMODELELEMENT);
+
+            expect(jsonization.toJsonable).toHaveBeenCalledWith(CORE_SUBMODELELEMENT);
+            expect(result).toEqual(API_SUBMODELELEMENT);
         });
     });
 });
