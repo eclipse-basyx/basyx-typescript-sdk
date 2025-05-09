@@ -27,7 +27,9 @@
     "lint:fix": "eslint --fix ./",
     "test": "jest --coverage",
     "docs": "typedoc --options typedoc.json",
-    "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true"
+    "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true",
+    "gen-submodelrepo": "openapi-generator-cli generate -i openapi/smrepository.yaml -g typescript-fetch -o src/generated/SubmodelRepositoryService --additional-properties=withoutRuntimeChecks=true"
+
   },
   "peerDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
