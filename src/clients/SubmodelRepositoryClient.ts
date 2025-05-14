@@ -1,12 +1,14 @@
-import type { Submodel, AasSubmodelElements, ISubmodelElement } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import { SubmodelRepositoryService } from '../generated'; // Updated import
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
-import { convertApiSubmodelToCoreSubmodel, convertCoreSubmodelToApiSubmodel,
-   convertApiSubmodelElementToCoreSubmodelElement,
+import {
+    convertApiSubmodelElementToCoreSubmodelElement,
+    convertApiSubmodelToCoreSubmodel,
     convertCoreSubmodelElementToApiSubmodelElement,
- } from '../lib/convertSubmodelTypes';
+    convertCoreSubmodelToApiSubmodel,
+} from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
@@ -17,13 +19,13 @@ export class SubmodelRepositoryClient {
      *
      * @param options Object containing:
      *  - configuration: The http request options
-     *  - semanticId?: The value of the semantic id reference 
+     *  - semanticId?: The value of the semantic id reference
      *  - idShort?: The Asset Administration Shell's IdShort
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
-     * 
+     *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodels(options: {
@@ -59,6 +61,7 @@ export class SubmodelRepositoryClient {
             });
 
             const submodels = (result.result ?? []).map(convertApiSubmodelToCoreSubmodel);
+            console.log('all submodels:', submodels);
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodels },
@@ -210,7 +213,7 @@ export class SubmodelRepositoryClient {
      *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
-     * 
+     *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElements(options: {
@@ -221,50 +224,51 @@ export class SubmodelRepositoryClient {
         level?: SubmodelRepositoryService.GetAllSubmodelElementsLevelEnum;
         extent?: SubmodelRepositoryService.GetAllSubmodelElementsExtentEnum;
     }): Promise<
-    ApiResult<
-        {
-            pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata | undefined;
-            result: ISubmodelElement[];
-        },
-        SubmodelRepositoryService.Result
-    >
+        ApiResult<
+            {
+                pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata | undefined;
+                result: ISubmodelElement[];
+            },
+            SubmodelRepositoryService.Result
+        >
     > {
-        const { configuration, submodelIdentifier, limit, cursor, level, extent  } = options;
+        const { configuration, submodelIdentifier, limit, cursor, level, extent } = options;
 
-    try {
-        const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-        const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-        const result = await apiInstance.getAllSubmodelElements({
-            submodelIdentifier: encodedSubmodelIdentifier,
-            limit: limit,
-            cursor: cursor,
-            level: level,
-            extent: extent,
-        });
+            const result = await apiInstance.getAllSubmodelElements({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+                extent: extent,
+            });
 
-        const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
-                return {
-                    success: true,
-                    data: { pagedResult: result.pagingMetadata, result: submodelElements },
-                };
-    } catch (err) {
-        const customError = await handleApiError(err);
-        return { success: false, error: customError };
+            const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
+            console.log('all submodelElements:', submodelElements);
+            return {
+                success: true,
+                data: { pagedResult: result.pagingMetadata, result: submodelElements },
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
     }
-     }
 
-     /**
+    /**
      * Creates a new submodel element
      *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id
-     *  
+     *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-     async postSubmodelElement(options: {
+    async postSubmodelElement(options: {
         configuration: SubmodelRepositoryService.Configuration;
         submodelIdentifier: string;
         submodelElement: ISubmodelElement;
@@ -320,7 +324,7 @@ export class SubmodelRepositoryClient {
                 level: level,
                 extent: extent,
             });
-
+            console.log('data:', result);
             return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -357,7 +361,7 @@ export class SubmodelRepositoryClient {
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
-
+            console.log('created element at specified path:', result);
             return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -520,7 +524,7 @@ export class SubmodelRepositoryClient {
     async patchSubmodelByIdValueOnly(options: {
         configuration: SubmodelRepositoryService.Configuration;
         submodelIdentifier: string;
-        body: object; 
+        body: object;
         level?: SubmodelRepositoryService.PatchSubmodelByIdValueOnlyLevelEnum;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier, body, level } = options;
@@ -532,7 +536,7 @@ export class SubmodelRepositoryClient {
 
             const result = await apiInstance.patchSubmodelByIdValueOnly({
                 submodelIdentifier: encodedSubmodelIdentifier,
-                body: body, 
+                body: body,
                 level: level,
             });
 
@@ -583,7 +587,7 @@ export class SubmodelRepositoryClient {
         }
     }
 
-     /**
+    /**
     //  * Updates the value of an existing SubmodelElement
     //  *
     //  * @param options Object containing:
@@ -611,7 +615,7 @@ export class SubmodelRepositoryClient {
 
             const result = await apiInstance.patchSubmodelElementByPathValueOnlySubmodelRepo({
                 submodelIdentifier: encodedSubmodelIdentifier,
-                idShortPath: idShortPath, 
+                idShortPath: idShortPath,
                 submodelElementValue: submodelElementValue,
                 level: level,
             });
@@ -662,5 +666,4 @@ export class SubmodelRepositoryClient {
             return { success: false, error: customError };
         }
     }
-
 }

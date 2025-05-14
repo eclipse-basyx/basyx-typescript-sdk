@@ -1,7 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { Submodel as CoreSubmodel, 
-        ISubmodelElement as CoreSubmodelElement,
-        SubmodelElementList as CoreSubmodelElementList
+import {
+    ISubmodelElement as CoreSubmodelElement,
+    Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { SubmodelRepositoryService } from '../generated';
 
@@ -47,8 +47,10 @@ export function convertCoreSubmodelToApiSubmodel(submodel: CoreSubmodel): Submod
  * @param {ApiSubmodelElement} submodelElement - The API SubmodelElement to convert
  * @returns {CoreSubmodelElement} The Core Works SubmodelElement
  */
-export function convertApiSubmodelElementToCoreSubmodelElement(submodelElement: SubmodelRepositoryService.SubmodelElement): CoreSubmodelElement {
-    let submodelElementStr = JSON.stringify(submodelElement);
+export function convertApiSubmodelElementToCoreSubmodelElement(
+    submodelElement: SubmodelRepositoryService.SubmodelElement
+): CoreSubmodelElement {
+    const submodelElementStr = JSON.stringify(submodelElement);
     const submodelElementObj = JSON.parse(submodelElementStr);
     //submodelElementStr = JSON.parse(submodelElementStr);
     const instanceOrError = jsonization.submodelElementFromJsonable(submodelElementObj);
@@ -67,7 +69,9 @@ export function convertApiSubmodelElementToCoreSubmodelElement(submodelElement: 
  * @param {CoreSubmodelElement} submodelElement - The Core Works SubmodelElement to convert
  * @returns {ApiSubmodelElement} The API SubmodelElement
  */
-export function convertCoreSubmodelElementToApiSubmodelElement(submodelElement: CoreSubmodelElement): SubmodelRepositoryService.SubmodelElement {
+export function convertCoreSubmodelElementToApiSubmodelElement(
+    submodelElement: CoreSubmodelElement
+): SubmodelRepositoryService.SubmodelElement {
     // first jsonize
     const jsonableSubmodelElement = jsonization.toJsonable(submodelElement);
     // then stringify

@@ -1,12 +1,15 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { Submodel as CoreSubmodel,
+import {
     ISubmodelElement as CoreSubmodelElement,
-    SubmodelElementList as CoreSubmodelElementList
- } from '@aas-core-works/aas-core3.0-typescript/types';
+    Submodel as CoreSubmodel,
+} from '@aas-core-works/aas-core3.0-typescript/types';
 import { SubmodelRepositoryService } from '../../generated';
-import { convertApiSubmodelToCoreSubmodel, convertCoreSubmodelToApiSubmodel,
-convertApiSubmodelElementToCoreSubmodelElement, convertCoreSubmodelElementToApiSubmodelElement
- } from '../../lib/convertSubmodelTypes';
+import {
+    convertApiSubmodelElementToCoreSubmodelElement,
+    convertApiSubmodelToCoreSubmodel,
+    convertCoreSubmodelElementToApiSubmodelElement,
+    convertCoreSubmodelToApiSubmodel,
+} from '../../lib/convertSubmodelTypes';
 
 /**
  * Mock the jsonization methods used in convertSubmodelTypes.ts
@@ -87,7 +90,9 @@ describe('convertSubmodelTypes', () => {
 
             const result = convertApiSubmodelElementToCoreSubmodelElement(API_SUBMODELELEMENT);
 
-            expect(jsonization.submodelElementFromJsonable).toHaveBeenCalledWith(JSON.parse(JSON.stringify(API_SUBMODELELEMENT)));
+            expect(jsonization.submodelElementFromJsonable).toHaveBeenCalledWith(
+                JSON.parse(JSON.stringify(API_SUBMODELELEMENT))
+            );
             expect(result).toBe(CORE_SUBMODELELEMENT);
         });
 
@@ -99,7 +104,9 @@ describe('convertSubmodelTypes', () => {
             });
 
             expect(() => convertApiSubmodelElementToCoreSubmodelElement(API_SUBMODELELEMENT)).toThrow(error);
-            expect(jsonization.submodelElementFromJsonable).toHaveBeenCalledWith(JSON.parse(JSON.stringify(API_SUBMODELELEMENT)));
+            expect(jsonization.submodelElementFromJsonable).toHaveBeenCalledWith(
+                JSON.parse(JSON.stringify(API_SUBMODELELEMENT))
+            );
         });
     });
 
