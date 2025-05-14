@@ -123,7 +123,8 @@ describe('AasRepositoryClient', () => {
         (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
         (
-            jest.requireMock('../../generated').AasRepositoryService.AssetAdministrationShellRepositoryAPIApi as jest.Mock
+            jest.requireMock('../../generated').AasRepositoryService
+                .AssetAdministrationShellRepositoryAPIApi as jest.Mock
         ).mockImplementation(MockAasRepository);
         // Setup mocks for conversion functions
         (convertApiAasToCoreAas as jest.Mock).mockImplementation((aas) => {
