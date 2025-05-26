@@ -8,15 +8,16 @@ import {
     Reference as CoreReference,
     ReferenceTypes as CoreReferenceTypes,
 } from '@aas-core-works/aas-core3.0-typescript/types';
-import {
-    AssetAdministrationShell as ApiAssetAdministrationShell,
-    AssetInformation as ApiAssetInformation,
-    AssetKind as ApiAssetKind,
-    KeyTypes as ApiKeyTypes,
-    ModelType,
-    Reference as ApiReference,
-    ReferenceTypes as ApiReferenceTypes,
-} from '../../generated';
+import { AasRepositoryService } from '../../generated';
+// import {
+//     AssetAdministrationShell as ApiAssetAdministrationShell,
+//     AssetInformation as ApiAssetInformation,
+//     AssetKind as ApiAssetKind,
+//     KeyTypes as ApiKeyTypes,
+//     ModelType,
+//     Reference as ApiReference,
+//     ReferenceTypes as ApiReferenceTypes,
+// } from '../../generated';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -39,10 +40,10 @@ jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
 }));
 
 // Define mock constants
-const API_AAS: ApiAssetAdministrationShell = {
+const API_AAS: AasRepositoryService.AssetAdministrationShell = {
     id: 'https://example.com/ids/aas/7600_5912_3951_6917',
-    modelType: ModelType.AssetAdministrationShell,
-    assetInformation: { assetKind: ApiAssetKind.Instance },
+    modelType: AasRepositoryService.ModelType.AssetAdministrationShell,
+    assetInformation: { assetKind: AasRepositoryService.AssetKind.Instance },
 };
 const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
     'https://example.com/ids/aas/7600_5912_3951_6917',
@@ -53,18 +54,18 @@ const JSONABLE_AAS: jsonization.JsonObject = {
     modelType: 'AssetAdministrationShell',
     assetInformation: { assetKind: 'Instance' },
 };
-const API_ASSET_INFO: ApiAssetInformation = {
-    assetKind: ApiAssetKind.Instance,
+const API_ASSET_INFO: AasRepositoryService.AssetInformation = {
+    assetKind: AasRepositoryService.AssetKind.Instance,
 };
 const CORE_ASSET_INFO: CoreAssetInformation = new CoreAssetInformation(CoreAssetKind.Instance);
 const JSONABLE_ASSET_INFO: jsonization.JsonObject = {
     assetKind: 'Instance',
 };
-const API_REFERENCE: ApiReference = {
-    type: ApiReferenceTypes.ExternalReference,
+const API_REFERENCE: AasRepositoryService.Reference = {
+    type: AasRepositoryService.ReferenceTypes.ExternalReference,
     keys: [
         {
-            type: ApiKeyTypes.GlobalReference,
+            type: AasRepositoryService.KeyTypes.GlobalReference,
             value: 'https://example.com/ids/submodel/7600_5912_3951_6917',
         },
     ],

@@ -1,5 +1,5 @@
-import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
-
+//import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
+import { AasRepositoryService, SubmodelRepositoryService } from '../generated';
 /**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.
@@ -7,7 +7,9 @@ import { FetchError, Message, RequiredError, ResponseError, Result } from '../ge
  * @param err The error thrown during an API call
  * @returns A standardized Result object containing error messages
  */
-export async function handleApiError(err: unknown): Promise<Result> {
+export async function handleApiError(
+    err: unknown
+): Promise<AasRepositoryService.Result | SubmodelRepositoryService.Result> {
     try {
         // Check if the error already has the expected format with messages array
         const errorAny = err as any;
@@ -18,7 +20,7 @@ export async function handleApiError(err: unknown): Promise<Result> {
         // Get current timestamp with millisecond precision as a string
         const timestamp = (new Date().getTime() / 1000).toString();
 
-        let message: Message = {
+        let message: AasRepositoryService.Message | SubmodelRepositoryService.Message = {
             code: '500',
             messageType: 'Exception',
             timestamp: timestamp,
@@ -26,14 +28,20 @@ export async function handleApiError(err: unknown): Promise<Result> {
         };
 
         // Handle different error types
-        if (err instanceof RequiredError) {
+        if (
+            err instanceof AasRepositoryService.RequiredError ||
+            err instanceof SubmodelRepositoryService.RequiredError
+        ) {
             message = {
                 code: '400',
                 messageType: 'Exception',
                 text: err.message || `Required parameter missing: ${err.field}`,
                 timestamp: timestamp,
             };
-        } else if (err instanceof ResponseError) {
+        } else if (
+            err instanceof AasRepositoryService.ResponseError ||
+            err instanceof SubmodelRepositoryService.ResponseError
+        ) {
             // Try to parse response body for messages
             const responseBody = err.response;
 
@@ -61,7 +69,10 @@ export async function handleApiError(err: unknown): Promise<Result> {
                     timestamp: timestamp,
                 };
             }
-        } else if (err instanceof FetchError) {
+        } else if (
+            err instanceof AasRepositoryService.FetchError ||
+            err instanceof SubmodelRepositoryService.FetchError
+        ) {
             message = {
                 code: '0',
                 messageType: 'Exception',

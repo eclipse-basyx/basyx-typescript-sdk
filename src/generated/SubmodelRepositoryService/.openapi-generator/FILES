@@ -1,0 +1,8 @@
+.openapi-generator-ignore
+apis/DescriptionAPIApi.ts
+apis/SerializationAPIApi.ts
+apis/SubmodelRepositoryAPIApi.ts
+apis/index.ts
+index.ts
+models/index.ts
+runtime.ts

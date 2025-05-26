@@ -5,12 +5,13 @@ import type {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
-import {
-    AssetAdministrationShellRepositoryAPIApi as AasRepository,
-    Configuration,
-    PagedResultPagingMetadata,
-    Result,
-} from '../generated';
+import { AasRepositoryService } from '../generated'; // Updated import
+//import {
+// AssetAdministrationShellRepositoryAPIApi as AasRepository,
+//Configuration,
+//PagedResultPagingMetadata,
+//Result,
+//} from '../generated';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -37,7 +38,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetAdministrationShells(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         assetIds?: AssetId[];
         idShort?: string;
         limit?: number;
@@ -45,16 +46,18 @@ export class AasRepositoryClient {
     }): Promise<
         ApiResult<
             {
-                pagedResult: PagedResultPagingMetadata | undefined;
+                pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
                 result: AssetAdministrationShell[];
             },
-            Result
+            AasRepositoryService.Result
         >
     > {
         const { configuration, assetIds, idShort, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
             const result = await apiInstance.getAllAssetAdministrationShells({
@@ -85,13 +88,15 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAssetAdministrationShell(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<AssetAdministrationShell, Result>> {
+    }): Promise<ApiResult<AssetAdministrationShell, AasRepositoryService.Result>> {
         const { configuration, assetAdministrationShell } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const result = await apiInstance.postAssetAdministrationShell({
                 assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
@@ -114,13 +119,15 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellById(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<void, Result>> {
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -145,13 +152,15 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetAdministrationShellById(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetAdministrationShell, Result>> {
+    }): Promise<ApiResult<AssetAdministrationShell, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -177,14 +186,16 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetAdministrationShellById(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<void, Result>> {
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, assetAdministrationShell } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -210,13 +221,15 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetInformation(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetInformation, Result>> {
+    }): Promise<ApiResult<AssetInformation, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -245,14 +258,16 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetInformation(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
-    }): Promise<ApiResult<void, Result>> {
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, assetInformation } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -278,12 +293,14 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteThumbnail(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<void, Result>> {
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -308,13 +325,15 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getThumbnail(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<Blob, Result>> {
+    }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -341,15 +360,17 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putThumbnail(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         fileName: string;
         file: Blob;
-    }): Promise<ApiResult<void, Result>> {
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, fileName, file } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -378,15 +399,22 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelReferences(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
-    }): Promise<ApiResult<{ pagedResult: PagedResultPagingMetadata | undefined; result: Reference[] }, Result>> {
+    }): Promise<
+        ApiResult<
+            { pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined; result: Reference[] },
+            AasRepositoryService.Result
+        >
+    > {
         const { configuration, aasIdentifier, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -421,14 +449,16 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelReference(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
-    }): Promise<ApiResult<Reference, Result>> {
+    }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, submodelReference } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
@@ -455,14 +485,16 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelReferenceById(options: {
-        configuration: Configuration;
+        configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
-    }): Promise<ApiResult<void, Result>> {
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, submodelIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepository(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
