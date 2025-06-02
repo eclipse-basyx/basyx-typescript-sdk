@@ -1,18 +1,12 @@
-import type {
-    ConceptDescription,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import { ConceptDescriptionRepositoryService } from '../generated'; // Updated import
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
-import {
-    convertApiCDToCoreCD,
-    convertCoreCDToApiCD,
-} from '../lib/convertConceptDescriptionTypes';
+import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../lib/convertConceptDescriptionTypes';
 import { handleApiError } from '../lib/errorHandler';
 
 export class ConceptDescriptionRepositoryClient {
-
     /**
      * Returns a specific Concept Description
      *
@@ -202,6 +196,4 @@ export class ConceptDescriptionRepositoryClient {
             return { success: false, error: customError };
         }
     }
-
-
 }

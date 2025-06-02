@@ -1,5 +1,5 @@
 //import { FetchError, RequiredError, ResponseError } from '../../generated';
-import { AasRepositoryService, SubmodelRepositoryService, ConceptDescriptionRepositoryService } from '../../generated';
+import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepositoryService } from '../../generated';
 import { handleApiError } from '../../lib/errorHandler';
 
 describe('handleApiError', () => {
@@ -137,7 +137,10 @@ describe('handleApiError', () => {
         });
 
         const mockResponse = createMockResponse(403, mockJson);
-        const originalError = new ConceptDescriptionRepositoryService.ResponseError(mockResponse, 'Concept Description access denied');
+        const originalError = new ConceptDescriptionRepositoryService.ResponseError(
+            mockResponse,
+            'Concept Description access denied'
+        );
         const result = await handleApiError(originalError);
 
         expect(result.messages).toHaveLength(1);
@@ -170,7 +173,10 @@ describe('handleApiError', () => {
     it('should handle ConceptDescriptionRepositoryService.ResponseError with unparseable JSON response', async () => {
         const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
-        const originalError = new ConceptDescriptionRepositoryService.ResponseError(mockResponse, 'Concept Description server error');
+        const originalError = new ConceptDescriptionRepositoryService.ResponseError(
+            mockResponse,
+            'Concept Description server error'
+        );
         const result = await handleApiError(originalError);
 
         expect(result.messages).toHaveLength(1);
@@ -237,11 +243,9 @@ describe('handleApiError', () => {
         expect(parsed.messages.length).toBe(1);
         expect(parsed.messages[0].text).toContain('AAS Test message');
         expect(parsed.messages[0].code).toBe('400');
-
-        });
+    });
 
     it('should produce valid Submodel JSON when serialized', async () => {
-
         const submodelError = new SubmodelRepositoryService.RequiredError('testField', 'Submodel test message');
         const submodelResult = await handleApiError(submodelError);
 
@@ -255,8 +259,10 @@ describe('handleApiError', () => {
     });
 
     it('should produce valid Concept Description JSON when serialized', async () => {
-        
-        const conceptDescriptionError = new ConceptDescriptionRepositoryService.RequiredError('testField', 'Concept Description test message');
+        const conceptDescriptionError = new ConceptDescriptionRepositoryService.RequiredError(
+            'testField',
+            'Concept Description test message'
+        );
         const conceptDescriptionResult = await handleApiError(conceptDescriptionError);
 
         const conceptDescriptionSerialized = JSON.stringify(conceptDescriptionResult);

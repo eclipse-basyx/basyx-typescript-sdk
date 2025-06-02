@@ -1,13 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import {
-    ConceptDescription as CoreConceptDescription,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
 import { ConceptDescriptionRepositoryService } from '../../generated';
-
-import {
-    convertApiCDToCoreCD,
-    convertCoreCDToApiCD,
-} from '../../lib/convertConceptDescriptionTypes';
+import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertConceptDescriptionTypes';
 
 /**
  * Mock the jsonization methods used in convertConceptDescriptionTypes.ts
@@ -23,11 +17,8 @@ jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
 const API_CD: ConceptDescriptionRepositoryService.ConceptDescription = {
     id: 'https://example.com/ids/cd/1234',
     modelType: ConceptDescriptionRepositoryService.ModelType.ConceptDescription,
-    
 };
-const CORE_CD: CoreConceptDescription = new CoreConceptDescription(
-    'https://example.com/ids/cd/1234'
-);
+const CORE_CD: CoreConceptDescription = new CoreConceptDescription('https://example.com/ids/cd/1234');
 const JSONABLE_CD: jsonization.JsonObject = {
     id: 'https://example.com/ids/cd/1234',
     modelType: 'ConceptDescription',
@@ -48,9 +39,7 @@ describe('convertConceptDescriptionTypes', () => {
 
             const result = convertApiCDToCoreCD(API_CD);
 
-            expect(jsonization.conceptDescriptionFromJsonable).toHaveBeenCalledWith(
-                JSON.parse(JSON.stringify(API_CD))
-            );
+            expect(jsonization.conceptDescriptionFromJsonable).toHaveBeenCalledWith(JSON.parse(JSON.stringify(API_CD)));
             expect(result).toBe(CORE_CD);
         });
 
@@ -62,9 +51,7 @@ describe('convertConceptDescriptionTypes', () => {
             });
 
             expect(() => convertApiCDToCoreCD(API_CD)).toThrow(error);
-            expect(jsonization.conceptDescriptionFromJsonable).toHaveBeenCalledWith(
-                JSON.parse(JSON.stringify(API_CD))
-            );
+            expect(jsonization.conceptDescriptionFromJsonable).toHaveBeenCalledWith(JSON.parse(JSON.stringify(API_CD)));
         });
     });
 

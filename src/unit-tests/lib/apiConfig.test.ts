@@ -1,5 +1,5 @@
 //import { Configuration } from '../../generated';
-import { AasRepositoryService, SubmodelRepositoryService, ConceptDescriptionRepositoryService } from '../../generated';
+import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepositoryService } from '../../generated';
 import { applyDefaults } from '../../lib/apiConfig';
 
 describe('apiConfig', () => {

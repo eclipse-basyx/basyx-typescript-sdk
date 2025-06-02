@@ -1,5 +1,5 @@
 //import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
-import { AasRepositoryService, SubmodelRepositoryService, ConceptDescriptionRepositoryService } from '../generated';
+import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepositoryService } from '../generated';
 /**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.
@@ -9,7 +9,9 @@ import { AasRepositoryService, SubmodelRepositoryService, ConceptDescriptionRepo
  */
 export async function handleApiError(
     err: unknown
-): Promise<AasRepositoryService.Result | SubmodelRepositoryService.Result | ConceptDescriptionRepositoryService.Result> {
+): Promise<
+    AasRepositoryService.Result | SubmodelRepositoryService.Result | ConceptDescriptionRepositoryService.Result
+> {
     try {
         // Check if the error already has the expected format with messages array
         const errorAny = err as any;
@@ -20,7 +22,10 @@ export async function handleApiError(
         // Get current timestamp with millisecond precision as a string
         const timestamp = (new Date().getTime() / 1000).toString();
 
-        let message: AasRepositoryService.Message | SubmodelRepositoryService.Message | ConceptDescriptionRepositoryService.Message = {
+        let message:
+            | AasRepositoryService.Message
+            | SubmodelRepositoryService.Message
+            | ConceptDescriptionRepositoryService.Message = {
             code: '500',
             messageType: 'Exception',
             timestamp: timestamp,

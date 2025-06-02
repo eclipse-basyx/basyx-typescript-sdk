@@ -1,9 +1,12 @@
 //import { Configuration } from '../generated';
-import { AasRepositoryService, SubmodelRepositoryService, ConceptDescriptionRepositoryService } from '../generated';
+import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepositoryService } from '../generated';
 //export function applyDefaults(configuration: AAS.Configuration): AAS.Configuration {
-export function applyDefaults<T extends AasRepositoryService.Configuration | SubmodelRepositoryService.Configuration | ConceptDescriptionRepositoryService.Configuration>(
-    configuration: T
-): T {
+export function applyDefaults<
+    T extends
+        | AasRepositoryService.Configuration
+        | SubmodelRepositoryService.Configuration
+        | ConceptDescriptionRepositoryService.Configuration,
+>(configuration: T): T {
     // Extract configuration properties
     const options = {
         basePath: configuration.basePath || undefined,
@@ -34,10 +37,9 @@ export function applyDefaults<T extends AasRepositoryService.Configuration | Sub
     // Create the appropriate configuration type
     if (configuration instanceof AasRepositoryService.Configuration) {
         return new AasRepositoryService.Configuration(options) as T;
-    } else if(configuration instanceof SubmodelRepositoryService.Configuration) {
+    } else if (configuration instanceof SubmodelRepositoryService.Configuration) {
         return new SubmodelRepositoryService.Configuration(options) as T;
-    }
-    else {
+    } else {
         return new ConceptDescriptionRepositoryService.Configuration(options) as T;
     }
 }

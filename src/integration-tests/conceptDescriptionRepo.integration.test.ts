@@ -87,5 +87,4 @@ describe('Concept Description Repository Integration Tests', () => {
             expect(fetchResponse.data).toEqual(updatedCD);
         }
     });
-
-  });    
+});
