@@ -12,11 +12,28 @@ jest.mock('../../lib/base64Url');
 jest.mock('../../lib/errorHandler');
 
 // Define mock constants
+
 const ID_SHORT = 'conceptDescriptionIdShort';
 const LIMIT = 10;
 const CURSOR = 'cursor123';
-const ISCASEOF = '';
-const DATASPECIFICATIONREF = '';
+const DATA_SPECIFICATION_REF = JSON.stringify({
+    type: 'ExternalReference',
+    keys: [
+        {
+            type: 'GlobalReference',
+            value: 'https://example.com/ids/cd/1234',
+        },
+    ],
+});
+const IS_CASE_OF = JSON.stringify({
+    type: 'ExternalReference',
+    keys: [
+        {
+            type: 'ConceptDescription',
+            value: 'https://example.com/ids/cd/1234',
+        },
+    ],
+});
 const API_CD1: ConceptDescriptionRepositoryService.ConceptDescription = {
     id: 'https://example.com/ids/cd/1234',
     modelType: 'ConceptDescription',
@@ -109,8 +126,8 @@ describe('ConceptDescriptionRepositoryClient', () => {
         const response = await client.getAllConceptDescriptions({
             configuration: TEST_CONFIGURATION,
             idShort: ID_SHORT,
-            isCaseOf: ISCASEOF,
-            dataSpecificationRef: DATASPECIFICATIONREF,
+            isCaseOf: IS_CASE_OF,
+            dataSpecificationRef: DATA_SPECIFICATION_REF,
             limit: LIMIT,
             cursor: CURSOR,
         });
@@ -119,8 +136,8 @@ describe('ConceptDescriptionRepositoryClient', () => {
         expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
         expect(mockApiInstance.getAllConceptDescriptions).toHaveBeenCalledWith({
             idShort: ID_SHORT,
-            isCaseOf: ISCASEOF,
-            dataSpecificationRef: DATASPECIFICATIONREF,
+            isCaseOf: `encoded_${JSON.stringify(IS_CASE_OF)}`,
+            dataSpecificationRef: `encoded_${JSON.stringify(DATA_SPECIFICATION_REF)}`,
             limit: LIMIT,
             cursor: CURSOR,
         });

@@ -144,13 +144,15 @@ export class ConceptDescriptionRepositoryClient {
             const apiInstance = new ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi(
                 applyDefaults(configuration)
             );
-            //const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
+            const encodedIsCaseOf = isCaseOf ? base64Encode(JSON.stringify(isCaseOf)) : undefined;
+            const encodedDataSpecificationRef = dataSpecificationRef
+                ? base64Encode(JSON.stringify(dataSpecificationRef))
+                : undefined;
 
             const result = await apiInstance.getAllConceptDescriptions({
-                //assetIds: encodedAssetIds,
                 idShort: idShort,
-                isCaseOf: isCaseOf,
-                dataSpecificationRef: dataSpecificationRef,
+                isCaseOf: encodedIsCaseOf,
+                dataSpecificationRef: encodedDataSpecificationRef,
                 limit: limit,
                 cursor: cursor,
             });
