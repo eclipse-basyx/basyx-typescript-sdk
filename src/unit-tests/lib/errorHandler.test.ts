@@ -1,5 +1,5 @@
 //import { FetchError, RequiredError, ResponseError } from '../../generated';
-import { AasRepositoryService, SubmodelRepositoryService } from '../../generated';
+import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepositoryService } from '../../generated';
 import { handleApiError } from '../../lib/errorHandler';
 
 describe('handleApiError', () => {
@@ -58,6 +58,20 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].timestamp).toBe('1744752054.63186');
     });
 
+    it('should handle ConceptDescriptionRepositoryService.RequiredError correctly', async () => {
+        const originalError = new ConceptDescriptionRepositoryService.RequiredError(
+            'testField',
+            'Required concept description parameter missing'
+        );
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('400');
+        expect(result.messages?.[0].messageType).toBe('Exception');
+        expect(result.messages?.[0].text).toContain('Required concept description parameter missing');
+        expect(result.messages?.[0].timestamp).toBe('1744752054.63186');
+    });
+
     it('should handle generic Error objects', async () => {
         const originalError = new Error('Generic error');
         const result = await handleApiError(originalError);
@@ -110,6 +124,30 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].text).toBe('Submodel access forbidden');
     });
 
+    it('should handle ConceptDescriptionRepositoryService.ResponseError with parseable JSON response', async () => {
+        const mockJson = jest.fn().mockResolvedValue({
+            messages: [
+                {
+                    code: '403',
+                    messageType: 'Exception',
+                    text: 'Concept Description access forbidden',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        });
+
+        const mockResponse = createMockResponse(403, mockJson);
+        const originalError = new ConceptDescriptionRepositoryService.ResponseError(
+            mockResponse,
+            'Concept Description access denied'
+        );
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('403');
+        expect(result.messages?.[0].text).toBe('Concept Description access forbidden');
+    });
+
     it('should handle AasRepositoryService.ResponseError with unparseable JSON response', async () => {
         const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
@@ -125,6 +163,20 @@ describe('handleApiError', () => {
         const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
         const originalError = new SubmodelRepositoryService.ResponseError(mockResponse, 'Submodel server error');
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('500');
+        expect(result.messages?.[0].text).toContain('HTTP 500');
+    });
+
+    it('should handle ConceptDescriptionRepositoryService.ResponseError with unparseable JSON response', async () => {
+        const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
+        const mockResponse = createMockResponse(500, mockJson);
+        const originalError = new ConceptDescriptionRepositoryService.ResponseError(
+            mockResponse,
+            'Concept Description server error'
+        );
         const result = await handleApiError(originalError);
 
         expect(result.messages).toHaveLength(1);
@@ -153,6 +205,18 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].text).toBe('Failed to fetch submodel');
     });
 
+    it('should handle ConceptDescriptionRepositoryService.FetchError objects', async () => {
+        const originalError = new ConceptDescriptionRepositoryService.FetchError(
+            new Error('Concept Description network failure'),
+            'Failed to fetch Concept Description'
+        );
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('0');
+        expect(result.messages?.[0].text).toBe('Failed to fetch Concept Description');
+    });
+
     it('should safely handle null/undefined messages', async () => {
         const originalError = new Error();
         (originalError as any).message = undefined;
@@ -168,8 +232,8 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].text).toBe('Unknown error');
     });
 
-    it('should produce valid JSON when serialized', async () => {
-        const originalError = new AasRepositoryService.RequiredError('testField', 'Test message');
+    it('should produce valid AAS JSON when serialized', async () => {
+        const originalError = new AasRepositoryService.RequiredError('testField', 'AAS Test message');
         const result = await handleApiError(originalError);
 
         const serialized = JSON.stringify(result);
@@ -177,9 +241,11 @@ describe('handleApiError', () => {
 
         expect(parsed.messages).toBeDefined();
         expect(parsed.messages.length).toBe(1);
-        expect(parsed.messages[0].text).toContain('Test message');
+        expect(parsed.messages[0].text).toContain('AAS Test message');
         expect(parsed.messages[0].code).toBe('400');
+    });
 
+    it('should produce valid Submodel JSON when serialized', async () => {
         const submodelError = new SubmodelRepositoryService.RequiredError('testField', 'Submodel test message');
         const submodelResult = await handleApiError(submodelError);
 
@@ -190,6 +256,22 @@ describe('handleApiError', () => {
         expect(submodelParsed.messages.length).toBe(1);
         expect(submodelParsed.messages[0].text).toContain('Submodel test message');
         expect(submodelParsed.messages[0].code).toBe('400');
+    });
+
+    it('should produce valid Concept Description JSON when serialized', async () => {
+        const conceptDescriptionError = new ConceptDescriptionRepositoryService.RequiredError(
+            'testField',
+            'Concept Description test message'
+        );
+        const conceptDescriptionResult = await handleApiError(conceptDescriptionError);
+
+        const conceptDescriptionSerialized = JSON.stringify(conceptDescriptionResult);
+        const conceptDescriptionParsed = JSON.parse(conceptDescriptionSerialized);
+
+        expect(conceptDescriptionParsed.messages).toBeDefined();
+        expect(conceptDescriptionParsed.messages.length).toBe(1);
+        expect(conceptDescriptionParsed.messages[0].text).toContain('Concept Description test message');
+        expect(conceptDescriptionParsed.messages[0].code).toBe('400');
     });
 
     it('should ensure all errors have a code', async () => {
