@@ -87,7 +87,7 @@ export class ConceptDescriptionRepositoryClient {
         configuration: ConceptDescriptionRepositoryService.Configuration;
         cdIdentifier: string;
         conceptDescription: ConceptDescription;
-    }): Promise<ApiResult<ConceptDescription | null, ConceptDescriptionRepositoryService.Result>> {
+    }): Promise<ApiResult<ConceptDescription | void, ConceptDescriptionRepositoryService.Result>> {
         const { configuration, cdIdentifier, conceptDescription } = options;
 
         try {
@@ -102,7 +102,7 @@ export class ConceptDescriptionRepositoryClient {
                 conceptDescription: convertCoreCDToApiCD(conceptDescription),
             });
 
-            return { success: true, data: result ? convertApiCDToCoreCD(result) : null };
+            return { success: true, data: result ? convertApiCDToCoreCD(result) : undefined };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
