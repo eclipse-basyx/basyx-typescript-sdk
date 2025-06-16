@@ -39,7 +39,7 @@
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
     "@openapitools/openapi-generator-cli": "^2.18.4",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.20.0",
