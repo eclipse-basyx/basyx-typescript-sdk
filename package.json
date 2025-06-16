@@ -29,7 +29,8 @@
     "docs": "typedoc --options typedoc.json",
     "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true",
     "gen-submodelrepo": "openapi-generator-cli generate -i openapi/smrepository.yaml -g typescript-fetch -o src/generated/SubmodelRepositoryService --additional-properties=withoutRuntimeChecks=true",
-    "gen-conceptdescriptionrepo": "openapi-generator-cli generate -i openapi/cdrepository.yaml -g typescript-fetch -o src/generated/ConceptDescriptionRepositoryService --additional-properties=withoutRuntimeChecks=true"
+    "gen-conceptdescriptionrepo": "openapi-generator-cli generate -i openapi/cdrepository.yaml -g typescript-fetch -o src/generated/ConceptDescriptionRepositoryService --additional-properties=withoutRuntimeChecks=true",
+    "gen-aasregistry": "openapi-generator-cli generate -i openapi/aasregistry.yaml -g typescript-fetch -o src/generated/AasRegistryService --additional-properties=withoutRuntimeChecks=true"
 
   },
   "peerDependencies": {
