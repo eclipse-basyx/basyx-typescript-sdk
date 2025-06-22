@@ -1,7 +1,10 @@
 //import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
-import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepositoryService,
-    AasRegistryService
- } from '../generated';
+import {
+    AasRegistryService,
+    AasRepositoryService,
+    ConceptDescriptionRepositoryService,
+    SubmodelRepositoryService,
+} from '../generated';
 /**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.
@@ -12,7 +15,8 @@ import { AasRepositoryService, ConceptDescriptionRepositoryService, SubmodelRepo
 export async function handleApiError(
     err: unknown
 ): Promise<
-    AasRepositoryService.Result | SubmodelRepositoryService.Result 
+    | AasRepositoryService.Result
+    | SubmodelRepositoryService.Result
     | ConceptDescriptionRepositoryService.Result
     | AasRegistryService.Result
 > {
@@ -29,7 +33,7 @@ export async function handleApiError(
         let message:
             | AasRepositoryService.Message
             | SubmodelRepositoryService.Message
-            | ConceptDescriptionRepositoryService.Message 
+            | ConceptDescriptionRepositoryService.Message
             | AasRegistryService.Message = {
             code: '500',
             messageType: 'Exception',
