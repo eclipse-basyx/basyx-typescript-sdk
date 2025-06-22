@@ -1,8 +1,10 @@
 //import { FetchError, RequiredError, ResponseError } from '../../generated';
-import { AasRepositoryService, 
-    ConceptDescriptionRepositoryService, 
+import {
+    AasRegistryService,
+    AasRepositoryService,
+    ConceptDescriptionRepositoryService,
     SubmodelRepositoryService,
-    AasRegistryService } from '../../generated';
+} from '../../generated';
 import { handleApiError } from '../../lib/errorHandler';
 
 describe('handleApiError', () => {
@@ -264,7 +266,10 @@ describe('handleApiError', () => {
     });
 
     it('should handle AasRegistryService.FetchError objects', async () => {
-        const originalError = new AasRegistryService.FetchError(new Error('Network failure'), 'Failed to fetch Aas Descriptor');
+        const originalError = new AasRegistryService.FetchError(
+            new Error('Network failure'),
+            'Failed to fetch Aas Descriptor'
+        );
         const result = await handleApiError(originalError);
 
         expect(result.messages).toHaveLength(1);
