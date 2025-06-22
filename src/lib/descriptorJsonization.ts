@@ -173,7 +173,8 @@ export function submodelDescriptorFromJsonable(
 
 export function endpointFromJsonable(json: any): Endpoint {
     return {
-        _interface: json._interface,
+        //_interface: json._interface,
+        _interface: json.interface,
         protocolInformation: protocolInformationFromJsonable(json.protocolInformation),
     };
 }
@@ -264,7 +265,8 @@ export function toJsonableSubmodelDescriptor(descriptor: SubmodelDescriptor): Re
 
 function toJsonableEndpoint(endpoint: Endpoint): Record<string, JsonValue> {
     return {
-        _interface: endpoint._interface,
+        //_interface: endpoint._interface,
+        interface: endpoint._interface,
         protocolInformation: toJsonableProtocolInformation(endpoint.protocolInformation),
     };
 }

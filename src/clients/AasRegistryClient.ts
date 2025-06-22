@@ -5,13 +5,12 @@ import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
     convertApiAasDescriptorToCoreAasDescriptor,
+    convertApiSubmodelDescriptorToCoreSubmodelDescriptor,
     convertCoreAasDescriptorToApiAasDescriptor,
+    convertCoreSubmodelDescriptorToApiSubmodelDescriptor,
 } from '../lib/convertAasDescriptorTypes';
 import { handleApiError } from '../lib/errorHandler';
-import {
-    AssetAdministrationShellDescriptor,
-    // SubmodelDescriptor
-} from '../models/Descriptors';
+import { AssetAdministrationShellDescriptor, SubmodelDescriptor } from '../models/Descriptors';
 
 export class AasRegistryClient {
     /**
@@ -198,6 +197,210 @@ export class AasRegistryClient {
             });
 
             return { success: true, data: result ? convertApiAasDescriptorToCoreAasDescriptor(result) : undefined };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns all Submodel Descriptors
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getAllSubmodelDescriptorsThroughSuperpath(options: {
+        configuration: AasRegistryService.Configuration;
+        aasIdentifier: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            {
+                pagedResult: AasRegistryService.PagedResultPagingMetadata | undefined;
+                result: SubmodelDescriptor[];
+            },
+            AasRegistryService.Result
+        >
+    > {
+        const { configuration, aasIdentifier, limit, cursor } = options;
+
+        try {
+            const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
+                applyDefaults(configuration)
+            );
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
+            const result = await apiInstance.getAllSubmodelDescriptorsThroughSuperpath({
+                aasIdentifier: encodedAasIdentifier,
+                limit: limit,
+                cursor: cursor,
+            });
+            const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
+            console.log('all submodel descriptors:', submodelDescriptors);
+            return {
+                success: true,
+                data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Creates a new Submodel Descriptor, i.e. registers a submodel
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options.
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelDescriptor: Submodel Descriptor object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async postSubmodelDescriptorThroughSuperpath(options: {
+        configuration: AasRegistryService.Configuration;
+        aasIdentifier: string;
+        submodelDescriptor: SubmodelDescriptor;
+    }): Promise<ApiResult<SubmodelDescriptor, AasRegistryService.Result>> {
+        const { configuration, aasIdentifier, submodelDescriptor } = options;
+
+        try {
+            const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+
+            const result = await apiInstance.postSubmodelDescriptorThroughSuperpath({
+                aasIdentifier: encodedAasIdentifier,
+                submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
+            });
+            console.log('created submodel descriptor:', result);
+            return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            //console.log('error during creation of submodel descriptor:', customError);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns a specific Submodel Descriptor
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getSubmodelDescriptorByIdThroughSuperpath(options: {
+        configuration: AasRegistryService.Configuration;
+        aasIdentifier: string;
+        submodelIdentifier: string;
+    }): Promise<ApiResult<SubmodelDescriptor, AasRegistryService.Result>> {
+        const { configuration, aasIdentifier, submodelIdentifier } = options;
+
+        try {
+            const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getSubmodelDescriptorByIdThroughSuperpath({
+                aasIdentifier: encodedAasIdentifier,
+                submodelIdentifier: encodedSubmodelIdentifier,
+            });
+
+            return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Deletes a Submodel Descriptor, i.e. de-registers a submodel
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async deleteSubmodelDescriptorByIdThroughSuperpath(options: {
+        configuration: AasRegistryService.Configuration;
+        aasIdentifier: string;
+        submodelIdentifier: string;
+    }): Promise<ApiResult<void, AasRegistryService.Result>> {
+        const { configuration, aasIdentifier, submodelIdentifier } = options;
+
+        try {
+            const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.deleteSubmodelDescriptorByIdThroughSuperpath({
+                aasIdentifier: encodedAasIdentifier,
+                submodelIdentifier: encodedSubmodelIdentifier,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Creates or updates an existing Submodel Descriptor
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelDescriptor: Submodel Descriptor object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async putSubmodelDescriptorByIdThroughSuperpath(options: {
+        configuration: AasRegistryService.Configuration;
+        aasIdentifier: string;
+        submodelIdentifier: string;
+        submodelDescriptor: SubmodelDescriptor;
+    }): Promise<ApiResult<SubmodelDescriptor | void, AasRegistryService.Result>> {
+        const { configuration, aasIdentifier, submodelIdentifier, submodelDescriptor } = options;
+
+        try {
+            const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.putSubmodelDescriptorByIdThroughSuperpath({
+                aasIdentifier: encodedAasIdentifier,
+                submodelIdentifier: encodedSubmodelIdentifier,
+                submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
+            });
+
+            return {
+                success: true,
+                data: result ? convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) : undefined,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };

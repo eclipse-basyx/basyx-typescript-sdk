@@ -1,10 +1,16 @@
 import { AasRegistryClient } from '../clients/AasRegistryClient';
 import { AasRegistryService } from '../generated';
-import { createDescription, createTestShellDescriptor } from './fixtures/aasregistryFixtures';
+import {
+    createDescription,
+    createDisplayName,
+    createTestShellDescriptor,
+    createTestSubmodelDescriptor,
+} from './fixtures/aasregistryFixtures';
 
 describe('AAS Registry Integration Tests', () => {
     const client = new AasRegistryClient();
     const testShellDescriptor = createTestShellDescriptor();
+    const testSubmodelDescriptor = createTestSubmodelDescriptor();
     const configuration = new AasRegistryService.Configuration({
         basePath: 'http://localhost:8084',
     });
@@ -66,6 +72,7 @@ describe('AAS Registry Integration Tests', () => {
         const description = createDescription();
 
         updatedShellDescriptor.description = [description];
+        //updatedShellDescriptor.submodelDescriptors = [testSubmodelDescriptor];
 
         const updateResponse = await client.putAssetAdministrationShellDescriptorById({
             configuration,
@@ -84,6 +91,82 @@ describe('AAS Registry Integration Tests', () => {
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data).toEqual(updatedShellDescriptor);
+        }
+    });
+
+    test('should create a new Submodel Descriptor', async () => {
+        const response = await client.postSubmodelDescriptorThroughSuperpath({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+            submodelDescriptor: testSubmodelDescriptor,
+        });
+        console.log('Submitted:', testSubmodelDescriptor);
+
+        expect(response.success).toBe(true);
+
+        if (response.success) {
+            console.log('Received:', response.data);
+            expect(response.data).toBeDefined();
+            expect(response.data?.id).toEqual(testSubmodelDescriptor.id);
+            expect(response.data?.endpoints).toEqual(testSubmodelDescriptor.endpoints);
+
+            expect(response.data).toEqual(testSubmodelDescriptor);
+        }
+    });
+
+    test('should fetch a Submodel Descriptor by ID', async () => {
+        const response = await client.getSubmodelDescriptorByIdThroughSuperpath({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+            submodelIdentifier: testSubmodelDescriptor.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data).toEqual(testSubmodelDescriptor);
+        }
+    });
+
+    test('should fetch all Submodel Descriptors', async () => {
+        const response = await client.getAllSubmodelDescriptorsThroughSuperpath({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.result.length).toBeGreaterThan(0);
+            expect(response.data.result).toContainEqual(testSubmodelDescriptor);
+        }
+    });
+
+    test('should update a Submodel Descriptor', async () => {
+        const updatedSubmodelDescriptor = testSubmodelDescriptor;
+        const displayName = createDisplayName();
+
+        updatedSubmodelDescriptor.displayName = [displayName];
+
+        const updateResponse = await client.putSubmodelDescriptorByIdThroughSuperpath({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+            submodelIdentifier: testSubmodelDescriptor.id,
+            submodelDescriptor: updatedSubmodelDescriptor,
+        });
+
+        expect(updateResponse.success).toBe(true);
+
+        const fetchResponse = await client.getSubmodelDescriptorByIdThroughSuperpath({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+            submodelIdentifier: testSubmodelDescriptor.id,
+        });
+
+        expect(fetchResponse.success).toBe(true);
+        if (fetchResponse.success) {
+            expect(fetchResponse.data).toBeDefined();
+            expect(fetchResponse.data).toEqual(updatedSubmodelDescriptor);
         }
     });
 });
