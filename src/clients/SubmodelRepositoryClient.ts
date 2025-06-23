@@ -11,7 +11,6 @@ import {
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
-//import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
 
 export class SubmodelRepositoryClient {
     /**
@@ -183,7 +182,7 @@ export class SubmodelRepositoryClient {
         configuration: SubmodelRepositoryService.Configuration;
         submodelIdentifier: string;
         submodel: Submodel;
-    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+    }): Promise<ApiResult<Submodel | void, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier, submodel } = options;
 
         try {
@@ -196,7 +195,7 @@ export class SubmodelRepositoryClient {
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
             });
 
-            return { success: true, data: result };
+            return { success: true, data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -421,7 +420,7 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         submodelElement: ISubmodelElement;
         level?: SubmodelRepositoryService.PutSubmodelElementByPathSubmodelRepoLevelEnum;
-    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+    }): Promise<ApiResult<ISubmodelElement | void, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier, idShortPath, submodelElement, level } = options;
 
         try {
@@ -436,7 +435,7 @@ export class SubmodelRepositoryClient {
                 level: level,
             });
 
-            return { success: true, data: result };
+            return { success: true, data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -644,9 +643,9 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
-        async?: boolean;
+        //async?: boolean;
     }): Promise<ApiResult<SubmodelRepositoryService.OperationResult, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, operationRequest, async } = options;
+        const { configuration, submodelIdentifier, idShortPath, operationRequest } = options;
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
@@ -657,7 +656,7 @@ export class SubmodelRepositoryClient {
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
-                async: async,
+                //async: async,
             });
 
             return { success: true, data: result };

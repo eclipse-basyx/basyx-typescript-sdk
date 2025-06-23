@@ -1,4 +1,3 @@
-.openapi-generator-ignore
 apis/AssetAdministrationShellRepositoryAPIApi.ts
 apis/DescriptionAPIApi.ts
 apis/SerializationAPIApi.ts

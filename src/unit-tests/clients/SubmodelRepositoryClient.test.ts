@@ -30,7 +30,7 @@ const SEMANTIC_ID = JSON.stringify({
     keys: [
         {
             type: 'GlobalReference',
-            value: 'https://example.com/ids/submodel/123',
+            value: 'https://example.com/ids/sm/123',
         },
     ],
 });
@@ -42,11 +42,11 @@ const LEVEL_SE_BY_PATH = SubmodelRepositoryService.PutSubmodelElementByPathSubmo
 const LEVEL_SUBMODELS = SubmodelRepositoryService.GetAllSubmodelsLevelEnum.Deep;
 const EXTENT_SUBMODELS = SubmodelRepositoryService.GetAllSubmodelsExtentEnum.WithBlobValue;
 const API_SUBMODEL1: SubmodelRepositoryService.Submodel = {
-    id: 'https://example.com/ids/submodel/123',
+    id: 'https://example.com/ids/sm/123',
     modelType: 'Submodel',
 };
 const API_SUBMODEL2: SubmodelRepositoryService.Submodel = {
-    id: 'https://example.com/ids/submodel/234',
+    id: 'https://example.com/ids/sm/234',
     modelType: 'Submodel',
 };
 const LEVEL_SUBMODEL = SubmodelRepositoryService.GetSubmodelByIdLevelEnum.Deep;
@@ -79,7 +79,7 @@ const LEVEL_SUBMODELELEMENT = SubmodelRepositoryService.GetAllSubmodelElementsLe
 const EXTENT_SUBMODELELEMENT = SubmodelRepositoryService.GetAllSubmodelElementsExtentEnum.WithBlobValue;
 
 const API_SUBMODEL_METADATA: SubmodelRepositoryService.SubmodelMetadata = {
-    id: 'https://example.com/ids/submodel/123',
+    id: 'https://example.com/ids/sm/123',
     modelType: ModelType.Submodel,
     // other metadata properties...,
 };
@@ -109,8 +109,8 @@ const EXTENT_SUBMODELELEMENT_VALUE_BY_PATH =
 const LEVEL_SUBMODELELEMENT_BY_PATH = SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoLevelEnum.Deep;
 const EXTENT_SUBMODELELEMENT_BY_PATH =
     SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoExtentEnum.WithBlobValue;
-const CORE_SUBMODEL1: CoreSubmodel = new CoreSubmodel('https://example.com/ids/submodel/123');
-const CORE_SUBMODEL2: CoreSubmodel = new CoreSubmodel('https://example.com/ids/submodel/234');
+const CORE_SUBMODEL1: CoreSubmodel = new CoreSubmodel('https://example.com/ids/sm/123');
+const CORE_SUBMODEL2: CoreSubmodel = new CoreSubmodel('https://example.com/ids/sm/234');
 const LEVEL_SE_VALUE_PATCH = SubmodelRepositoryService.PatchSubmodelElementByPathValueOnlySubmodelRepoLevelEnum.Core;
 const OPERATION_REQUEST: SubmodelRepositoryService.OperationRequest = {
     inputArguments: [
@@ -481,6 +481,34 @@ describe('SubmodelRepositoryClient', () => {
         });
         expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
         expect(response.success).toBe(true);
+    });
+
+    it('should create a new Submodel during update', async () => {
+        // Arrange
+        mockApiInstance.putSubmodelById.mockResolvedValue(API_SUBMODEL1);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.putSubmodelById({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            submodel: CORE_SUBMODEL1,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.putSubmodelById).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            submodel: API_SUBMODEL1,
+        });
+        expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
+        expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_SUBMODEL1); // After conversion
+        }
     });
 
     it('should handle errors when updating a Submodel', async () => {
@@ -1155,6 +1183,38 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(true);
     });
 
+    it('should create a new Submodel element at a specified path during update', async () => {
+        // Arrange
+        mockApiInstance.putSubmodelElementByPathSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT_PROPERTY);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.putSubmodelElementByPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            submodelElement: CORE_SUBMODELELEMENT_PROPERTY,
+            level: LEVEL_SE_BY_PATH,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.putSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            submodelElement: API_SUBMODELELEMENT_PROPERTY,
+            level: LEVEL_SE_BY_PATH,
+        });
+        expect(convertCoreSubmodelElementToApiSubmodelElement).toHaveBeenCalledWith(CORE_SUBMODELELEMENT_PROPERTY);
+        expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT_PROPERTY);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_SUBMODELELEMENT_PROPERTY); // After conversion
+        }
+    });
+
     it('should handle errors when updating a Submodel element at a specified path', async () => {
         // Arrange
         const errorResult: SubmodelRepositoryService.Result = {
@@ -1199,7 +1259,7 @@ describe('SubmodelRepositoryClient', () => {
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequest: OPERATION_REQUEST,
-            async: true,
+            //async: true,
         });
 
         // Assert
@@ -1209,7 +1269,7 @@ describe('SubmodelRepositoryClient', () => {
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             operationRequest: OPERATION_REQUEST,
-            async: true,
+            //async: true,
         });
         //expect(convertCoreSubmodelElementToApiSubmodelElement).toHaveBeenCalledWith(CORE_SUBMODELELEMENT1);
         //expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT1);
