@@ -1,22 +1,21 @@
-import { AasRegistryService } from '../../generated';
 import {
     assetAdministrationShellDescriptorFromJsonable,
-    submodelDescriptorFromJsonable,
     endpointFromJsonable,
     protocolInformationFromJsonable,
+    submodelDescriptorFromJsonable,
     toJsonableAssetAdministrationShellDescriptor,
-    toJsonableSubmodelDescriptor,
     toJsonableEndpoint,
     toJsonableProtocolInformation,
     toJsonableSecurityAttribute,
+    toJsonableSubmodelDescriptor,
 } from '../../lib/descriptorJsonization';
 import {
     AssetAdministrationShellDescriptor as CoreAssetAdministrationShellDescriptor,
-    SubmodelDescriptor as CoreSubmodelDescriptor,
     Endpoint as CoreEndPoint,
     ProtocolInformation as CoreProtocolInformation,
     ProtocolInformationSecurityAttributes as CoreProtocolInformationSecurityAttributes,
     ProtocolInformationSecurityAttributesTypeEnum as CoreProtocolInformationSecurityAttributesTypeEnum,
+    SubmodelDescriptor as CoreSubmodelDescriptor,
 } from '../../models/Descriptors';
 
 //mock any methods as needed
@@ -73,31 +72,31 @@ const CORE_ENDPOINT: CoreEndPoint = {
     },
 };
 const JSONABLE_ENDPOINT = {
-            interface: 'SUBMODEL-3.X',
-            protocolInformation: {
-                href: 'http://localhost:8085/submodels/xyz',
-            },
-        };
-const CORE_PROTOCOL_INFO: CoreProtocolInformation = {
+    interface: 'SUBMODEL-3.X',
+    protocolInformation: {
         href: 'http://localhost:8085/submodels/xyz',
-        endpointProtocol: null,
-        endpointProtocolVersion: null,
-        subprotocol: null,
-        subprotocolBody: null,
-        subprotocolBodyEncoding: null,
-        securityAttributes: null,
-    };
-const JSONABLE_PROTOCOL_INFO = {href: 'http://localhost:8085/submodels/xyz'};
+    },
+};
+const CORE_PROTOCOL_INFO: CoreProtocolInformation = {
+    href: 'http://localhost:8085/submodels/xyz',
+    endpointProtocol: null,
+    endpointProtocolVersion: null,
+    subprotocol: null,
+    subprotocolBody: null,
+    subprotocolBodyEncoding: null,
+    securityAttributes: null,
+};
+const JSONABLE_PROTOCOL_INFO = { href: 'http://localhost:8085/submodels/xyz' };
 const CORE_SECURITY_ATTRIBUTES: CoreProtocolInformationSecurityAttributes = {
-        type: CoreProtocolInformationSecurityAttributesTypeEnum.None,
-        key: 'Authorization',
-        value: 'Basic abc123',
-        };
+    type: CoreProtocolInformationSecurityAttributesTypeEnum.None,
+    key: 'Authorization',
+    value: 'Basic abc123',
+};
 const JSONABLE_SECURITY_ATTRIBUTES = {
-        type: 0,
-        key: 'Authorization',
-        value: 'Basic abc123',
-        };
+    type: 0,
+    key: 'Authorization',
+    value: 'Basic abc123',
+};
 
 describe('descriptorJsonization', () => {
     afterEach(() => {
@@ -115,7 +114,6 @@ describe('descriptorJsonization', () => {
         });
 
         it('should throw an error if assetAdministrationShellDescriptorFromJsonable returns an error', () => {
-            
             const result = assetAdministrationShellDescriptorFromJsonable([]);
             expect(result.error).not.toBeNull();
         });
@@ -139,7 +137,6 @@ describe('descriptorJsonization', () => {
         });
 
         it('should throw an error if submodelDescriptorFromJsonable returns an error', () => {
-            
             const result = submodelDescriptorFromJsonable([]);
             expect(result.error).not.toBeNull();
         });
@@ -163,7 +160,6 @@ describe('descriptorJsonization', () => {
         });
 
         it('should throw an error if endpointFromJsonable returns an error', () => {
-            
             expect(() => endpointFromJsonable(null)).toThrow();
         });
     });
@@ -186,7 +182,6 @@ describe('descriptorJsonization', () => {
         });
 
         it('should throw an error if protocolInformationFromJsonable returns an error', () => {
-            
             expect(() => protocolInformationFromJsonable(null)).toThrow();
         });
     });
@@ -202,8 +197,7 @@ describe('descriptorJsonization', () => {
 
     describe('toJsonableSecurityAttribute', () => {
         it('should serialize a security attribute correctly', () => {
-
             expect(toJsonableSecurityAttribute(CORE_SECURITY_ATTRIBUTES)).toEqual(JSONABLE_SECURITY_ATTRIBUTES);
         });
-     });
+    });
 });
