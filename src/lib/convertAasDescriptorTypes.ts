@@ -2,7 +2,6 @@ import { AasRegistryService } from '../generated';
 import {
     assetAdministrationShellDescriptorFromJsonable,
     submodelDescriptorFromJsonable,
-    //assetAdministrationShellDescriptorToJsonable,
     toJsonableAssetAdministrationShellDescriptor,
     toJsonableSubmodelDescriptor,
 } from '../lib/descriptorJsonization';

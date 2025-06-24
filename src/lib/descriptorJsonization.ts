@@ -191,25 +191,6 @@ export function protocolInformationFromJsonable(json: any): ProtocolInformation 
     };
 }
 
-// export function assetAdministrationShellDescriptorToJsonable(
-//   descriptor: AssetAdministrationShellDescriptor
-// ): AasRegistryService.AssetAdministrationShellDescriptor {
-//   return {
-//     id: descriptor.id,
-//     description: descriptor.description ?? undefined,
-//     displayName: descriptor.displayName ?? undefined,
-//     extensions: descriptor.extensions ?? undefined,
-//     administration: descriptor.administration ?? undefined,
-//     assetKind: descriptor.assetKind ?? undefined,
-//     assetType: descriptor.assetType ?? undefined,
-//     endpoints: descriptor.endpoints ?? undefined,
-//     globalAssetId: descriptor.globalAssetId ?? undefined,
-//     idShort: descriptor.idShort ?? undefined,
-//     specificAssetIds: descriptor.specificAssetIds ?? undefined,
-//     submodelDescriptors: descriptor.submodelDescriptors?.map(sm => submodelDescriptorToJsonable(sm))
-//   };
-// }
-
 export function toJsonableAssetAdministrationShellDescriptor(
     descriptor: AssetAdministrationShellDescriptor
 ): Record<string, JsonValue> {
@@ -263,7 +244,7 @@ export function toJsonableSubmodelDescriptor(descriptor: SubmodelDescriptor): Re
     };
 }
 
-function toJsonableEndpoint(endpoint: Endpoint): Record<string, JsonValue> {
+export function toJsonableEndpoint(endpoint: Endpoint): Record<string, JsonValue> {
     return {
         //_interface: endpoint._interface,
         interface: endpoint._interface,
@@ -271,7 +252,7 @@ function toJsonableEndpoint(endpoint: Endpoint): Record<string, JsonValue> {
     };
 }
 
-function toJsonableProtocolInformation(info: ProtocolInformation): Record<string, JsonValue> {
+export function toJsonableProtocolInformation(info: ProtocolInformation): Record<string, JsonValue> {
     return {
         href: info.href,
         ...(info.endpointProtocol !== null && { endpointProtocol: info.endpointProtocol }),
@@ -285,7 +266,7 @@ function toJsonableProtocolInformation(info: ProtocolInformation): Record<string
     };
 }
 
-function toJsonableSecurityAttribute(attr: ProtocolInformationSecurityAttributes): Record<string, JsonValue> {
+export function toJsonableSecurityAttribute(attr: ProtocolInformationSecurityAttributes): Record<string, JsonValue> {
     return {
         type: attr.type,
         key: attr.key,

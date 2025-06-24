@@ -1,12 +1,22 @@
+import { AasRegistryService } from '../../generated';
 import {
     assetAdministrationShellDescriptorFromJsonable,
     submodelDescriptorFromJsonable,
+    endpointFromJsonable,
+    protocolInformationFromJsonable,
     toJsonableAssetAdministrationShellDescriptor,
     toJsonableSubmodelDescriptor,
+    toJsonableEndpoint,
+    toJsonableProtocolInformation,
+    toJsonableSecurityAttribute,
 } from '../../lib/descriptorJsonization';
 import {
     AssetAdministrationShellDescriptor as CoreAssetAdministrationShellDescriptor,
     SubmodelDescriptor as CoreSubmodelDescriptor,
+    Endpoint as CoreEndPoint,
+    ProtocolInformation as CoreProtocolInformation,
+    ProtocolInformationSecurityAttributes as CoreProtocolInformationSecurityAttributes,
+    ProtocolInformationSecurityAttributesTypeEnum as CoreProtocolInformationSecurityAttributesTypeEnum,
 } from '../../models/Descriptors';
 
 //mock any methods as needed
@@ -49,6 +59,45 @@ const JSONABLE_SUBMODEL_DESCRIPTOR = {
         },
     ],
 };
+//const CORE_ENDPOINT: CoreEndPoint = {} as CoreEndPoint;
+const CORE_ENDPOINT: CoreEndPoint = {
+    _interface: 'SUBMODEL-3.X',
+    protocolInformation: {
+        href: 'http://localhost:8085/submodels/xyz',
+        endpointProtocol: null,
+        endpointProtocolVersion: null,
+        subprotocol: null,
+        subprotocolBody: null,
+        subprotocolBodyEncoding: null,
+        securityAttributes: null,
+    },
+};
+const JSONABLE_ENDPOINT = {
+            interface: 'SUBMODEL-3.X',
+            protocolInformation: {
+                href: 'http://localhost:8085/submodels/xyz',
+            },
+        };
+const CORE_PROTOCOL_INFO: CoreProtocolInformation = {
+        href: 'http://localhost:8085/submodels/xyz',
+        endpointProtocol: null,
+        endpointProtocolVersion: null,
+        subprotocol: null,
+        subprotocolBody: null,
+        subprotocolBodyEncoding: null,
+        securityAttributes: null,
+    };
+const JSONABLE_PROTOCOL_INFO = {href: 'http://localhost:8085/submodels/xyz'};
+const CORE_SECURITY_ATTRIBUTES: CoreProtocolInformationSecurityAttributes = {
+        type: CoreProtocolInformationSecurityAttributesTypeEnum.None,
+        key: 'Authorization',
+        value: 'Basic abc123',
+        };
+const JSONABLE_SECURITY_ATTRIBUTES = {
+        type: 0,
+        key: 'Authorization',
+        value: 'Basic abc123',
+        };
 
 describe('descriptorJsonization', () => {
     afterEach(() => {
@@ -66,11 +115,9 @@ describe('descriptorJsonization', () => {
         });
 
         it('should throw an error if assetAdministrationShellDescriptorFromJsonable returns an error', () => {
-            //const error = new Error('Conversion failed');
+            
             const result = assetAdministrationShellDescriptorFromJsonable([]);
             expect(result.error).not.toBeNull();
-            //expect(() => assetAdministrationShellDescriptorFromJsonable(JSONABLE_AAS_DESCRIPTOR)).toThrow(error);
-            //expect(result.mustValue()).toBeNull();
         });
     });
 
@@ -87,17 +134,14 @@ describe('descriptorJsonization', () => {
         it('should convert valid json to SubmodelDescriptor successfully', () => {
             const result = submodelDescriptorFromJsonable(JSONABLE_SUBMODEL_DESCRIPTOR);
 
-            //expect(result.mustValue()).toEqual(CORE_AAS_DESCRIPTOR);
             expect(result.error).toBeNull();
             expect(result.mustValue()).toBeInstanceOf(CoreSubmodelDescriptor);
-            //expect(result).toBe(CORE_AAS_DESCRIPTOR);
         });
 
         it('should throw an error if submodelDescriptorFromJsonable returns an error', () => {
-            //const error = new Error('Conversion failed');
+            
             const result = submodelDescriptorFromJsonable([]);
             expect(result.error).not.toBeNull();
-            //expect(result.mustValue()).toBeNull();
         });
     });
 
@@ -110,4 +154,56 @@ describe('descriptorJsonization', () => {
             expect(jsonable).toEqual(JSONABLE_SUBMODEL_DESCRIPTOR);
         });
     });
+
+    describe('endpointFromJsonable', () => {
+        it('should convert valid json to Endpoint successfully', () => {
+            const result = endpointFromJsonable(JSONABLE_ENDPOINT);
+
+            expect(result).toEqual(CORE_ENDPOINT);
+        });
+
+        it('should throw an error if endpointFromJsonable returns an error', () => {
+            
+            expect(() => endpointFromJsonable(null)).toThrow();
+        });
+    });
+
+    describe('toJsonableEndpoint', () => {
+        it('should serialize Endpoint in JSON format correctly', () => {
+            const jsonable = toJsonableEndpoint(CORE_ENDPOINT);
+
+            expect(jsonable).toHaveProperty('interface');
+            expect(jsonable).toHaveProperty('protocolInformation');
+            expect(jsonable).toEqual(JSONABLE_ENDPOINT);
+        });
+    });
+
+    describe('protocolInformationFromJsonable', () => {
+        it('should convert valid json to ProtocolInformation successfully', () => {
+            const result = protocolInformationFromJsonable(JSONABLE_PROTOCOL_INFO);
+
+            expect(result).toEqual(CORE_PROTOCOL_INFO);
+        });
+
+        it('should throw an error if protocolInformationFromJsonable returns an error', () => {
+            
+            expect(() => protocolInformationFromJsonable(null)).toThrow();
+        });
+    });
+
+    describe('toJsonableProtocolInformation', () => {
+        it('should serialize ProtocolInformation in JSON format correctly', () => {
+            const jsonable = toJsonableProtocolInformation(CORE_PROTOCOL_INFO);
+
+            expect(jsonable).toHaveProperty('href');
+            expect(jsonable).toEqual(JSONABLE_PROTOCOL_INFO);
+        });
+    });
+
+    describe('toJsonableSecurityAttribute', () => {
+        it('should serialize a security attribute correctly', () => {
+
+            expect(toJsonableSecurityAttribute(CORE_SECURITY_ATTRIBUTES)).toEqual(JSONABLE_SECURITY_ATTRIBUTES);
+        });
+     });
 });
