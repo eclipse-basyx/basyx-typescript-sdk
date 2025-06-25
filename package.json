@@ -29,7 +29,8 @@
     "docs": "typedoc --options typedoc.json",
     "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true",
     "gen-submodelrepo": "openapi-generator-cli generate -i openapi/smrepository.yaml -g typescript-fetch -o src/generated/SubmodelRepositoryService --additional-properties=withoutRuntimeChecks=true",
-    "gen-conceptdescriptionrepo": "openapi-generator-cli generate -i openapi/cdrepository.yaml -g typescript-fetch -o src/generated/ConceptDescriptionRepositoryService --additional-properties=withoutRuntimeChecks=true"
+    "gen-conceptdescriptionrepo": "openapi-generator-cli generate -i openapi/cdrepository.yaml -g typescript-fetch -o src/generated/ConceptDescriptionRepositoryService --additional-properties=withoutRuntimeChecks=true",
+    "gen-aasregistry": "openapi-generator-cli generate -i openapi/aasregistry.yaml -g typescript-fetch -o src/generated/AasRegistryService --additional-properties=withoutRuntimeChecks=true"
 
   },
   "peerDependencies": {
@@ -39,15 +40,15 @@
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
     "@openapitools/openapi-generator-cli": "^2.18.4",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.7",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.20.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "jest": "^29.7.0",
+    "jest": "^30.0.0",
     "jiti": "^2.4.2",
     "prettier": "^3.4.2",
     "rollup": "^4.34.6",
