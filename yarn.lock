@@ -983,15 +983,15 @@
     node-fetch "^2.6.1"
 
 "@openapitools/openapi-generator-cli@^2.18.4":
-  version "2.20.5"
-  resolved "https://registry.yarnpkg.com/@openapitools/openapi-generator-cli/-/openapi-generator-cli-2.20.5.tgz#497231898e7e9ae3a35cda9c4537ef783e8b87e1"
-  integrity sha512-s8IaBV11xJIGWlGg/v/lRES/9yY0kqmTzxxWfmCuFjkaClyDEf0Aa9cWqll7C4uqUMaUqnsceOV8arVFcuzYWg==
+  version "2.21.0"
+  resolved "https://registry.yarnpkg.com/@openapitools/openapi-generator-cli/-/openapi-generator-cli-2.21.0.tgz#70732e0e771e337bac0f290895340256ee90c96d"
+  integrity sha512-NdDvCd7hya+UucxH7G94Jf6tmA6641I4CF/T3xtFhM+NQQNWAP5tpiOBN4Ub9ocU6cCgQgXdWl4EpwlEwW7JDQ==
   dependencies:
     "@nestjs/axios" "4.0.0"
     "@nestjs/common" "11.1.3"
     "@nestjs/core" "11.1.3"
     "@nuxtjs/opencollective" "0.3.2"
-    axios "1.9.0"
+    axios "1.10.0"
     chalk "4.1.2"
     commander "8.3.0"
     compare-versions "4.1.4"
@@ -1659,10 +1659,10 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==
 
-axios@1.9.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.9.0.tgz#25534e3b72b54540077d33046f77e3b8d7081901"
-  integrity sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==
+axios@1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.10.0.tgz#af320aee8632eaf2a400b6a1979fa75856f38d54"
+  integrity sha512-/1xYAC4MP/HEG+3duIhFr4ZQXR4sQXOIe+o6sdqzeykGLx6Upp/1p8MHqhINOvGeP7xyNHe7tsiJByc4SSVUxw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.0"
