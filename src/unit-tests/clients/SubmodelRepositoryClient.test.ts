@@ -144,14 +144,14 @@ const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
 );
 const OPERATION_REQUEST_VALUEONLY: SubmodelRepositoryService.OperationRequestValueOnly = {
     inputArguments: {
-    temperature: '25',
-  },
-  clientTimeoutDuration: '10S',
+        temperature: '25',
+    },
+    clientTimeoutDuration: '10S',
 };
 const OPERATION_RESULT_VALUEONLY: SubmodelRepositoryService.OperationResultValueOnly = {
     outputArguments: {
-    status: 'ok',
-  },
+        status: 'ok',
+    },
 };
 const TEST_CONFIGURATION = new SubmodelRepositoryService.Configuration({
     basePath: 'http://localhost:8082',
