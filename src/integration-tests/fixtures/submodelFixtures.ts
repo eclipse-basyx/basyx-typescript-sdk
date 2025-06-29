@@ -13,7 +13,7 @@ import { OperationRequest, OperationResult, PropertyValue } from '../../generate
 
 export function createTestSubmodel(): Submodel {
     const demoSubmodel = new Submodel(
-        'https://example.com/ids/submodel/123',
+        'https://example.com/ids/sm/123',
         null, // extensions
         null, // category
         'sampleIdentification', // idShort
@@ -84,7 +84,7 @@ export function createValue(): PropertyValue {
     return 'updatedPropertyValue';
 }
 export function createSemanticId(): string {
-    return 'https://example.com/ids/submodel/123';
+    return 'https://example.com/ids/sm/123';
 }
 
 export function createTestOperationElement(): ISubmodelElement {

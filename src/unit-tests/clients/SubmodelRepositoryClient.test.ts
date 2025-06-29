@@ -1,6 +1,9 @@
 // Import necessary types
 //import type { PagedResultPagingMetadata, Result } from '../../generated';
 import {
+    AssetAdministrationShell as CoreAssetAdministrationShell,
+    AssetInformation as CoreAssetInformation,
+    AssetKind,
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
@@ -30,7 +33,7 @@ const SEMANTIC_ID = JSON.stringify({
     keys: [
         {
             type: 'GlobalReference',
-            value: 'https://example.com/ids/submodel/123',
+            value: 'https://example.com/ids/sm/123',
         },
     ],
 });
@@ -42,11 +45,11 @@ const LEVEL_SE_BY_PATH = SubmodelRepositoryService.PutSubmodelElementByPathSubmo
 const LEVEL_SUBMODELS = SubmodelRepositoryService.GetAllSubmodelsLevelEnum.Deep;
 const EXTENT_SUBMODELS = SubmodelRepositoryService.GetAllSubmodelsExtentEnum.WithBlobValue;
 const API_SUBMODEL1: SubmodelRepositoryService.Submodel = {
-    id: 'https://example.com/ids/submodel/123',
+    id: 'https://example.com/ids/sm/123',
     modelType: 'Submodel',
 };
 const API_SUBMODEL2: SubmodelRepositoryService.Submodel = {
-    id: 'https://example.com/ids/submodel/234',
+    id: 'https://example.com/ids/sm/234',
     modelType: 'Submodel',
 };
 const LEVEL_SUBMODEL = SubmodelRepositoryService.GetSubmodelByIdLevelEnum.Deep;
@@ -79,7 +82,7 @@ const LEVEL_SUBMODELELEMENT = SubmodelRepositoryService.GetAllSubmodelElementsLe
 const EXTENT_SUBMODELELEMENT = SubmodelRepositoryService.GetAllSubmodelElementsExtentEnum.WithBlobValue;
 
 const API_SUBMODEL_METADATA: SubmodelRepositoryService.SubmodelMetadata = {
-    id: 'https://example.com/ids/submodel/123',
+    id: 'https://example.com/ids/sm/123',
     modelType: ModelType.Submodel,
     // other metadata properties...,
 };
@@ -109,8 +112,8 @@ const EXTENT_SUBMODELELEMENT_VALUE_BY_PATH =
 const LEVEL_SUBMODELELEMENT_BY_PATH = SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoLevelEnum.Deep;
 const EXTENT_SUBMODELELEMENT_BY_PATH =
     SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoExtentEnum.WithBlobValue;
-const CORE_SUBMODEL1: CoreSubmodel = new CoreSubmodel('https://example.com/ids/submodel/123');
-const CORE_SUBMODEL2: CoreSubmodel = new CoreSubmodel('https://example.com/ids/submodel/234');
+const CORE_SUBMODEL1: CoreSubmodel = new CoreSubmodel('https://example.com/ids/sm/123');
+const CORE_SUBMODEL2: CoreSubmodel = new CoreSubmodel('https://example.com/ids/sm/234');
 const LEVEL_SE_VALUE_PATCH = SubmodelRepositoryService.PatchSubmodelElementByPathValueOnlySubmodelRepoLevelEnum.Core;
 const OPERATION_REQUEST: SubmodelRepositoryService.OperationRequest = {
     inputArguments: [
@@ -134,6 +137,21 @@ const OPERATION_RESULT: SubmodelRepositoryService.OperationResult = {
             },
         },
     ],
+};
+const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
+    'https://example.com/ids/aas/7600_5912_3951_6917',
+    new CoreAssetInformation(AssetKind.Instance)
+);
+const OPERATION_REQUEST_VALUEONLY: SubmodelRepositoryService.OperationRequestValueOnly = {
+    inputArguments: {
+        temperature: '25',
+    },
+    clientTimeoutDuration: '10S',
+};
+const OPERATION_RESULT_VALUEONLY: SubmodelRepositoryService.OperationResultValueOnly = {
+    outputArguments: {
+        status: 'ok',
+    },
 };
 const TEST_CONFIGURATION = new SubmodelRepositoryService.Configuration({
     basePath: 'http://localhost:8082',
@@ -160,6 +178,9 @@ describe('SubmodelRepositoryClient', () => {
         getSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
         patchSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
         invokeOperationSubmodelRepo: jest.fn(),
+        invokeOperationValueOnly: jest.fn(),
+        invokeOperationAsync: jest.fn(),
+        invokeOperationAsyncValueOnly: jest.fn(),
     };
 
     // Mock constructor
@@ -481,6 +502,34 @@ describe('SubmodelRepositoryClient', () => {
         });
         expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
         expect(response.success).toBe(true);
+    });
+
+    it('should create a new Submodel during update', async () => {
+        // Arrange
+        mockApiInstance.putSubmodelById.mockResolvedValue(API_SUBMODEL1);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.putSubmodelById({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            submodel: CORE_SUBMODEL1,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.putSubmodelById).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            submodel: API_SUBMODEL1,
+        });
+        expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
+        expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_SUBMODEL1); // After conversion
+        }
     });
 
     it('should handle errors when updating a Submodel', async () => {
@@ -1155,6 +1204,38 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(true);
     });
 
+    it('should create a new Submodel element at a specified path during update', async () => {
+        // Arrange
+        mockApiInstance.putSubmodelElementByPathSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT_PROPERTY);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.putSubmodelElementByPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            submodelElement: CORE_SUBMODELELEMENT_PROPERTY,
+            level: LEVEL_SE_BY_PATH,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.putSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            submodelElement: API_SUBMODELELEMENT_PROPERTY,
+            level: LEVEL_SE_BY_PATH,
+        });
+        expect(convertCoreSubmodelElementToApiSubmodelElement).toHaveBeenCalledWith(CORE_SUBMODELELEMENT_PROPERTY);
+        expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT_PROPERTY);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_SUBMODELELEMENT_PROPERTY); // After conversion
+        }
+    });
+
     it('should handle errors when updating a Submodel element at a specified path', async () => {
         // Arrange
         const errorResult: SubmodelRepositoryService.Result = {
@@ -1187,7 +1268,7 @@ describe('SubmodelRepositoryClient', () => {
         }
     });
 
-    it('should invoke an Operation at a specified path', async () => {
+    it('should invoke an Operation at a specified path synchronously', async () => {
         // Arrange
         mockApiInstance.invokeOperationSubmodelRepo.mockResolvedValue(OPERATION_RESULT);
 
@@ -1199,7 +1280,7 @@ describe('SubmodelRepositoryClient', () => {
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequest: OPERATION_REQUEST,
-            async: true,
+            //async: true,
         });
 
         // Assert
@@ -1209,7 +1290,7 @@ describe('SubmodelRepositoryClient', () => {
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             operationRequest: OPERATION_REQUEST,
-            async: true,
+            //async: true,
         });
         //expect(convertCoreSubmodelElementToApiSubmodelElement).toHaveBeenCalledWith(CORE_SUBMODELELEMENT1);
         //expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT1);
@@ -1219,7 +1300,7 @@ describe('SubmodelRepositoryClient', () => {
         }
     });
 
-    it('should handle errors when invoking an Operation at a specified path', async () => {
+    it('should handle errors when invoking an Operation at a specified path synchronously', async () => {
         // Arrange
         const errorResult: SubmodelRepositoryService.Result = {
             messages: [
@@ -1242,6 +1323,188 @@ describe('SubmodelRepositoryClient', () => {
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequest: OPERATION_REQUEST,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should invoke an Operation at a specified path in value-only representation synchronously', async () => {
+        // Arrange
+        mockApiInstance.invokeOperationValueOnly.mockResolvedValue(OPERATION_RESULT_VALUEONLY);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postInvokeOperationValueOnly({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS.id,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.invokeOperationValueOnly).toHaveBeenCalledWith({
+            aasIdentifier: `encoded_${CORE_AAS.id}`,
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
+        });
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(OPERATION_RESULT_VALUEONLY);
+        }
+    });
+
+    it('should handle errors when invoking an Operation at a specified path in value-only representation synchronously', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.invokeOperationValueOnly.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postInvokeOperationValueOnly({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS.id,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should invoke an Operation at a specified path asynchronously', async () => {
+        // Arrange
+        mockApiInstance.invokeOperationAsync.mockResolvedValue(undefined);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postInvokeOperationAsync({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            operationRequest: OPERATION_REQUEST,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.invokeOperationAsync).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            operationRequest: OPERATION_REQUEST,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should handle errors when invoking an Operation at a specified path asynchronously', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.invokeOperationAsync.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postInvokeOperationAsync({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            operationRequest: OPERATION_REQUEST,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should invoke an Operation at a specified path in value-only representation asynchronously', async () => {
+        // Arrange
+        mockApiInstance.invokeOperationAsyncValueOnly.mockResolvedValue(undefined);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postInvokeOperationAsyncValueOnly({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS.id,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
+        });
+
+        // Assert
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
+        expect(mockApiInstance.invokeOperationAsyncValueOnly).toHaveBeenCalledWith({
+            aasIdentifier: `encoded_${CORE_AAS.id}`,
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should handle errors when invoking an Operation at a specified path in value-only representation asynchronously', async () => {
+        // Arrange
+        const errorResult: SubmodelRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.invokeOperationAsyncValueOnly.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRepositoryClient();
+
+        // Act
+        const response = await client.postInvokeOperationAsyncValueOnly({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS.id,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
         });
 
         // Assert

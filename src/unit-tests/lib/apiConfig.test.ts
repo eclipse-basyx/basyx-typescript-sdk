@@ -299,7 +299,7 @@ describe('apiConfig', () => {
             // Assert
             // Instead of expecting basePath to be undefined, we should expect the default value
             // that the Configuration constructor sets
-            expect(result.basePath).toBe('https://admin-shell.io:443/api/v3.0');
+            expect(result.basePath).toBe('https://admin-shell.io/api/v3');
             expect(result.username).toBeUndefined();
             expect(result.password).toBeUndefined();
             expect(result.apiKey).toBeUndefined();
@@ -327,7 +327,7 @@ describe('apiConfig', () => {
             // Assert
             // Check the default value that the Configuration constructor sets
             // Note: Update this expected value if your default differs
-            expect(result.basePath).toBe('https://admin-shell.io:443/api/v3.0');
+            expect(result.basePath).toBe('https://admin-shell.io/api/v3');
             expect(result.username).toBeUndefined();
             expect(result.password).toBeUndefined();
             expect(result.apiKey).toBeUndefined();

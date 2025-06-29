@@ -1,37 +1,18 @@
 openapi: 3.0.3
 info:
   title: DotAAS Part 2 | HTTP/REST | Submodel Repository Service Specification
-  description: "The entire Submodel Repository Service Specification as part of the [Specification of the Asset Administration Shell: Part 2](http://industrialdigitaltwin.org/en/content-hub).  \nPublisher: Industrial Digital Twin Association (IDTA) 2023"
+  description: "The entire Submodel Repository Service Specification as part of the [Specification of the Asset Administration Shell: Part 2](https://industrialdigitaltwin.org/en/content-hub/aasspecifications).  \nCopyright: Industrial Digital Twin Association (IDTA) 2025"
   contact:
     name: Industrial Digital Twin Association (IDTA)
     email: info@idtwin.org
   license:
     name: CC BY 4.0
     url: https://creativecommons.org/licenses/by/4.0/
-  version: V3.0.3_SSP-001
-  x-profile-identifier: https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-001
+  version: V3.1.0_SSP-001
+  x-profile-identifier: https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-001
 servers:
-- url: "{protocol}://{host_name}:{port}/api/{version_prefix}"
-  variables:
-    protocol:
-      description: Allows access through http and https (recommended)
-      default: https
-      enum:
-      - http
-      - https
-    host_name:
-      description: Hostname of server hosting the api
-      default: admin-shell.io
-    port:
-      description: "80 is default for http, 443 for https"
-      default: "443"
-      enum:
-      - "80"
-      - "443"
-    version_prefix:
-      default: v3.0
-      enum:
-      - v3.0
+- url: https://admin-shell.io/api/v3/
+- url: https://example.com/
 paths:
   /submodels:
     get:
@@ -320,6 +301,7 @@ paths:
         in: query
         description: Determines the structural depth of the respective resource content
         required: false
+        deprecated: true
         schema:
           type: string
           default: core
@@ -471,7 +453,7 @@ paths:
     put:
       tags:
       - Submodel Repository API
-      summary: Updates an existing Submodel
+      summary: Creates or updates an existing Submodel
       operationId: PutSubmodelById
       parameters:
       - name: submodelIdentifier
@@ -490,6 +472,17 @@ paths:
               $ref: '#/components/schemas/Submodel'
         required: true
       responses:
+        "201":
+          description: Submodel created successfully
+          headers:
+            Location:
+              description: URL of the newly created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submodel'
         "204":
           description: Submodel updated successfully
         "400":
@@ -498,8 +491,6 @@ paths:
           $ref: '#/components/responses/unauthorized'
         "403":
           $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/not-found'
         "500":
           $ref: '#/components/responses/internal-server-error'
         default:
@@ -634,6 +625,15 @@ paths:
         explode: false
         schema:
           type: string
+      - name: level
+        in: query
+        description: Determines the structural depth of the respective resource content
+        required: false
+        schema:
+          type: string
+          default: core
+          enum:
+          - core
       requestBody:
         description: The metadata attributes of the Submodel object
         content:
@@ -1117,6 +1117,7 @@ paths:
         in: query
         description: Determines the structural depth of the respective resource content
         required: false
+        deprecated: true
         schema:
           type: string
           default: core
@@ -1269,7 +1270,7 @@ paths:
     put:
       tags:
       - Submodel Repository API
-      summary: Updates an existing submodel element at a specified path within submodel elements hierarchy
+      summary: Creates or updates an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutSubmodelElementByPath_SubmodelRepo
       parameters:
       - name: submodelIdentifier
@@ -1305,6 +1306,17 @@ paths:
               $ref: '#/components/schemas/SubmodelElement'
         required: true
       responses:
+        "201":
+          description: Submodel element created successfully
+          headers:
+            Location:
+              description: URL of the newly created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmodelElement'
         "204":
           description: Submodel element updated successfully
         "400":
@@ -1321,7 +1333,6 @@ paths:
           $ref: '#/components/responses/default'
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutSubmodelElementByPath/3/0
-      - https://admin-shell.io/aas/API/SetSubmodelElementValueByPath/3/0
     post:
       tags:
       - Submodel Repository API
@@ -1937,7 +1948,7 @@ paths:
     post:
       tags:
       - Submodel Repository API
-      summary: Synchronously or asynchronously invokes an Operation at a specified path
+      summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperation_SubmodelRepo
       parameters:
       - name: submodelIdentifier
@@ -1956,13 +1967,6 @@ paths:
         explode: false
         schema:
           type: string
-      - name: async
-        in: query
-        description: Determines whether an operation invocation is performed asynchronously or synchronously
-        required: false
-        schema:
-          type: boolean
-          default: false
       requestBody:
         description: Operation request object
         content:
@@ -1997,12 +2001,11 @@ paths:
           $ref: '#/components/responses/default'
       x-semanticIds:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
-      - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value:
     post:
       tags:
       - Submodel Repository API
-      summary: Synchronously or asynchronously invokes an Operation at a specified path
+      summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperation-ValueOnly
       parameters:
       - name: aasIdentifier
@@ -2029,13 +2032,6 @@ paths:
         explode: false
         schema:
           type: string
-      - name: async
-        in: query
-        description: Determines whether an operation invocation is performed asynchronously or synchronously
-        required: false
-        schema:
-          type: boolean
-          default: false
       requestBody:
         description: Operation request object
         content:
@@ -2064,7 +2060,6 @@ paths:
           $ref: '#/components/responses/default'
       x-semanticIds:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
-      - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async:
     post:
       tags:
@@ -2399,7 +2394,7 @@ paths:
       tags:
       - Description API
       summary: Returns the self-describing information of a network resource (ServiceDescription)
-      operationId: GetDescription
+      operationId: GetSelfDescription
       responses:
         "200":
           description: Requested Description
@@ -2412,7 +2407,7 @@ paths:
         "403":
           $ref: '#/components/responses/forbidden'
       x-semanticIds:
-      - https://admin-shell.io/aas/API/Descriptor/GetDescription/3/0
+      - https://admin-shell.io/aas/API/GetSelfDescription/3/1
 components:
   schemas:
     GetSubmodelsResult:
@@ -2425,6 +2420,8 @@ components:
             items:
               $ref: '#/components/schemas/Submodel'
     PagedResult:
+      required:
+      - paging_metadata
       type: object
       properties:
         paging_metadata:
@@ -2444,7 +2441,6 @@ components:
               $ref: '#/components/schemas/SubmodelElement_choice'
           modelType:
             pattern: ^Submodel$
-            type: string
     Identifiable:
       allOf:
       - $ref: '#/components/schemas/Referable'
@@ -2454,7 +2450,7 @@ components:
           administration:
             $ref: '#/components/schemas/AdministrativeInformation'
           id:
-            maxLength: 2000
+            maxLength: 2048
             minLength: 1
             pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
@@ -2475,7 +2471,7 @@ components:
             - maxLength: 128
               minLength: 1
             - pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-            - pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"
+            - pattern: "^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9_]+$"
           displayName:
             minItems: 1
             type: array
@@ -2510,6 +2506,7 @@ components:
           valueType:
             $ref: '#/components/schemas/DataTypeDefXsd'
           value:
+            pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
           refersTo:
             minItems: 1
@@ -2559,7 +2556,7 @@ components:
         type:
           $ref: '#/components/schemas/KeyTypes'
         value:
-          maxLength: 2000
+          maxLength: 2048
           minLength: 1
           pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
           type: string
@@ -2690,7 +2687,7 @@ components:
           creator:
             $ref: '#/components/schemas/Reference'
           templateId:
-            maxLength: 2000
+            maxLength: 2048
             minLength: 1
             pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
@@ -2759,7 +2756,7 @@ components:
           valueList:
             $ref: '#/components/schemas/ValueList'
           value:
-            maxLength: 2000
+            maxLength: 2048
             minLength: 1
             pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
@@ -2767,7 +2764,6 @@ components:
             $ref: '#/components/schemas/LevelType'
           modelType:
             pattern: ^DataSpecificationIec61360$
-            type: string
     DataSpecificationContent:
       required:
       - modelType
@@ -2828,11 +2824,10 @@ components:
     ValueReferencePair:
       required:
       - value
-      - valueId
       type: object
       properties:
         value:
-          maxLength: 2000
+          maxLength: 2048
           minLength: 1
           pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
           type: string
@@ -2893,6 +2888,7 @@ components:
           valueType:
             $ref: '#/components/schemas/DataTypeDefXsd'
           value:
+            pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
           valueId:
             $ref: '#/components/schemas/Reference'
@@ -2924,14 +2920,10 @@ components:
       - properties:
           modelType:
             pattern: ^RelationshipElement$
-            type: string
     RelationshipElement_abstract:
       allOf:
       - $ref: '#/components/schemas/SubmodelElement'
-      - required:
-        - first
-        - second
-        properties:
+      - properties:
           first:
             $ref: '#/components/schemas/Reference'
           second:
@@ -2953,7 +2945,6 @@ components:
               $ref: '#/components/schemas/DataElement_choice'
           modelType:
             pattern: ^AnnotatedRelationshipElement$
-            type: string
     DataElement_choice:
       oneOf:
       - $ref: '#/components/schemas/Blob'
@@ -2965,22 +2956,19 @@ components:
     Blob:
       allOf:
       - $ref: '#/components/schemas/DataElement'
-      - required:
-        - contentType
-        properties:
+      - properties:
           value:
             type: string
             format: byte
           contentType:
             type: string
             allOf:
-            - maxLength: 100
+            - maxLength: 128
               minLength: 1
             - pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-            - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([ \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t !#-\\[\\]-~]|[-ÿ])|\\\\([\\t !-~]|[-ÿ]))*\"))*$"
+            - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([ \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t !#-\\[\\]-~]|[\\x80-\\xff])|\\\\([\\t !-~]|[\\x80-\\xff]))*\"))*$"
           modelType:
             pattern: ^Blob$
-            type: string
     DataElement:
       allOf:
       - $ref: '#/components/schemas/Referable'
@@ -2990,24 +2978,23 @@ components:
     File:
       allOf:
       - $ref: '#/components/schemas/DataElement'
-      - required:
-        - contentType
-        properties:
+      - properties:
           value:
-            maxLength: 2000
-            minLength: 1
-            pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
+            allOf:
+            - maxLength: 2048
+              minLength: 1
+            - pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
+            - pattern: "^([a-zA-Z][a-zA-Z0-9+\\-.]*:((//((((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;:&=+$,])*@)?((([a-zA-Z0-9]|[a-zA-Z0-9]([a-zA-Z0-9]|-)*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z]([a-zA-Z0-9]|-)*[a-zA-Z0-9])(\\.)?|[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)(:[0-9]*)?)?|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[$,;:@&=+])+)(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)?|/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)(\\?(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)?|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;?:@&=+$,])(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)|(//((((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;:&=+$,])*@)?((([a-zA-Z0-9]|[a-zA-Z0-9]([a-zA-Z0-9]|-)*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z]([a-zA-Z0-9]|-)*[a-zA-Z0-9])(\\.)?|[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)(:[0-9]*)?)?|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[$,;:@&=+])+)(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)?|/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;@&=+$,])+(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)?)(\\?(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)?)?(#(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)?$"
           contentType:
             type: string
             allOf:
-            - maxLength: 100
+            - maxLength: 128
               minLength: 1
             - pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-            - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([ \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t !#-\\[\\]-~]|[-ÿ])|\\\\([\\t !-~]|[-ÿ]))*\"))*$"
+            - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([ \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t !#-\\[\\]-~]|[\\x80-\\xff])|\\\\([\\t !-~]|[\\x80-\\xff]))*\"))*$"
           modelType:
             pattern: ^File$
-            type: string
     MultiLanguageProperty:
       allOf:
       - $ref: '#/components/schemas/DataElement'
@@ -3021,7 +3008,6 @@ components:
             $ref: '#/components/schemas/Reference'
           modelType:
             pattern: ^MultiLanguageProperty$
-            type: string
     Property:
       allOf:
       - $ref: '#/components/schemas/DataElement'
@@ -3031,12 +3017,12 @@ components:
           valueType:
             $ref: '#/components/schemas/DataTypeDefXsd'
           value:
+            pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
           valueId:
             $ref: '#/components/schemas/Reference'
           modelType:
             pattern: ^Property$
-            type: string
     Range:
       allOf:
       - $ref: '#/components/schemas/DataElement'
@@ -3046,12 +3032,13 @@ components:
           valueType:
             $ref: '#/components/schemas/DataTypeDefXsd'
           min:
+            pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
           max:
+            pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
           modelType:
             pattern: ^Range$
-            type: string
     ReferenceElement:
       allOf:
       - $ref: '#/components/schemas/DataElement'
@@ -3060,7 +3047,6 @@ components:
             $ref: '#/components/schemas/Reference'
           modelType:
             pattern: ^ReferenceElement$
-            type: string
     BasicEventElement:
       allOf:
       - $ref: '#/components/schemas/EventElement'
@@ -3093,7 +3079,6 @@ components:
             type: string
           modelType:
             pattern: ^BasicEventElement$
-            type: string
     EventElement:
       allOf:
       - $ref: '#/components/schemas/Referable'
@@ -3116,13 +3101,10 @@ components:
       - properties:
           modelType:
             pattern: ^Capability$
-            type: string
     Entity:
       allOf:
       - $ref: '#/components/schemas/SubmodelElement'
-      - required:
-        - entityType
-        properties:
+      - properties:
           statements:
             minItems: 1
             type: array
@@ -3131,7 +3113,7 @@ components:
           entityType:
             $ref: '#/components/schemas/EntityType'
           globalAssetId:
-            maxLength: 2000
+            maxLength: 2048
             minLength: 1
             pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
@@ -3142,7 +3124,6 @@ components:
               $ref: '#/components/schemas/SpecificAssetId'
           modelType:
             pattern: ^Entity$
-            type: string
     EntityType:
       type: string
       enum:
@@ -3161,7 +3142,7 @@ components:
             pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
           value:
-            maxLength: 2000
+            maxLength: 2048
             minLength: 1
             pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
             type: string
@@ -3188,7 +3169,6 @@ components:
               $ref: '#/components/schemas/OperationVariable'
           modelType:
             pattern: ^Operation$
-            type: string
     OperationVariable:
       required:
       - value
@@ -3207,7 +3187,6 @@ components:
               $ref: '#/components/schemas/SubmodelElement_choice'
           modelType:
             pattern: ^SubmodelElementCollection$
-            type: string
     SubmodelElementList:
       allOf:
       - $ref: '#/components/schemas/SubmodelElement'
@@ -3229,7 +3208,6 @@ components:
               $ref: '#/components/schemas/SubmodelElement_choice'
           modelType:
             pattern: ^SubmodelElementList$
-            type: string
     AasSubmodelElements:
       type: string
       enum:
@@ -3303,12 +3281,10 @@ components:
       - type: object
         properties:
           result:
-            type: array
-            items:
-              $ref: '#/components/schemas/SubmodelValue'
+            $ref: '#/components/schemas/SubmodelValue'
     SubmodelValue:
       type: object
-      description: The ValueOnly serialization (patternProperties and propertyNames will be supported probably with OpenApi 3.1). For the full description of the generic JSON validation schema see the ValueOnly-Serialization as defined in the 'Specification of the Asset Administration Shell - Part 2'.
+      description: The ValueOnly serialization (patternProperties and propertyNames will probably be supported with OpenApi 3.1). For the full description of the generic JSON validation schema see the ValueOnly-Serialization as defined in the 'Specification of the Asset Administration Shell - Part 2'.
     GetReferencesResult:
       allOf:
       - $ref: '#/components/schemas/PagedResult'
@@ -3328,7 +3304,7 @@ components:
             items:
               $ref: '#/components/schemas/PathItem'
     PathItem:
-      pattern: "^([A-Za-z][A-Za-z0-9_]+)((\\.[A-Za-z][A-Za-z0-9_]+)|(\\[(0|[1-9][0-9]*)\\])){0,}$"
+      pattern: "^(([A-Za-z][A-Za-z0-9_]+)|(\\[[0-9]+\\]))((\\.[A-Za-z][A-Za-z0-9_]+)|(\\[[0-9]+\\])){0,}$"
       type: string
     GetSubmodelElementsResult:
       allOf:
@@ -3349,6 +3325,8 @@ components:
             items:
               $ref: '#/components/schemas/SubmodelElementMetadata'
     SubmodelElementMetadata:
+      allOf:
+      - $ref: '#/components/schemas/SubmodelElementAttributes'
       oneOf:
       - $ref: '#/components/schemas/BlobMetadata'
       - $ref: '#/components/schemas/FileMetadata'
@@ -3364,100 +3342,23 @@ components:
       - $ref: '#/components/schemas/RelationshipElementMetadata'
       - $ref: '#/components/schemas/SubmodelElementListMetadata'
       - $ref: '#/components/schemas/SubmodelElementCollectionMetadata'
+    SubmodelElementAttributes:
+      allOf:
+      - $ref: '#/components/schemas/Referable'
+      - $ref: '#/components/schemas/HasDataSpecification'
+      - $ref: '#/components/schemas/HasSemantics'
+      - $ref: '#/components/schemas/Qualifiable'
+      - $ref: '#/components/schemas/HasKind'
     BlobMetadata:
       allOf:
-      - $ref: '#/components/schemas/Referable_1'
+      - $ref: '#/components/schemas/Referable'
       - $ref: '#/components/schemas/HasDataSpecification'
-      - $ref: '#/components/schemas/HasSemantics_1'
-      - $ref: '#/components/schemas/Qualifiable_1'
-      - $ref: '#/components/schemas/HasKind_1'
+      - $ref: '#/components/schemas/HasSemantics'
+      - $ref: '#/components/schemas/Qualifiable'
+      - $ref: '#/components/schemas/HasKind'
     FileMetadata:
       allOf:
       - $ref: '#/components/schemas/SubmodelElementAttributes'
-    SubmodelElementAttributes:
-      allOf:
-      - $ref: '#/components/schemas/Referable_1'
-      - $ref: '#/components/schemas/HasDataSpecification'
-      - $ref: '#/components/schemas/HasSemantics_1'
-      - $ref: '#/components/schemas/Qualifiable_1'
-      - $ref: '#/components/schemas/HasKind_1'
-    Referable_1:
-      allOf:
-      - $ref: '#/components/schemas/HasExtensions'
-      - required:
-        - modelType
-        properties:
-          category:
-            maxLength: 128
-            minLength: 1
-            pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-            type: string
-          idShort:
-            type: string
-            allOf:
-            - maxLength: 128
-              minLength: 1
-            - pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-            - pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"
-          displayName:
-            minItems: 1
-            type: array
-            items:
-              $ref: '#/components/schemas/LangStringNameType'
-          description:
-            minItems: 1
-            type: array
-            items:
-              $ref: '#/components/schemas/LangStringTextType'
-          modelType:
-            $ref: '#/components/schemas/ModelType'
-    HasSemantics_1:
-      type: object
-      properties:
-        semanticId:
-          $ref: '#/components/schemas/Reference'
-        supplementalSemanticIds:
-          minItems: 1
-          type: array
-          items:
-            $ref: '#/components/schemas/Reference'
-    Qualifiable_1:
-      required:
-      - modelType
-      type: object
-      properties:
-        qualifiers:
-          minItems: 1
-          type: array
-          items:
-            $ref: '#/components/schemas/Qualifier_1'
-        modelType:
-          $ref: '#/components/schemas/ModelType'
-    Qualifier_1:
-      allOf:
-      - $ref: '#/components/schemas/HasSemantics_1'
-      - required:
-        - type
-        - valueType
-        properties:
-          kind:
-            $ref: '#/components/schemas/QualifierKind'
-          type:
-            maxLength: 128
-            minLength: 1
-            pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-            type: string
-          valueType:
-            $ref: '#/components/schemas/DataTypeDefXsd'
-          value:
-            type: string
-          valueId:
-            $ref: '#/components/schemas/Reference'
-    HasKind_1:
-      type: object
-      properties:
-        kind:
-          $ref: '#/components/schemas/ModellingKind'
     CapabilityMetadata:
       allOf:
       - $ref: '#/components/schemas/SubmodelElementAttributes'
@@ -3506,11 +3407,11 @@ components:
       - $ref: '#/components/schemas/SubmodelElementAttributes'
     AnnotatedRelationshipElementMetadata:
       allOf:
-      - $ref: '#/components/schemas/Referable_1'
+      - $ref: '#/components/schemas/Referable'
       - $ref: '#/components/schemas/HasDataSpecification'
-      - $ref: '#/components/schemas/HasSemantics_1'
-      - $ref: '#/components/schemas/Qualifiable_1'
-      - $ref: '#/components/schemas/HasKind_1'
+      - $ref: '#/components/schemas/HasSemantics'
+      - $ref: '#/components/schemas/Qualifiable'
+      - $ref: '#/components/schemas/HasKind'
     RelationshipElementMetadata:
       allOf:
       - $ref: '#/components/schemas/SubmodelElementAttributes'
@@ -3535,9 +3436,8 @@ components:
       - type: object
         properties:
           result:
-            type: array
-            items:
-              $ref: '#/components/schemas/SubmodelElementValue'
+            type: object
+            description: "Since patternProperties and propertyNames are not supported by OpenApi yet, the ValueOnly serialization for this elements works with the key-attribute as the JSON-property name and the value-attribute as the corresponding value."
     SubmodelElementValue:
       oneOf:
       - $ref: '#/components/schemas/BasicEventElementValue'
@@ -3583,42 +3483,36 @@ components:
       type: object
       description: "Since patternProperties and propertyNames are not supported by OpenApi yet, the ValueOnly serialization for this elements works with the key-attribute as the JSON-property name and the value-attribute as the corresponding value."
     BlobValue:
-      required:
-      - contentType
       type: object
       properties:
         contentType:
-          maxLength: 100
+          maxLength: 128
           minLength: 1
           type: string
         value:
+          minLength: 1
           type: string
     FileValue:
-      required:
-      - contentType
-      - value
       type: object
       properties:
         contentType:
-          maxLength: 100
+          maxLength: 128
           minLength: 1
           type: string
         value:
-          maxLength: 2000
+          maxLength: 2048
           minLength: 1
           type: string
     RangeValue:
+      required:
+      - max
+      - min
       type: object
       properties:
         max:
-          $ref: '#/components/schemas/RangeValueType'
+          type: number
         min:
-          $ref: '#/components/schemas/RangeValueType'
-    RangeValueType:
-      oneOf:
-      - $ref: '#/components/schemas/StringValue'
-      - $ref: '#/components/schemas/NumberValue'
-      - $ref: '#/components/schemas/BooleanValue'
+          type: number
     ReferenceElementValue:
       type: object
       properties:
@@ -3629,9 +3523,6 @@ components:
           items:
             $ref: '#/components/schemas/Key'
     RelationshipElementValue:
-      required:
-      - first
-      - second
       type: object
       properties:
         first:
@@ -3639,9 +3530,6 @@ components:
         second:
           $ref: '#/components/schemas/ReferenceValue'
     AnnotatedRelationshipElementValue:
-      required:
-      - first
-      - second
       type: object
       properties:
         first:
@@ -3649,38 +3537,32 @@ components:
         second:
           $ref: '#/components/schemas/ReferenceValue'
         annotations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValueOnly'
+          $ref: '#/components/schemas/ValueOnly'
     ValueOnly:
       type: object
-      description: The ValueOnly serialization (patternProperties and propertyNames will be supported probably with OpenApi 3.1). For the full description of the generic JSON validation schema see the ValueOnly-Serialization as defined in the 'Specification of the Asset Administration Shell - Part 2'.
+      description: The ValueOnly serialization (patternProperties and propertyNames will probably be supported with OpenApi 3.1). For the full description of the generic JSON validation schema see the ValueOnly-Serialization as defined in the 'Specification of the Asset Administration Shell - Part 2'.
     EntityValue:
-      required:
-      - entityType
       type: object
       properties:
         entityType:
           $ref: '#/components/schemas/EntityType'
         globalAssetId:
-          maxLength: 2000
+          maxLength: 2048
           minLength: 1
-          pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
+          pattern: "^([\\\\x09\\\\x0a\\\\x0d\\\\x20-\\\\ud7ff\\\\ue000-\\\\ufffd]|\\\\ud800[\\\\udc00-\\\\udfff]|[\\\\ud801-\\\\udbfe][\\\\udc00-\\\\udfff]|\\\\udbff[\\\\udc00-\\\\udfff])*$"
           type: string
         specificAssetIds:
           type: array
           items:
             $ref: '#/components/schemas/SpecificAssetIdValue'
         statements:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValueOnly'
+          $ref: '#/components/schemas/ValueOnly'
     SpecificAssetIdValue:
       type: object
       description: "Since patternProperties and propertyNames are not supported by OpenApi yet, the ValueOnly serialization for this elements works with the key-attribute as the JSON-property name and the value-attribute as the corresponding value."
     SubmodelElementCollectionValue:
       type: object
-      description: "Since patternProperties and propertyNames are not supported by OpenApi yet, the ValueOnly serialization for this elements works with the key-attribute as the JSON-property name and the value-attribute as the corresponding value."
+      description: The ValueOnly serialization (patternProperties and propertyNames will probably be supported with OpenApi 3.1). For the full description of the generic JSON validation schema see the ValueOnly-Serialization as defined in the 'Specification of the Asset Administration Shell - Part 2'.
     SubmodelElementListValue:
       type: array
       items:
@@ -3697,7 +3579,7 @@ components:
           items:
             $ref: '#/components/schemas/OperationVariable'
         clientTimeoutDuration:
-          pattern: "^-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\\.[0-9]+)?S)?|([0-9]+(\\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\\.[0-9]+)?S)?|([0-9]+(\\.[0-9]+)?S))))$"
+          pattern: ^(-?)P(?=.)((\d+)Y)?((\d+)M)?((\d+)D)?(T(?=.)((\d+)H)?((\d+)M)?(\d*(\.\d+)?S)?)?$
           type: string
     OperationResult:
       type: object
@@ -3739,7 +3621,7 @@ components:
         inputArguments:
           $ref: '#/components/schemas/ValueOnly'
         clientTimeoutDuration:
-          pattern: "^-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\\.[0-9]+)?S)?|([0-9]+(\\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\\.[0-9]+)?S)?|([0-9]+(\\.[0-9]+)?S))))$"
+          pattern: ^(-?)P(?=.)((\d+)Y)?((\d+)M)?((\d+)D)?(T(?=.)((\d+)H)?((\d+)M)?(\d*(\.\d+)?S)?)?$
           type: string
     OperationResultValueOnly:
       type: object
@@ -3786,7 +3668,6 @@ components:
               $ref: '#/components/schemas/Reference'
           modelType:
             pattern: ^AssetAdministrationShell$
-            type: string
     AssetInformation:
       required:
       - assetKind
@@ -3795,7 +3676,7 @@ components:
         assetKind:
           $ref: '#/components/schemas/AssetKind'
         globalAssetId:
-          maxLength: 2000
+          maxLength: 2048
           minLength: 1
           pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
           type: string
@@ -3805,7 +3686,7 @@ components:
           items:
             $ref: '#/components/schemas/SpecificAssetId'
         assetType:
-          maxLength: 2000
+          maxLength: 2048
           minLength: 1
           pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
           type: string
@@ -3816,6 +3697,7 @@ components:
       enum:
       - Instance
       - NotApplicable
+      - Role
       - Type
     Resource:
       required:
@@ -3823,17 +3705,19 @@ components:
       type: object
       properties:
         path:
-          maxLength: 2000
-          minLength: 1
-          pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
           type: string
+          allOf:
+          - maxLength: 2048
+            minLength: 1
+          - pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
+          - pattern: "^([a-zA-Z][a-zA-Z0-9+\\-.]*:((//((((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;:&=+$,])*@)?((([a-zA-Z0-9]|[a-zA-Z0-9]([a-zA-Z0-9]|-)*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z]([a-zA-Z0-9]|-)*[a-zA-Z0-9])(\\.)?|[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)(:[0-9]*)?)?|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[$,;:@&=+])+)(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)?|/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)(\\?(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)?|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;?:@&=+$,])(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)|(//((((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;:&=+$,])*@)?((([a-zA-Z0-9]|[a-zA-Z0-9]([a-zA-Z0-9]|-)*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z]([a-zA-Z0-9]|-)*[a-zA-Z0-9])(\\.)?|[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)(:[0-9]*)?)?|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[$,;:@&=+])+)(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)?|/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*|(([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[;@&=+$,])+(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*(/((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*(;((([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])|[:@&=+$,]))*)*)*)?)(\\?(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)?)?(#(([;/?:@&=+$,]|([a-zA-Z0-9]|[-_.!~*'()])|%([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])([0-9]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF]|[aA]|[bB]|[cC]|[dD]|[eE]|[fF])))*)?$"
         contentType:
           type: string
           allOf:
-          - maxLength: 100
+          - maxLength: 128
             minLength: 1
           - pattern: "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-          - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([ \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t !#-\\[\\]-~]|[-ÿ])|\\\\([\\t !-~]|[-ÿ]))*\"))*$"
+          - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([ \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t !#-\\[\\]-~]|[\\x80-\\xff])|\\\\([\\t !-~]|[\\x80-\\xff]))*\"))*$"
     ConceptDescription:
       allOf:
       - $ref: '#/components/schemas/Identifiable'
@@ -3846,7 +3730,6 @@ components:
               $ref: '#/components/schemas/Reference'
           modelType:
             pattern: ^ConceptDescription$
-            type: string
     ServiceDescription:
       type: object
       properties:
@@ -3855,7 +3738,7 @@ components:
           type: array
           items:
             type: string
-            example: "[\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/0/AasxFileServerServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/DiscoveryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-004\",\"https://admin-shell.io/aas/API/3/0/ConceptDescriptionServiceSpecification/SSP-001\"]"
+            example: "[\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/SubmodelServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/SubmodelServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/1/SubmodelServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/0/AasxFileServerServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/AasxFileServerServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRegistryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRegistryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRegistryServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRegistryServiceSpecification/SSP-004\",\"https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/SubmodelRegistryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/SubmodelRegistryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/SubmodelRegistryServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/1/SubmodelRegistryServiceSpecification/SSP-004\",\"https://admin-shell.io/aas/API/3/1/DiscoveryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/DiscoveryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRepositoryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/AssetAdministrationShellRepositoryServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-002\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-003\",\"https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-004\",\"https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-004\",\"https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-005\",\"https://admin-shell.io/aas/API/3/0/ConceptDescriptionServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/ConceptDescriptionRepositoryServiceSpecification/SSP-001\",\"https://admin-shell.io/aas/API/3/1/ConceptDescriptionRepositoryServiceSpecification/SSP-002\"]"
       description: "The Description object enables servers to present their capabilities to the clients, in particular which profiles they implement. At least one defined profile is required. Additional, proprietary attributes might be included. Nevertheless, the server must not expect that a regular client understands them."
       example: |-
         {
@@ -3910,7 +3793,7 @@ components:
           schema:
             $ref: '#/components/schemas/Result'
     conflict:
-      description: "Conflict, a resource which shall be created exists already. Might be thrown if a Submodel or SubmodelElement with the same ShortId is contained in a POST request."
+      description: "Conflict, a resource which shall be created exists already. Might be thrown if an object with the same id (for Identifiables) or idShort (for Referables within the same Container Element or Submodel) is contained in a POST request."
       content:
         application/json:
           schema:

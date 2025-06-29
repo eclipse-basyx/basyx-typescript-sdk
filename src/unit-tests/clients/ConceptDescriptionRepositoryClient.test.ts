@@ -364,7 +364,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         expect(response.success).toBe(true);
     });
 
-    it('should create a new Concept Description', async () => {
+    it('should create a new Concept Description during update', async () => {
         // Arrange
         mockApiInstance.putConceptDescriptionById.mockResolvedValue(API_CD1);
 
