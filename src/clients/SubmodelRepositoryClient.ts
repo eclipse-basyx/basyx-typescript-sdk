@@ -11,7 +11,6 @@ import {
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
-//import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
 
 export class SubmodelRepositoryClient {
     /**
@@ -183,7 +182,7 @@ export class SubmodelRepositoryClient {
         configuration: SubmodelRepositoryService.Configuration;
         submodelIdentifier: string;
         submodel: Submodel;
-    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+    }): Promise<ApiResult<Submodel | void, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier, submodel } = options;
 
         try {
@@ -196,7 +195,7 @@ export class SubmodelRepositoryClient {
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
             });
 
-            return { success: true, data: result };
+            return { success: true, data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -421,7 +420,7 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         submodelElement: ISubmodelElement;
         level?: SubmodelRepositoryService.PutSubmodelElementByPathSubmodelRepoLevelEnum;
-    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+    }): Promise<ApiResult<ISubmodelElement | void, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier, idShortPath, submodelElement, level } = options;
 
         try {
@@ -436,7 +435,7 @@ export class SubmodelRepositoryClient {
                 level: level,
             });
 
-            return { success: true, data: result };
+            return { success: true, data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -628,7 +627,7 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-     * Synchronously or asynchronously invokes an Operation at a specified path
+     * Synchronously invokes an Operation at a specified path
      *
      * @param options Object containing:
      *  - configuration: The http request options.
@@ -644,9 +643,9 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
-        async?: boolean;
+        //async?: boolean;
     }): Promise<ApiResult<SubmodelRepositoryService.OperationResult, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, operationRequest, async } = options;
+        const { configuration, submodelIdentifier, idShortPath, operationRequest } = options;
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
@@ -657,7 +656,126 @@ export class SubmodelRepositoryClient {
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
-                async: async,
+                //async: async,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Synchronously invokes an Operation at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options.
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelIdentifier: The Submodel’s unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - operationRequestValueOnly: Operation request object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async postInvokeOperationValueOnly(options: {
+        configuration: SubmodelRepositoryService.Configuration;
+        aasIdentifier: string;
+        submodelIdentifier: string;
+        idShortPath: string;
+        operationRequestValueOnly: SubmodelRepositoryService.OperationRequestValueOnly;
+    }): Promise<ApiResult<SubmodelRepositoryService.OperationResultValueOnly, SubmodelRepositoryService.Result>> {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.invokeOperationValueOnly({
+                aasIdentifier: encodedAasIdentifier,
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                operationRequestValueOnly: operationRequestValueOnly,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Asynchronously invokes an Operation at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options.
+     *  - submodelIdentifier: The Submodel’s unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - operationRequest: Operation request object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async postInvokeOperationAsync(options: {
+        configuration: SubmodelRepositoryService.Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        operationRequest: SubmodelRepositoryService.OperationRequest;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, operationRequest } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.invokeOperationAsync({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                operationRequest: operationRequest,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Asynchronously invokes an Operation at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options.
+     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - submodelIdentifier: The Submodel’s unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - operationRequestValueOnly: Operation request object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async postInvokeOperationAsyncValueOnly(options: {
+        configuration: SubmodelRepositoryService.Configuration;
+        aasIdentifier: string;
+        submodelIdentifier: string;
+        idShortPath: string;
+        operationRequestValueOnly: SubmodelRepositoryService.OperationRequestValueOnly;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.invokeOperationAsyncValueOnly({
+                aasIdentifier: encodedAasIdentifier,
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                operationRequestValueOnly: operationRequestValueOnly,
             });
 
             return { success: true, data: result };

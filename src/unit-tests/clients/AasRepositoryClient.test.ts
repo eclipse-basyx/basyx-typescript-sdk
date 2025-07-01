@@ -111,7 +111,7 @@ describe('AasRepositoryClient', () => {
         putThumbnailAasRepository: jest.fn(),
         getAllSubmodelReferencesAasRepository: jest.fn(),
         postSubmodelReferenceAasRepository: jest.fn(),
-        deleteSubmodelReferenceByIdAasRepository: jest.fn(),
+        deleteSubmodelReferenceAasRepository: jest.fn(),
     };
 
     // Mock constructor
@@ -429,6 +429,34 @@ describe('AasRepositoryClient', () => {
         expect(response.success).toBe(true);
     });
 
+    it('should create a new Asset Administration Shell during update', async () => {
+        // Arrange
+        mockApiInstance.putAssetAdministrationShellById.mockResolvedValue(API_AAS1);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.putAssetAdministrationShellById({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+            assetAdministrationShell: CORE_AAS1,
+        });
+
+        // Assert
+        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
+        expect(mockApiInstance.putAssetAdministrationShellById).toHaveBeenCalledWith({
+            aasIdentifier: `encoded_${CORE_AAS1.id}`,
+            assetAdministrationShell: API_AAS1,
+        });
+        expect(convertCoreAasToApiAas).toHaveBeenCalledWith(CORE_AAS1);
+        expect(convertApiAasToCoreAas).toHaveBeenCalledWith(API_AAS1);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(CORE_AAS1); // After conversion
+        }
+    });
+
     it('should handle errors when updating an Asset Administration Shell', async () => {
         // Arrange
         const errorResult: AasRepositoryService.Result = {
@@ -708,7 +736,7 @@ describe('AasRepositoryClient', () => {
     it('should delete a submodel reference', async () => {
         // Arrange
         const submodelId = 'https://example.com/ids/submodel/7600_5912_3951_6917';
-        mockApiInstance.deleteSubmodelReferenceByIdAasRepository.mockResolvedValue(undefined);
+        mockApiInstance.deleteSubmodelReferenceAasRepository.mockResolvedValue(undefined);
 
         const client = new AasRepositoryClient();
 
@@ -723,7 +751,7 @@ describe('AasRepositoryClient', () => {
         expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(submodelId);
-        expect(mockApiInstance.deleteSubmodelReferenceByIdAasRepository).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteSubmodelReferenceAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
             submodelIdentifier: `encoded_${submodelId}`,
         });
