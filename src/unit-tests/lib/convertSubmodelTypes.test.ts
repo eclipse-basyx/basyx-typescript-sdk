@@ -24,12 +24,12 @@ jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
 
 // Define mock constants
 const API_SUBMODEL: SubmodelRepositoryService.Submodel = {
-    id: 'https://example.com/submodel/123',
+    id: 'https://example.com/ids/sm/123',
     modelType: SubmodelRepositoryService.ModelType.Submodel,
 };
-const CORE_SUBMODEL: CoreSubmodel = new CoreSubmodel('https://example.com/submodel/123');
+const CORE_SUBMODEL: CoreSubmodel = new CoreSubmodel('https://example.com/ids/sm/123');
 const JSONABLE_SUBMODEL: jsonization.JsonObject = {
-    id: 'https://example.com/submodel/123',
+    id: 'https://example.com/ids/sm/123',
     modelType: 'Submodel',
 };
 const API_SUBMODELELEMENT: SubmodelRepositoryService.SubmodelElement = {

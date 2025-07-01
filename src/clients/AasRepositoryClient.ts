@@ -5,13 +5,7 @@ import type {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
-import { AasRepositoryService } from '../generated'; // Updated import
-//import {
-// AssetAdministrationShellRepositoryAPIApi as AasRepository,
-//Configuration,
-//PagedResultPagingMetadata,
-//Result,
-//} from '../generated';
+import { AasRepositoryService } from '../generated';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -189,7 +183,7 @@ export class AasRepositoryClient {
         configuration: AasRepositoryService.Configuration;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
-    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+    }): Promise<ApiResult<AssetAdministrationShell | void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, assetAdministrationShell } = options;
 
         try {
@@ -204,7 +198,7 @@ export class AasRepositoryClient {
                 assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
-            return { success: true, data: result };
+            return { success: true, data: result ? convertApiAasToCoreAas(result) : undefined };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -499,7 +493,7 @@ export class AasRepositoryClient {
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const result = await apiInstance.deleteSubmodelReferenceByIdAasRepository({
+            const result = await apiInstance.deleteSubmodelReferenceAasRepository({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
