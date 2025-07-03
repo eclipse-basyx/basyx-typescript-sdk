@@ -3,6 +3,7 @@ import {
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
+    SubmodelRegistryService,
     SubmodelRepositoryService,
 } from '../generated';
 /**
@@ -19,6 +20,7 @@ export async function handleApiError(
     | SubmodelRepositoryService.Result
     | ConceptDescriptionRepositoryService.Result
     | AasRegistryService.Result
+    | SubmodelRegistryService.Result
 > {
     try {
         // Check if the error already has the expected format with messages array
@@ -34,7 +36,8 @@ export async function handleApiError(
             | AasRepositoryService.Message
             | SubmodelRepositoryService.Message
             | ConceptDescriptionRepositoryService.Message
-            | AasRegistryService.Message = {
+            | AasRegistryService.Message
+            | SubmodelRegistryService.Message = {
             code: '500',
             messageType: 'Exception',
             timestamp: timestamp,
@@ -46,7 +49,8 @@ export async function handleApiError(
             err instanceof AasRepositoryService.RequiredError ||
             err instanceof SubmodelRepositoryService.RequiredError ||
             err instanceof ConceptDescriptionRepositoryService.RequiredError ||
-            err instanceof AasRegistryService.RequiredError
+            err instanceof AasRegistryService.RequiredError ||
+            err instanceof SubmodelRegistryService.RequiredError
         ) {
             message = {
                 code: '400',
@@ -58,7 +62,8 @@ export async function handleApiError(
             err instanceof AasRepositoryService.ResponseError ||
             err instanceof SubmodelRepositoryService.ResponseError ||
             err instanceof ConceptDescriptionRepositoryService.ResponseError ||
-            err instanceof AasRegistryService.ResponseError
+            err instanceof AasRegistryService.ResponseError ||
+            err instanceof SubmodelRegistryService.ResponseError
         ) {
             // Try to parse response body for messages
             const responseBody = err.response;
@@ -91,7 +96,8 @@ export async function handleApiError(
             err instanceof AasRepositoryService.FetchError ||
             err instanceof SubmodelRepositoryService.FetchError ||
             err instanceof ConceptDescriptionRepositoryService.FetchError ||
-            err instanceof AasRegistryService.FetchError
+            err instanceof AasRegistryService.FetchError ||
+            err instanceof SubmodelRegistryService.FetchError
         ) {
             message = {
                 code: '0',
