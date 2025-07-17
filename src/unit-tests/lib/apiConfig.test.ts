@@ -5,6 +5,7 @@ import {
     ConceptDescriptionRepositoryService,
     SubmodelRegistryService,
     SubmodelRepositoryService,
+    AasDiscoveryService,
 } from '../../generated';
 import { applyDefaults } from '../../lib/apiConfig';
 
@@ -221,6 +222,51 @@ describe('apiConfig', () => {
             expect(result.credentials).toBe('include');
         });
 
+        it('should preserve all provided AasDiscoveryService configuration values', () => {
+            // Arrange
+            const mockFetch = jest.fn();
+            const mockMiddleware = [{ pre: jest.fn() }];
+            const mockQueryParamsStringify = jest.fn();
+            const mockApiKey = jest.fn();
+            const mockHeaders = { 'Content-Type': 'application/json' };
+
+            const config = new AasDiscoveryService.Configuration({
+                basePath: 'https://example.com/aasdiscovery-api',
+                fetchApi: mockFetch,
+                middleware: mockMiddleware,
+                queryParamsStringify: mockQueryParamsStringify,
+                username: 'testUser',
+                password: 'testPass',
+                apiKey: mockApiKey,
+                accessToken: 'token123',
+                headers: mockHeaders,
+                credentials: 'include',
+            });
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            expect(result).toBeInstanceOf(AasDiscoveryService.Configuration);
+            expect(result.basePath).toBe('https://example.com/aasdiscovery-api');
+            expect(result.fetchApi).toBe(mockFetch);
+            expect(result.middleware).toEqual(mockMiddleware);
+            expect(result.queryParamsStringify).toBe(mockQueryParamsStringify);
+            expect(result.username).toBe('testUser');
+            expect(result.password).toBe('testPass');
+
+            // For apiKey, the Configuration class converts it to a function
+            expect(typeof result.apiKey).toBe('function');
+
+            // For accessToken, verify it's a function that returns the original value
+            expect(typeof result.accessToken).toBe('function');
+            // Uncomment the line below if you want to test the function returns the correct value
+            // expect(result.accessToken()).resolves.toBe('token123');
+
+            expect(result.headers).toBe(mockHeaders);
+            expect(result.credentials).toBe('include');
+        });
+
         it('should apply default fetch API when not provided for AasRepositoryService', () => {
             // Arrange
             const config = new AasRepositoryService.Configuration({});
@@ -274,6 +320,19 @@ describe('apiConfig', () => {
         it('should apply default fetch API when not provided for SubmodelRegistryService', () => {
             // Arrange
             const config = new SubmodelRegistryService.Configuration({});
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            expect(result.fetchApi).toBeDefined();
+            // We can't directly compare function instances, but we can check it's defined
+            expect(typeof result.fetchApi).toBe('function');
+        });
+
+        it('should apply default fetch API when not provided for AasDiscoveryService', () => {
+            // Arrange
+            const config = new AasDiscoveryService.Configuration({});
 
             // Act
             const result = applyDefaults(config);
@@ -351,6 +410,20 @@ describe('apiConfig', () => {
 
             // Assert
             expect(result).toBeInstanceOf(SubmodelRegistryService.Configuration);
+            expect(result).not.toBe(config); // Should be a different instance
+        });
+
+        it('should return a new AasDiscoveryService Configuration object', () => {
+            // Arrange
+            const config = new AasDiscoveryService.Configuration({
+                basePath: 'https://example.com/aasdiscovery-api',
+            });
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            expect(result).toBeInstanceOf(AasDiscoveryService.Configuration);
             expect(result).not.toBe(config); // Should be a different instance
         });
 
@@ -438,7 +511,7 @@ describe('apiConfig', () => {
             expect(result.fetchApi).toBeDefined(); // Default fetch should be applied
         });
 
-        it('should handle undefined values correctlyfor AasRegistryService', () => {
+        it('should handle undefined values correctly for AasRegistryService', () => {
             // Arrange
             const config = new AasRegistryService.Configuration({
                 basePath: undefined,
@@ -466,9 +539,37 @@ describe('apiConfig', () => {
             expect(result.fetchApi).toBeDefined(); // Default fetch should be applied
         });
 
-        it('should handle undefined values correctlyfor SubmodelRegistryService', () => {
+        it('should handle undefined values correctly for SubmodelRegistryService', () => {
             // Arrange
             const config = new SubmodelRegistryService.Configuration({
+                basePath: undefined,
+                username: undefined,
+                password: undefined,
+                apiKey: undefined,
+                accessToken: undefined,
+                headers: undefined,
+                credentials: undefined,
+            });
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            // Instead of expecting basePath to be undefined, we should expect the default value
+            // that the Configuration constructor sets
+            expect(result.basePath).toBe('https://admin-shell.io/api/v3');
+            expect(result.username).toBeUndefined();
+            expect(result.password).toBeUndefined();
+            expect(result.apiKey).toBeUndefined();
+            expect(result.accessToken).toBeUndefined();
+            expect(result.headers).toBeUndefined();
+            expect(result.credentials).toBeUndefined();
+            expect(result.fetchApi).toBeDefined(); // Default fetch should be applied
+        });
+
+        it('should handle undefined values correctly for AasDiscoveryService', () => {
+            // Arrange
+            const config = new AasDiscoveryService.Configuration({
                 basePath: undefined,
                 username: undefined,
                 password: undefined,
