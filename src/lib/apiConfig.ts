@@ -3,6 +3,7 @@ import {
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
+    SubmodelRegistryService,
     SubmodelRepositoryService,
 } from '../generated';
 //export function applyDefaults(configuration: AAS.Configuration): AAS.Configuration {
@@ -11,7 +12,8 @@ export function applyDefaults<
         | AasRepositoryService.Configuration
         | SubmodelRepositoryService.Configuration
         | ConceptDescriptionRepositoryService.Configuration
-        | AasRegistryService.Configuration,
+        | AasRegistryService.Configuration
+        | SubmodelRegistryService.Configuration,
 >(configuration: T): T {
     // Extract configuration properties
     const options = {
@@ -47,8 +49,10 @@ export function applyDefaults<
         return new SubmodelRepositoryService.Configuration(options) as T;
     } else if (configuration instanceof ConceptDescriptionRepositoryService.Configuration) {
         return new ConceptDescriptionRepositoryService.Configuration(options) as T;
-    } else {
+    } else if (configuration instanceof AasRegistryService.Configuration) {
         return new AasRegistryService.Configuration(options) as T;
+    } else {
+        return new SubmodelRegistryService.Configuration(options) as T;
     }
 }
 
