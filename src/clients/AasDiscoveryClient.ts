@@ -1,20 +1,13 @@
-import type {
-    SpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import type { SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasDiscoveryService } from '../generated';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
-import {
-    convertApiAssetIdToCoreAssetId,
-    convertCoreAssetIdToApiAssetId,
-} from '../lib/convertAasDiscoveryTypes';
+import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../lib/convertAasDiscoveryTypes';
 import { handleApiError } from '../lib/errorHandler';
-//import { InlineResponse200 } from 'src/generated/AasDiscoveryService';
 
 export class AasDiscoveryClient {
-
     /**
      * Returns a list of Asset Administration Shell IDs linked to specific asset identifiers or the global asset ID
      *
@@ -54,8 +47,8 @@ export class AasDiscoveryClient {
                 cursor: cursor,
             });
 
-            //const shellIds = (result.result ?? []).map(convertApiAssetIdToCoreAssetId);
             const shellIds = result.result ?? [];
+            console.log('all shellIds:', shellIds);
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: shellIds },
@@ -93,11 +86,9 @@ export class AasDiscoveryClient {
             const result = await apiInstance.postAllAssetLinksById({
                 aasIdentifier: encodedAasIdentifier,
                 specificAssetId: specificAssetId.map(convertCoreAssetIdToApiAssetId),
-                //specificAssetId: convertCoreAssetIdToApiAssetId(specificAssetId),//check as its an array of specificassetids
             });
-
+            console.log('created asset links:', result);
             return { success: true, data: result.map(convertApiAssetIdToCoreAssetId) };
-            //return { success: true, data: convertApiAssetIdToCoreAssetId(result) };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -136,7 +127,7 @@ export class AasDiscoveryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Returns a list of specific asset identifiers based on an Asset Administration Shell ID to edit discoverable content.
      *
@@ -149,7 +140,8 @@ export class AasDiscoveryClient {
     async getAllAssetLinksById(options: {
         configuration: AasDiscoveryService.Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<Array<SpecificAssetId>, AasDiscoveryService.Result>> { //check array of specificassetid
+    }): Promise<ApiResult<Array<SpecificAssetId>, AasDiscoveryService.Result>> {
+        
         const { configuration, aasIdentifier } = options;
 
         try {
@@ -164,7 +156,7 @@ export class AasDiscoveryClient {
             });
 
             return { success: true, data: result.map(convertApiAssetIdToCoreAssetId) };
-            //return { success: true, data: convertApiAssetIdToCoreAssetId(result) };
+            
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };

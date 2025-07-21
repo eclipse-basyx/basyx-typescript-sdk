@@ -1,12 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import {
-    SpecificAssetId as CoreSpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryService } from '../../generated';
-import {
-    convertApiAssetIdToCoreAssetId,
-    convertCoreAssetIdToApiAssetId,
-} from '../../lib/convertAasDiscoveryTypes';
+import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../../lib/convertAasDiscoveryTypes';
 
 /**
  * Mock the jsonization methods used in convertAasDiscoveryTypes.ts
@@ -20,18 +15,16 @@ jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
 
 // Define mock constants
 const API_SPECIFIC_ASSET_ID: AasDiscoveryService.SpecificAssetId = {
-    // id: 'https://example.com/ids/aas/7600_5912_3951_6917',
-    // modelType: AasRepositoryService.ModelType.AssetAdministrationShell,
-    // assetInformation: { assetKind: AasRepositoryService.AssetKind.Instance },
+    name: 'globalAssetId',
+    value: 'https://example.com/ids/asset/7600_5912_3951_6917',
 };
 const CORE_SPECIFIC_ASSET_ID: CoreSpecificAssetId = new CoreSpecificAssetId(
-    // 'https://example.com/ids/aas/7600_5912_3951_6917',
-    // new CoreAssetInformation(CoreAssetKind.Instance)
+    'globalAssetId',
+    'https://example.com/ids/asset/7600_5912_3951_6917'
 );
 const JSONABLE_SPECIFIC_ASSET_ID: jsonization.JsonObject = {
-    // id: 'https://example.com/ids/aas/7600_5912_3951_6917',
-    // modelType: 'AssetAdministrationShell',
-    // assetInformation: { assetKind: 'Instance' },
+    name: 'globalAssetId',
+    value: 'https://example.com/ids/asset/7600_5912_3951_6917',
 };
 
 describe('convertAasDiscoveryTypes', () => {
@@ -78,4 +71,4 @@ describe('convertAasDiscoveryTypes', () => {
             expect(result).toEqual(API_SPECIFIC_ASSET_ID);
         });
     });
-});    
+});

@@ -1,14 +1,14 @@
 // Import necessary types
 import {
+    AssetAdministrationShell as CoreAssetAdministrationShell,
+    AssetInformation as CoreAssetInformation,
+    AssetKind,
     SpecificAssetId as CoreSpecificAssetId,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasDiscoveryService } from '../../generated';
 import { base64Encode } from '../../lib/base64Url';
-import {
-    convertApiAssetIdToCoreAssetId,
-    convertCoreAssetIdToApiAssetId,
-} from '../../lib/convertAasDiscoveryTypes';
+import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../../lib/convertAasDiscoveryTypes';
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
@@ -25,18 +25,28 @@ const ASSET_IDS = [
     { name: 'globalAssetId', value: 'https://example.com/ids/asset/7600_5912_3951_6917' },
     { name: 'globalAssetId', value: 'https://example.com/ids/asset/7600_5912_3951_6918' },
 ];
-const API_SPECIFIC_ASSET_IDS = [];
-const CORE_SPECIFIC_ASSET_IDS = [];
-const API_AAS: AasDiscoveryService.AssetAdministrationShell = {
-    id: 'https://example.com/ids/aas/7600_5912_3951_6917',
-    modelType: 'AssetAdministrationShell',
-    assetInformation: { assetKind: 'Instance' },
+const SHELL_IDS = [
+    'https://example.com/ids/aas/7600_5912_3951_6917',
+    'https://example.com/ids/aas/7600_5912_3951_6918',
+];
+const API_SPECIFIC_ASSET_ID1: AasDiscoveryService.SpecificAssetId = {
+    name: 'globalAssetId',
+    value: 'https://example.com/ids/asset/7600_5912_3951_6917',
 };
-// const API_AAS2: AasDiscoveryService.AssetAdministrationShell = {
-//     id: 'https://example.com/ids/aas/7600_5912_3951_6918',
-//     modelType: 'AssetAdministrationShell',
-//     assetInformation: { assetKind: 'Instance' },
-// };
+const API_SPECIFIC_ASSET_ID2: AasDiscoveryService.SpecificAssetId = {
+    name: 'globalAssetId',
+    value: 'https://example.com/ids/asset/7600_5912_3951_6918',
+};
+const API_SPECIFIC_ASSET_IDS = [API_SPECIFIC_ASSET_ID1, API_SPECIFIC_ASSET_ID2];
+const CORE_SPECIFIC_ASSET_ID1: CoreSpecificAssetId = new CoreSpecificAssetId(
+    'globalAssetId',
+    'https://example.com/ids/asset/7600_5912_3951_6917'
+);
+const CORE_SPECIFIC_ASSET_ID2: CoreSpecificAssetId = new CoreSpecificAssetId(
+    'globalAssetId',
+    'https://example.com/ids/asset/7600_5912_3951_6918'
+);
+const CORE_SPECIFIC_ASSET_IDS = [CORE_SPECIFIC_ASSET_ID1, CORE_SPECIFIC_ASSET_ID2];
 const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
     'https://example.com/ids/aas/7600_5912_3951_6917',
     new CoreAssetInformation(AssetKind.Instance)
@@ -69,27 +79,15 @@ describe('AasDiscoveryClient', () => {
         ).mockImplementation(MockAasDiscovery);
         // Setup mocks for conversion functions
         (convertApiAssetIdToCoreAssetId as jest.Mock).mockImplementation((assetId) => {
-           // if (assetId.id === API_SPECIFIC_ASSET_IDS.id) return CORE_SPECIFIC_ASSET_IDS;
-            //if (aas.id === API_AAS2.id) return CORE_AAS2;
+            if (assetId.value === API_SPECIFIC_ASSET_ID1.value) return CORE_SPECIFIC_ASSET_ID1;
+            if (assetId.value === API_SPECIFIC_ASSET_ID2.value) return CORE_SPECIFIC_ASSET_ID2;
             return null;
         });
         (convertCoreAssetIdToApiAssetId as jest.Mock).mockImplementation((assetId) => {
-            //if (aas.id === CORE_AAS1.id) return API_AAS1;
-            //if (aas.id === CORE_AAS2.id) return API_AAS2;
+            if (assetId.value === CORE_SPECIFIC_ASSET_ID1.value) return API_SPECIFIC_ASSET_ID1;
+            if (assetId.value === CORE_SPECIFIC_ASSET_ID2.value) return API_SPECIFIC_ASSET_ID2;
             return null;
-        }); //mocking of these assetid fns more likely should be like below
-        // (convertApiAssetInformationToCoreAssetInformation as jest.Mock).mockReturnValue(CORE_ASSET_INFO);
-        // (convertCoreAssetInformationToApiAssetInformation as jest.Mock).mockReturnValue(API_ASSET_INFO);
-        // (convertApiReferenceToCoreReference as jest.Mock).mockImplementation((ref) => {
-        //     if (ref === API_REFERENCE1) return CORE_REFERENCE1;
-        //     if (ref === API_REFERENCE2) return CORE_REFERENCE2;
-        //     return null;
-        // });
-        // (convertCoreReferenceToApiReference as jest.Mock).mockImplementation((ref) => {
-        //     if (ref === CORE_REFERENCE1) return API_REFERENCE1;
-        //     if (ref === CORE_REFERENCE2) return API_REFERENCE2;
-        //     return null;
-        // });
+        });
 
         // Mock the error handler to return a standardized Result
         (handleApiError as jest.Mock).mockImplementation(async (err) => {
@@ -125,7 +123,7 @@ describe('AasDiscoveryClient', () => {
         };
         mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink.mockResolvedValue({
             pagingMetadata: pagedResult,
-            result: [API_SPECIFIC_ASSET_IDS, API_AAS2],
+            result: SHELL_IDS,
         });
 
         const client = new AasDiscoveryClient();
@@ -145,15 +143,14 @@ describe('AasDiscoveryClient', () => {
             limit: LIMIT,
             cursor: CURSOR,
         });
-        expect(convertApiAssetIdToCoreAssetId).toHaveBeenCalledTimes(2);//check 2 or 1
         expect(response.success).toBe(true);
 
         if (response.success) {
             expect(response.data.pagedResult).toBe(pagedResult);
-            expect(response.data.result).toEqual([CORE_SPECIFIC_ASSET_IDS, CORE_AAS2]);
+            expect(response.data.result).toEqual(SHELL_IDS);
         }
     });
-    
+
     it('should handle errors when fetching Asset Administration Shell IDs', async () => {
         // Arrange
         const errorResult: AasDiscoveryService.Result = {
@@ -166,7 +163,9 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(
+            new Error('Required parameter missing')
+        );
         (handleApiError as jest.Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
@@ -174,6 +173,7 @@ describe('AasDiscoveryClient', () => {
         // Act
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration: TEST_CONFIGURATION,
+            //assetIds: ASSET_IDS,
         });
 
         // Assert
@@ -203,8 +203,8 @@ describe('AasDiscoveryClient', () => {
             aasIdentifier: `encoded_${CORE_AAS.id}`,
             specificAssetId: API_SPECIFIC_ASSET_IDS,
         });
-        expect(convertCoreAssetIdToApiAssetId).toHaveBeenCalledWith(CORE_SPECIFIC_ASSET_IDS);
-        expect(convertApiAssetIdToCoreAssetId).toHaveBeenCalledWith(API_SPECIFIC_ASSET_IDS);
+        expect(convertCoreAssetIdToApiAssetId).toHaveBeenCalledTimes(2);
+        expect(convertApiAssetIdToCoreAssetId).toHaveBeenCalledTimes(2);
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(CORE_SPECIFIC_ASSET_IDS);
@@ -292,7 +292,7 @@ describe('AasDiscoveryClient', () => {
             expect(response.error).toEqual(errorResult);
         }
     });
-    
+
     it('should get a list of specific asset identifiers based on an Asset Administration Shell ID', async () => {
         // Arrange
         mockApiInstance.getAllAssetLinksById.mockResolvedValue(API_SPECIFIC_ASSET_IDS);
@@ -311,7 +311,7 @@ describe('AasDiscoveryClient', () => {
         expect(mockApiInstance.getAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
         });
-        expect(convertApiAssetIdToCoreAssetId).toHaveBeenCalledWith(API_SPECIFIC_ASSET_IDS);
+        expect(convertApiAssetIdToCoreAssetId).toHaveBeenCalledTimes(2);
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(CORE_SPECIFIC_ASSET_IDS);
@@ -347,5 +347,4 @@ describe('AasDiscoveryClient', () => {
             expect(response.error).toEqual(errorResult);
         }
     });
-    
-});    
+});

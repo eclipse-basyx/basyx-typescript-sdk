@@ -1,10 +1,16 @@
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { AasDiscoveryService } from '../generated';
-import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
+import {
+    createTestShell,
+    createTestSpecificAssetId1,
+    createTestSpecificAssetId2,
+} from './fixtures/aasDiscoveryFixtures';
 
 describe('AAS Discovery Integration Tests', () => {
     const client = new AasDiscoveryClient();
     const testShell = createTestShell();
+    const testSpecificAssetId1 = createTestSpecificAssetId1();
+    const testSpecificAssetId2 = createTestSpecificAssetId2();
     const configuration = new AasDiscoveryService.Configuration({
         basePath: 'http://localhost:8086',
     });
@@ -13,13 +19,13 @@ describe('AAS Discovery Integration Tests', () => {
         const response = await client.postAllAssetLinksById({
             configuration,
             aasIdentifier: testShell.id,
-            specificAssetId: testShell, //fix it
+            specificAssetId: [testSpecificAssetId1, testSpecificAssetId2],
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testShell); //correct the response
+            expect(response.data).toEqual([testSpecificAssetId1, testSpecificAssetId2]);
         }
     });
 
@@ -32,7 +38,7 @@ describe('AAS Discovery Integration Tests', () => {
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testShell);//response should be list of asset identifiers
+            expect(response.data).toEqual([testSpecificAssetId1, testSpecificAssetId2]);
         }
     });
 
@@ -58,8 +64,7 @@ describe('AAS Discovery Integration Tests', () => {
         if (response.success) {
             expect(response.data).toBeDefined();
             expect(response.data.result.length).toBeGreaterThan(0);
-            expect(response.data.result).toContainEqual(testShell); //response should list of ids not testshell
+            expect(response.data.result).toContainEqual(testShell.id); 
         }
     });
-
 });
