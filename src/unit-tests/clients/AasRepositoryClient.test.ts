@@ -8,16 +8,11 @@ import {
     KeyTypes,
     Reference as CoreReference,
     ReferenceTypes,
+    ISubmodelElement as CoreSubmodelElement,
+    Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
-// import {
-//     AssetAdministrationShell as ApiAssetAdministrationShell,
-//     AssetInformation as ApiAssetInformation,
-//     Configuration,
-//     Message,
-//     Reference as ApiReference,
-// } from '../../generated';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -27,12 +22,19 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
+import {
+    convertApiSubmodelToCoreSubmodel,
+    convertApiSubmodelElementToCoreSubmodelElement,
+    convertCoreSubmodelToApiSubmodel,
+    convertCoreSubmodelElementToApiSubmodelElement,
+} from '../../lib/convertSubmodelTypes';
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
 //jest.mock('../../generated');
 jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
+jest.mock('../../lib/convertSubmodelTypes');
 jest.mock('../../lib/base64Url');
 jest.mock('../../lib/errorHandler');
 
@@ -112,6 +114,44 @@ describe('AasRepositoryClient', () => {
         getAllSubmodelReferencesAasRepository: jest.fn(),
         postSubmodelReferenceAasRepository: jest.fn(),
         deleteSubmodelReferenceAasRepository: jest.fn(),
+        getSubmodelByIdAasRepository: jest.fn(),
+        putSubmodelByIdAasRepository: jest.fn(),
+        deleteSubmodelByIdAasRepository: jest.fn(),
+        patchSubmodelAasRepository: jest.fn(),
+        getSubmodelByIdMetadataAasRepository: jest.fn(),
+        patchSubmodelByIdMetadataAasRepository: jest.fn(),
+        getSubmodelByIdValueOnlyAasRepository: jest.fn(),
+        patchSubmodelByIdValueOnlyAasRepository: jest.fn(),
+        getSubmodelByIdReferenceAasRepository: jest.fn(),
+        getSubmodelByIdPathAasRepository: jest.fn(),
+        getAllSubmodelElementsAasRepository: jest.fn(),
+        postSubmodelElementAasRepository: jest.fn(),
+        getAllSubmodelElementsMetadataAasRepository: jest.fn(),
+        getAllSubmodelElementsValueOnlyAasRepository: jest.fn(),
+        getAllSubmodelElementsReferenceAasRepository: jest.fn(),
+        getAllSubmodelElementsPathAasRepository: jest.fn(),
+        getSubmodelElementByPathAasRepository: jest.fn(),
+        postSubmodelElementByPathAasRepository: jest.fn(),
+        deleteSubmodelElementByPathAasRepository: jest.fn(),
+        putSubmodelElementByPathAasRepository: jest.fn(),
+        patchSubmodelElementValueByPathAasRepository: jest.fn(),
+        getSubmodelElementByPathMetadataAasRepository: jest.fn(),
+        patchSubmodelElementValueByPathMetadata: jest.fn(),
+        getSubmodelElementByPathValueOnlyAasRepository: jest.fn(),
+        patchSubmodelElementValueByPathValueOnly: jest.fn(),
+        getSubmodelElementByPathReferenceAasRepository: jest.fn(),
+        getSubmodelElementByPathPathAasRepository: jest.fn(),
+        getFileByPathAasRepository: jest.fn(),
+        putFileByPathAasRepository: jest.fn(),
+        deleteFileByPathAasRepository: jest.fn(),
+        invokeOperationAasRepository: jest.fn(),
+        invokeOperationValueOnlyAasRepository: jest.fn(),
+        invokeOperationAsyncAasRepository: jest.fn(),
+        invokeOperationAsyncValueOnlyAasRepository: jest.fn(),
+        getOperationAsyncStatusAasRepository: jest.fn(),
+        getOperationAsyncResultAasRepository: jest.fn(),
+        getOperationAsyncResultValueOnlyAasRepository: jest.fn(),
+
     };
 
     // Mock constructor
