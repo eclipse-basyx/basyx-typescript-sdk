@@ -141,7 +141,6 @@ export class AasDiscoveryClient {
         configuration: AasDiscoveryService.Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<Array<SpecificAssetId>, AasDiscoveryService.Result>> {
-        
         const { configuration, aasIdentifier } = options;
 
         try {
@@ -156,7 +155,6 @@ export class AasDiscoveryClient {
             });
 
             return { success: true, data: result.map(convertApiAssetIdToCoreAssetId) };
-            
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };

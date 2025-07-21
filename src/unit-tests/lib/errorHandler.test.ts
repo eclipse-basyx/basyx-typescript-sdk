@@ -1,11 +1,11 @@
 //import { FetchError, RequiredError, ResponseError } from '../../generated';
 import {
+    AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
     SubmodelRegistryService,
     SubmodelRepositoryService,
-    AasDiscoveryService,
 } from '../../generated';
 import { handleApiError } from '../../lib/errorHandler';
 
@@ -111,7 +111,6 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].text).toContain('Required parameter missing');
         expect(result.messages?.[0].timestamp).toBe('1744752054.63186');
     });
-
 
     it('should handle generic Error objects', async () => {
         const originalError = new Error('Generic error');
@@ -252,7 +251,6 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].text).toBe('Access forbidden');
     });
 
-
     it('should handle AasRepositoryService.ResponseError with unparseable JSON response', async () => {
         const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
@@ -387,7 +385,6 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].code).toBe('0');
         expect(result.messages?.[0].text).toBe('Failed to fetch');
     });
-
 
     it('should safely handle null/undefined messages', async () => {
         const originalError = new Error();

@@ -1,11 +1,11 @@
 //import { FetchError, Message, RequiredError, ResponseError, Result } from '../generated';
 import {
+    AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
     SubmodelRegistryService,
     SubmodelRepositoryService,
-    AasDiscoveryService,
 } from '../generated';
 /**
  * Processes errors from API calls and standardizes them to a Result object

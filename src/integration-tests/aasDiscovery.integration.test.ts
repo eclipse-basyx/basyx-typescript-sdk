@@ -64,7 +64,7 @@ describe('AAS Discovery Integration Tests', () => {
         if (response.success) {
             expect(response.data).toBeDefined();
             expect(response.data.result.length).toBeGreaterThan(0);
-            expect(response.data.result).toContainEqual(testShell.id); 
+            expect(response.data.result).toContainEqual(testShell.id);
         }
     });
 });

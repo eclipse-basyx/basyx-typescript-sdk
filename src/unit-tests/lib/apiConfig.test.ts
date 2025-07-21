@@ -1,11 +1,11 @@
 //import { Configuration } from '../../generated';
 import {
+    AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
     SubmodelRegistryService,
     SubmodelRepositoryService,
-    AasDiscoveryService,
 } from '../../generated';
 import { applyDefaults } from '../../lib/apiConfig';
 

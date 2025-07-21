@@ -1,7 +1,5 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import {
-    SpecificAssetId as CoreSpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryService } from '../generated';
 
 /**
@@ -11,9 +9,7 @@ import { AasDiscoveryService } from '../generated';
  * @param {ApiSpecificAssetId} assetId - The API SpecificAssetId to convert
  * @returns {CoreSpecificAssetId} The Core Works SpecificAssetId
  */
-export function convertApiAssetIdToCoreAssetId(
-    assetId: AasDiscoveryService.SpecificAssetId
-): CoreSpecificAssetId {
+export function convertApiAssetIdToCoreAssetId(assetId: AasDiscoveryService.SpecificAssetId): CoreSpecificAssetId {
     // first stringify
     let assetIdStr = JSON.stringify(assetId);
     // then parse
@@ -36,9 +32,7 @@ export function convertApiAssetIdToCoreAssetId(
  * @param {CoreSpecificAssetId} assetId - The Core Works SpecificAssetId to convert
  * @returns {ApiSpecificAssetId} The API SpecificAssetId
  */
-export function convertCoreAssetIdToApiAssetId(
-    assetId: CoreSpecificAssetId
-): AasDiscoveryService.SpecificAssetId {
+export function convertCoreAssetIdToApiAssetId(assetId: CoreSpecificAssetId): AasDiscoveryService.SpecificAssetId {
     // first jsonize
     const jsonableAssetId = jsonization.toJsonable(assetId);
     // then stringify
