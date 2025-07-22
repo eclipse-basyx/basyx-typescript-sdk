@@ -1,0 +1,7 @@
+.openapi-generator-ignore
+apis/AssetAdministrationShellBasicDiscoveryAPIApi.ts
+apis/DescriptionAPIApi.ts
+apis/index.ts
+index.ts
+models/index.ts
+runtime.ts
