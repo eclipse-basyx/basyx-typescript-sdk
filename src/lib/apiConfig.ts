@@ -1,5 +1,6 @@
 //import { Configuration } from '../generated';
 import {
+    AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
@@ -13,7 +14,8 @@ export function applyDefaults<
         | SubmodelRepositoryService.Configuration
         | ConceptDescriptionRepositoryService.Configuration
         | AasRegistryService.Configuration
-        | SubmodelRegistryService.Configuration,
+        | SubmodelRegistryService.Configuration
+        | AasDiscoveryService.Configuration,
 >(configuration: T): T {
     // Extract configuration properties
     const options = {
@@ -51,8 +53,10 @@ export function applyDefaults<
         return new ConceptDescriptionRepositoryService.Configuration(options) as T;
     } else if (configuration instanceof AasRegistryService.Configuration) {
         return new AasRegistryService.Configuration(options) as T;
-    } else {
+    } else if (configuration instanceof SubmodelRegistryService.Configuration) {
         return new SubmodelRegistryService.Configuration(options) as T;
+    } else {
+        return new AasDiscoveryService.Configuration(options) as T;
     }
 }
 
