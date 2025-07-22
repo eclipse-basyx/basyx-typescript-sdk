@@ -1,5 +1,6 @@
 //import { FetchError, RequiredError, ResponseError } from '../../generated';
 import {
+    AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
     ConceptDescriptionRepositoryService,
@@ -91,6 +92,17 @@ describe('handleApiError', () => {
 
     it('should handle SubmodelRegistryService.RequiredError correctly', async () => {
         const originalError = new SubmodelRegistryService.RequiredError('testField', 'Required parameter missing');
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('400');
+        expect(result.messages?.[0].messageType).toBe('Exception');
+        expect(result.messages?.[0].text).toContain('Required parameter missing');
+        expect(result.messages?.[0].timestamp).toBe('1744752054.63186');
+    });
+
+    it('should handle AasDiscoveryService.RequiredError correctly', async () => {
+        const originalError = new AasDiscoveryService.RequiredError('testField', 'Required parameter missing');
         const result = await handleApiError(originalError);
 
         expect(result.messages).toHaveLength(1);
@@ -218,6 +230,27 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].text).toBe('Access forbidden');
     });
 
+    it('should handle AasDiscoveryService.ResponseError with parseable JSON response', async () => {
+        const mockJson = jest.fn().mockResolvedValue({
+            messages: [
+                {
+                    code: '403',
+                    messageType: 'Exception',
+                    text: 'Access forbidden',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        });
+
+        const mockResponse = createMockResponse(403, mockJson);
+        const originalError = new AasDiscoveryService.ResponseError(mockResponse, 'Access denied');
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('403');
+        expect(result.messages?.[0].text).toBe('Access forbidden');
+    });
+
     it('should handle AasRepositoryService.ResponseError with unparseable JSON response', async () => {
         const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
@@ -269,6 +302,17 @@ describe('handleApiError', () => {
         const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
         const originalError = new SubmodelRegistryService.ResponseError(mockResponse, 'Server error');
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('500');
+        expect(result.messages?.[0].text).toContain('HTTP 500');
+    });
+
+    it('should handle AasDiscoveryService.ResponseError with unparseable JSON response', async () => {
+        const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
+        const mockResponse = createMockResponse(500, mockJson);
+        const originalError = new AasDiscoveryService.ResponseError(mockResponse, 'Server error');
         const result = await handleApiError(originalError);
 
         expect(result.messages).toHaveLength(1);
@@ -331,6 +375,15 @@ describe('handleApiError', () => {
         expect(result.messages).toHaveLength(1);
         expect(result.messages?.[0].code).toBe('0');
         expect(result.messages?.[0].text).toBe('Failed to fetch Submodel Descriptor');
+    });
+
+    it('should handle AasDiscoveryService.FetchError objects', async () => {
+        const originalError = new AasDiscoveryService.FetchError(new Error('Network failure'), 'Failed to fetch');
+        const result = await handleApiError(originalError);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages?.[0].code).toBe('0');
+        expect(result.messages?.[0].text).toBe('Failed to fetch');
     });
 
     it('should safely handle null/undefined messages', async () => {
@@ -416,6 +469,19 @@ describe('handleApiError', () => {
         expect(parsed.messages).toBeDefined();
         expect(parsed.messages.length).toBe(1);
         expect(parsed.messages[0].text).toContain('Submodel Descriptor Test message');
+        expect(parsed.messages[0].code).toBe('400');
+    });
+
+    it('should produce valid ASSET ID JSON when serialized', async () => {
+        const originalError = new AasDiscoveryService.RequiredError('testField', 'AAS Discovery Test message');
+        const result = await handleApiError(originalError);
+
+        const serialized = JSON.stringify(result);
+        const parsed = JSON.parse(serialized);
+
+        expect(parsed.messages).toBeDefined();
+        expect(parsed.messages.length).toBe(1);
+        expect(parsed.messages[0].text).toContain('AAS Discovery Test message');
         expect(parsed.messages[0].code).toBe('400');
     });
 
