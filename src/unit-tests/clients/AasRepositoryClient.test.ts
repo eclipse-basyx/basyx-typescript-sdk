@@ -8,8 +8,6 @@ import {
     KeyTypes,
     Reference as CoreReference,
     ReferenceTypes,
-    ISubmodelElement as CoreSubmodelElement,
-    Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
@@ -22,19 +20,12 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
-import {
-    convertApiSubmodelToCoreSubmodel,
-    convertApiSubmodelElementToCoreSubmodelElement,
-    convertCoreSubmodelToApiSubmodel,
-    convertCoreSubmodelElementToApiSubmodelElement,
-} from '../../lib/convertSubmodelTypes';
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
 //jest.mock('../../generated');
 jest.mock('../../generated');
 jest.mock('../../lib/convertAasTypes');
-jest.mock('../../lib/convertSubmodelTypes');
 jest.mock('../../lib/base64Url');
 jest.mock('../../lib/errorHandler');
 
@@ -93,6 +84,8 @@ const API_REFERENCE2: AasRepositoryService.Reference = {
 const CORE_REFERENCE2: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [
     new CoreKey(KeyTypes.GlobalReference, 'https://example.com/ids/submodel/7600_5912_3951_6918'),
 ]);
+const fileName = 'thumbnail.png';
+const submodelId = 'https://example.com/ids/submodel/7600_5912_3951_6917';
 const TEST_CONFIGURATION = new AasRepositoryService.Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
@@ -114,44 +107,6 @@ describe('AasRepositoryClient', () => {
         getAllSubmodelReferencesAasRepository: jest.fn(),
         postSubmodelReferenceAasRepository: jest.fn(),
         deleteSubmodelReferenceAasRepository: jest.fn(),
-        getSubmodelByIdAasRepository: jest.fn(),
-        putSubmodelByIdAasRepository: jest.fn(),
-        deleteSubmodelByIdAasRepository: jest.fn(),
-        patchSubmodelAasRepository: jest.fn(),
-        getSubmodelByIdMetadataAasRepository: jest.fn(),
-        patchSubmodelByIdMetadataAasRepository: jest.fn(),
-        getSubmodelByIdValueOnlyAasRepository: jest.fn(),
-        patchSubmodelByIdValueOnlyAasRepository: jest.fn(),
-        getSubmodelByIdReferenceAasRepository: jest.fn(),
-        getSubmodelByIdPathAasRepository: jest.fn(),
-        getAllSubmodelElementsAasRepository: jest.fn(),
-        postSubmodelElementAasRepository: jest.fn(),
-        getAllSubmodelElementsMetadataAasRepository: jest.fn(),
-        getAllSubmodelElementsValueOnlyAasRepository: jest.fn(),
-        getAllSubmodelElementsReferenceAasRepository: jest.fn(),
-        getAllSubmodelElementsPathAasRepository: jest.fn(),
-        getSubmodelElementByPathAasRepository: jest.fn(),
-        postSubmodelElementByPathAasRepository: jest.fn(),
-        deleteSubmodelElementByPathAasRepository: jest.fn(),
-        putSubmodelElementByPathAasRepository: jest.fn(),
-        patchSubmodelElementValueByPathAasRepository: jest.fn(),
-        getSubmodelElementByPathMetadataAasRepository: jest.fn(),
-        patchSubmodelElementValueByPathMetadata: jest.fn(),
-        getSubmodelElementByPathValueOnlyAasRepository: jest.fn(),
-        patchSubmodelElementValueByPathValueOnly: jest.fn(),
-        getSubmodelElementByPathReferenceAasRepository: jest.fn(),
-        getSubmodelElementByPathPathAasRepository: jest.fn(),
-        getFileByPathAasRepository: jest.fn(),
-        putFileByPathAasRepository: jest.fn(),
-        deleteFileByPathAasRepository: jest.fn(),
-        invokeOperationAasRepository: jest.fn(),
-        invokeOperationValueOnlyAasRepository: jest.fn(),
-        invokeOperationAsyncAasRepository: jest.fn(),
-        invokeOperationAsyncValueOnlyAasRepository: jest.fn(),
-        getOperationAsyncStatusAasRepository: jest.fn(),
-        getOperationAsyncResultAasRepository: jest.fn(),
-        getOperationAsyncResultValueOnlyAasRepository: jest.fn(),
-
     };
 
     // Mock constructor
@@ -659,6 +614,36 @@ describe('AasRepositoryClient', () => {
         expect(response.success).toBe(true);
     });
 
+    it('should handle errors when deleting a thumbnail', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.deleteThumbnailAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.deleteThumbnail({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
     it('should get a thumbnail', async () => {
         // Arrange
         mockApiInstance.getThumbnailAasRepository.mockResolvedValue(MOCK_BLOB);
@@ -683,9 +668,38 @@ describe('AasRepositoryClient', () => {
         }
     });
 
+    it('should handle errors when getting a thumbnail', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getThumbnailAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.getThumbnail({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
     it('should update a thumbnail', async () => {
         // Arrange
-        const fileName = 'thumbnail.png';
         mockApiInstance.putThumbnailAasRepository.mockResolvedValue(undefined);
 
         const client = new AasRepositoryClient();
@@ -707,6 +721,38 @@ describe('AasRepositoryClient', () => {
             file: MOCK_BLOB,
         });
         expect(response.success).toBe(true);
+    });
+
+    it('should handle errors when updating a thumbnail', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.putThumbnailAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.putThumbnail({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+            fileName: fileName,
+            file: MOCK_BLOB,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
     });
 
     it('should get all submodel references', async () => {
@@ -745,6 +791,38 @@ describe('AasRepositoryClient', () => {
         }
     });
 
+    it('should handle errors when getting all submodel references', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getAllSubmodelReferencesAasRepository.mockRejectedValue(
+            new Error('Required parameter missing')
+        );
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.getAllSubmodelReferences({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
     it('should post a submodel reference', async () => {
         // Arrange
         mockApiInstance.postSubmodelReferenceAasRepository.mockResolvedValue(API_REFERENCE1);
@@ -773,9 +851,39 @@ describe('AasRepositoryClient', () => {
         }
     });
 
+    it('should handle errors when creating a new submodel reference', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.postSubmodelReferenceAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.postSubmodelReference({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+            submodelReference: CORE_REFERENCE1,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
     it('should delete a submodel reference', async () => {
         // Arrange
-        const submodelId = 'https://example.com/ids/submodel/7600_5912_3951_6917';
         mockApiInstance.deleteSubmodelReferenceAasRepository.mockResolvedValue(undefined);
 
         const client = new AasRepositoryClient();
@@ -796,5 +904,36 @@ describe('AasRepositoryClient', () => {
             submodelIdentifier: `encoded_${submodelId}`,
         });
         expect(response.success).toBe(true);
+    });
+
+    it('should handle errors when creating a new submodel reference', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.deleteSubmodelReferenceAasRepository.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.deleteSubmodelReferenceById({
+            configuration: TEST_CONFIGURATION,
+            aasIdentifier: CORE_AAS1.id,
+            submodelIdentifier: submodelId,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
     });
 });

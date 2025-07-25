@@ -1,9 +1,9 @@
 import type {
     AssetAdministrationShell,
     AssetInformation,
+    ISubmodelElement,
     Reference,
     Submodel,
-    ISubmodelElement,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
@@ -18,11 +18,12 @@ import {
     convertCoreAssetInformationToApiAssetInformation,
     convertCoreReferenceToApiReference,
 } from '../lib/convertAasTypes';
-import { convertApiSubmodelToCoreSubmodel,
+import {
     convertApiSubmodelElementToCoreSubmodelElement,
-    convertCoreSubmodelToApiSubmodel,
+    convertApiSubmodelToCoreSubmodel,
     convertCoreSubmodelElementToApiSubmodelElement,
- } from '../lib/convertSubmodelTypes';
+    convertCoreSubmodelToApiSubmodel,
+} from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
 
 export class AasRepositoryClient {
@@ -575,7 +576,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, submodel } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -592,7 +595,7 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Deletes the submodel from the Asset Administration Shell and the Repository.
      *
@@ -611,7 +614,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -627,7 +632,7 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Updates the Submodel
      *
@@ -650,7 +655,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, submodel, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -687,7 +694,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -724,7 +733,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, submodelMetadata } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -764,7 +775,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, level, extent } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -782,7 +795,7 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Updates the values of the Submodel
      *
@@ -804,7 +817,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, body, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -934,7 +949,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, extent } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -967,7 +984,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - submodelElement: The Submodel Element object
-     * 
+     *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelElementAasRepository(options: {
@@ -979,7 +996,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, submodelElement } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1024,10 +1043,12 @@ export class AasRepositoryClient {
             AasRepositoryService.Result
         >
     > {
-        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor} = options;
+        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1083,7 +1104,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1140,7 +1163,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1163,7 +1188,7 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Returns all submodel elements including their hierarchy
      *
@@ -1198,7 +1223,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, extent } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1226,7 +1253,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns a specific submodel element from the Submodel at a specified path
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1248,7 +1275,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, extent } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1267,7 +1296,7 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Creates a new submodel element at a specified path within submodel elements hierarchy
      *
@@ -1290,7 +1319,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1329,7 +1360,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1369,7 +1402,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1387,10 +1422,10 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-    
+
     /**
      * Updates an existing submodel element value at a specified path within submodel elements hierarchy
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1398,7 +1433,7 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
      *  - level?: Determines the structural depth of the respective resource content
-     * 
+     *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementValueByPathAasRepository(options: {
@@ -1412,7 +1447,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1452,7 +1489,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1492,7 +1531,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElementMetadata } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1513,7 +1554,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns a specific submodel element from the Submodel at a specified path in the ValueOnly representation
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1535,7 +1576,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, extent } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1554,10 +1597,10 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
- 
+
     /**
      * Updates the value of an existing submodel element value at a specified path within submodel elements hierarchy
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1565,7 +1608,7 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - SubmodelElementValue: SubmodelElementValue object
      *  - level?: Determines the structural depth of the respective resource content
-     * 
+     *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementValueByPathValueOnly(options: {
@@ -1579,7 +1622,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElementValue, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1601,7 +1646,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns the Reference of a specific submodel element from the Submodel at a specified path
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1621,7 +1666,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1642,7 +1689,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns a specific submodel element from the Submodel at a specified path in the Path notation
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1662,7 +1709,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1683,7 +1732,7 @@ export class AasRepositoryClient {
 
     /**
      * Downloads file content from a specific submodel element from the Submodel at a specified path
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1701,7 +1750,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1743,7 +1794,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, fileName, file } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1783,7 +1836,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1823,7 +1878,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1841,7 +1898,7 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
- 
+
     /**
      * Synchronously invokes an Operation at a specified path
      *
@@ -1864,7 +1921,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1905,7 +1964,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1946,7 +2007,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -1967,7 +2030,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns the Operation status of an asynchronous invoked Operation
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -1987,7 +2050,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, handleId } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -2009,7 +2074,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns the Operation result of an asynchronous invoked Operation
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -2029,7 +2094,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, handleId } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -2051,7 +2118,7 @@ export class AasRepositoryClient {
 
     /**
      * Returns the ValueOnly notation of the Operation result of an asynchronous invoked Operation
-     * 
+     *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
@@ -2071,7 +2138,9 @@ export class AasRepositoryClient {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, handleId } = options;
 
         try {
-            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
@@ -2090,5 +2159,4 @@ export class AasRepositoryClient {
             return { success: false, error: customError };
         }
     }
-
 }
