@@ -30,33 +30,29 @@ export function applyDefaults<
         headers: configuration.headers || undefined,
         credentials: configuration.credentials || undefined,
     };
-    // const defaultConfiguration = new AAS.Configuration({
-    //     basePath: configuration.basePath || undefined,
-    //     fetchApi: configuration.fetchApi || getDefaultFetchApi(),
-    //     middleware: configuration.middleware || undefined,
-    //     queryParamsStringify: configuration.queryParamsStringify || undefined,
-    //     username: configuration.username || undefined,
-    //     password: configuration.password || undefined,
-    //     apiKey: configuration.apiKey || undefined,
-    //     accessToken: configuration.accessToken || undefined,
-    //     headers: configuration.headers || undefined,
-    //     credentials: configuration.credentials || undefined,
-    // });
 
-    //return defaultConfiguration as T;
     // Create the appropriate configuration type
-    if (configuration instanceof AasRepositoryService.Configuration) {
-        return new AasRepositoryService.Configuration(options) as T;
-    } else if (configuration instanceof SubmodelRepositoryService.Configuration) {
-        return new SubmodelRepositoryService.Configuration(options) as T;
-    } else if (configuration instanceof ConceptDescriptionRepositoryService.Configuration) {
-        return new ConceptDescriptionRepositoryService.Configuration(options) as T;
-    } else if (configuration instanceof AasRegistryService.Configuration) {
-        return new AasRegistryService.Configuration(options) as T;
-    } else if (configuration instanceof SubmodelRegistryService.Configuration) {
-        return new SubmodelRegistryService.Configuration(options) as T;
-    } else {
-        return new AasDiscoveryService.Configuration(options) as T;
+    switch (configuration.constructor) {
+        case AasRepositoryService.Configuration:
+            return new AasRepositoryService.Configuration(options) as T;
+
+        case SubmodelRepositoryService.Configuration:
+            return new SubmodelRepositoryService.Configuration(options) as T;
+
+        case ConceptDescriptionRepositoryService.Configuration:
+            return new ConceptDescriptionRepositoryService.Configuration(options) as T;
+
+        case AasRegistryService.Configuration:
+            return new AasRegistryService.Configuration(options) as T;
+
+        case SubmodelRegistryService.Configuration:
+            return new SubmodelRegistryService.Configuration(options) as T;
+
+        case AasDiscoveryService.Configuration:
+            return new AasDiscoveryService.Configuration(options) as T;
+
+        default:
+            throw new Error('None of the configuration types match');
     }
 }
 
