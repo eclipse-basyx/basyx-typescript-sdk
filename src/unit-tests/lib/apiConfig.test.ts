@@ -3,6 +3,7 @@ import {
     AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
+    AasxFileService,
     ConceptDescriptionRepositoryService,
     SubmodelRegistryService,
     SubmodelRepositoryService,
@@ -267,6 +268,51 @@ describe('apiConfig', () => {
             expect(result.credentials).toBe('include');
         });
 
+        it('should preserve all provided AasxFileService configuration values', () => {
+            // Arrange
+            const mockFetch = jest.fn();
+            const mockMiddleware = [{ pre: jest.fn() }];
+            const mockQueryParamsStringify = jest.fn();
+            const mockApiKey = jest.fn();
+            const mockHeaders = { 'Content-Type': 'application/json' };
+
+            const config = new AasxFileService.Configuration({
+                basePath: 'https://example.com/aasxfile-api',
+                fetchApi: mockFetch,
+                middleware: mockMiddleware,
+                queryParamsStringify: mockQueryParamsStringify,
+                username: 'testUser',
+                password: 'testPass',
+                apiKey: mockApiKey,
+                accessToken: 'token123',
+                headers: mockHeaders,
+                credentials: 'include',
+            });
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            expect(result).toBeInstanceOf(AasxFileService.Configuration);
+            expect(result.basePath).toBe('https://example.com/aasxfile-api');
+            expect(result.fetchApi).toBe(mockFetch);
+            expect(result.middleware).toEqual(mockMiddleware);
+            expect(result.queryParamsStringify).toBe(mockQueryParamsStringify);
+            expect(result.username).toBe('testUser');
+            expect(result.password).toBe('testPass');
+
+            // For apiKey, the Configuration class converts it to a function
+            expect(typeof result.apiKey).toBe('function');
+
+            // For accessToken, verify it's a function that returns the original value
+            expect(typeof result.accessToken).toBe('function');
+            // Uncomment the line below if you want to test the function returns the correct value
+            // expect(result.accessToken()).resolves.toBe('token123');
+
+            expect(result.headers).toBe(mockHeaders);
+            expect(result.credentials).toBe('include');
+        });
+
         it('should apply default fetch API when not provided for AasRepositoryService', () => {
             // Arrange
             const config = new AasRepositoryService.Configuration({});
@@ -333,6 +379,19 @@ describe('apiConfig', () => {
         it('should apply default fetch API when not provided for AasDiscoveryService', () => {
             // Arrange
             const config = new AasDiscoveryService.Configuration({});
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            expect(result.fetchApi).toBeDefined();
+            // We can't directly compare function instances, but we can check it's defined
+            expect(typeof result.fetchApi).toBe('function');
+        });
+
+        it('should apply default fetch API when not provided for AasxFileService', () => {
+            // Arrange
+            const config = new AasxFileService.Configuration({});
 
             // Act
             const result = applyDefaults(config);
@@ -424,6 +483,20 @@ describe('apiConfig', () => {
 
             // Assert
             expect(result).toBeInstanceOf(AasDiscoveryService.Configuration);
+            expect(result).not.toBe(config); // Should be a different instance
+        });
+
+        it('should return a new AasxFileService Configuration object', () => {
+            // Arrange
+            const config = new AasxFileService.Configuration({
+                basePath: 'https://example.com/aasxfile-api',
+            });
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            expect(result).toBeInstanceOf(AasxFileService.Configuration);
             expect(result).not.toBe(config); // Should be a different instance
         });
 
@@ -586,6 +659,34 @@ describe('apiConfig', () => {
             // Instead of expecting basePath to be undefined, we should expect the default value
             // that the Configuration constructor sets
             expect(result.basePath).toBe('https://admin-shell.io/api/v3');
+            expect(result.username).toBeUndefined();
+            expect(result.password).toBeUndefined();
+            expect(result.apiKey).toBeUndefined();
+            expect(result.accessToken).toBeUndefined();
+            expect(result.headers).toBeUndefined();
+            expect(result.credentials).toBeUndefined();
+            expect(result.fetchApi).toBeDefined(); // Default fetch should be applied
+        });
+
+        it('should handle undefined values correctlyfor AasxFileService', () => {
+            // Arrange
+            const config = new AasxFileService.Configuration({
+                basePath: undefined,
+                username: undefined,
+                password: undefined,
+                apiKey: undefined,
+                accessToken: undefined,
+                headers: undefined,
+                credentials: undefined,
+            });
+
+            // Act
+            const result = applyDefaults(config);
+
+            // Assert
+            // Instead of expecting basePath to be undefined, we should expect the default value
+            // that the Configuration constructor sets
+            expect(result.basePath).toBe('https://admin-shell.io:443/api/v1');
             expect(result.username).toBeUndefined();
             expect(result.password).toBeUndefined();
             expect(result.apiKey).toBeUndefined();

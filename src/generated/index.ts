@@ -4,7 +4,8 @@ import * as ConceptDescriptionRepositoryService from './ConceptDescriptionReposi
 import * as AasRegistryService from './AasRegistryService';
 import * as SubmodelRegistryService from './SubmodelRegistryService';
 import * as AasDiscoveryService from './AasDiscoveryService';
+import * as AasxFileService from './AasxFileService';
 
 export { AasRepositoryService, SubmodelRepositoryService, ConceptDescriptionRepositoryService,
-    AasRegistryService, SubmodelRegistryService, AasDiscoveryService
+    AasRegistryService, SubmodelRegistryService, AasDiscoveryService, AasxFileService
  };

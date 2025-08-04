@@ -3,6 +3,7 @@ import {
     AasDiscoveryService,
     AasRegistryService,
     AasRepositoryService,
+    AasxFileService,
     ConceptDescriptionRepositoryService,
     SubmodelRegistryService,
     SubmodelRepositoryService,
@@ -15,7 +16,8 @@ export function applyDefaults<
         | ConceptDescriptionRepositoryService.Configuration
         | AasRegistryService.Configuration
         | SubmodelRegistryService.Configuration
-        | AasDiscoveryService.Configuration,
+        | AasDiscoveryService.Configuration
+        | AasxFileService.Configuration,
 >(configuration: T): T {
     // Extract configuration properties
     const options = {
@@ -50,6 +52,9 @@ export function applyDefaults<
 
         case AasDiscoveryService.Configuration:
             return new AasDiscoveryService.Configuration(options) as T;
+
+        case AasxFileService.Configuration:
+            return new AasxFileService.Configuration(options) as T;
 
         default:
             throw new Error('None of the configuration types match');

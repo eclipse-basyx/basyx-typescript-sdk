@@ -4,3 +4,4 @@ export { AasRepositoryClient } from './AasRepositoryClient';
 export { ConceptDescriptionRepositoryClient } from './ConceptDescriptionRepositoryClient';
 export { SubmodelRegistryClient } from './SubmodelRegistryClient';
 export { SubmodelRepositoryClient } from './SubmodelRepositoryClient';
+export { AasxFileClient } from './AasxFileClient';
