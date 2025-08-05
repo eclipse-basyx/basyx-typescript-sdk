@@ -99,7 +99,7 @@ describe('AasxFileClient', () => {
         // Assert
         expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
         expect(mockApiInstance.getAllAASXPackageIds).toHaveBeenCalledWith({
-            aasId: `encoded_${CORE_AAS1.id}`,
+            aasId: CORE_AAS1.id,
         });
         expect(response.success).toBe(true);
 
@@ -147,18 +147,18 @@ describe('AasxFileClient', () => {
         const response = await client.postAASXPackage({
             configuration: TEST_CONFIGURATION,
             aasIds: [CORE_AAS1.id],
-            fileName: fileName,
             file: MOCK_BLOB,
+            fileName: fileName,
         });
 
         // Assert
         expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
-        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
-        expect(base64Encode).toHaveBeenCalledWith(fileName);
+        //expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
+        //expect(base64Encode).toHaveBeenCalledWith(fileName);
         expect(mockApiInstance.postAASXPackage).toHaveBeenCalledWith({
-            aasIds: [`encoded_${CORE_AAS1.id}`],
+            aasIds: [CORE_AAS1.id],
             file: MOCK_BLOB,
-            fileName: `encoded_${fileName}`,
+            fileName: fileName,
         });
         expect(response.success).toBe(true);
         if (response.success) {
@@ -186,9 +186,8 @@ describe('AasxFileClient', () => {
         // Act
         const response = await client.postAASXPackage({
             configuration: TEST_CONFIGURATION,
-            aasIds: [CORE_AAS1.id],
-            fileName: fileName,
             file: MOCK_BLOB,
+            fileName: fileName,
         });
 
         // Assert
@@ -314,20 +313,20 @@ describe('AasxFileClient', () => {
             configuration: TEST_CONFIGURATION,
             packageId: PACKAGE_ID,
             aasIds: [CORE_AAS1.id],
-            fileName: fileName,
             file: MOCK_BLOB,
+            fileName: fileName,
         });
 
         // Assert
         expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
-        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
+        // expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
+        // expect(base64Encode).toHaveBeenCalledWith(fileName);
         expect(base64Encode).toHaveBeenCalledWith(PACKAGE_ID);
-        expect(base64Encode).toHaveBeenCalledWith(fileName);
         expect(mockApiInstance.putAASXByPackageId).toHaveBeenCalledWith({
             packageId: `encoded_${PACKAGE_ID}`,
-            aasIds: [`encoded_${CORE_AAS1.id}`],
+            aasIds: [CORE_AAS1.id],
             file: MOCK_BLOB,
-            fileName: `encoded_${fileName}`,
+            fileName: fileName,
         });
         expect(response.success).toBe(true);
     });
@@ -353,9 +352,8 @@ describe('AasxFileClient', () => {
         const response = await client.putAASXByPackageId({
             configuration: TEST_CONFIGURATION,
             packageId: PACKAGE_ID,
-            aasIds: [CORE_AAS1.id],
-            fileName: fileName,
             file: MOCK_BLOB,
+            fileName: fileName,
         });
 
         // Assert

@@ -27,10 +27,10 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifier = aasId ? base64Encode(aasId) : undefined;
+            //const encodedAasIdentifier = aasId ? base64Encode(aasId) : undefined;
 
             const result = await apiInstance.getAllAASXPackageIds({
-                aasId: encodedAasIdentifier,
+                aasId: aasId,
             });
             console.log('received packages:', result);
             return {
@@ -57,30 +57,22 @@ export class AasxFileClient {
      */
     async postAASXPackage(options: {
         configuration: AasxFileService.Configuration;
-        aasIds: string[]; //aasIds: object[];
-
-        fileName: string;
+        aasIds?: string[];
         file: Blob;
+        fileName: string;
     }): Promise<ApiResult<AasxFileService.PackageDescription, AasxFileService.Result>> {
-        const { configuration, aasIds, fileName, file } = options;
+        const { configuration, aasIds, file, fileName } = options;
 
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifiers = aasIds?.map((id) => base64Encode(id));
-            const encodedFileName = base64Encode(fileName);
-            console.log('Request params:', {
-                originalAasIds: aasIds,
-                encodedAasIds: encodedAasIdentifiers,
-                originalFileName: fileName,
-                encodedFileName: encodedFileName,
-                fileSize: file.size,
-                fileType: file.type,
-            });
+            //const encodedAasIdentifiers = aasIds?.map((id) => base64Encode(id));
+            //const encodedFileName = base64Encode(fileName);
+
             const result = await apiInstance.postAASXPackage({
-                aasIds: encodedAasIdentifiers,
+                aasIds: aasIds,
                 file: file,
-                fileName: encodedFileName,
+                fileName: fileName,
             });
             console.log('created aasx package: ', result);
             return { success: true, data: result };
@@ -138,23 +130,23 @@ export class AasxFileClient {
     async putAASXByPackageId(options: {
         configuration: AasxFileService.Configuration;
         packageId: string;
-        aasIds: string[];
-        fileName: string;
+        aasIds?: string[];
         file: Blob;
+        fileName: string;
     }): Promise<ApiResult<void, AasxFileService.Result>> {
-        const { configuration, packageId, aasIds, fileName, file } = options;
+        const { configuration, packageId, aasIds, file, fileName } = options;
 
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifiers = aasIds?.map((id) => base64Encode(id));
+            //const encodedAasIdentifiers = aasIds?.map((id) => base64Encode(id));
             const encodedPackageId = base64Encode(packageId);
-            const encodedFileName = base64Encode(fileName);
+            //const encodedFileName = base64Encode(fileName);
             const result = await apiInstance.putAASXByPackageId({
                 packageId: encodedPackageId,
-                aasIds: encodedAasIdentifiers,
+                aasIds: aasIds,
                 file: file,
-                fileName: encodedFileName,
+                fileName: fileName,
             });
 
             return { success: true, data: result };
