@@ -976,9 +976,9 @@
     node-fetch "^2.6.1"
 
 "@openapitools/openapi-generator-cli@^2.18.4":
-  version "2.21.4"
-  resolved "https://registry.yarnpkg.com/@openapitools/openapi-generator-cli/-/openapi-generator-cli-2.21.4.tgz#494db5a50eb3d68f80cce3fb12a0300995ca6761"
-  integrity sha512-s2OBgiNml0DL0ebkvAMQxZi7c8SUQMHssTUJwWsFDv4kVtBVDV4UzsCh9gQEXlNjuEcEgZoa5BIOai2sT0sE8g==
+  version "2.21.5"
+  resolved "https://registry.yarnpkg.com/@openapitools/openapi-generator-cli/-/openapi-generator-cli-2.21.5.tgz#12dd6bb7fbe9ea4194c6c3a656581692f7b238f9"
+  integrity sha512-V6XJXt9E0iELD9HBJF/tHCrtj5DOFdf1d8TwN6AXDWhPeF2OcIpxPrYPiJFJm8Ck/T6oIiyhrh8m8uajf9gtSw==
   dependencies:
     "@nestjs/axios" "4.0.1"
     "@nestjs/common" "11.1.5"
@@ -990,10 +990,9 @@
     compare-versions "4.1.4"
     concurrently "9.2.0"
     console.table "0.10.0"
-    fs-extra "11.3.0"
+    fs-extra "11.3.1"
     glob "11.0.3"
     inquirer "8.2.6"
-    lodash "4.17.21"
     proxy-agent "6.5.0"
     reflect-metadata "0.2.2"
     rxjs "7.8.2"
@@ -2463,10 +2462,10 @@ form-data@^4.0.4:
     hasown "^2.0.2"
     mime-types "^2.1.12"
 
-fs-extra@11.3.0:
-  version "11.3.0"
-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-11.3.0.tgz#0daced136bbaf65a555a326719af931adc7a314d"
-  integrity sha512-Z4XaCL6dUDHfP/jT25jJKMmtxvuwbkrD1vNSMFlo9lNLY2c5FHYSQgHPRZUjAB26TpDEoW9HCOgplrdbaPV/ew==
+fs-extra@11.3.1:
+  version "11.3.1"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-11.3.1.tgz#ba7a1f97a85f94c6db2e52ff69570db3671d5a74"
+  integrity sha512-eXvGGwZ5CL17ZSwHWd3bbgk7UUpF6IFHtP57NYYakPvHOs8GDgDe5KJI36jIJzDkJ6eJjuzRA8eBQb6SkKue0g==
   dependencies:
     graceful-fs "^4.2.0"
     jsonfile "^6.0.1"
@@ -3436,7 +3435,7 @@ lodash.merge@^4.6.2:
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
 
-lodash@4.17.21, lodash@^4.17.21:
+lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
