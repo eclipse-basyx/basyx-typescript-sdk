@@ -1,9 +1,9 @@
 import {
     ISubmodelElement,
+    ModelType,
     Submodel,
     SubmodelElementCollection,
     SubmodelElementList,
-    ModelType,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 
 const versionRevisionRegex = /\/(\d{1,})\/(\d{1,})(\/|$)/; // This regex matches the version/revision string of a semanticId ".../version/revision"
@@ -291,8 +291,10 @@ export function getEquivalentIriSemanticIds(semanticId: string): any[] {
  * @param {Submodel | ISubmodelElement} submodelElement - The parent SM/SME to search within.
  * @returns {ISubmodelElement | undefined} The found SME or an empty object if not found or input is invalid.
  */
-export function getSubmodelElementBySemanticId(semanticId: string, submodelElement: Submodel | ISubmodelElement): ISubmodelElement | undefined {
-
+export function getSubmodelElementBySemanticId(
+    semanticId: string,
+    submodelElement: Submodel | ISubmodelElement
+): ISubmodelElement | undefined {
     if (semanticId.trim() == '') return undefined;
     semanticId = semanticId.trim();
 
@@ -301,10 +303,7 @@ export function getSubmodelElementBySemanticId(semanticId: string, submodelEleme
     switch (submodelElement.modelType()) {
         case ModelType.Submodel: {
             const submodel = submodelElement as Submodel;
-            if (
-                submodel.submodelElements &&
-                submodel.submodelElements.length > 0
-            ) {
+            if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                 return submodel.submodelElements.find((sme: ISubmodelElement) => {
                     return checkSemanticId(sme, semanticId);
                 });
@@ -313,28 +312,22 @@ export function getSubmodelElementBySemanticId(semanticId: string, submodelEleme
         }
         case ModelType.SubmodelElementCollection: {
             const collection = submodelElement as SubmodelElementCollection;
-            if (
-                collection.value &&
-                collection.value.length > 0
-            ) {
+            if (collection.value && collection.value.length > 0) {
                 return collection.value.find((sme: ISubmodelElement) => {
                     return checkSemanticId(sme, semanticId);
                 });
             }
             break;
         }
-        case ModelType.SubmodelElementList:{
-                const list = submodelElement as SubmodelElementList;
-                if (
-                    list.value &&
-                    list.value.length > 0
-                ) {
-                    return list.value.find((sme: ISubmodelElement) => {
-                        return checkSemanticId(sme, semanticId);
-                    });
-                }
-                break;
+        case ModelType.SubmodelElementList: {
+            const list = submodelElement as SubmodelElementList;
+            if (list.value && list.value.length > 0) {
+                return list.value.find((sme: ISubmodelElement) => {
+                    return checkSemanticId(sme, semanticId);
+                });
             }
+            break;
+        }
     }
 
     return undefined;
@@ -352,20 +345,19 @@ export function getSubmodelElementBySemanticId(semanticId: string, submodelEleme
  * @param {Submodel | ISubmodelElement} submodelElement - The parent SM/SME to search within.
  * @returns {ISubmodelElement[]} An array of found SMEs matching the `idShort`, or an empty array if not found or input is invalid.
  */
-export function getSubmodelElementsBySemanticId(semanticId: string, submodelElement: Submodel | ISubmodelElement): ISubmodelElement[] {
-
+export function getSubmodelElementsBySemanticId(
+    semanticId: string,
+    submodelElement: Submodel | ISubmodelElement
+): ISubmodelElement[] {
     if (semanticId.trim() == '') return [];
     semanticId = semanticId.trim();
 
     if (!submodelElement?.modelType) return [];
 
     switch (submodelElement.modelType()) {
-        case ModelType.Submodel:{
+        case ModelType.Submodel: {
             const submodel = submodelElement as Submodel;
-            if (
-                submodel.submodelElements &&
-                submodel.submodelElements.length > 0
-            ) {
+            if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                 return submodel.submodelElements.filter((sme: ISubmodelElement) => {
                     return checkSemanticId(sme, semanticId);
                 });
@@ -373,18 +365,15 @@ export function getSubmodelElementsBySemanticId(semanticId: string, submodelElem
             break;
         }
         case ModelType.SubmodelElementCollection: {
-                const collection = submodelElement as SubmodelElementCollection;
-                if (
-                    collection.value &&
-                    collection.value.length > 0
-                ) {
-                    return collection.value.filter((sme: ISubmodelElement) => {
-                        return checkSemanticId(sme, semanticId);
-                    });
-                }
-                break;
-             }
-        case ModelType.SubmodelElementList:{
+            const collection = submodelElement as SubmodelElementCollection;
+            if (collection.value && collection.value.length > 0) {
+                return collection.value.filter((sme: ISubmodelElement) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+        }
+        case ModelType.SubmodelElementList: {
             const list = submodelElement as SubmodelElementList;
             if (list.value && list.value.length > 0) {
                 return list.value.filter((sme: ISubmodelElement) => {

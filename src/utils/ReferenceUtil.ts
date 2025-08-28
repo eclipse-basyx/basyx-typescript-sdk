@@ -1,7 +1,4 @@
-import type {
-    Reference,
-    KeyTypes,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import type { KeyTypes, Reference } from '@aas-core-works/aas-core3.0-typescript/types';
 //import {keyTypes} from '../utils/KeyTypesUtil';
 /**
  * Extracts the ID (Key) from a Reference object based on the given Key Type.
@@ -24,7 +21,7 @@ export function extractId(reference: Reference, keyType: KeyTypes): string {
 
     const keys = reference.keys;
     // find the key based on the key type
-    const key = keys.find((key) =>  key?.type === keyType);
+    const key = keys.find((key) => key?.type === keyType);
 
     return key?.value?.trim() || failResponse;
 }

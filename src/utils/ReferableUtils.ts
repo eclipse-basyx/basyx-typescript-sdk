@@ -1,14 +1,13 @@
 import {
     IReferable,
     ISubmodelElement,
+    ModelType,
     Submodel,
     SubmodelElementCollection,
     SubmodelElementList,
-    ModelType
 } from '@aas-core-works/aas-core3.0-typescript/types';
 
-export function useReferableUtils() {
-
+//export function useReferableUtils() {
     //const { uuidV4Regex } = useIDUtils();
     const uuidV4Regex = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/;
     /**
@@ -26,15 +25,14 @@ export function useReferableUtils() {
      * @param {string} [defaultNameToDisplay=''] - The default name to return if no display name is found. Defaults to an empty string.
      * @returns {string} The determined display name or an appropriate fallback value.
      */
-    function nameToDisplay(referable: IReferable, language: string = 'en', defaultNameToDisplay: string = ''): string {
+    export function nameToDisplay(referable: IReferable, language: string = 'en', defaultNameToDisplay: string = ''): string {
         if (referable && Object.keys(referable).length > 0) {
             // 1.) Check if displayName is available, if so, return displayName
             if (Array.isArray(referable.displayName) && referable.displayName.length > 0) {
                 const displayNameEn = referable.displayName.find(
-                     (d) => d.language === language && d.text?.trim() !== ''
+                    (d) => d.language === language && d.text?.trim() !== ''
                 );
-                if (displayNameEn)
-                    return displayNameEn.text;
+                if (displayNameEn) return displayNameEn.text;
             }
 
             // 2.) Otherwise return defaultNameToDisplay (if specified)
@@ -45,14 +43,11 @@ export function useReferableUtils() {
 
             // 4.) If referable is also an identifiable at the same time return id (if available and not empty string)
             if (hasId(referable) && referable.id?.trim()) {
-
-                const isSubmodelElementListChild = hasParent(referable) && 
-                referable.parent.modelType === 'SubmodelElementList';
+                const isSubmodelElementListChild =
+                    hasParent(referable) && referable.parent.modelType === 'SubmodelElementList';
                 // Note: Constraint AASd-120: idShort of submodel elements being a direct child of a SubmodelElementList shall not be specified.
                 // This condition avoids the output of an UUID v4
-                if (
-                    isSubmodelElementListChild ||
-                    uuidV4Regex.test(referable.id)) {
+                if (isSubmodelElementListChild || uuidV4Regex.test(referable.id)) {
                     return defaultNameToDisplay.trim() || '';
                 }
 
@@ -69,7 +64,7 @@ export function useReferableUtils() {
     }
 
     function hasParent(obj: any): obj is { parent: { modelType: string } } {
-         return typeof obj?.parent?.modelType === 'string';
+        return typeof obj?.parent?.modelType === 'string';
     }
 
     /**
@@ -84,7 +79,7 @@ export function useReferableUtils() {
      * @param {string} [defaultDescriptionToDisplay=''] - The default description to return if no matching description is found.
      * @returns {string} The text of the found description in the specified language or the default description if not found.
      */
-    function descriptionToDisplay(referable: IReferable, language = 'en', defaultDescriptionToDisplay = '') {
+    export function descriptionToDisplay(referable: IReferable, language = 'en', defaultDescriptionToDisplay = '') {
         if (
             referable &&
             Object.keys(referable).length > 0 &&
@@ -111,7 +106,7 @@ export function useReferableUtils() {
      * @param {boolean} [strict=false] - If true, the check will be case-sensitive.
      * @returns {boolean} Returns true if a matching `idShort` is found, false otherwise.
      */
-    function checkIdShort(
+    export function checkIdShort(
         referable: IReferable,
         idShort: string,
         startsWith: boolean = false,
@@ -164,20 +159,18 @@ export function useReferableUtils() {
      * @param {Submodel | ISubmodelElement} submodelElement - The parent SM/SME to search within.
      * @returns {ISubmodelElement | undefined} The found SME or an empty object if not found or input is invalid.
      */
-    function getSubmodelElementByIdShort(idShort: string, submodelElement: Submodel | ISubmodelElement): 
-    ISubmodelElement | undefined {
-
+    export function getSubmodelElementByIdShort(
+        idShort: string,
+        submodelElement: Submodel | ISubmodelElement
+    ): ISubmodelElement | undefined {
         if (idShort.trim() == '') return undefined;
 
         if (!submodelElement?.modelType) return undefined;
 
         switch (submodelElement.modelType()) {
-            case ModelType.Submodel:{
+            case ModelType.Submodel: {
                 const submodel = submodelElement as Submodel;
-                if (
-                    submodel.submodelElements &&
-                    submodel.submodelElements.length > 0
-                ) {
+                if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                     return submodel.submodelElements.find((sme: ISubmodelElement) => {
                         return checkIdShort(sme, idShort);
                     });
@@ -185,30 +178,23 @@ export function useReferableUtils() {
                 break;
             }
             case ModelType.SubmodelElementCollection: {
-            const collection = submodelElement as SubmodelElementCollection;
-                if (
-                    collection.value &&
-                    collection.value.length > 0
-                ) {
+                const collection = submodelElement as SubmodelElementCollection;
+                if (collection.value && collection.value.length > 0) {
                     return collection.value.find((sme: ISubmodelElement) => {
                         return checkIdShort(sme, idShort);
                     });
                 }
                 break;
-          }
-            case ModelType.SubmodelElementList:{
+            }
+            case ModelType.SubmodelElementList: {
                 const list = submodelElement as SubmodelElementList;
-                if (
-                    list.value &&
-                    list.value.length > 0
-                ) {
+                if (list.value && list.value.length > 0) {
                     return list.value.find((sme: ISubmodelElement) => {
                         return checkIdShort(sme, idShort);
                     });
                 }
                 break;
             }
-                
         }
 
         return undefined;
@@ -225,19 +211,18 @@ export function useReferableUtils() {
      * @param {Submodel | ISubmodelElement} submodelElement - The parent SM/SME to search within.
      * @returns {ISubmodelElement[]} An array of found SMEs matching the `idShort`, or an empty array if not found or input is invalid.
      */
-    function getSubmodelElementsByIdShort(idShort: string, submodelElement: Submodel | ISubmodelElement): ISubmodelElement[] {
-
+    export function getSubmodelElementsByIdShort(
+        idShort: string,
+        submodelElement: Submodel | ISubmodelElement
+    ): ISubmodelElement[] {
         if (idShort.trim() == '') return [];
 
         if (!submodelElement?.modelType) return [];
 
         switch (submodelElement.modelType()) {
-            case ModelType.Submodel:{
+            case ModelType.Submodel: {
                 const submodel = submodelElement as Submodel;
-                if (
-                    submodel.submodelElements &&
-                    submodel.submodelElements.length > 0
-                ) {
+                if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                     return submodel.submodelElements.filter((sme: ISubmodelElement) => {
                         return checkIdShort(sme, idShort);
                     });
@@ -246,38 +231,32 @@ export function useReferableUtils() {
             }
             case ModelType.SubmodelElementCollection: {
                 const collection = submodelElement as SubmodelElementCollection;
-                if (
-                    collection.value &&
-                    collection.value.length > 0
-                ) {
+                if (collection.value && collection.value.length > 0) {
                     return collection.value.filter((sme: ISubmodelElement) => {
                         return checkIdShort(sme, idShort);
                     });
                 }
                 break;
-             }
-            case ModelType.SubmodelElementList:{
+            }
+            case ModelType.SubmodelElementList: {
                 const list = submodelElement as SubmodelElementList;
-                if (
-                    list.value &&
-                    list.value.length > 0
-                ) {
+                if (list.value && list.value.length > 0) {
                     return list.value.filter((sme: ISubmodelElement) => {
                         return checkIdShort(sme, idShort);
                     });
                 }
                 break;
-             }
+            }
         }
 
         return [];
     }
 
-    return {
-        nameToDisplay,
-        descriptionToDisplay,
-        checkIdShort,
-        getSubmodelElementByIdShort,
-        getSubmodelElementsByIdShort,
-    };
-}
+    // return {
+    //     nameToDisplay,
+    //     descriptionToDisplay,
+    //     checkIdShort,
+    //     getSubmodelElementByIdShort,
+    //     getSubmodelElementsByIdShort,
+    // };
+//}

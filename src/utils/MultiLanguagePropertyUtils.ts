@@ -1,7 +1,4 @@
-import {
-    MultiLanguageProperty,
-    isMultiLanguageProperty,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import { isMultiLanguageProperty, MultiLanguageProperty } from '@aas-core-works/aas-core3.0-typescript/types';
 
 /**
  * Checks whether the given multi-language property object has a non-empty value.
@@ -10,13 +7,11 @@ import {
  * @returns {boolean} True if the multiLanguageProperty has a non-empty value, otherwise false.
  */
 export function hasValue(multiLanguageProperty: MultiLanguageProperty): boolean {
-
     if (!isMultiLanguageProperty(multiLanguageProperty) || !multiLanguageProperty?.value?.length) {
         return false;
     }
 
-    return multiLanguageProperty.value.some(langStringSet => 
-        langStringSet?.text?.trim() !== '');
+    return multiLanguageProperty.value.some((langStringSet) => langStringSet?.text?.trim() !== '');
 }
 
 /**

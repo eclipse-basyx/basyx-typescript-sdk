@@ -1,6 +1,4 @@
-import {
-    KeyTypes,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+import { KeyTypes } from '@aas-core-works/aas-core3.0-typescript/types';
 /**
  * @constant {Array<Object>} keyTypes
  * @description Enumeration of Key Types as specified in IDTA 01001-3-0-1, page 82.

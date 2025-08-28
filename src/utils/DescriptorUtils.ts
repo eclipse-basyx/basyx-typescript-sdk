@@ -1,6 +1,4 @@
-import { AssetAdministrationShellDescriptor, 
-    SubmodelDescriptor, } 
-    from '../models/Descriptors';
+import { AssetAdministrationShellDescriptor, SubmodelDescriptor } from '../models/Descriptors';
 /**
  * Extracts the endpoint from a descriptor based on the given interface short name.
  *
@@ -8,7 +6,10 @@ import { AssetAdministrationShellDescriptor,
  * @param {string} interfaceShortName - The short name of the interface to match against endpoint interfaces.
  * @returns {string} The href of the matching endpoint's protocol information if found, otherwise an empty string.
  */
-export function extractEndpointHref(descriptor: AssetAdministrationShellDescriptor | SubmodelDescriptor, interfaceShortName: string): string {
+export function extractEndpointHref(
+    descriptor: AssetAdministrationShellDescriptor | SubmodelDescriptor,
+    interfaceShortName: string
+): string {
     const failResponse = '';
 
     const interfaceShortNames = [
@@ -41,7 +42,7 @@ export function extractEndpointHref(descriptor: AssetAdministrationShellDescript
     const endpoints = descriptor.endpoints;
 
     // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
-    const endpoint = endpoints.find(endpoint => endpoint?._interface === interfaceShortName);
+    const endpoint = endpoints.find((endpoint) => endpoint?._interface === interfaceShortName);
 
     return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
 }
