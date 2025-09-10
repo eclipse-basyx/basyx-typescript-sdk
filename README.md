@@ -45,11 +45,11 @@ yarn add @aas-core-works/aas-core3.0-typescript
 ## Usage
 
 ```typescript
-import { AasRepositoryClient, Configuration } from 'basyx-typescript-sdk';
+import { AasRepositoryClient, AasRepositoryService } from 'basyx-typescript-sdk';
 
 async function getAllShells() {
     const client = new AasRepositoryClient();
-    const configuration = new Configuration({
+    const configuration = new AasRepositoryService.Configuration({
         basePath: 'http://localhost:8081',
     });
 
