@@ -1,6 +1,6 @@
 {
   "name": "basyx-typescript-sdk",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)",
   "type": "module",
   "main": "bundle/index.js",
