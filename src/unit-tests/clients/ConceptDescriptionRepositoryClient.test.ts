@@ -1,6 +1,7 @@
 import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
 import { ConceptDescriptionRepositoryClient } from '../../clients/ConceptDescriptionRepositoryClient';
 import { ConceptDescriptionRepositoryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertConceptDescriptionTypes';
 import { handleApiError } from '../../lib/errorHandler';
@@ -44,7 +45,7 @@ const API_CD2: ConceptDescriptionRepositoryService.ConceptDescription = {
 };
 const CORE_CD1: CoreConceptDescription = new CoreConceptDescription('https://example.com/ids/cd/1234');
 const CORE_CD2: CoreConceptDescription = new CoreConceptDescription('https://example.com/ids/cd/5678');
-const TEST_CONFIGURATION = new ConceptDescriptionRepositoryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8083',
     fetchApi: globalThis.fetch,
 });

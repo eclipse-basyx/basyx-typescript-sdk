@@ -1,6 +1,7 @@
 // Import necessary types
 import { SubmodelRegistryClient } from '../../clients/SubmodelRegistryClient';
 import { SubmodelRegistryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiSubmodelDescriptorToCoreSubmodelDescriptor,
@@ -74,7 +75,7 @@ const CORE_SUBMODEL_DESCRIPTOR2: CoreSubmodelDescriptor = new CoreSubmodelDescri
         },
     ]
 );
-const TEST_CONFIGURATION = new SubmodelRegistryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8085',
     fetchApi: globalThis.fetch,
 });

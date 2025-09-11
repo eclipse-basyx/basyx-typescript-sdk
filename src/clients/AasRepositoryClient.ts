@@ -8,6 +8,7 @@ import type {
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasRepositoryService } from '../generated';
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -40,7 +41,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetAdministrationShells(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         assetIds?: AssetId[];
         idShort?: string;
         limit?: number;
@@ -90,7 +91,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAssetAdministrationShell(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         assetAdministrationShell: AssetAdministrationShell;
     }): Promise<ApiResult<AssetAdministrationShell, AasRepositoryService.Result>> {
         const { configuration, assetAdministrationShell } = options;
@@ -121,7 +122,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellById(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -154,7 +155,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetAdministrationShellById(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<AssetAdministrationShell, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -188,7 +189,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetAdministrationShellById(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
     }): Promise<ApiResult<AssetAdministrationShell | void, AasRepositoryService.Result>> {
@@ -223,7 +224,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetInformation(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<AssetInformation, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -260,7 +261,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetInformation(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
@@ -295,7 +296,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteThumbnail(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -327,7 +328,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getThumbnail(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -362,7 +363,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putThumbnail(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         fileName: string;
         file: Blob;
@@ -401,7 +402,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelReferences(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
@@ -451,7 +452,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelReference(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
     }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
@@ -487,7 +488,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelReferenceById(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
@@ -526,7 +527,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         level?: AasRepositoryService.GetSubmodelByIdAasRepositoryLevelEnum;
@@ -568,7 +569,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putSubmodelByIdAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         submodel: Submodel;
@@ -607,7 +608,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelByIdAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
@@ -646,7 +647,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         submodel: Submodel;
@@ -687,7 +688,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdMetadataAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
     }): Promise<ApiResult<AasRepositoryService.SubmodelMetadata, AasRepositoryService.Result>> {
@@ -725,7 +726,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelByIdMetadataAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         submodelMetadata: AasRepositoryService.SubmodelMetadata;
@@ -766,7 +767,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         level?: AasRepositoryService.GetSubmodelByIdValueOnlyAasRepositoryLevelEnum;
@@ -808,7 +809,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelByIdValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         body: object;
@@ -849,7 +850,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdReferenceAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
     }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
@@ -887,7 +888,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         level?: AasRepositoryService.GetSubmodelByIdPathAasRepositoryLevelEnum;
@@ -930,7 +931,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
@@ -988,7 +989,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelElementAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         submodelElement: ISubmodelElement;
@@ -1029,7 +1030,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsMetadataAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
@@ -1086,7 +1087,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
@@ -1145,7 +1146,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsReferenceAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
@@ -1204,7 +1205,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
@@ -1265,7 +1266,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1310,7 +1311,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelElementByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1352,7 +1353,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelElementByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1393,7 +1394,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putSubmodelElementByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1437,7 +1438,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementValueByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1481,7 +1482,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathMetadataAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1522,7 +1523,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementValueByPathMetadata(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1566,7 +1567,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1612,7 +1613,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementValueByPathValueOnly(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1657,7 +1658,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathReferenceAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1700,7 +1701,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1742,7 +1743,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getFileByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1784,7 +1785,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putFileByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1828,7 +1829,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteFileByPathAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1869,7 +1870,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async invokeOperationAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1912,7 +1913,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async invokeOperationValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1955,7 +1956,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async invokeOperationAsyncAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -1998,7 +1999,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async invokeOperationAsyncValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -2041,7 +2042,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getOperationAsyncStatusAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -2085,7 +2086,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getOperationAsyncResultAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -2129,7 +2130,7 @@ export class AasRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getOperationAsyncResultValueOnlyAasRepository(options: {
-        configuration: AasRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;

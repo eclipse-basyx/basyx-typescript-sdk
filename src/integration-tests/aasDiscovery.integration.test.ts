@@ -1,5 +1,5 @@
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
-import { AasDiscoveryService } from '../generated';
+import { Configuration } from '../generated';
 import {
     createTestShell,
     createTestSpecificAssetId1,
@@ -11,7 +11,7 @@ describe('AAS Discovery Integration Tests', () => {
     const testShell = createTestShell();
     const testSpecificAssetId1 = createTestSpecificAssetId1();
     const testSpecificAssetId2 = createTestSpecificAssetId2();
-    const configuration = new AasDiscoveryService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8086',
     });
 

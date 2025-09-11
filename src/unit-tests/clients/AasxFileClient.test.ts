@@ -6,6 +6,7 @@ import {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasxFileClient } from '../../clients/AasxFileClient';
 import { AasxFileService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import { handleApiError } from '../../lib/errorHandler';
 
@@ -30,7 +31,7 @@ const API_PACKAGEDESCRIPTION2: AasxFileService.PackageDescription = {
     aasIds: ['https://example.com/ids/aas/7600_5912_3951_6919', 'https://example.com/ids/aas/7600_5912_3951_6916'],
     packageId: 'aasx-package-02',
 };
-const TEST_CONFIGURATION = new AasxFileService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8087',
     fetchApi: globalThis.fetch,
 });

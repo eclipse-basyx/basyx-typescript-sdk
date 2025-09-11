@@ -2,6 +2,7 @@
 //import { AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
 import { AasRegistryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasDescriptorToCoreAasDescriptor,
@@ -99,7 +100,7 @@ const CORE_SUBMODEL_DESCRIPTOR2: CoreSubmodelDescriptor = new CoreSubmodelDescri
         },
     ]
 );
-const TEST_CONFIGURATION = new AasRegistryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8084',
     fetchApi: globalThis.fetch,
 });

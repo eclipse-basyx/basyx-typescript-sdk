@@ -8,6 +8,7 @@ import {
     SubmodelRegistryService,
     SubmodelRepositoryService,
 } from '../generated';
+import { FetchError, RequiredError, ResponseError } from '../generated/runtime';
 /**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.
@@ -51,30 +52,14 @@ export async function handleApiError(
         };
 
         // Handle different error types
-        if (
-            err instanceof AasRepositoryService.RequiredError ||
-            err instanceof SubmodelRepositoryService.RequiredError ||
-            err instanceof ConceptDescriptionRepositoryService.RequiredError ||
-            err instanceof AasRegistryService.RequiredError ||
-            err instanceof SubmodelRegistryService.RequiredError ||
-            err instanceof AasDiscoveryService.RequiredError ||
-            err instanceof AasxFileService.RequiredError
-        ) {
+        if (err instanceof RequiredError) {
             message = {
                 code: '400',
                 messageType: 'Exception',
                 text: err.message || `Required parameter missing: ${err.field}`,
                 timestamp: timestamp,
             };
-        } else if (
-            err instanceof AasRepositoryService.ResponseError ||
-            err instanceof SubmodelRepositoryService.ResponseError ||
-            err instanceof ConceptDescriptionRepositoryService.ResponseError ||
-            err instanceof AasRegistryService.ResponseError ||
-            err instanceof SubmodelRegistryService.ResponseError ||
-            err instanceof AasDiscoveryService.ResponseError ||
-            err instanceof AasxFileService.ResponseError
-        ) {
+        } else if (err instanceof ResponseError) {
             // Try to parse response body for messages
             const responseBody = err.response;
 
@@ -102,15 +87,7 @@ export async function handleApiError(
                     timestamp: timestamp,
                 };
             }
-        } else if (
-            err instanceof AasRepositoryService.FetchError ||
-            err instanceof SubmodelRepositoryService.FetchError ||
-            err instanceof ConceptDescriptionRepositoryService.FetchError ||
-            err instanceof AasRegistryService.FetchError ||
-            err instanceof SubmodelRegistryService.FetchError ||
-            err instanceof AasDiscoveryService.FetchError ||
-            err instanceof AasxFileService.FetchError
-        ) {
+        } else if (err instanceof FetchError) {
             message = {
                 code: '0',
                 messageType: 'Exception',

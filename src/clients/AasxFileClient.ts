@@ -1,5 +1,6 @@
 import type { ApiResult } from '../models/api';
 import { AasxFileService } from '../generated';
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { handleApiError } from '../lib/errorHandler';
@@ -14,7 +15,7 @@ export class AasxFileClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllAASXPackageIds(options: { configuration: AasxFileService.Configuration; aasId?: string }): Promise<
+    async getAllAASXPackageIds(options: { configuration: Configuration; aasId?: string }): Promise<
         ApiResult<
             {
                 result: AasxFileService.PackageDescription[];
@@ -56,7 +57,7 @@ export class AasxFileClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAASXPackage(options: {
-        configuration: AasxFileService.Configuration;
+        configuration: Configuration;
         aasIds?: string[];
         file: Blob;
         fileName: string;
@@ -93,7 +94,7 @@ export class AasxFileClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAASXByPackageId(options: {
-        configuration: AasxFileService.Configuration;
+        configuration: Configuration;
         packageId: string;
     }): Promise<ApiResult<Blob, AasxFileService.Result>> {
         const { configuration, packageId } = options;
@@ -128,7 +129,7 @@ export class AasxFileClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAASXByPackageId(options: {
-        configuration: AasxFileService.Configuration;
+        configuration: Configuration;
         packageId: string;
         aasIds?: string[];
         file: Blob;
@@ -166,7 +167,7 @@ export class AasxFileClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAASXByPackageId(options: {
-        configuration: AasxFileService.Configuration;
+        configuration: Configuration;
         packageId: string;
     }): Promise<ApiResult<void, AasxFileService.Result>> {
         const { configuration, packageId } = options;

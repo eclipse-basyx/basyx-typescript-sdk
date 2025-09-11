@@ -14,6 +14,7 @@ import {
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
 import { ModelType } from '../../generated/AasRepositoryService';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import { convertApiReferenceToCoreReference, convertCoreReferenceToApiReference } from '../../lib/convertAasTypes';
 import {
@@ -218,7 +219,7 @@ const LEVEL_SUBMODELELEMENT_VALUE_BY_PATH_VALUEONLY =
 const LEVEL_SUBMODELELEMENT_BY_PATH_REFERENCE =
     AasRepositoryService.GetSubmodelElementByPathReferenceAasRepositoryLevelEnum.Core;
 const LEVEL_SUBMODELELEMENT_BY_PATH_PATH = AasRepositoryService.GetSubmodelElementByPathPathAasRepositoryLevelEnum.Core;
-const TEST_CONFIGURATION = new AasRepositoryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
 });

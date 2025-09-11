@@ -11,6 +11,7 @@ import {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -86,7 +87,7 @@ const CORE_REFERENCE2: CoreReference = new CoreReference(ReferenceTypes.External
 ]);
 const fileName = 'thumbnail.png';
 const submodelId = 'https://example.com/ids/submodel/7600_5912_3951_6917';
-const TEST_CONFIGURATION = new AasRepositoryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
 });

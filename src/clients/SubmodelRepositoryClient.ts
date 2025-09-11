@@ -1,6 +1,7 @@
 import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import { SubmodelRepositoryService } from '../generated'; // Updated import
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -28,7 +29,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodels(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         semanticId?: string;
         idShort?: string;
         limit?: number;
@@ -81,7 +82,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodel(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodel: Submodel;
     }): Promise<ApiResult<Submodel, SubmodelRepositoryService.Result>> {
         const { configuration, submodel } = options;
@@ -110,7 +111,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelById(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier } = options;
@@ -143,7 +144,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelById(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         level?: SubmodelRepositoryService.GetSubmodelByIdLevelEnum;
         extent?: SubmodelRepositoryService.GetSubmodelByIdExtentEnum;
@@ -179,7 +180,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putSubmodelById(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         submodel: Submodel;
     }): Promise<ApiResult<Submodel | void, SubmodelRepositoryService.Result>> {
@@ -216,7 +217,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElements(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
@@ -268,7 +269,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelElement(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         submodelElement: ISubmodelElement;
     }): Promise<ApiResult<ISubmodelElement, SubmodelRepositoryService.Result>> {
@@ -304,7 +305,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPath(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         level?: SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoLevelEnum;
@@ -343,7 +344,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelElementByPath(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         submodelElement: ISubmodelElement;
@@ -379,7 +380,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelElementByPath(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
@@ -415,7 +416,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putSubmodelElementByPath(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         submodelElement: ISubmodelElement;
@@ -452,7 +453,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdMetadata(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
     }): Promise<ApiResult<SubmodelRepositoryService.SubmodelMetadata, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier } = options;
@@ -485,7 +486,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdValueOnly(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         level?: SubmodelRepositoryService.GetSubmodelByIdValueOnlyLevelEnum;
         extent?: SubmodelRepositoryService.GetSubmodelByIdValueOnlyExtentEnum;
@@ -521,7 +522,7 @@ export class SubmodelRepositoryClient {
     //  * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
     //  */
     async patchSubmodelByIdValueOnly(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         body: object;
         level?: SubmodelRepositoryService.PatchSubmodelByIdValueOnlyLevelEnum;
@@ -559,7 +560,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathValueOnly(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         level?: SubmodelRepositoryService.GetSubmodelElementByPathValueOnlySubmodelRepoLevelEnum;
@@ -599,7 +600,7 @@ export class SubmodelRepositoryClient {
     //  * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
     //  */
     async patchSubmodelElementByPathValueOnly(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         submodelElementValue: SubmodelRepositoryService.SubmodelElementValue;
@@ -639,7 +640,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postInvokeOperationSubmodelRepo(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
@@ -679,7 +680,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postInvokeOperationValueOnly(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
@@ -719,7 +720,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postInvokeOperationAsync(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
@@ -757,7 +758,7 @@ export class SubmodelRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postInvokeOperationAsyncValueOnly(options: {
-        configuration: SubmodelRepositoryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;

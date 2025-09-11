@@ -1,12 +1,12 @@
 import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptionRepositoryClient';
 //import { Configuration } from '../generated';
-import { ConceptDescriptionRepositoryService } from '../generated';
+import { Configuration } from '../generated';
 import { createDescription, createTestCD } from './fixtures/conceptDescriptionFixtures';
 
 describe('Concept Description Repository Integration Tests', () => {
     const client = new ConceptDescriptionRepositoryClient();
     const testCD = createTestCD();
-    const configuration = new ConceptDescriptionRepositoryService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8083',
     });
 

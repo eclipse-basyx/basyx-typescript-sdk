@@ -9,6 +9,7 @@ import {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
 import { SubmodelRepositoryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { ModelType } from '../../generated/SubmodelRepositoryService';
 import { base64Encode } from '../../lib/base64Url';
 import {
@@ -153,7 +154,7 @@ const OPERATION_RESULT_VALUEONLY: SubmodelRepositoryService.OperationResultValue
         status: 'ok',
     },
 };
-const TEST_CONFIGURATION = new SubmodelRepositoryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8082',
     fetchApi: globalThis.fetch,
 });
