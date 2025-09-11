@@ -1,6 +1,7 @@
 // Import necessary types
 import { SubmodelRegistryClient } from '../../clients/SubmodelRegistryClient';
 import { SubmodelRegistryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiSubmodelDescriptorToCoreSubmodelDescriptor,
@@ -74,12 +75,19 @@ const CORE_SUBMODEL_DESCRIPTOR2: CoreSubmodelDescriptor = new CoreSubmodelDescri
         },
     ]
 );
-const TEST_CONFIGURATION = new SubmodelRegistryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8085',
     fetchApi: globalThis.fetch,
 });
 
 describe('SubmodelRegistryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8085',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for SubmodelRegistryAPIApi
     const mockApiInstance = {
         getAllSubmodelDescriptors: jest.fn(),
@@ -159,7 +167,7 @@ describe('SubmodelRegistryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllSubmodelDescriptors).toHaveBeenCalledWith({
             limit: LIMIT,
             cursor: CURSOR,
@@ -215,7 +223,7 @@ describe('SubmodelRegistryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.postSubmodelDescriptor).toHaveBeenCalledWith({
             submodelDescriptor: API_SUBMODEL_DESCRIPTOR1,
         });
@@ -270,7 +278,7 @@ describe('SubmodelRegistryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.deleteSubmodelDescriptorById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
@@ -321,7 +329,7 @@ describe('SubmodelRegistryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.getSubmodelDescriptorById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
@@ -377,7 +385,7 @@ describe('SubmodelRegistryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.putSubmodelDescriptorById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
@@ -401,7 +409,7 @@ describe('SubmodelRegistryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.putSubmodelDescriptorById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,

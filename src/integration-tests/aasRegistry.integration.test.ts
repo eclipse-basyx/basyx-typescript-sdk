@@ -1,5 +1,5 @@
 import { AasRegistryClient } from '../clients/AasRegistryClient';
-import { AasRegistryService } from '../generated';
+import { Configuration } from '../generated';
 import {
     createDescription,
     createDisplayName,
@@ -11,7 +11,7 @@ describe('AAS Registry Integration Tests', () => {
     const client = new AasRegistryClient();
     const testShellDescriptor = createTestShellDescriptor();
     const testSubmodelDescriptor = createTestSubmodelDescriptor();
-    const configuration = new AasRegistryService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8084',
     });
 

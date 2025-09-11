@@ -11,6 +11,7 @@ import {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasToCoreAas,
@@ -86,12 +87,19 @@ const CORE_REFERENCE2: CoreReference = new CoreReference(ReferenceTypes.External
 ]);
 const fileName = 'thumbnail.png';
 const submodelId = 'https://example.com/ids/submodel/7600_5912_3951_6917';
-const TEST_CONFIGURATION = new AasRepositoryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
 });
 
 describe('AasRepositoryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8081',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for AssetAdministrationShellRepositoryAPIApi
     const mockApiInstance = {
         getAllAssetAdministrationShells: jest.fn(),
@@ -194,7 +202,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllAssetAdministrationShells).toHaveBeenCalledWith({
             assetIds: ASSET_IDS.map((id) => base64Encode(JSON.stringify(id))),
             idShort: ID_SHORT,
@@ -252,7 +260,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.postAssetAdministrationShell).toHaveBeenCalledWith({
             assetAdministrationShell: API_AAS1,
         });
@@ -307,7 +315,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.deleteAssetAdministrationShellById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -358,7 +366,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.getAssetAdministrationShellById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -414,7 +422,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.putAssetAdministrationShellById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -438,7 +446,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.putAssetAdministrationShellById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -496,7 +504,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.getAssetInformationAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -552,7 +560,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.putAssetInformationAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -606,7 +614,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.deleteThumbnailAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -657,7 +665,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.getThumbnailAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -713,7 +721,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.putThumbnailAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -776,7 +784,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.getAllSubmodelReferencesAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -837,7 +845,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(mockApiInstance.postSubmodelReferenceAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
@@ -896,7 +904,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(submodelId);
         expect(mockApiInstance.deleteSubmodelReferenceAasRepository).toHaveBeenCalledWith({

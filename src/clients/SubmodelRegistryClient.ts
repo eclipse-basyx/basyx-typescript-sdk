@@ -1,5 +1,6 @@
 import type { ApiResult } from '../models/api';
 import { SubmodelRegistryService } from '../generated';
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -21,7 +22,7 @@ export class SubmodelRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelDescriptors(options: {
-        configuration: SubmodelRegistryService.Configuration;
+        configuration: Configuration;
         limit?: number;
         cursor?: string;
     }): Promise<
@@ -64,7 +65,7 @@ export class SubmodelRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelDescriptor(options: {
-        configuration: SubmodelRegistryService.Configuration;
+        configuration: Configuration;
         submodelDescriptor: SubmodelDescriptor;
     }): Promise<ApiResult<SubmodelDescriptor, SubmodelRegistryService.Result>> {
         const { configuration, submodelDescriptor } = options;
@@ -93,7 +94,7 @@ export class SubmodelRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelDescriptorById(options: {
-        configuration: SubmodelRegistryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
     }): Promise<ApiResult<void, SubmodelRegistryService.Result>> {
         const { configuration, submodelIdentifier } = options;
@@ -124,7 +125,7 @@ export class SubmodelRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelDescriptorById(options: {
-        configuration: SubmodelRegistryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
     }): Promise<ApiResult<SubmodelDescriptor, SubmodelRegistryService.Result>> {
         const { configuration, submodelIdentifier } = options;
@@ -156,7 +157,7 @@ export class SubmodelRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putSubmodelDescriptorById(options: {
-        configuration: SubmodelRegistryService.Configuration;
+        configuration: Configuration;
         submodelIdentifier: string;
         submodelDescriptor: SubmodelDescriptor;
     }): Promise<ApiResult<SubmodelDescriptor | void, SubmodelRegistryService.Result>> {

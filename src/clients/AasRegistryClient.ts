@@ -1,6 +1,7 @@
 //import type { AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import { AasRegistryService } from '../generated';
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -26,7 +27,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetAdministrationShellDescriptors(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         limit?: number;
         cursor?: string;
         assetKind?: AasRegistryService.AssetKind;
@@ -76,7 +77,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAssetAdministrationShellDescriptor(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         assetAdministrationShellDescriptor: AssetAdministrationShellDescriptor;
     }): Promise<ApiResult<AssetAdministrationShellDescriptor, AasRegistryService.Result>> {
         const { configuration, assetAdministrationShellDescriptor } = options;
@@ -109,7 +110,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellDescriptorById(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<void, AasRegistryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -142,7 +143,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAssetAdministrationShellDescriptorById(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<AssetAdministrationShellDescriptor, AasRegistryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -176,7 +177,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putAssetAdministrationShellDescriptorById(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         assetAdministrationShellDescriptor: AssetAdministrationShellDescriptor;
     }): Promise<ApiResult<AssetAdministrationShellDescriptor | void, AasRegistryService.Result>> {
@@ -215,7 +216,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelDescriptorsThroughSuperpath(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
@@ -264,7 +265,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postSubmodelDescriptorThroughSuperpath(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelDescriptor: SubmodelDescriptor;
     }): Promise<ApiResult<SubmodelDescriptor, AasRegistryService.Result>> {
@@ -301,7 +302,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelDescriptorByIdThroughSuperpath(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
     }): Promise<ApiResult<SubmodelDescriptor, AasRegistryService.Result>> {
@@ -338,7 +339,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelDescriptorByIdThroughSuperpath(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
     }): Promise<ApiResult<void, AasRegistryService.Result>> {
@@ -376,7 +377,7 @@ export class AasRegistryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putSubmodelDescriptorByIdThroughSuperpath(options: {
-        configuration: AasRegistryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         submodelDescriptor: SubmodelDescriptor;

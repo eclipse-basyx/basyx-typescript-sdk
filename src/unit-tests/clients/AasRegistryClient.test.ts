@@ -2,6 +2,7 @@
 //import { AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
 import { AasRegistryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import {
     convertApiAasDescriptorToCoreAasDescriptor,
@@ -99,12 +100,19 @@ const CORE_SUBMODEL_DESCRIPTOR2: CoreSubmodelDescriptor = new CoreSubmodelDescri
         },
     ]
 );
-const TEST_CONFIGURATION = new AasRegistryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8084',
     fetchApi: globalThis.fetch,
 });
 
 describe('AasRegistryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8084',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for AssetAdministrationShellRegistryAPIApi
     const mockApiInstance = {
         getAllAssetAdministrationShellDescriptors: jest.fn(),
@@ -201,7 +209,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllAssetAdministrationShellDescriptors).toHaveBeenCalledWith({
             limit: LIMIT,
             cursor: CURSOR,
@@ -261,7 +269,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.postAssetAdministrationShellDescriptor).toHaveBeenCalledWith({
             assetAdministrationShellDescriptor: API_AAS_DESCRIPTOR1,
         });
@@ -318,7 +326,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(mockApiInstance.deleteAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
@@ -371,7 +379,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(mockApiInstance.getAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
@@ -429,7 +437,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(mockApiInstance.putAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
@@ -453,7 +461,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(mockApiInstance.putAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
@@ -520,7 +528,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(mockApiInstance.getAllSubmodelDescriptorsThroughSuperpath).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
@@ -582,7 +590,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(mockApiInstance.postSubmodelDescriptorThroughSuperpath).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
@@ -643,7 +651,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.getSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
@@ -704,7 +712,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
@@ -762,7 +770,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
@@ -789,7 +797,7 @@ describe('AasRegistryClient', () => {
         });
 
         // Assert
-        expect(MockAasRegistry).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
         expect(mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({

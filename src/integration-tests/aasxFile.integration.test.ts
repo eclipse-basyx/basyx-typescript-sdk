@@ -1,5 +1,5 @@
 import { AasxFileClient } from '../clients/AasxFileClient';
-import { AasxFileService } from '../generated';
+import { Configuration } from '../generated';
 //import { createTestShell } from './fixtures/aasxFileFixtures';
 //import fs from 'fs';
 
@@ -14,7 +14,7 @@ describe('AASX File Server Integration Tests', () => {
     // //const packageId = 'aasx-package-01';
     // let createdPackageId: string;
 
-    const configuration = new AasxFileService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8087',
     });
 

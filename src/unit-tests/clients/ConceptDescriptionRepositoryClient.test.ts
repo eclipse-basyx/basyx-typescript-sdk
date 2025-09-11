@@ -1,6 +1,7 @@
 import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
 import { ConceptDescriptionRepositoryClient } from '../../clients/ConceptDescriptionRepositoryClient';
 import { ConceptDescriptionRepositoryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertConceptDescriptionTypes';
 import { handleApiError } from '../../lib/errorHandler';
@@ -44,12 +45,19 @@ const API_CD2: ConceptDescriptionRepositoryService.ConceptDescription = {
 };
 const CORE_CD1: CoreConceptDescription = new CoreConceptDescription('https://example.com/ids/cd/1234');
 const CORE_CD2: CoreConceptDescription = new CoreConceptDescription('https://example.com/ids/cd/5678');
-const TEST_CONFIGURATION = new ConceptDescriptionRepositoryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8083',
     fetchApi: globalThis.fetch,
 });
 
 describe('ConceptDescriptionRepositoryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8083',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for ConceptDescriptionRepositoryAPIApi
     const mockApiInstance = {
         getAllConceptDescriptions: jest.fn(),
@@ -133,7 +141,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllConceptDescriptions).toHaveBeenCalledWith({
             idShort: ID_SHORT,
             isCaseOf: `encoded_${JSON.stringify(IS_CASE_OF)}`,
@@ -192,7 +200,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.postConceptDescription).toHaveBeenCalledWith({
             conceptDescription: API_CD1,
         });
@@ -247,7 +255,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
         expect(mockApiInstance.deleteConceptDescriptionById).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
@@ -298,7 +306,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
         expect(mockApiInstance.getConceptDescriptionById).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
@@ -354,7 +362,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
         expect(mockApiInstance.putConceptDescriptionById).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
@@ -378,7 +386,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockCDRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
         expect(mockApiInstance.putConceptDescriptionById).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,

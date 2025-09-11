@@ -1,12 +1,12 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 //import { Configuration } from '../generated';
-import { AasRepositoryService } from '../generated';
+import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 
 describe('AAS Repository Integration Tests', () => {
     const client = new AasRepositoryClient();
     const testShell = createTestShell();
-    const configuration = new AasRepositoryService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8081',
     });
 

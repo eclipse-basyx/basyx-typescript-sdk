@@ -1,6 +1,7 @@
 import type { ConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
 import { ConceptDescriptionRepositoryService } from '../generated'; // Updated import
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../lib/convertConceptDescriptionTypes';
@@ -17,7 +18,7 @@ export class ConceptDescriptionRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getConceptDescriptionById(options: {
-        configuration: ConceptDescriptionRepositoryService.Configuration;
+        configuration: Configuration;
         cdIdentifier: string;
     }): Promise<ApiResult<ConceptDescription, ConceptDescriptionRepositoryService.Result>> {
         const { configuration, cdIdentifier } = options;
@@ -50,7 +51,7 @@ export class ConceptDescriptionRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteConceptDescriptionById(options: {
-        configuration: ConceptDescriptionRepositoryService.Configuration;
+        configuration: Configuration;
         cdIdentifier: string;
     }): Promise<ApiResult<void, ConceptDescriptionRepositoryService.Result>> {
         const { configuration, cdIdentifier } = options;
@@ -84,7 +85,7 @@ export class ConceptDescriptionRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putConceptDescriptionById(options: {
-        configuration: ConceptDescriptionRepositoryService.Configuration;
+        configuration: Configuration;
         cdIdentifier: string;
         conceptDescription: ConceptDescription;
     }): Promise<ApiResult<ConceptDescription | void, ConceptDescriptionRepositoryService.Result>> {
@@ -123,7 +124,7 @@ export class ConceptDescriptionRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllConceptDescriptions(options: {
-        configuration: ConceptDescriptionRepositoryService.Configuration;
+        configuration: Configuration;
         idShort?: string;
         isCaseOf?: string;
         dataSpecificationRef?: string;
@@ -178,7 +179,7 @@ export class ConceptDescriptionRepositoryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postConceptDescription(options: {
-        configuration: ConceptDescriptionRepositoryService.Configuration;
+        configuration: Configuration;
         conceptDescription: ConceptDescription;
     }): Promise<ApiResult<ConceptDescription, ConceptDescriptionRepositoryService.Result>> {
         const { configuration, conceptDescription } = options;

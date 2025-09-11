@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * DotAAS Part 2 | HTTP/REST | Submodel Repository Service Specification
- * The entire Submodel Repository Service Specification as part of the [Specification of the Asset Administration Shell: Part 2](https://industrialdigitaltwin.org/en/content-hub/aasspecifications).   Copyright: Industrial Digital Twin Association (IDTA) 2025
+ * DotAAS Part 2 | HTTP/REST | Runtime Configuration
+ * The entire Full Profile of the Runtime Configuration as part of the [Specification of the Asset Administration Shell - Part 2: API](https://industrialdigitaltwin.org/en/content-hub/aasspecifications).   Copyright: Industrial Digital Twin Association (IDTA) 2025
  *
  * The version of the OpenAPI document: V3.1.0_SSP-001
  * Contact: info@idtwin.org

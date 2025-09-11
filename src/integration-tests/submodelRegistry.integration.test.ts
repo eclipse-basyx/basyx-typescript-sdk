@@ -1,11 +1,11 @@
 import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
-import { SubmodelRegistryService } from '../generated';
+import { Configuration } from '../generated';
 import { createDisplayName, createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
 
 describe('Submodel Registry Integration Tests', () => {
     const client = new SubmodelRegistryClient();
     const testSubmodelDescriptor = createTestSubmodelDescriptor();
-    const configuration = new SubmodelRegistryService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8085',
     });
 

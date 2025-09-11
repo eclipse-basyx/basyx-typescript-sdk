@@ -2,6 +2,7 @@ import type { SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/typ
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasDiscoveryService } from '../generated';
+import { Configuration } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../lib/convertAasDiscoveryTypes';
@@ -20,7 +21,7 @@ export class AasDiscoveryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetAdministrationShellIdsByAssetLink(options: {
-        configuration: AasDiscoveryService.Configuration;
+        configuration: Configuration;
         assetIds?: AssetId[];
         limit?: number;
         cursor?: string;
@@ -70,7 +71,7 @@ export class AasDiscoveryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async postAllAssetLinksById(options: {
-        configuration: AasDiscoveryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
         specificAssetId: Array<SpecificAssetId>;
     }): Promise<ApiResult<Array<SpecificAssetId>, AasDiscoveryService.Result>> {
@@ -105,7 +106,7 @@ export class AasDiscoveryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAllAssetLinksById(options: {
-        configuration: AasDiscoveryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<void, AasDiscoveryService.Result>> {
         const { configuration, aasIdentifier } = options;
@@ -138,7 +139,7 @@ export class AasDiscoveryClient {
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllAssetLinksById(options: {
-        configuration: AasDiscoveryService.Configuration;
+        configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<Array<SpecificAssetId>, AasDiscoveryService.Result>> {
         const { configuration, aasIdentifier } = options;

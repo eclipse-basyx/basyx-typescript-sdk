@@ -7,6 +7,7 @@ import {
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasDiscoveryService } from '../../generated';
+import { Configuration } from '../../generated/runtime';
 import { base64Encode } from '../../lib/base64Url';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../../lib/convertAasDiscoveryTypes';
 import { handleApiError } from '../../lib/errorHandler';
@@ -51,12 +52,19 @@ const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
     'https://example.com/ids/aas/7600_5912_3951_6917',
     new CoreAssetInformation(AssetKind.Instance)
 );
-const TEST_CONFIGURATION = new AasDiscoveryService.Configuration({
+const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8086',
     fetchApi: globalThis.fetch,
 });
 
 describe('AasDiscoveryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8086',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for AssetAdministrationShellBasicDiscoveryAPIApi
     const mockApiInstance = {
         getAllAssetAdministrationShellIdsByAssetLink: jest.fn(),
@@ -137,7 +145,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink).toHaveBeenCalledWith({
             assetIds: ASSET_IDS.map((id) => base64Encode(JSON.stringify(id))),
             limit: LIMIT,
@@ -197,7 +205,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(mockApiInstance.postAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
@@ -255,7 +263,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(mockApiInstance.deleteAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
@@ -306,7 +314,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(mockApiInstance.getAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,

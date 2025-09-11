@@ -1,6 +1,6 @@
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 //import { Configuration } from '../generated';
-import { SubmodelRepositoryService } from '../generated';
+import { Configuration } from '../generated';
 import {
     createDescription,
     createNewSubmodelElement,
@@ -19,7 +19,7 @@ describe('Submodel Repository Integration Tests', () => {
     //const OPERATION_REQUEST = createTestOperationRequest();
     //const OPERATION_RESULT = createTestOperationResult();
     //const testOperationSubmodelElement = createTestOperationElement();
-    const configuration = new SubmodelRepositoryService.Configuration({
+    const configuration = new Configuration({
         basePath: 'http://localhost:8082',
     });
 
