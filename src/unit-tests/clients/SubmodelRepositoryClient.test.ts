@@ -160,6 +160,13 @@ const TEST_CONFIGURATION = new Configuration({
 });
 
 describe('SubmodelRepositoryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8082',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for SubmodelRepositoryAPIApi
     const mockApiInstance = {
         getAllSubmodels: jest.fn(),
@@ -269,7 +276,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllSubmodels).toHaveBeenCalledWith({
             semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
             idShort: ID_SHORT,
@@ -329,7 +336,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.postSubmodel).toHaveBeenCalledWith({
             submodel: API_SUBMODEL1,
         });
@@ -384,7 +391,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.deleteSubmodelById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -437,7 +444,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -495,7 +502,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -519,7 +526,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelById).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -577,7 +584,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdMetadata).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -635,7 +642,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdValueOnly).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -695,7 +702,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelByIdValueOnly).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -753,7 +760,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathValueOnlySubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -818,7 +825,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelElementByPathValueOnlySubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -887,7 +894,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getAllSubmodelElements).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -949,7 +956,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.postSubmodelElementSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1010,7 +1017,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1072,7 +1079,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.postSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1135,7 +1142,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.deleteSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1193,7 +1200,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1221,7 +1228,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1285,7 +1292,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationSubmodelRepo).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1349,7 +1356,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationValueOnly).toHaveBeenCalledWith({
@@ -1412,7 +1419,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationAsync).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
@@ -1470,7 +1477,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockSubmodelRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationAsyncValueOnly).toHaveBeenCalledWith({

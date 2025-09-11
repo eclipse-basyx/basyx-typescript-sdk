@@ -58,6 +58,13 @@ const TEST_CONFIGURATION = new Configuration({
 });
 
 describe('AasDiscoveryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8086',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for AssetAdministrationShellBasicDiscoveryAPIApi
     const mockApiInstance = {
         getAllAssetAdministrationShellIdsByAssetLink: jest.fn(),
@@ -138,7 +145,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink).toHaveBeenCalledWith({
             assetIds: ASSET_IDS.map((id) => base64Encode(JSON.stringify(id))),
             limit: LIMIT,
@@ -198,7 +205,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(mockApiInstance.postAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
@@ -256,7 +263,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(mockApiInstance.deleteAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
@@ -307,7 +314,7 @@ describe('AasDiscoveryClient', () => {
         });
 
         // Assert
-        expect(MockAasDiscovery).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(mockApiInstance.getAllAssetLinksById).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,

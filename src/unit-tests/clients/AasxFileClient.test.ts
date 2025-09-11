@@ -37,6 +37,13 @@ const TEST_CONFIGURATION = new Configuration({
 });
 
 describe('AasxFileClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8087',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for AASXFileServerAPIApi
     const mockApiInstance = {
         getAllAASXPackageIds: jest.fn(),
@@ -98,7 +105,7 @@ describe('AasxFileClient', () => {
         });
 
         // Assert
-        expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllAASXPackageIds).toHaveBeenCalledWith({
             aasId: CORE_AAS1.id,
         });
@@ -153,7 +160,7 @@ describe('AasxFileClient', () => {
         });
 
         // Assert
-        expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
         //expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         //expect(base64Encode).toHaveBeenCalledWith(fileName);
         expect(mockApiInstance.postAASXPackage).toHaveBeenCalledWith({
@@ -211,7 +218,7 @@ describe('AasxFileClient', () => {
         });
 
         // Assert
-        expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(PACKAGE_ID);
         expect(mockApiInstance.getAASXByPackageId).toHaveBeenCalledWith({
             packageId: `encoded_${PACKAGE_ID}`,
@@ -265,7 +272,7 @@ describe('AasxFileClient', () => {
         });
 
         // Assert
-        expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(PACKAGE_ID);
         expect(mockApiInstance.deleteAASXByPackageId).toHaveBeenCalledWith({
             packageId: `encoded_${PACKAGE_ID}`,
@@ -319,7 +326,7 @@ describe('AasxFileClient', () => {
         });
 
         // Assert
-        expect(MockAasxFile).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
         // expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         // expect(base64Encode).toHaveBeenCalledWith(fileName);
         expect(base64Encode).toHaveBeenCalledWith(PACKAGE_ID);

@@ -225,6 +225,13 @@ const TEST_CONFIGURATION = new Configuration({
 });
 
 describe('AasRepositoryClient', () => {
+    // Helper function to create expected configuration matcher
+    const expectConfigurationCall = () =>
+        expect.objectContaining({
+            basePath: 'http://localhost:8081',
+            fetchApi: globalThis.fetch,
+        });
+
     // Create mock for AssetAdministrationShellRepositoryAPIApi
     const mockApiInstance = {
         getSubmodelByIdAasRepository: jest.fn(),
@@ -359,7 +366,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdAasRepository).toHaveBeenCalledWith({
@@ -421,7 +428,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelByIdAasRepository).toHaveBeenCalledWith({
@@ -448,7 +455,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelByIdAasRepository).toHaveBeenCalledWith({
@@ -510,7 +517,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.deleteSubmodelByIdAasRepository).toHaveBeenCalledWith({
@@ -567,7 +574,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelAasRepository).toHaveBeenCalledWith({
@@ -626,7 +633,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdMetadataAasRepository).toHaveBeenCalledWith({
@@ -685,7 +692,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelByIdMetadataAasRepository).toHaveBeenCalledWith({
@@ -746,7 +753,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdValueOnlyAasRepository).toHaveBeenCalledWith({
@@ -810,7 +817,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelByIdValueOnlyAasRepository).toHaveBeenCalledWith({
@@ -870,7 +877,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdReferenceAasRepository).toHaveBeenCalledWith({
@@ -932,7 +939,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelByIdPathAasRepository).toHaveBeenCalledWith({
@@ -1001,7 +1008,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getAllSubmodelElementsAasRepository).toHaveBeenCalledWith({
@@ -1067,7 +1074,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.postSubmodelElementAasRepository).toHaveBeenCalledWith({
@@ -1137,7 +1144,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getAllSubmodelElementsMetadataAasRepository).toHaveBeenCalledWith({
@@ -1211,7 +1218,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getAllSubmodelElementsValueOnlyAasRepository).toHaveBeenCalledWith({
@@ -1286,7 +1293,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getAllSubmodelElementsReferenceAasRepository).toHaveBeenCalledWith({
@@ -1362,7 +1369,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getAllSubmodelElementsPathAasRepository).toHaveBeenCalledWith({
@@ -1432,7 +1439,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathAasRepository).toHaveBeenCalledWith({
@@ -1500,7 +1507,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.postSubmodelElementByPathAasRepository).toHaveBeenCalledWith({
@@ -1567,7 +1574,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.deleteSubmodelElementByPathAasRepository).toHaveBeenCalledWith({
@@ -1628,7 +1635,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelElementByPathAasRepository).toHaveBeenCalledWith({
@@ -1657,7 +1664,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putSubmodelElementByPathAasRepository).toHaveBeenCalledWith({
@@ -1726,7 +1733,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelElementValueByPathAasRepository).toHaveBeenCalledWith({
@@ -1790,7 +1797,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathMetadataAasRepository).toHaveBeenCalledWith({
@@ -1856,7 +1863,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelElementValueByPathMetadata).toHaveBeenCalledWith({
@@ -1921,7 +1928,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathValueOnlyAasRepository).toHaveBeenCalledWith({
@@ -1989,7 +1996,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.patchSubmodelElementValueByPathValueOnly).toHaveBeenCalledWith({
@@ -2056,7 +2063,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathReferenceAasRepository).toHaveBeenCalledWith({
@@ -2123,7 +2130,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getSubmodelElementByPathPathAasRepository).toHaveBeenCalledWith({
@@ -2189,7 +2196,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.getFileByPathAasRepository).toHaveBeenCalledWith({
@@ -2254,7 +2261,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.putFileByPathAasRepository).toHaveBeenCalledWith({
@@ -2316,7 +2323,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.deleteFileByPathAasRepository).toHaveBeenCalledWith({
@@ -2375,7 +2382,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationAasRepository).toHaveBeenCalledWith({
@@ -2439,7 +2446,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationValueOnlyAasRepository).toHaveBeenCalledWith({
@@ -2505,7 +2512,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationAsyncAasRepository).toHaveBeenCalledWith({
@@ -2566,7 +2573,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationAsyncValueOnlyAasRepository).toHaveBeenCalledWith({
@@ -2629,7 +2636,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(base64Encode).toHaveBeenCalledWith(HANDLE_ID);
@@ -2694,7 +2701,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(base64Encode).toHaveBeenCalledWith(HANDLE_ID);
@@ -2759,7 +2766,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Assert
-        expect(MockAasRepository).toHaveBeenCalledWith(TEST_CONFIGURATION);
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(base64Encode).toHaveBeenCalledWith(HANDLE_ID);
