@@ -11,15 +11,20 @@ BaSyx TypeScript SDK for developing applications and components for the Asset Ad
 
 Clients for the AAS API components:
 - AAS Repository
-- Submodel Repository (coming soon)
-- Concept Description Repository (coming soon)
-- AAS Registry (coming soon)
-- Submodel Registry (coming soon)
-- AAS Discovery Service (coming soon)
-- AASX File Service (coming soon)
+- Submodel Repository
+- Concept Description Repository
+- AAS Registry
+- Submodel Registry
+- AAS Discovery Service
+- AASX File Service
 
 Utility functions for working with AAS data:
-- Coming soon
+- Utils for Descriptors
+- Utils for KeyTypes
+- Utils for MultiLanguageProperties
+- Utils for Referables
+- Utils for References
+- Utils for SemanticIds
 
 ## Installation
 
@@ -34,7 +39,7 @@ yarn add basyx-typescript-sdk
 ---
 
 > [!IMPORTANT]
-> Make sure to install `@aas-core-works/aas-core3.0-typescript` in your project:
+> Make sure to also install `@aas-core-works/aas-core3.0-typescript` in your project:
 
 ```bash
 npm install @aas-core-works/aas-core3.0-typescript
@@ -42,7 +47,7 @@ npm install @aas-core-works/aas-core3.0-typescript
 yarn add @aas-core-works/aas-core3.0-typescript
 ```
 
-## Usage
+## Usage Example
 
 ```typescript
 import { AasRepositoryClient, AasRepositoryService } from 'basyx-typescript-sdk';
