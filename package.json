@@ -2,24 +2,20 @@
   "name": "basyx-typescript-sdk",
   "version": "1.0.0",
   "description": "BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)",
-  "type": "module",
-  "main": "bundle/index.js",
+  "main": "bundle/index.cjs",
+  "module": "bundle/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./bundle/index.js",
+      "import": "./bundle/index.mjs",
+      "require": "./bundle/index.cjs",
       "types": "./dist/index.d.ts"
     }
   },
   "repository": "https://github.com/eclipse-basyx/basyx-typescript-sdk.git",
   "author": "Aaron Zielstorff <aaron.zielstorff@iese.fraunhofer.de>",
   "license": "MIT",
-  "files": [
-    "bundle",
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["bundle", "dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "tsc",
     "bundle": "rollup -c",
@@ -34,7 +30,6 @@
     "gen-smregistry": "openapi-generator-cli generate -i openapi/smregistry.yaml -g typescript-fetch -o src/generated/SubmodelRegistryService --additional-properties=withoutRuntimeChecks=true",
     "gen-aasdiscovery": "openapi-generator-cli generate -i openapi/aasdiscovery.yaml -g typescript-fetch -o src/generated/AasDiscoveryService --additional-properties=withoutRuntimeChecks=true",
     "gen-aasxfileserver": "openapi-generator-cli generate -i openapi/aasxfileserver.yaml -g typescript-fetch -o src/generated/AasxFileService --additional-properties=withoutRuntimeChecks=true"
-
   },
   "peerDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
