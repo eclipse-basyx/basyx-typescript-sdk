@@ -33,13 +33,12 @@ export class AasxFileClient {
             const result = await apiInstance.getAllAASXPackageIds({
                 aasId: aasId,
             });
-            console.log('received packages:', result);
+
             return {
                 success: true,
                 data: { result },
             };
         } catch (err) {
-            console.error('Failed to fetch AASX packagees:', err);
             const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
@@ -75,10 +74,9 @@ export class AasxFileClient {
                 file: file,
                 fileName: fileName,
             });
-            console.log('created aasx package: ', result);
+
             return { success: true, data: result };
         } catch (err) {
-            console.error('Failed to create AASX package:', err);
             const customError = await handleApiError(err);
             return { success: false, error: customError };
         }
@@ -107,10 +105,9 @@ export class AasxFileClient {
             const result = await apiInstance.getAASXByPackageId({
                 packageId: encodedPackageId,
             });
-            console.log('received aasx package by id: ', result);
+
             return { success: true, data: result };
         } catch (err) {
-            console.error('Failed to fetch AASX package by id:', err);
             const customError = await handleApiError(err);
             return { success: false, error: customError };
         }

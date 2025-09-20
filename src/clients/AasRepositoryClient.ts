@@ -1333,7 +1333,7 @@ export class AasRepositoryClient {
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
-            console.log('created element at specified path:', result);
+
             return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
         } catch (err) {
             const customError = await handleApiError(err);

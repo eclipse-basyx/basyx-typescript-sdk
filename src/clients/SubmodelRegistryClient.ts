@@ -44,7 +44,7 @@ export class SubmodelRegistryClient {
                 cursor: cursor,
             });
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
-            console.log('all submodel descriptors:', submodelDescriptors);
+
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
@@ -76,7 +76,7 @@ export class SubmodelRegistryClient {
             const result = await apiInstance.postSubmodelDescriptor({
                 submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
             });
-            console.log('created submodel descriptor:', result);
+
             return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
         } catch (err) {
             const customError = await handleApiError(err);
