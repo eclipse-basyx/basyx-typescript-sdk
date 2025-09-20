@@ -60,8 +60,13 @@ async function getAllShells() {
 
     try {
         const response = await client.getAllAssetAdministrationShells({ configuration });
-        console.log('Asset Administration Shells fetched successfully:', response);
-        // You can now use the response as needed
+
+        if (response.success) {
+            console.log('Asset Administration Shells fetched successfully:', response.data);
+            // You can now use the response data as needed
+        } else {
+            console.error('Failed to fetch Asset Administration Shells:', response.error);
+        }
     } catch (error) {
         console.error('Error fetching Asset Administration Shells:', error);
     }

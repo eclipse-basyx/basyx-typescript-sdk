@@ -25,7 +25,6 @@ export function checkSemanticId(submodelElement: ISubmodelElement, semanticId: s
     if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0) return false;
 
     for (const key of submodelElement.semanticId.keys) {
-        // console.log('checkSemanticId: ', 'key of submodelElement', key.value, 'semanticId', semanticId);
         if (key.value.startsWith('0112/')) {
             return checkSemanticIdIecCdd(key.value, semanticId);
         } else if (key.value.startsWith('0173-1#') || key.value.startsWith('0173/1///')) {

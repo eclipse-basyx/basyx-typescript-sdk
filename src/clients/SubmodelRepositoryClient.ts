@@ -61,7 +61,7 @@ export class SubmodelRepositoryClient {
             });
 
             const submodels = (result.result ?? []).map(convertApiSubmodelToCoreSubmodel);
-            console.log('all submodels:', submodels);
+
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodels },
@@ -248,7 +248,7 @@ export class SubmodelRepositoryClient {
             });
 
             const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
-            console.log('all submodelElements:', submodelElements);
+
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodelElements },
@@ -324,7 +324,7 @@ export class SubmodelRepositoryClient {
                 level: level,
                 extent: extent,
             });
-            console.log('data:', result);
+
             return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -361,7 +361,7 @@ export class SubmodelRepositoryClient {
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
-            console.log('created element at specified path:', result);
+
             return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
         } catch (err) {
             const customError = await handleApiError(err);

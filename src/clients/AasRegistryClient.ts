@@ -56,7 +56,7 @@ export class AasRegistryClient {
                 assetType: encodedAssetType,
             });
             const aasDescriptors = (result.result ?? []).map(convertApiAasDescriptorToCoreAasDescriptor);
-            console.log('all aas descriptors:', aasDescriptors);
+
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: aasDescriptors },
@@ -92,7 +92,7 @@ export class AasRegistryClient {
                     assetAdministrationShellDescriptor
                 ),
             });
-            console.log('created aas descriptor:', result);
+
             return { success: true, data: convertApiAasDescriptorToCoreAasDescriptor(result) };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -243,7 +243,7 @@ export class AasRegistryClient {
                 cursor: cursor,
             });
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
-            console.log('all submodel descriptors:', submodelDescriptors);
+
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
@@ -282,11 +282,10 @@ export class AasRegistryClient {
                 aasIdentifier: encodedAasIdentifier,
                 submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
             });
-            console.log('created submodel descriptor:', result);
+
             return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
         } catch (err) {
             const customError = await handleApiError(err);
-            //console.log('error during creation of submodel descriptor:', customError);
             return { success: false, error: customError };
         }
     }

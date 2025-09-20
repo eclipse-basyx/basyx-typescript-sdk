@@ -49,7 +49,7 @@ export class AasDiscoveryClient {
             });
 
             const shellIds = result.result ?? [];
-            console.log('all shellIds:', shellIds);
+
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: shellIds },
@@ -88,7 +88,7 @@ export class AasDiscoveryClient {
                 aasIdentifier: encodedAasIdentifier,
                 specificAssetId: specificAssetId.map(convertCoreAssetIdToApiAssetId),
             });
-            console.log('created asset links:', result);
+
             return { success: true, data: result.map(convertApiAssetIdToCoreAssetId) };
         } catch (err) {
             const customError = await handleApiError(err);
