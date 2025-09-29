@@ -984,9 +984,9 @@
     node-fetch "^2.6.1"
 
 "@openapitools/openapi-generator-cli@^2.18.4":
-  version "2.23.4"
-  resolved "https://registry.yarnpkg.com/@openapitools/openapi-generator-cli/-/openapi-generator-cli-2.23.4.tgz#1939b9bb8fc5a617db00758461b7027bcd2c682f"
-  integrity sha512-9/sUf5q2j2waXUMF78sJjywQJOv2+cyPzabYsqou8AAuUOXQCfNRUzRP+Vxe05dodAtxBCE7Mi+JBuDRleDOEA==
+  version "2.24.0"
+  resolved "https://registry.yarnpkg.com/@openapitools/openapi-generator-cli/-/openapi-generator-cli-2.24.0.tgz#cc4057a1ec9bc114913ab001be11e4446202dc85"
+  integrity sha512-VS0sfW46oe/hQq7g1YZU1cJJebAQIwKhKqjsDY1/QFmcJMXYfe339yjMDTv02kMbsx621cSH46HIdvmW+i+7mg==
   dependencies:
     "@nestjs/axios" "4.0.1"
     "@nestjs/common" "11.1.6"
