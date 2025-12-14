@@ -1,0 +1,569 @@
+import type { ApiResult } from '../models/api';
+import { AssetAdministrationShell } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AasRegistryClient } from '../clients/AasRegistryClient';
+import { AasRepositoryClient } from '../clients/AasRepositoryClient';
+import { Configuration } from '../generated';
+import { base64Decode, base64Encode } from '../lib/base64Url';
+import { AssetAdministrationShellDescriptor } from '../models/Descriptors';
+import { extractEndpointHref } from '../utils/DescriptorUtils';
+
+export interface AasServiceConfig {
+    registryConfig?: Configuration;
+    repositoryConfig?: Configuration;
+}
+
+/**
+ * AasService combines AAS Registry and Repository clients to provide
+ * higher-level functionality for working with Asset Administration Shells.
+ *
+ * This service demonstrates the multi-client pattern by orchestrating
+ * operations across different BaSyx components.
+ */
+export class AasService {
+    private registryClient: AasRegistryClient;
+    private repositoryClient: AasRepositoryClient;
+    private registryConfig?: Configuration;
+    private repositoryConfig?: Configuration;
+
+    constructor(config: AasServiceConfig) {
+        this.registryClient = new AasRegistryClient();
+        this.repositoryClient = new AasRepositoryClient();
+        this.registryConfig = config.registryConfig;
+        this.repositoryConfig = config.repositoryConfig;
+    }
+
+    /**
+     * Retrieves a list of all Asset Administration Shells.
+     *
+     * This method first attempts to fetch AAS Descriptors from the Registry,
+     * then uses the descriptor endpoints to fetch the actual shells.
+     * If a registry is not configured or fails, it falls back to fetching
+     * AAS directly from the Repository.
+     *
+     * @param options Object containing:
+     *  - preferRegistry?: Whether to prefer registry over repository (default: true)
+     *  - limit?: Maximum number of elements to retrieve
+     *  - cursor?: Pagination cursor
+     *
+     * @returns Either `{ success: true; data: { shells, source } }` or `{ success: false; error: ... }`.
+     */
+    async getAasList(options?: { preferRegistry?: boolean; limit?: number; cursor?: string }): Promise<
+        ApiResult<
+            {
+                shells: AssetAdministrationShell[];
+                source: 'registry' | 'repository';
+            },
+            any
+        >
+    > {
+        const preferRegistry = options?.preferRegistry ?? true;
+
+        // Try registry first if configured and preferred
+        if (preferRegistry && this.registryConfig) {
+            const registryResult = await this.registryClient.getAllAssetAdministrationShellDescriptors({
+                configuration: this.registryConfig,
+                limit: options?.limit,
+                cursor: options?.cursor,
+            });
+
+            if (registryResult.success) {
+                // Fetch actual shells from descriptor endpoints
+                const shells: AssetAdministrationShell[] = [];
+                for (const descriptor of registryResult.data.result) {
+                    const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
+                    if (endpoint && descriptor.id) {
+                        // Extract base URL from endpoint (remove /shells/{id} part)
+                        const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
+                        const config = new Configuration({ basePath: baseUrl });
+                        const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+                            configuration: config,
+                            aasIdentifier: descriptor.id,
+                        });
+                        if (shellResult.success) {
+                            shells.push(shellResult.data);
+                        }
+                    }
+                }
+
+                return {
+                    success: true,
+                    data: {
+                        shells,
+                        source: 'registry',
+                    },
+                };
+            }
+        }
+
+        // Fall back to repository if registry failed or not configured
+        if (this.repositoryConfig) {
+            const repositoryResult = await this.repositoryClient.getAllAssetAdministrationShells({
+                configuration: this.repositoryConfig,
+                limit: options?.limit,
+                cursor: options?.cursor,
+            });
+
+            if (repositoryResult.success) {
+                return {
+                    success: true,
+                    data: {
+                        shells: repositoryResult.data.result,
+                        source: 'repository',
+                    },
+                };
+            }
+
+            return { success: false, error: repositoryResult.error };
+        }
+
+        return {
+            success: false,
+            error: {
+                errorType: 'ConfigurationError',
+                message: 'Neither registry nor repository configuration provided',
+            },
+        };
+    }
+
+    /**
+     * Retrieves an Asset Administration Shell by ID.
+     *
+     * This method first attempts to fetch the descriptor from the registry
+     * and use its endpoint to fetch the shell. If that fails, it falls back
+     * to fetching directly from the repository.
+     *
+     * @param options Object containing:
+     *  - aasIdentifier: The AAS identifier
+     *  - useRegistryEndpoint?: Whether to try registry endpoint first (default: true)
+     *
+     * @returns Either `{ success: true; data: { shell, descriptor? } }` or `{ success: false; error: ... }`.
+     */
+    async getAasById(options: { aasIdentifier: string; useRegistryEndpoint?: boolean }): Promise<
+        ApiResult<
+            {
+                shell: AssetAdministrationShell;
+                descriptor?: AssetAdministrationShellDescriptor;
+            },
+            any
+        >
+    > {
+        const { aasIdentifier, useRegistryEndpoint = true } = options;
+
+        // Try registry-based flow first
+        if (useRegistryEndpoint && this.registryConfig) {
+            const descriptorResult = await this.registryClient.getAssetAdministrationShellDescriptorById({
+                configuration: this.registryConfig,
+                aasIdentifier,
+            });
+
+            if (descriptorResult.success) {
+                const descriptor = descriptorResult.data;
+                const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
+
+                if (endpoint) {
+                    // Extract base URL from endpoint (remove /shells/{id} part)
+                    const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
+                    // Try to fetch from descriptor endpoint
+                    const config = new Configuration({ basePath: baseUrl });
+                    const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+                        configuration: config,
+                        aasIdentifier,
+                    });
+
+                    if (shellResult.success) {
+                        return {
+                            success: true,
+                            data: {
+                                shell: shellResult.data,
+                                descriptor,
+                            },
+                        };
+                    }
+                }
+            }
+        }
+
+        // Fall back to repository
+        if (!this.repositoryConfig) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'ConfigurationError',
+                    message: 'No repository configuration available',
+                },
+            };
+        }
+
+        const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+            configuration: this.repositoryConfig,
+            aasIdentifier,
+        });
+
+        if (shellResult.success) {
+            return {
+                success: true,
+                data: {
+                    shell: shellResult.data,
+                    descriptor: undefined,
+                },
+            };
+        }
+
+        return { success: false, error: shellResult.error };
+    }
+
+    /**
+     * Gets the endpoint URL for an Asset Administration Shell by its identifier.
+     *
+     * If registry is configured and useRegistry is true, retrieves the endpoint
+     * from the descriptor's endpoint object. Otherwise, constructs the endpoint
+     * from the repository base path and the encoded AAS identifier.
+     *
+     * @param options Object containing:
+     *  - aasIdentifier: The AAS identifier
+     *  - useRegistry?: Whether to try getting endpoint from registry (default: true)
+     *
+     * @returns Either `{ success: true; data: endpointUrl }` or `{ success: false; error: ... }`.
+     */
+    async getAasEndpointById(options: {
+        aasIdentifier: string;
+        useRegistry?: boolean;
+    }): Promise<ApiResult<string, any>> {
+        const { aasIdentifier, useRegistry = true } = options;
+
+        // Try registry first if configured and requested
+        if (useRegistry && this.registryConfig) {
+            const descriptorResult = await this.registryClient.getAssetAdministrationShellDescriptorById({
+                configuration: this.registryConfig,
+                aasIdentifier,
+            });
+
+            if (descriptorResult.success) {
+                const endpoint = extractEndpointHref(descriptorResult.data, 'AAS-3.0');
+                if (endpoint) {
+                    return { success: true, data: endpoint };
+                }
+            }
+        }
+
+        // Fall back to constructing from repository base
+        if (!this.repositoryConfig) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'ConfigurationError',
+                    message: 'Repository configuration required',
+                },
+            };
+        }
+
+        const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8081';
+        const encodedId = base64Encode(aasIdentifier);
+        const endpoint = `${repositoryBasePath}/shells/${encodedId}`;
+
+        return { success: true, data: endpoint };
+    }
+
+    /**
+     * Retrieves an Asset Administration Shell by its endpoint URL.
+     *
+     * Extracts the base URL and base64url-encoded AAS identifier from the endpoint,
+     * decodes the identifier, and fetches the shell from the repository.
+     *
+     * @param options Object containing:
+     *  - endpoint: The endpoint URL (format: http://host/shells/{base64EncodedId})
+     *
+     * @returns Either `{ success: true; data: { shell } }` or `{ success: false; error: ... }`.
+     */
+    async getAasByEndpoint(options: { endpoint: string }): Promise<
+        ApiResult<
+            {
+                shell: AssetAdministrationShell;
+            },
+            any
+        >
+    > {
+        const { endpoint } = options;
+
+        // Extract base URL and encoded ID from endpoint
+        // Expected format: http://localhost:8081/shells/base64EncodedId
+        const match = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)\/shells\/([^/]+)$/);
+
+        if (!match) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'InvalidEndpoint',
+                    message: 'Invalid endpoint format. Expected format: http://host/shells/{base64EncodedId}',
+                },
+            };
+        }
+
+        const [, baseUrl, encodedId] = match;
+
+        // Decode the ID
+        const aasIdentifier = base64Decode(encodedId);
+
+        // Create configuration for the endpoint
+        const config = new Configuration({ basePath: baseUrl });
+
+        // Fetch the shell
+        const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+            configuration: config,
+            aasIdentifier,
+        });
+
+        if (!shellResult.success) {
+            return { success: false, error: shellResult.error };
+        }
+
+        return {
+            success: true,
+            data: {
+                shell: shellResult.data,
+            },
+        };
+    }
+
+    /**
+     * Creates an Asset Administration Shell and optionally registers it in the registry.
+     *
+     * This method creates the AAS in the repository first. If registry is configured
+     * and registerInRegistry is true, it automatically creates a descriptor from the shell
+     * and registers it in the registry with the repository endpoint.
+     *
+     * @param options Object containing:
+     *  - shell: The AAS to create
+     *  - registerInRegistry?: Whether to register the descriptor in the registry (default: true)
+     *
+     * @returns Either `{ success: true; data: { shell, descriptor? } }` or `{ success: false; error: ... }`.
+     */
+    async createAas(options: { shell: AssetAdministrationShell; registerInRegistry?: boolean }): Promise<
+        ApiResult<
+            {
+                shell: AssetAdministrationShell;
+                descriptor?: AssetAdministrationShellDescriptor;
+            },
+            any
+        >
+    > {
+        const { shell, registerInRegistry = true } = options;
+
+        if (!this.repositoryConfig) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'ConfigurationError',
+                    message: 'Repository configuration required',
+                },
+            };
+        }
+
+        // Create AAS in repository
+        const shellResult = await this.repositoryClient.postAssetAdministrationShell({
+            configuration: this.repositoryConfig,
+            assetAdministrationShell: shell,
+        });
+
+        if (!shellResult.success) {
+            return { success: false, error: shellResult.error };
+        }
+
+        // Register descriptor in registry if configured and requested
+        if (registerInRegistry && this.registryConfig) {
+            // Create descriptor from shell
+            const descriptor = new AssetAdministrationShellDescriptor(shell.id);
+
+            // Set endpoint using repository base path
+            const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8081';
+            const encodedId = base64Encode(shell.id);
+            descriptor.endpoints = [
+                {
+                    _interface: 'AAS-3.0',
+                    protocolInformation: {
+                        href: `${repositoryBasePath}/shells/${encodedId}`,
+                        endpointProtocol: null,
+                        endpointProtocolVersion: null,
+                        subprotocol: null,
+                        subprotocolBody: null,
+                        subprotocolBodyEncoding: null,
+                        securityAttributes: null,
+                    },
+                },
+            ];
+
+            const descriptorResult = await this.registryClient.postAssetAdministrationShellDescriptor({
+                configuration: this.registryConfig,
+                assetAdministrationShellDescriptor: descriptor,
+            });
+
+            if (!descriptorResult.success) {
+                // Note: Shell was created but descriptor registration failed
+                return { success: false, error: descriptorResult.error };
+            }
+
+            return {
+                success: true,
+                data: {
+                    shell: shellResult.data,
+                    descriptor: descriptorResult.data,
+                },
+            };
+        }
+
+        // Registry not configured or registration not requested
+        return {
+            success: true,
+            data: {
+                shell: shellResult.data,
+                descriptor: undefined,
+            },
+        };
+    }
+
+    /**
+     * Updates an Asset Administration Shell and optionally updates its descriptor in the registry.
+     *
+     * This method updates the AAS in the repository. If registry is configured
+     * and updateInRegistry is true, it automatically creates/updates the descriptor
+     * in the registry with the updated shell data.
+     *
+     * @param options Object containing:
+     *  - shell: The updated AAS
+     *  - updateInRegistry?: Whether to update the descriptor in the registry (default: true)
+     *
+     * @returns Either `{ success: true; data: { shell, descriptor? } }` or `{ success: false; error: ... }`.
+     */
+    async updateAas(options: { shell: AssetAdministrationShell; updateInRegistry?: boolean }): Promise<
+        ApiResult<
+            {
+                shell: AssetAdministrationShell;
+                descriptor?: AssetAdministrationShellDescriptor;
+            },
+            any
+        >
+    > {
+        const { shell, updateInRegistry = true } = options;
+
+        if (!this.repositoryConfig) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'ConfigurationError',
+                    message: 'Repository configuration required',
+                },
+            };
+        }
+
+        // Update AAS in repository
+        const shellResult = await this.repositoryClient.putAssetAdministrationShellById({
+            configuration: this.repositoryConfig,
+            aasIdentifier: shell.id,
+            assetAdministrationShell: shell,
+        });
+
+        if (!shellResult.success) {
+            return { success: false, error: shellResult.error };
+        }
+
+        // Use the returned shell if available, otherwise use the input shell
+        const updatedShell = shellResult.data || shell;
+
+        // Update descriptor in registry if configured and requested
+        if (updateInRegistry && this.registryConfig) {
+            // Create/update descriptor from shell
+            const descriptor = new AssetAdministrationShellDescriptor(shell.id);
+
+            // Set endpoint using repository base path
+            const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8081';
+            const encodedId = base64Encode(shell.id);
+            descriptor.endpoints = [
+                {
+                    _interface: 'AAS-3.0',
+                    protocolInformation: {
+                        href: `${repositoryBasePath}/shells/${encodedId}`,
+                        endpointProtocol: null,
+                        endpointProtocolVersion: null,
+                        subprotocol: null,
+                        subprotocolBody: null,
+                        subprotocolBodyEncoding: null,
+                        securityAttributes: null,
+                    },
+                },
+            ];
+
+            const descriptorResult = await this.registryClient.putAssetAdministrationShellDescriptorById({
+                configuration: this.registryConfig,
+                aasIdentifier: shell.id,
+                assetAdministrationShellDescriptor: descriptor,
+            });
+
+            if (!descriptorResult.success) {
+                // Note: Shell was updated but descriptor update failed
+                return { success: false, error: descriptorResult.error };
+            }
+
+            // Use the returned descriptor if available, otherwise use the created descriptor
+            const updatedDescriptor = descriptorResult.data || descriptor;
+
+            return {
+                success: true,
+                data: {
+                    shell: updatedShell,
+                    descriptor: updatedDescriptor,
+                },
+            };
+        }
+
+        // Registry not configured or update not requested
+        return {
+            success: true,
+            data: {
+                shell: updatedShell,
+                descriptor: undefined,
+            },
+        };
+    }
+
+    /**
+     * Deletes an Asset Administration Shell and optionally removes it from the registry.
+     *
+     * This method removes the descriptor from the registry first (if requested),
+     * then deletes the AAS from the repository.
+     *
+     * @param options Object containing:
+     *  - aasIdentifier: The AAS identifier to remove
+     *  - deleteFromRegistry?: Whether to delete from registry (default: true)
+     *
+     * @returns Either `{ success: true; data: void }` or `{ success: false; error: ... }`.
+     */
+    async deleteAas(options: { aasIdentifier: string; deleteFromRegistry?: boolean }): Promise<ApiResult<void, any>> {
+        const { aasIdentifier, deleteFromRegistry = true } = options;
+
+        // Remove from registry first if configured and requested
+        if (deleteFromRegistry && this.registryConfig) {
+            const registryResult = await this.registryClient.deleteAssetAdministrationShellDescriptorById({
+                configuration: this.registryConfig,
+                aasIdentifier,
+            });
+
+            if (!registryResult.success) {
+                return { success: false, error: registryResult.error };
+            }
+        }
+
+        // Remove from repository
+        if (this.repositoryConfig) {
+            const repoResult = await this.repositoryClient.deleteAssetAdministrationShellById({
+                configuration: this.repositoryConfig,
+                aasIdentifier,
+            });
+
+            if (!repoResult.success) {
+                return { success: false, error: repoResult.error };
+            }
+        }
+
+        return { success: true, data: undefined };
+    }
+}
