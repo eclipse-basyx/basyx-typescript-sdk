@@ -9,6 +9,16 @@ BaSyx TypeScript SDK for developing applications and components for the Asset Ad
 
 ## Features
 
+High-level orchestration services:
+- **AasService**: Unified API for AAS operations across registry and repository
+  - Create, read, update, delete AAS with automatic registry synchronization
+  - Fetch AAS with their submodels in a single call
+  - Automatic endpoint resolution and fallback handling
+- **SubmodelService**: Unified API for Submodel operations across registry and repository
+  - Create, read, update, delete Submodels with automatic registry synchronization
+  - Flexible endpoint-based retrieval
+  - Automatic fallback to repository when registry unavailable
+
 Clients for the AAS API components:
 - AAS Repository
 - Submodel Repository
@@ -127,8 +137,13 @@ import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core
 
 // Initialize service with both registry and repository
 const service = new AasService({
-    registryConfig: new Configuration({ basePath: 'http://localhost:8082' }),
+    registryConfig: new Configuration({ basePath: 'http://localhost:8084' }),
     repositoryConfig: new Configuration({ basePath: 'http://localhost:8081' }),
+    // Optional: Separate configs for submodel services (used when includeSubmodels is enabled)
+    // If not provided, falls back to using registryConfig/repositoryConfig for submodels
+    // In typical BaSyx deployments, submodel services run on different ports:
+    submodelRegistryConfig: new Configuration({ basePath: 'http://localhost:8083' }),
+    submodelRepositoryConfig: new Configuration({ basePath: 'http://localhost:8081' }),
 });
 
 // Create a new AAS (automatically registers in registry)
@@ -153,6 +168,25 @@ const getResult = await service.getAasById({
     aasIdentifier: 'https://example.com/ids/aas/my-aas' 
 });
 
+// Get AAS with its submodels in a single call
+const withSubmodels = await service.getAasById({
+    aasIdentifier: 'https://example.com/ids/aas/my-aas',
+    includeSubmodels: true
+});
+if (withSubmodels.success) {
+    console.log('Shell:', withSubmodels.data.shell);
+    console.log('Submodels:', withSubmodels.data.submodels); // Array of submodels
+}
+
+// Get all AAS with their submodels
+const allWithSubmodels = await service.getAasList({ includeSubmodels: true });
+if (allWithSubmodels.success) {
+    allWithSubmodels.data.shells.forEach((shell, index) => {
+        console.log(`Shell ${index}:`, shell.id);
+        console.log(`Submodels:`, allWithSubmodels.data.submodels?.[index]);
+    });
+}
+
 // Update AAS (updates both repository and registry)
 shell.idShort = 'UpdatedName';
 const updateResult = await service.updateAas({ shell });
@@ -171,6 +205,84 @@ const byEndpointResult = await service.getAasByEndpoint({
 await service.deleteAas({ 
     aasIdentifier: 'https://example.com/ids/aas/my-aas' 
 });
+```
+
+### Using the SubmodelService (High-level API)
+
+```typescript
+import { SubmodelService, Configuration } from 'basyx-typescript-sdk';
+import { Submodel, ModellingKind } from '@aas-core-works/aas-core3.0-typescript/types';
+
+// Initialize service with both registry and repository
+const service = new SubmodelService({
+    registryConfig: new Configuration({ basePath: 'http://localhost:8085' }),
+    repositoryConfig: new Configuration({ basePath: 'http://localhost:8082' }),
+});
+
+// Create a new Submodel (automatically registers in registry)
+const submodel = new Submodel(
+    'https://example.com/ids/sm/my-submodel',
+    null, // extensions
+    null, // category
+    'MySubmodel', // idShort
+    null, // displayName
+    null, // description
+    null, // administration
+    ModellingKind.Instance
+);
+
+const createResult = await service.createSubmodel({ submodel });
+if (createResult.success) {
+    console.log('Created Submodel:', createResult.data.submodel);
+    console.log('Registry Descriptor:', createResult.data.descriptor);
+}
+
+// Get Submodel list from registry with automatic endpoint resolution
+const listResult = await service.getSubmodelList({ preferRegistry: true });
+if (listResult.success) {
+    console.log('All submodels:', listResult.data.submodels);
+    console.log('Fetched from:', listResult.data.source); // 'registry' or 'repository'
+}
+
+// Get Submodel by ID (uses registry endpoint if available)
+const getResult = await service.getSubmodelById({
+    submodelIdentifier: 'https://example.com/ids/sm/my-submodel',
+    useRegistryEndpoint: true
+});
+if (getResult.success) {
+    console.log('Submodel:', getResult.data.submodel);
+    console.log('Descriptor:', getResult.data.descriptor);
+}
+
+// Update Submodel (updates both repository and registry)
+submodel.idShort = 'UpdatedSubmodel';
+const updateResult = await service.updateSubmodel({ submodel });
+
+// Get endpoint for a Submodel
+const endpointResult = await service.getSubmodelEndpointById({
+    submodelIdentifier: 'https://example.com/ids/sm/my-submodel'
+});
+if (endpointResult.success) {
+    console.log('Endpoint:', endpointResult.data);
+}
+
+// Get Submodel directly by endpoint URL
+const byEndpointResult = await service.getSubmodelByEndpoint({
+    endpoint: 'http://localhost:8082/submodels/encoded-id'
+});
+
+// Delete Submodel (removes from both registry and repository)
+await service.deleteSubmodel({
+    submodelIdentifier: 'https://example.com/ids/sm/my-submodel'
+});
+
+// Service works with only repository (no registry)
+const repoOnlyService = new SubmodelService({
+    repositoryConfig: new Configuration({ basePath: 'http://localhost:8082' })
+});
+
+const repoList = await repoOnlyService.getSubmodelList();
+// Automatically falls back to repository when registry unavailable
 ```
 
 ### Using Utility Functions

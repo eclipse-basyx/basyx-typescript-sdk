@@ -8,6 +8,7 @@ import { AasService } from '../../services/AasService';
 // Mock the clients
 jest.mock('../../clients/AasRegistryClient');
 jest.mock('../../clients/AasRepositoryClient');
+jest.mock('../../services/SubmodelService');
 
 describe('AasService Unit Tests', () => {
     let aasService: AasService;
@@ -742,6 +743,59 @@ describe('AasService Unit Tests', () => {
             if (!result.success) {
                 expect(result.error.errorType).toBe('ConfigurationError');
             }
+        });
+    });
+
+    describe('includeSubmodels functionality', () => {
+        // Note: Full integration tests for includeSubmodels are in the integration test file
+        // These unit tests just verify the basic structure and mocking
+
+        it('should accept includeSubmodels parameter in getAasList', async () => {
+            mockRepositoryClient.getAllAssetAdministrationShells = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testShell],
+                    pagedResult: undefined,
+                },
+            });
+
+            const result = await aasService.getAasList({ preferRegistry: false, includeSubmodels: true });
+
+            expect(result.success).toBe(true);
+            // The actual submodel fetching is tested in integration tests
+        });
+
+        it('should accept includeSubmodels parameter in getAasById', async () => {
+            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testShell,
+            });
+
+            const result = await aasService.getAasById({
+                aasIdentifier: testAasId,
+                useRegistryEndpoint: false,
+                includeSubmodels: true,
+            });
+
+            expect(result.success).toBe(true);
+            // The actual submodel fetching is tested in integration tests
+        });
+
+        it('should accept includeSubmodels parameter in getAasByEndpoint', async () => {
+            const endpoint = 'http://localhost:8081/shells/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvYWFzL3Rlc3QtMTIz';
+
+            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testShell,
+            });
+
+            const result = await aasService.getAasByEndpoint({
+                endpoint,
+                includeSubmodels: true,
+            });
+
+            expect(result.success).toBe(true);
+            // The actual submodel fetching is tested in integration tests
         });
     });
 });

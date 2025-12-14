@@ -68,7 +68,13 @@ export function base64Decode(urlSafeBase64String: string): string {
 
     const encodedUriComponent = atob(base64String);
     const escapedEncodedUriComponent = escape(encodedUriComponent);
-    const decodedString = decodeURIComponent(escapedEncodedUriComponent);
 
-    return decodedString;
+    try {
+        const decodedString = decodeURIComponent(escapedEncodedUriComponent);
+        return decodedString;
+    } catch {
+        // If decodeURIComponent fails, the string might not need URI decoding
+        // Return the unescaped version directly
+        return unescape(escapedEncodedUriComponent);
+    }
 }

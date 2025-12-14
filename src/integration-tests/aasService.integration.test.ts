@@ -395,4 +395,107 @@ describe('AasService Integration Tests', () => {
             }
         });
     });
+
+    describe('includeSubmodels functionality', () => {
+        test('should include submodels when requested in getAasList', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            // Get list with submodels
+            const result = await aasService.getAasList({
+                preferRegistry: false,
+                includeSubmodels: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells).toBeDefined();
+                expect(result.data.submodels).toBeDefined();
+                expect(typeof result.data.submodels).toBe('object');
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('should not include submodels when not requested in getAasList', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            // Get list without submodels
+            const result = await aasService.getAasList({
+                preferRegistry: false,
+                includeSubmodels: false,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells).toBeDefined();
+                expect(result.data.submodels).toBeUndefined();
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('should include submodels when requested in getAasById', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            // Get by ID with submodels
+            const result = await aasService.getAasById({
+                aasIdentifier: testShell.id,
+                useRegistryEndpoint: false,
+                includeSubmodels: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shell).toBeDefined();
+                expect(result.data.submodels).toBeDefined();
+                expect(Array.isArray(result.data.submodels)).toBe(true);
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('should include submodels when requested in getAasByEndpoint', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            // Get endpoint
+            const endpointResult = await aasService.getAasEndpointById({
+                aasIdentifier: testShell.id,
+            });
+
+            expect(endpointResult.success).toBe(true);
+
+            if (endpointResult.success) {
+                // Get by endpoint with submodels
+                const result = await aasService.getAasByEndpoint({
+                    endpoint: endpointResult.data,
+                    includeSubmodels: true,
+                });
+
+                expect(result.success).toBe(true);
+                if (result.success) {
+                    expect(result.data.shell).toBeDefined();
+                    expect(result.data.submodels).toBeDefined();
+                    expect(Array.isArray(result.data.submodels)).toBe(true);
+                }
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+    });
 });

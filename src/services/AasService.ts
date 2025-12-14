@@ -1,15 +1,18 @@
 import type { ApiResult } from '../models/api';
-import { AssetAdministrationShell } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AssetAdministrationShell, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasRegistryClient } from '../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { base64Decode, base64Encode } from '../lib/base64Url';
 import { AssetAdministrationShellDescriptor } from '../models/Descriptors';
 import { extractEndpointHref } from '../utils/DescriptorUtils';
+import { SubmodelService } from './SubmodelService';
 
 export interface AasServiceConfig {
     registryConfig?: Configuration;
     repositoryConfig?: Configuration;
+    submodelRegistryConfig?: Configuration;
+    submodelRepositoryConfig?: Configuration;
 }
 
 /**
@@ -24,12 +27,19 @@ export class AasService {
     private repositoryClient: AasRepositoryClient;
     private registryConfig?: Configuration;
     private repositoryConfig?: Configuration;
+    private submodelService: SubmodelService;
 
     constructor(config: AasServiceConfig) {
         this.registryClient = new AasRegistryClient();
         this.repositoryClient = new AasRepositoryClient();
         this.registryConfig = config.registryConfig;
         this.repositoryConfig = config.repositoryConfig;
+
+        // Use separate submodel configs if provided, otherwise fall back to AAS configs
+        this.submodelService = new SubmodelService({
+            registryConfig: config.submodelRegistryConfig ?? config.registryConfig,
+            repositoryConfig: config.submodelRepositoryConfig ?? config.repositoryConfig,
+        });
     }
 
     /**
@@ -44,19 +54,27 @@ export class AasService {
      *  - preferRegistry?: Whether to prefer registry over repository (default: true)
      *  - limit?: Maximum number of elements to retrieve
      *  - cursor?: Pagination cursor
+     *  - includeSubmodels?: Whether to fetch submodels for each shell (default: false)
      *
-     * @returns Either `{ success: true; data: { shells, source } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { shells, source, submodels? } }` or `{ success: false; error: ... }`.
      */
-    async getAasList(options?: { preferRegistry?: boolean; limit?: number; cursor?: string }): Promise<
+    async getAasList(options?: {
+        preferRegistry?: boolean;
+        limit?: number;
+        cursor?: string;
+        includeSubmodels?: boolean;
+    }): Promise<
         ApiResult<
             {
                 shells: AssetAdministrationShell[];
                 source: 'registry' | 'repository';
+                submodels?: Record<string, Submodel[]>;
             },
             any
         >
     > {
         const preferRegistry = options?.preferRegistry ?? true;
+        const includeSubmodels = options?.includeSubmodels ?? false;
 
         // Try registry first if configured and preferred
         if (preferRegistry && this.registryConfig) {
@@ -85,11 +103,18 @@ export class AasService {
                     }
                 }
 
+                // Fetch submodels if requested
+                let submodelsMap: Record<string, Submodel[]> | undefined;
+                if (includeSubmodels) {
+                    submodelsMap = await this.fetchSubmodelsForShells(shells);
+                }
+
                 return {
                     success: true,
                     data: {
                         shells,
                         source: 'registry',
+                        ...(submodelsMap && { submodels: submodelsMap }),
                     },
                 };
             }
@@ -104,11 +129,20 @@ export class AasService {
             });
 
             if (repositoryResult.success) {
+                const shells = repositoryResult.data.result;
+
+                // Fetch submodels if requested
+                let submodelsMap: Record<string, Submodel[]> | undefined;
+                if (includeSubmodels) {
+                    submodelsMap = await this.fetchSubmodelsForShells(shells);
+                }
+
                 return {
                     success: true,
                     data: {
-                        shells: repositoryResult.data.result,
+                        shells,
                         source: 'repository',
+                        ...(submodelsMap && { submodels: submodelsMap }),
                     },
                 };
             }
@@ -135,19 +169,25 @@ export class AasService {
      * @param options Object containing:
      *  - aasIdentifier: The AAS identifier
      *  - useRegistryEndpoint?: Whether to try registry endpoint first (default: true)
+     *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
      *
-     * @returns Either `{ success: true; data: { shell, descriptor? } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { shell, descriptor?, submodels? } }` or `{ success: false; error: ... }`.
      */
-    async getAasById(options: { aasIdentifier: string; useRegistryEndpoint?: boolean }): Promise<
+    async getAasById(options: {
+        aasIdentifier: string;
+        useRegistryEndpoint?: boolean;
+        includeSubmodels?: boolean;
+    }): Promise<
         ApiResult<
             {
                 shell: AssetAdministrationShell;
                 descriptor?: AssetAdministrationShellDescriptor;
+                submodels?: Submodel[];
             },
             any
         >
     > {
-        const { aasIdentifier, useRegistryEndpoint = true } = options;
+        const { aasIdentifier, useRegistryEndpoint = true, includeSubmodels = false } = options;
 
         // Try registry-based flow first
         if (useRegistryEndpoint && this.registryConfig) {
@@ -171,11 +211,21 @@ export class AasService {
                     });
 
                     if (shellResult.success) {
+                        const shell = shellResult.data;
+
+                        // Fetch submodels if requested
+                        let submodels: Submodel[] | undefined;
+                        if (includeSubmodels) {
+                            const submodelsMap = await this.fetchSubmodelsForShells([shell]);
+                            submodels = submodelsMap[shell.id] || [];
+                        }
+
                         return {
                             success: true,
                             data: {
-                                shell: shellResult.data,
+                                shell,
                                 descriptor,
+                                ...(submodels && { submodels }),
                             },
                         };
                     }
@@ -200,11 +250,21 @@ export class AasService {
         });
 
         if (shellResult.success) {
+            const shell = shellResult.data;
+
+            // Fetch submodels if requested
+            let submodels: Submodel[] | undefined;
+            if (includeSubmodels) {
+                const submodelsMap = await this.fetchSubmodelsForShells([shell]);
+                submodels = submodelsMap[shell.id] || [];
+            }
+
             return {
                 success: true,
                 data: {
-                    shell: shellResult.data,
+                    shell,
                     descriptor: undefined,
+                    ...(submodels && { submodels }),
                 },
             };
         }
@@ -272,18 +332,20 @@ export class AasService {
      *
      * @param options Object containing:
      *  - endpoint: The endpoint URL (format: http://host/shells/{base64EncodedId})
+     *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
      *
-     * @returns Either `{ success: true; data: { shell } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { shell, submodels? } }` or `{ success: false; error: ... }`.
      */
-    async getAasByEndpoint(options: { endpoint: string }): Promise<
+    async getAasByEndpoint(options: { endpoint: string; includeSubmodels?: boolean }): Promise<
         ApiResult<
             {
                 shell: AssetAdministrationShell;
+                submodels?: Submodel[];
             },
             any
         >
     > {
-        const { endpoint } = options;
+        const { endpoint, includeSubmodels = false } = options;
 
         // Extract base URL and encoded ID from endpoint
         // Expected format: http://localhost:8081/shells/base64EncodedId
@@ -317,10 +379,20 @@ export class AasService {
             return { success: false, error: shellResult.error };
         }
 
+        const shell = shellResult.data;
+
+        // Fetch submodels if requested
+        let submodels: Submodel[] | undefined;
+        if (includeSubmodels) {
+            const submodelsMap = await this.fetchSubmodelsForShells([shell]);
+            submodels = submodelsMap[shell.id] || [];
+        }
+
         return {
             success: true,
             data: {
-                shell: shellResult.data,
+                shell,
+                ...(submodels && { submodels }),
             },
         };
     }
@@ -565,5 +637,43 @@ export class AasService {
         }
 
         return { success: true, data: undefined };
+    }
+
+    /**
+     * Helper method to fetch submodels for a list of shells.
+     * Returns a map of shell IDs to their corresponding submodels.
+     *
+     * @param shells Array of Asset Administration Shells
+     * @returns Record mapping shell IDs to arrays of Submodels
+     */
+    private async fetchSubmodelsForShells(shells: AssetAdministrationShell[]): Promise<Record<string, Submodel[]>> {
+        const submodelsMap: Record<string, Submodel[]> = {};
+
+        await Promise.all(
+            shells.map(async (shell) => {
+                const submodelRefs = shell.submodels || [];
+                const submodels: Submodel[] = [];
+
+                for (const submodelRef of submodelRefs) {
+                    // Extract submodel ID from reference
+                    const submodelId = submodelRef.keys?.[0]?.value;
+                    if (!submodelId) continue;
+
+                    // Fetch the submodel
+                    const submodelResult = await this.submodelService.getSubmodelById({
+                        submodelIdentifier: submodelId,
+                        useRegistryEndpoint: false, // Use repository directly for consistency
+                    });
+
+                    if (submodelResult.success) {
+                        submodels.push(submodelResult.data.submodel);
+                    }
+                }
+
+                submodelsMap[shell.id] = submodels;
+            })
+        );
+
+        return submodelsMap;
     }
 }
