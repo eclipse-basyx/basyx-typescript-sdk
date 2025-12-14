@@ -1,4 +1,4 @@
 export {
-  assetAdministrationShellDescriptorFromJsonable,
-  submodelDescriptorFromJsonable,
+    assetAdministrationShellDescriptorFromJsonable,
+    submodelDescriptorFromJsonable,
 } from './descriptorJsonization';
