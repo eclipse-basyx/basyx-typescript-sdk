@@ -73,8 +73,10 @@ export function base64Decode(urlSafeBase64String: string): string {
         const decodedString = decodeURIComponent(escapedEncodedUriComponent);
         return decodedString;
     } catch {
-        // If decodeURIComponent fails, the string might not need URI decoding
-        // Return the unescaped version directly
+        // If decodeURIComponent fails, it usually means the decoded string does not contain valid percent-encoded sequences.
+        // This can happen if the original input to base64Encode did not require URI encoding (e.g., only contained ASCII characters).
+        // In such cases, we return the unescaped string directly as a fallback.
+        // Example: base64Decode(base64Encode("simpleASCII")) will not require URI decoding.
         return unescape(escapedEncodedUriComponent);
     }
 }
