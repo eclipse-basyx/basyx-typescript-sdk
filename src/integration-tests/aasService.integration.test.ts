@@ -1,3 +1,5 @@
+import { SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { AasService } from '../services/AasService';
@@ -580,6 +582,158 @@ describe('AasService Integration Tests', () => {
 
             // Cleanup
             await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+    });
+
+    describe('getAasByAssetId', () => {
+        const discoveryConfig = new Configuration({ basePath: 'http://localhost:8086' });
+        const aasServiceWithDiscovery = new AasService({ registryConfig, repositoryConfig, discoveryConfig });
+
+        test('should find AAS by asset IDs', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            const createResult = await aasServiceWithDiscovery.createAas({ shell: testShell });
+            expect(createResult.success).toBe(true);
+
+            // Register asset links (assuming the shell has asset information with specific asset IDs)
+            const assetIds = [
+                { name: 'serialNumber', value: `SN-${Date.now()}` },
+                { name: 'deviceId', value: `DEV-${Date.now()}` },
+            ];
+
+            // Post asset links to discovery service
+            const discoveryClient = new AasDiscoveryClient();
+            await discoveryClient.postAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell.id,
+                specificAssetId: assetIds.map((id) => new SpecificAssetId(id.name, id.value)),
+            });
+
+            // Find AAS by asset IDs
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells.length).toBeGreaterThan(0);
+                expect(result.data.aasIds).toContain(testShell.id);
+                const foundShell = result.data.shells.find((s) => s.id === testShell.id);
+                expect(foundShell).toBeDefined();
+            }
+
+            // Cleanup
+            await discoveryClient.deleteAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell.id,
+            });
+            await aasServiceWithDiscovery.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('should return empty result when no AAS matches asset IDs', async () => {
+            const assetIds = [{ name: 'nonexistent', value: 'does-not-exist-12345' }];
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells).toHaveLength(0);
+                expect(result.data.aasIds).toHaveLength(0);
+            }
+        });
+
+        test('should handle multiple matching AAS', async () => {
+            const { testShell: testShell1 } = createUniqueTestData();
+            const { testShell: testShell2 } = createUniqueTestData();
+
+            // Create two AAS
+            await aasServiceWithDiscovery.createAas({ shell: testShell1 });
+            await aasServiceWithDiscovery.createAas({ shell: testShell2 });
+
+            // Register same asset ID for both (simulating multiple AAS with same asset)
+            const sharedAssetId = { name: 'batchNumber', value: `BATCH-${Date.now()}` };
+            const discoveryClient = new AasDiscoveryClient();
+
+            await discoveryClient.postAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell1.id,
+                specificAssetId: [new SpecificAssetId(sharedAssetId.name, sharedAssetId.value)],
+            });
+
+            await discoveryClient.postAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell2.id,
+                specificAssetId: [new SpecificAssetId(sharedAssetId.name, sharedAssetId.value)],
+            });
+
+            // Find AAS by the shared asset ID
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds: [sharedAssetId] });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells.length).toBeGreaterThanOrEqual(2);
+                expect(result.data.aasIds).toContain(testShell1.id);
+                expect(result.data.aasIds).toContain(testShell2.id);
+            }
+
+            // Cleanup
+            await discoveryClient.deleteAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell1.id,
+            });
+            await discoveryClient.deleteAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell2.id,
+            });
+            await aasServiceWithDiscovery.deleteAas({ aasIdentifier: testShell1.id });
+            await aasServiceWithDiscovery.deleteAas({ aasIdentifier: testShell2.id });
+        });
+
+        test('should fail when discovery service is not configured', async () => {
+            const assetIds = [{ name: 'serialNumber', value: '12345' }];
+
+            const result = await aasService.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('ConfigurationError');
+                expect(result.error.message).toContain('Discovery service configuration not provided');
+            }
+        });
+
+        test('should support includeSubmodels option', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasServiceWithDiscovery.createAas({ shell: testShell });
+
+            // Register asset links
+            const assetIds = [{ name: 'testSerial', value: `TS-${Date.now()}` }];
+            const discoveryClient = new AasDiscoveryClient();
+
+            await discoveryClient.postAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell.id,
+                specificAssetId: [new SpecificAssetId(assetIds[0].name, assetIds[0].value)],
+            });
+
+            // Find AAS with submodels
+            const result = await aasServiceWithDiscovery.getAasByAssetId({
+                assetIds,
+                includeSubmodels: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells.length).toBeGreaterThan(0);
+                // Submodels would be included if the AAS had any
+            }
+
+            // Cleanup
+            await discoveryClient.deleteAllAssetLinksById({
+                configuration: discoveryConfig,
+                aasIdentifier: testShell.id,
+            });
+            await aasServiceWithDiscovery.deleteAas({ aasIdentifier: testShell.id });
         });
     });
 });

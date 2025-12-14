@@ -1,4 +1,5 @@
 import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { Configuration } from '../../generated/runtime';
@@ -6,6 +7,7 @@ import { AssetAdministrationShellDescriptor } from '../../models/Descriptors';
 import { AasService } from '../../services/AasService';
 
 // Mock the clients
+jest.mock('../../clients/AasDiscoveryClient');
 jest.mock('../../clients/AasRegistryClient');
 jest.mock('../../clients/AasRepositoryClient');
 jest.mock('../../services/SubmodelService');
@@ -791,6 +793,328 @@ describe('AasService Unit Tests', () => {
 
             const result = await aasService.getAasByEndpoint({
                 endpoint,
+                includeSubmodels: true,
+            });
+
+            expect(result.success).toBe(true);
+            // The actual submodel fetching is tested in integration tests
+        });
+    });
+
+    describe('getAasByAssetId', () => {
+        it('should resolve asset IDs and fetch corresponding AAS', async () => {
+            const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+            const aasServiceWithDiscovery = new AasService({
+                registryConfig,
+                repositoryConfig,
+                discoveryConfig,
+            });
+
+            const assetIds = [
+                { name: 'serialNumber', value: '12345' },
+                { name: 'deviceId', value: 'device-001' },
+            ];
+            const discoveredAasIds = [testAasId];
+
+            // Get the mocked instances for the service with discovery
+            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+                .instances;
+            const mockDiscoveryClient = allDiscoveryInstances[
+                allDiscoveryInstances.length - 1
+            ] as jest.Mocked<AasDiscoveryClient>;
+
+            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+                .instances;
+            const mockRepoClientForDiscovery = allRepoInstances[
+                allRepoInstances.length - 1
+            ] as jest.Mocked<AasRepositoryClient>;
+
+            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+                .instances;
+            const mockRegistryClientForDiscovery = allRegistryInstances[
+                allRegistryInstances.length - 1
+            ] as jest.Mocked<AasRegistryClient>;
+
+            // Mock discovery service response
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: discoveredAasIds,
+                    pagedResult: undefined,
+                },
+            });
+
+            // Mock registry response (getAasById will try registry first)
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NotFound', message: 'Descriptor not found' },
+            });
+
+            // Mock repository response
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testShell,
+            });
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells).toHaveLength(1);
+                expect(result.data.shells[0]).toEqual(testShell);
+                expect(result.data.aasIds).toEqual(discoveredAasIds);
+            }
+            expect(mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink).toHaveBeenCalledWith({
+                configuration: discoveryConfig,
+                assetIds,
+            });
+        });
+
+        it('should return empty arrays when no AAS IDs are found', async () => {
+            const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+            const aasServiceWithDiscovery = new AasService({
+                registryConfig,
+                repositoryConfig,
+                discoveryConfig,
+            });
+
+            const assetIds = [{ name: 'serialNumber', value: 'nonexistent' }];
+
+            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+                .instances;
+            const mockDiscoveryClient = allDiscoveryInstances[
+                allDiscoveryInstances.length - 1
+            ] as jest.Mocked<AasDiscoveryClient>;
+
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [],
+                    pagedResult: undefined,
+                },
+            });
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells).toHaveLength(0);
+                expect(result.data.aasIds).toHaveLength(0);
+            }
+        });
+
+        it('should handle discovery service errors', async () => {
+            const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+            const aasServiceWithDiscovery = new AasService({
+                registryConfig,
+                repositoryConfig,
+                discoveryConfig,
+            });
+
+            const assetIds = [{ name: 'serialNumber', value: '12345' }];
+
+            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+                .instances;
+            const mockDiscoveryClient = allDiscoveryInstances[
+                allDiscoveryInstances.length - 1
+            ] as jest.Mocked<AasDiscoveryClient>;
+
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NetworkError', message: 'Discovery service unavailable' },
+            });
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('NetworkError');
+            }
+        });
+
+        it('should return error when discovery config is not provided', async () => {
+            const assetIds = [{ name: 'serialNumber', value: '12345' }];
+
+            const result = await aasService.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('ConfigurationError');
+                expect(result.error.message).toBe('Discovery service configuration not provided');
+            }
+        });
+
+        it('should handle multiple AAS IDs and partial failures', async () => {
+            const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+            const aasServiceWithDiscovery = new AasService({
+                registryConfig,
+                repositoryConfig,
+                discoveryConfig,
+            });
+
+            const assetIds = [{ name: 'serialNumber', value: '12345' }];
+            const discoveredAasIds = ['aas-1', 'aas-2'];
+
+            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+                .instances;
+            const mockDiscoveryClient = allDiscoveryInstances[
+                allDiscoveryInstances.length - 1
+            ] as jest.Mocked<AasDiscoveryClient>;
+
+            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+                .instances;
+            const mockRepoClientForDiscovery = allRepoInstances[
+                allRepoInstances.length - 1
+            ] as jest.Mocked<AasRepositoryClient>;
+
+            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+                .instances;
+            const mockRegistryClientForDiscovery = allRegistryInstances[
+                allRegistryInstances.length - 1
+            ] as jest.Mocked<AasRegistryClient>;
+
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: discoveredAasIds,
+                    pagedResult: undefined,
+                },
+            });
+
+            // Mock registry response
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NotFound', message: 'Descriptor not found' },
+            });
+
+            // First AAS fetch succeeds, second fails
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest
+                .fn()
+                .mockResolvedValueOnce({
+                    success: true,
+                    data: testShell,
+                })
+                .mockResolvedValueOnce({
+                    success: false,
+                    error: { errorType: 'NotFound', message: 'AAS not found' },
+                });
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells).toHaveLength(1);
+                expect(result.data.aasIds).toEqual(discoveredAasIds);
+            }
+        });
+
+        it('should return error when all AAS fetches fail', async () => {
+            const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+            const aasServiceWithDiscovery = new AasService({
+                registryConfig,
+                repositoryConfig,
+                discoveryConfig,
+            });
+
+            const assetIds = [{ name: 'serialNumber', value: '12345' }];
+            const discoveredAasIds = ['aas-1'];
+
+            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+                .instances;
+            const mockDiscoveryClient = allDiscoveryInstances[
+                allDiscoveryInstances.length - 1
+            ] as jest.Mocked<AasDiscoveryClient>;
+
+            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+                .instances;
+            const mockRepoClientForDiscovery = allRepoInstances[
+                allRepoInstances.length - 1
+            ] as jest.Mocked<AasRepositoryClient>;
+
+            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+                .instances;
+            const mockRegistryClientForDiscovery = allRegistryInstances[
+                allRegistryInstances.length - 1
+            ] as jest.Mocked<AasRegistryClient>;
+
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: discoveredAasIds,
+                    pagedResult: undefined,
+                },
+            });
+
+            // Mock registry response
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NotFound', message: 'Descriptor not found' },
+            });
+
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NotFound', message: 'AAS not found' },
+            });
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('FetchError');
+                expect(result.error.message).toBe('Failed to fetch any AAS');
+            }
+        });
+
+        it('should accept includeSubmodels parameter', async () => {
+            const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+            const aasServiceWithDiscovery = new AasService({
+                registryConfig,
+                repositoryConfig,
+                discoveryConfig,
+            });
+
+            const assetIds = [{ name: 'serialNumber', value: '12345' }];
+            const discoveredAasIds = [testAasId];
+
+            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+                .instances;
+            const mockDiscoveryClient = allDiscoveryInstances[
+                allDiscoveryInstances.length - 1
+            ] as jest.Mocked<AasDiscoveryClient>;
+
+            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+                .instances;
+            const mockRepoClientForDiscovery = allRepoInstances[
+                allRepoInstances.length - 1
+            ] as jest.Mocked<AasRepositoryClient>;
+
+            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+                .instances;
+            const mockRegistryClientForDiscovery = allRegistryInstances[
+                allRegistryInstances.length - 1
+            ] as jest.Mocked<AasRegistryClient>;
+
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: discoveredAasIds,
+                    pagedResult: undefined,
+                },
+            });
+
+            // Mock registry response
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NotFound', message: 'Descriptor not found' },
+            });
+
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testShell,
+            });
+
+            const result = await aasServiceWithDiscovery.getAasByAssetId({
+                assetIds,
                 includeSubmodels: true,
             });
 

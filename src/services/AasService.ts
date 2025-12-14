@@ -1,9 +1,11 @@
 import type { ApiResult } from '../models/api';
 import { AssetAdministrationShell, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { AasRegistryClient } from '../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { base64Decode, base64Encode } from '../lib/base64Url';
+import { AssetId } from '../models/AssetId';
 import { AssetAdministrationShellDescriptor } from '../models/Descriptors';
 import { extractEndpointHref } from '../utils/DescriptorUtils';
 import { SubmodelService } from './SubmodelService';
@@ -14,6 +16,7 @@ export interface AasServiceConfig {
     submodelRegistryConfig?: Configuration;
     submodelRepositoryConfig?: Configuration;
     conceptDescriptionRepositoryConfig?: Configuration;
+    discoveryConfig?: Configuration;
 }
 
 /**
@@ -26,15 +29,19 @@ export interface AasServiceConfig {
 export class AasService {
     private registryClient: AasRegistryClient;
     private repositoryClient: AasRepositoryClient;
+    private discoveryClient: AasDiscoveryClient;
     private registryConfig?: Configuration;
     private repositoryConfig?: Configuration;
+    private discoveryConfig?: Configuration;
     private submodelService: SubmodelService;
 
     constructor(config: AasServiceConfig) {
         this.registryClient = new AasRegistryClient();
         this.repositoryClient = new AasRepositoryClient();
+        this.discoveryClient = new AasDiscoveryClient();
         this.registryConfig = config.registryConfig;
         this.repositoryConfig = config.repositoryConfig;
+        this.discoveryConfig = config.discoveryConfig;
 
         // Use separate submodel configs if provided, otherwise fall back to AAS configs
         this.submodelService = new SubmodelService({
@@ -651,6 +658,112 @@ export class AasService {
         }
 
         return { success: true, data: undefined };
+    }
+
+    /**
+     * Retrieves Asset Administration Shells by their asset identifiers.
+     *
+     * This method uses the discovery service to resolve asset IDs to AAS identifiers,
+     * then fetches the corresponding shells. If multiple AAS IDs are found for the given
+     * asset IDs, all matching shells are returned.
+     *
+     * @param options Object containing:
+     *  - assetIds: Array of asset identifiers to search for
+     *  - includeSubmodels?: Whether to fetch submodels for each shell (default: false)
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
+     *
+     * @returns Either `{ success: true; data: { shells, aasIds } }` or `{ success: false; error: ... }`.
+     */
+    async getAasByAssetId(options: {
+        assetIds: AssetId[];
+        includeSubmodels?: boolean;
+        includeConceptDescriptions?: boolean;
+    }): Promise<
+        ApiResult<
+            {
+                shells: AssetAdministrationShell[];
+                aasIds: string[];
+            },
+            any
+        >
+    > {
+        const { assetIds, includeSubmodels = false, includeConceptDescriptions = false } = options;
+
+        if (!this.discoveryConfig) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'ConfigurationError',
+                    message: 'Discovery service configuration not provided',
+                },
+            };
+        }
+
+        // Use discovery service to resolve asset IDs to AAS identifiers
+        const discoveryResult = await this.discoveryClient.getAllAssetAdministrationShellIdsByAssetLink({
+            configuration: this.discoveryConfig,
+            assetIds,
+        });
+
+        if (!discoveryResult.success) {
+            return { success: false, error: discoveryResult.error };
+        }
+
+        const aasIds = discoveryResult.data.result;
+
+        if (aasIds.length === 0) {
+            return {
+                success: true,
+                data: {
+                    shells: [],
+                    aasIds: [],
+                },
+            };
+        }
+
+        // Fetch all AAS by their identifiers
+        const shellResults = await Promise.all(
+            aasIds.map((aasId) =>
+                this.getAasById({
+                    aasIdentifier: aasId,
+                    includeSubmodels,
+                    includeConceptDescriptions,
+                })
+            )
+        );
+
+        // Collect successful results
+        const shells: AssetAdministrationShell[] = [];
+        const errors: any[] = [];
+
+        shellResults.forEach((result, index) => {
+            if (result.success) {
+                shells.push(result.data.shell);
+            } else {
+                errors.push({ aasId: aasIds[index], error: result.error });
+            }
+        });
+
+        // If some shells failed to fetch but others succeeded, still return success with available shells
+        if (shells.length > 0) {
+            return {
+                success: true,
+                data: {
+                    shells,
+                    aasIds,
+                },
+            };
+        }
+
+        // If all failed, return error
+        return {
+            success: false,
+            error: {
+                errorType: 'FetchError',
+                message: 'Failed to fetch any AAS',
+                details: errors,
+            },
+        };
     }
 
     /**

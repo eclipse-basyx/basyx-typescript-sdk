@@ -144,6 +144,8 @@ const service = new AasService({
     // In typical BaSyx deployments, submodel services run on different ports:
     submodelRegistryConfig: new Configuration({ basePath: 'http://localhost:8083' }),
     submodelRepositoryConfig: new Configuration({ basePath: 'http://localhost:8081' }),
+    // Optional: Discovery service config (used for asset ID lookups)
+    discoveryConfig: new Configuration({ basePath: 'http://localhost:8086' }),
 });
 
 // Create a new AAS (automatically registers in registry)
@@ -205,6 +207,22 @@ const byEndpointResult = await service.getAasByEndpoint({
 await service.deleteAas({ 
     aasIdentifier: 'https://example.com/ids/aas/my-aas' 
 });
+
+// Find AAS by asset IDs using discovery service
+const assetIds = [
+    { name: 'serialNumber', value: '12345' },
+    { name: 'deviceId', value: 'device-001' },
+];
+
+const byAssetIdResult = await service.getAasByAssetId({ 
+    assetIds,
+    includeSubmodels: true  // Optionally include submodels
+});
+if (byAssetIdResult.success) {
+    console.log('Found AAS IDs:', byAssetIdResult.data.aasIds);
+    console.log('Found shells:', byAssetIdResult.data.shells);
+    // If multiple AAS match the asset IDs, all are returned
+}
 
 // Fetch AAS with submodels and their concept descriptions
 const serviceWithCD = new AasService({
