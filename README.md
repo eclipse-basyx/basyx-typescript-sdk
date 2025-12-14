@@ -183,7 +183,7 @@ const allWithSubmodels = await service.getAasList({ includeSubmodels: true });
 if (allWithSubmodels.success) {
     allWithSubmodels.data.shells.forEach((shell, index) => {
         console.log(`Shell ${index}:`, shell.id);
-        console.log(`Submodels:`, allWithSubmodels.data.submodels?.[index]);
+        console.log(`Submodels:`, allWithSubmodels.data.submodels?.[shell.id]);
     });
 }
 
