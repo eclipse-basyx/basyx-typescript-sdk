@@ -127,7 +127,7 @@ import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core
 
 // Initialize service with both registry and repository
 const service = new AasService({
-    registryConfig: new Configuration({ basePath: 'http://localhost:8084' }),
+    registryConfig: new Configuration({ basePath: 'http://localhost:8082' }),
     repositoryConfig: new Configuration({ basePath: 'http://localhost:8081' }),
 });
 
