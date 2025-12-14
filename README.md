@@ -367,7 +367,7 @@ const element = getSubmodelElementByIdShort(submodel, 'MyProperty');
 // Extract endpoint from descriptor
 const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
 
-// Encode/decode IDs for BaSyx URLs
+// Encode/decode IDs from Identifiables
 const encoded = base64Encode('https://example.com/ids/aas/my-aas');
 // Use in URL: http://localhost:8081/shells/{encoded}
 ```
