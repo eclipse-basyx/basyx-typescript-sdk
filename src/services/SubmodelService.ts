@@ -1,5 +1,7 @@
-import type { Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ConceptDescription, ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
 import type { ApiResult } from '../models/api';
+import { ModelType } from '@aas-core-works/aas-core3.0-typescript/types';
+import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptionRepositoryClient';
 import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 import { Configuration } from '../generated/runtime';
@@ -9,6 +11,7 @@ import { SubmodelDescriptor } from '../models/Descriptors';
 export interface SubmodelServiceConfig {
     registryConfig?: Configuration;
     repositoryConfig?: Configuration;
+    conceptDescriptionRepositoryConfig?: Configuration;
 }
 
 /**
@@ -21,14 +24,18 @@ export interface SubmodelServiceConfig {
 export class SubmodelService {
     private registryClient: SubmodelRegistryClient;
     private repositoryClient: SubmodelRepositoryClient;
+    private conceptDescriptionClient: ConceptDescriptionRepositoryClient;
     private registryConfig?: Configuration;
     private repositoryConfig?: Configuration;
+    private conceptDescriptionRepositoryConfig?: Configuration;
 
     constructor(config: SubmodelServiceConfig) {
         this.registryClient = new SubmodelRegistryClient();
         this.repositoryClient = new SubmodelRepositoryClient();
+        this.conceptDescriptionClient = new ConceptDescriptionRepositoryClient();
         this.registryConfig = config.registryConfig;
         this.repositoryConfig = config.repositoryConfig;
+        this.conceptDescriptionRepositoryConfig = config.conceptDescriptionRepositoryConfig;
     }
 
     /**
@@ -43,19 +50,27 @@ export class SubmodelService {
      *  - preferRegistry?: Whether to prefer registry over repository (default: true)
      *  - limit?: Maximum number of elements to retrieve
      *  - cursor?: Pagination cursor
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { submodels, source } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { submodels, source, conceptDescriptions? } }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelList(options?: { preferRegistry?: boolean; limit?: number; cursor?: string }): Promise<
+    async getSubmodelList(options?: {
+        preferRegistry?: boolean;
+        limit?: number;
+        cursor?: string;
+        includeConceptDescriptions?: boolean;
+    }): Promise<
         ApiResult<
             {
                 submodels: Submodel[];
                 source: 'registry' | 'repository';
+                conceptDescriptions?: ConceptDescription[];
             },
             any
         >
     > {
         const preferRegistry = options?.preferRegistry ?? true;
+        const includeConceptDescriptions = options?.includeConceptDescriptions ?? false;
 
         // Try registry first if configured and preferred
         if (preferRegistry && this.registryConfig) {
@@ -81,11 +96,18 @@ export class SubmodelService {
 
                 const submodels = (await Promise.all(submodelPromises)).filter((sm): sm is Submodel => sm !== null);
 
+                // Fetch concept descriptions if requested
+                let conceptDescriptions: ConceptDescription[] | undefined;
+                if (includeConceptDescriptions) {
+                    conceptDescriptions = await this.fetchConceptDescriptionsForSubmodels(submodels);
+                }
+
                 return {
                     success: true,
                     data: {
                         submodels,
                         source: 'registry',
+                        ...(conceptDescriptions && { conceptDescriptions }),
                     },
                 };
             }
@@ -100,11 +122,20 @@ export class SubmodelService {
             });
 
             if (repositoryResult.success) {
+                const submodels = repositoryResult.data.result;
+
+                // Fetch concept descriptions if requested
+                let conceptDescriptions: ConceptDescription[] | undefined;
+                if (includeConceptDescriptions) {
+                    conceptDescriptions = await this.fetchConceptDescriptionsForSubmodels(submodels);
+                }
+
                 return {
                     success: true,
                     data: {
-                        submodels: repositoryResult.data.result,
+                        submodels,
                         source: 'repository',
+                        ...(conceptDescriptions && { conceptDescriptions }),
                     },
                 };
             }
@@ -131,19 +162,25 @@ export class SubmodelService {
      * @param options Object containing:
      *  - submodelIdentifier: The Submodel identifier
      *  - useRegistryEndpoint?: Whether to try registry endpoint first (default: true)
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { submodel, descriptor? } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { submodel, descriptor?, conceptDescriptions? } }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelById(options: { submodelIdentifier: string; useRegistryEndpoint?: boolean }): Promise<
+    async getSubmodelById(options: {
+        submodelIdentifier: string;
+        useRegistryEndpoint?: boolean;
+        includeConceptDescriptions?: boolean;
+    }): Promise<
         ApiResult<
             {
                 submodel: Submodel;
                 descriptor?: SubmodelDescriptor;
+                conceptDescriptions?: ConceptDescription[];
             },
             any
         >
     > {
-        const { submodelIdentifier, useRegistryEndpoint = true } = options;
+        const { submodelIdentifier, useRegistryEndpoint = true, includeConceptDescriptions = false } = options;
 
         // Try registry-based flow first
         if (useRegistryEndpoint && this.registryConfig) {
@@ -157,13 +194,19 @@ export class SubmodelService {
                 const endpoint = descriptor.endpoints?.[0]?.protocolInformation?.href;
 
                 if (endpoint) {
-                    const submodelResult = await this.getSubmodelByEndpoint({ endpoint });
+                    const submodelResult = await this.getSubmodelByEndpoint({
+                        endpoint,
+                        includeConceptDescriptions,
+                    });
                     if (submodelResult.success) {
                         return {
                             success: true,
                             data: {
                                 submodel: submodelResult.data.submodel,
                                 descriptor,
+                                ...(submodelResult.data.conceptDescriptions && {
+                                    conceptDescriptions: submodelResult.data.conceptDescriptions,
+                                }),
                             },
                         };
                     }
@@ -190,11 +233,20 @@ export class SubmodelService {
         });
 
         if (submodelResult.success) {
+            const submodel = submodelResult.data;
+
+            // Fetch concept descriptions if requested
+            let conceptDescriptions: ConceptDescription[] | undefined;
+            if (includeConceptDescriptions) {
+                conceptDescriptions = await this.fetchConceptDescriptionsForSubmodels([submodel]);
+            }
+
             return {
                 success: true,
                 data: {
-                    submodel: submodelResult.data,
+                    submodel,
                     descriptor: undefined,
+                    ...(conceptDescriptions && { conceptDescriptions }),
                 },
             };
         }
@@ -262,18 +314,20 @@ export class SubmodelService {
      *
      * @param options Object containing:
      *  - endpoint: The endpoint URL (format: http://host/submodels/{base64EncodedId})
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { submodel } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { submodel, conceptDescriptions? } }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByEndpoint(options: { endpoint: string }): Promise<
+    async getSubmodelByEndpoint(options: { endpoint: string; includeConceptDescriptions?: boolean }): Promise<
         ApiResult<
             {
                 submodel: Submodel;
+                conceptDescriptions?: ConceptDescription[];
             },
             any
         >
     > {
-        const { endpoint } = options;
+        const { endpoint, includeConceptDescriptions = false } = options;
 
         // Extract base URL and encoded ID from endpoint
         // Expected format: http://localhost:8082/submodels/base64EncodedId
@@ -307,10 +361,19 @@ export class SubmodelService {
             return { success: false, error: submodelResult.error };
         }
 
+        const submodel = submodelResult.data;
+
+        // Fetch concept descriptions if requested
+        let conceptDescriptions: ConceptDescription[] | undefined;
+        if (includeConceptDescriptions) {
+            conceptDescriptions = await this.fetchConceptDescriptionsForSubmodels([submodel]);
+        }
+
         return {
             success: true,
             data: {
-                submodel: submodelResult.data,
+                submodel,
+                ...(conceptDescriptions && { conceptDescriptions }),
             },
         };
     }
@@ -555,5 +618,110 @@ export class SubmodelService {
         }
 
         return { success: true, data: undefined };
+    }
+
+    /**
+     * Extracts all unique semantic IDs from a submodel and its elements recursively.
+     * Uses a stack-based approach to traverse the submodel element tree.
+     *
+     * @param submodel The submodel to extract semantic IDs from
+     * @returns Array of unique semantic ID strings
+     */
+    private extractSemanticIds(submodel: Submodel): string[] {
+        const semanticIds = new Set<string>();
+
+        // Add submodel's own semantic ID if present
+        if (submodel.semanticId?.keys && submodel.semanticId.keys.length > 0) {
+            const semanticIdValue = submodel.semanticId.keys[0].value;
+            if (semanticIdValue) {
+                semanticIds.add(semanticIdValue);
+            }
+        }
+
+        // Stack-based traversal of submodel elements
+        const stack: ISubmodelElement[] = [...(submodel.submodelElements || [])];
+
+        while (stack.length > 0) {
+            const element = stack.pop()!;
+
+            // Add element's semantic ID if present
+            if (element.semanticId?.keys && element.semanticId.keys.length > 0) {
+                const semanticIdValue = element.semanticId.keys[0].value;
+                if (semanticIdValue) {
+                    semanticIds.add(semanticIdValue);
+                }
+            }
+
+            // Add children to stack based on element type
+            const modelType = typeof element.modelType === 'function' ? element.modelType() : element.modelType;
+
+            if (modelType === ModelType.SubmodelElementCollection) {
+                const collection = element as any;
+                if (collection.value && Array.isArray(collection.value)) {
+                    stack.push(...collection.value);
+                }
+            } else if (modelType === ModelType.SubmodelElementList) {
+                const list = element as any;
+                if (list.value && Array.isArray(list.value)) {
+                    stack.push(...list.value);
+                }
+            } else if (modelType === ModelType.Entity) {
+                const entity = element as any;
+                if (entity.statements && Array.isArray(entity.statements)) {
+                    stack.push(...entity.statements);
+                }
+            } else if (modelType === ModelType.AnnotatedRelationshipElement) {
+                const annotatedRel = element as any;
+                if (annotatedRel.annotations && Array.isArray(annotatedRel.annotations)) {
+                    stack.push(...annotatedRel.annotations);
+                }
+            }
+        }
+
+        return Array.from(semanticIds);
+    }
+
+    /**
+     * Fetches concept descriptions for multiple submodels.
+     * Deduplicates semantic IDs across all submodels and fetches each concept description once.
+     * Skips concept descriptions that cannot be resolved.
+     *
+     * @param submodels Array of submodels to fetch concept descriptions for
+     * @returns Array of unique concept descriptions
+     */
+    private async fetchConceptDescriptionsForSubmodels(submodels: Submodel[]): Promise<ConceptDescription[]> {
+        if (!this.conceptDescriptionRepositoryConfig) {
+            return [];
+        }
+
+        // Extract all semantic IDs from all submodels
+        const allSemanticIds = new Set<string>();
+        for (const submodel of submodels) {
+            const semanticIds = this.extractSemanticIds(submodel);
+            semanticIds.forEach((id) => allSemanticIds.add(id));
+        }
+
+        // Fetch concept descriptions for all unique semantic IDs
+        const conceptDescriptions: ConceptDescription[] = [];
+        const fetchPromises = Array.from(allSemanticIds).map(async (semanticId) => {
+            try {
+                const result = await this.conceptDescriptionClient.getConceptDescriptionById({
+                    configuration: this.conceptDescriptionRepositoryConfig!,
+                    cdIdentifier: semanticId,
+                });
+
+                if (result.success) {
+                    return result.data;
+                }
+            } catch {
+                // Skip concept descriptions that cannot be resolved
+            }
+            return null;
+        });
+
+        const results = await Promise.all(fetchPromises);
+        conceptDescriptions.push(...results.filter((cd): cd is ConceptDescription => cd !== null));
+
+        return conceptDescriptions;
     }
 }

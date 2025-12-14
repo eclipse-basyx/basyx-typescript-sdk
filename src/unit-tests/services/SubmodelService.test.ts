@@ -712,4 +712,66 @@ describe('SubmodelService Unit Tests', () => {
             }
         });
     });
+
+    describe('includeConceptDescriptions functionality', () => {
+        it('getSubmodelList should support includeConceptDescriptions parameter', async () => {
+            const mockSubmodels = [testSubmodel];
+            mockRepositoryClient.getAllSubmodels = jest.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: mockSubmodels,
+                    pagedResult: undefined,
+                },
+            });
+
+            const result = await submodelService.getSubmodelList({
+                preferRegistry: false,
+                includeConceptDescriptions: false,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodels).toEqual(mockSubmodels);
+                expect(result.data.conceptDescriptions).toBeUndefined();
+            }
+        });
+
+        it('getSubmodelById should support includeConceptDescriptions parameter', async () => {
+            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testSubmodel,
+            });
+
+            const result = await submodelService.getSubmodelById({
+                submodelIdentifier: testSubmodelId,
+                useRegistryEndpoint: false,
+                includeConceptDescriptions: false,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodel).toEqual(testSubmodel);
+                expect(result.data.conceptDescriptions).toBeUndefined();
+            }
+        });
+
+        it('getSubmodelByEndpoint should support includeConceptDescriptions parameter', async () => {
+            const endpoint = 'http://localhost:8081/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC0xMjM';
+            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testSubmodel,
+            });
+
+            const result = await submodelService.getSubmodelByEndpoint({
+                endpoint,
+                includeConceptDescriptions: false,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodel).toEqual(testSubmodel);
+                expect(result.data.conceptDescriptions).toBeUndefined();
+            }
+        });
+    });
 });

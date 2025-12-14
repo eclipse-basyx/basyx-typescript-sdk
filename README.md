@@ -205,6 +205,39 @@ const byEndpointResult = await service.getAasByEndpoint({
 await service.deleteAas({ 
     aasIdentifier: 'https://example.com/ids/aas/my-aas' 
 });
+
+// Fetch AAS with submodels and their concept descriptions
+const serviceWithCD = new AasService({
+    registryConfig: new Configuration({ basePath: 'http://localhost:8084' }),
+    repositoryConfig: new Configuration({ basePath: 'http://localhost:8081' }),
+    submodelRegistryConfig: new Configuration({ basePath: 'http://localhost:8085' }),
+    submodelRepositoryConfig: new Configuration({ basePath: 'http://localhost:8082' }),
+    conceptDescriptionRepositoryConfig: new Configuration({ basePath: 'http://localhost:8083' }),
+});
+
+const withConceptDescriptions = await serviceWithCD.getAasById({
+    aasIdentifier: 'https://example.com/ids/aas/my-aas',
+    includeSubmodels: true,
+    includeConceptDescriptions: true,
+});
+if (withConceptDescriptions.success) {
+    console.log('Shell:', withConceptDescriptions.data.shell);
+    console.log('Submodels with CDs:', withConceptDescriptions.data.submodels);
+    // Concept descriptions are fetched for all semantic IDs in submodels and their elements
+}
+
+// Fetch all AAS with submodels and concept descriptions
+const allWithCD = await serviceWithCD.getAasList({
+    includeSubmodels: true,
+    includeConceptDescriptions: true,
+});
+if (allWithCD.success) {
+    allWithCD.data.shells.forEach((shell) => {
+        console.log('Shell:', shell.id);
+        console.log('Submodels:', allWithCD.data.submodels?.[shell.id]);
+        // Concept descriptions are available through the submodel service
+    });
+}
 ```
 
 ### Using the SubmodelService (High-level API)
@@ -283,6 +316,43 @@ const repoOnlyService = new SubmodelService({
 
 const repoList = await repoOnlyService.getSubmodelList();
 // Automatically falls back to repository when registry unavailable
+
+// Fetch submodels with concept descriptions
+const serviceWithCD = new SubmodelService({
+    registryConfig: new Configuration({ basePath: 'http://localhost:8085' }),
+    repositoryConfig: new Configuration({ basePath: 'http://localhost:8082' }),
+    conceptDescriptionRepositoryConfig: new Configuration({ basePath: 'http://localhost:8083' }),
+});
+
+// Get submodel with its concept descriptions
+const withCD = await serviceWithCD.getSubmodelById({
+    submodelIdentifier: 'https://example.com/ids/sm/my-submodel',
+    includeConceptDescriptions: true,
+});
+if (withCD.success) {
+    console.log('Submodel:', withCD.data.submodel);
+    console.log('Concept Descriptions:', withCD.data.conceptDescriptions);
+    // conceptDescriptions array contains all unique CDs referenced by:
+    // - The submodel's semanticId
+    // - All submodel elements' semanticId properties (recursively through collections, lists, entities)
+}
+
+// Get all submodels with concept descriptions
+const listWithCD = await serviceWithCD.getSubmodelList({
+    preferRegistry: false,
+    includeConceptDescriptions: true,
+});
+if (listWithCD.success) {
+    console.log('Submodels:', listWithCD.data.submodels);
+    console.log('All Concept Descriptions:', listWithCD.data.conceptDescriptions);
+    // Concept descriptions are deduplicated across all submodels
+}
+
+// Get submodel by endpoint with concept descriptions
+const byEndpointWithCD = await serviceWithCD.getSubmodelByEndpoint({
+    endpoint: 'http://localhost:8082/submodels/encoded-id',
+    includeConceptDescriptions: true,
+});
 ```
 
 ### Using Utility Functions

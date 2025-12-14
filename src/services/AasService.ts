@@ -13,6 +13,7 @@ export interface AasServiceConfig {
     repositoryConfig?: Configuration;
     submodelRegistryConfig?: Configuration;
     submodelRepositoryConfig?: Configuration;
+    conceptDescriptionRepositoryConfig?: Configuration;
 }
 
 /**
@@ -39,6 +40,7 @@ export class AasService {
         this.submodelService = new SubmodelService({
             registryConfig: config.submodelRegistryConfig ?? config.registryConfig,
             repositoryConfig: config.submodelRepositoryConfig ?? config.repositoryConfig,
+            conceptDescriptionRepositoryConfig: config.conceptDescriptionRepositoryConfig,
         });
     }
 
@@ -55,6 +57,7 @@ export class AasService {
      *  - limit?: Maximum number of elements to retrieve
      *  - cursor?: Pagination cursor
      *  - includeSubmodels?: Whether to fetch submodels for each shell (default: false)
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
      * @returns Either `{ success: true; data: { shells, source, submodels? } }` or `{ success: false; error: ... }`.
      */
@@ -63,6 +66,7 @@ export class AasService {
         limit?: number;
         cursor?: string;
         includeSubmodels?: boolean;
+        includeConceptDescriptions?: boolean;
     }): Promise<
         ApiResult<
             {
@@ -106,7 +110,7 @@ export class AasService {
                 // Fetch submodels if requested
                 let submodelsMap: Record<string, Submodel[]> | undefined;
                 if (includeSubmodels) {
-                    submodelsMap = await this.fetchSubmodelsForShells(shells);
+                    submodelsMap = await this.fetchSubmodelsForShells(shells, options?.includeConceptDescriptions);
                 }
 
                 return {
@@ -134,7 +138,7 @@ export class AasService {
                 // Fetch submodels if requested
                 let submodelsMap: Record<string, Submodel[]> | undefined;
                 if (includeSubmodels) {
-                    submodelsMap = await this.fetchSubmodelsForShells(shells);
+                    submodelsMap = await this.fetchSubmodelsForShells(shells, options?.includeConceptDescriptions);
                 }
 
                 return {
@@ -170,6 +174,7 @@ export class AasService {
      *  - aasIdentifier: The AAS identifier
      *  - useRegistryEndpoint?: Whether to try registry endpoint first (default: true)
      *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
      * @returns Either `{ success: true; data: { shell, descriptor?, submodels? } }` or `{ success: false; error: ... }`.
      */
@@ -177,6 +182,7 @@ export class AasService {
         aasIdentifier: string;
         useRegistryEndpoint?: boolean;
         includeSubmodels?: boolean;
+        includeConceptDescriptions?: boolean;
     }): Promise<
         ApiResult<
             {
@@ -216,7 +222,10 @@ export class AasService {
                         // Fetch submodels if requested
                         let submodels: Submodel[] | undefined;
                         if (includeSubmodels) {
-                            const submodelsMap = await this.fetchSubmodelsForShells([shell]);
+                            const submodelsMap = await this.fetchSubmodelsForShells(
+                                [shell],
+                                options.includeConceptDescriptions
+                            );
                             submodels = submodelsMap[shell.id] || [];
                         }
 
@@ -255,7 +264,7 @@ export class AasService {
             // Fetch submodels if requested
             let submodels: Submodel[] | undefined;
             if (includeSubmodels) {
-                const submodelsMap = await this.fetchSubmodelsForShells([shell]);
+                const submodelsMap = await this.fetchSubmodelsForShells([shell], options.includeConceptDescriptions);
                 submodels = submodelsMap[shell.id] || [];
             }
 
@@ -333,10 +342,15 @@ export class AasService {
      * @param options Object containing:
      *  - endpoint: The endpoint URL (format: http://host/shells/{base64EncodedId})
      *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
+     *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
      * @returns Either `{ success: true; data: { shell, submodels? } }` or `{ success: false; error: ... }`.
      */
-    async getAasByEndpoint(options: { endpoint: string; includeSubmodels?: boolean }): Promise<
+    async getAasByEndpoint(options: {
+        endpoint: string;
+        includeSubmodels?: boolean;
+        includeConceptDescriptions?: boolean;
+    }): Promise<
         ApiResult<
             {
                 shell: AssetAdministrationShell;
@@ -384,7 +398,7 @@ export class AasService {
         // Fetch submodels if requested
         let submodels: Submodel[] | undefined;
         if (includeSubmodels) {
-            const submodelsMap = await this.fetchSubmodelsForShells([shell]);
+            const submodelsMap = await this.fetchSubmodelsForShells([shell], options.includeConceptDescriptions);
             submodels = submodelsMap[shell.id] || [];
         }
 
@@ -644,9 +658,13 @@ export class AasService {
      * Returns a map of shell IDs to their corresponding submodels.
      *
      * @param shells Array of Asset Administration Shells
+     * @param includeConceptDescriptions Whether to fetch concept descriptions for submodels
      * @returns Record mapping shell IDs to arrays of Submodels
      */
-    private async fetchSubmodelsForShells(shells: AssetAdministrationShell[]): Promise<Record<string, Submodel[]>> {
+    private async fetchSubmodelsForShells(
+        shells: AssetAdministrationShell[],
+        includeConceptDescriptions?: boolean
+    ): Promise<Record<string, Submodel[]>> {
         const submodelsMap: Record<string, Submodel[]> = {};
 
         await Promise.all(
@@ -663,6 +681,7 @@ export class AasService {
                     const submodelResult = await this.submodelService.getSubmodelById({
                         submodelIdentifier: submodelId,
                         useRegistryEndpoint: false, // Use repository directly for consistency
+                        includeConceptDescriptions,
                     });
 
                     if (submodelResult.success) {

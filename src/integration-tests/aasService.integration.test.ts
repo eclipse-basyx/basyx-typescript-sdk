@@ -498,4 +498,88 @@ describe('AasService Integration Tests', () => {
             await aasService.deleteAas({ aasIdentifier: testShell.id });
         });
     });
+
+    describe('includeConceptDescriptions functionality', () => {
+        const cdRepositoryConfig = new Configuration({ basePath: 'http://localhost:8083' });
+        const serviceWithCD = new AasService({
+            registryConfig,
+            repositoryConfig,
+            conceptDescriptionRepositoryConfig: cdRepositoryConfig,
+        });
+
+        test('getAasList with includeSubmodels and includeConceptDescriptions should work', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            // Fetch with concept descriptions
+            const result = await serviceWithCD.getAasList({
+                preferRegistry: false,
+                includeSubmodels: true,
+                includeConceptDescriptions: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shells.length).toBeGreaterThan(0);
+                expect(result.data.submodels).toBeDefined();
+                // Concept descriptions are fetched through submodel service
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('getAasById with includeSubmodels and includeConceptDescriptions should work', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            // Fetch with concept descriptions
+            const result = await serviceWithCD.getAasById({
+                aasIdentifier: testShell.id,
+                useRegistryEndpoint: false,
+                includeSubmodels: true,
+                includeConceptDescriptions: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shell.id).toBe(testShell.id);
+                expect(result.data.submodels).toBeDefined();
+                // Concept descriptions are fetched through submodel service
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('getAasByEndpoint with includeSubmodels and includeConceptDescriptions should work', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await aasService.createAas({ shell: testShell });
+
+            const endpoint = `http://localhost:8081/shells/${base64Encode(testShell.id)}`;
+
+            // Fetch with concept descriptions
+            const result = await serviceWithCD.getAasByEndpoint({
+                endpoint,
+                includeSubmodels: true,
+                includeConceptDescriptions: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.shell.id).toBe(testShell.id);
+                expect(result.data.submodels).toBeDefined();
+                // Concept descriptions are fetched through submodel service
+            }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+    });
 });

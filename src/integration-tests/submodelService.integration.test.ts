@@ -395,4 +395,92 @@ describe('SubmodelService Integration Tests', () => {
             }
         });
     });
+
+    describe('includeConceptDescriptions functionality', () => {
+        const cdRepositoryConfig = new Configuration({ basePath: 'http://localhost:8083' });
+        const serviceWithCD = new SubmodelService({
+            registryConfig,
+            repositoryConfig,
+            conceptDescriptionRepositoryConfig: cdRepositoryConfig,
+        });
+
+        test('getSubmodelList with includeConceptDescriptions should not fail when CD repo unavailable', async () => {
+            const { testSubmodel } = createUniqueTestData();
+
+            // Create a submodel in repository
+            await submodelService.createSubmodel({
+                submodel: testSubmodel,
+            });
+
+            // Fetch with concept descriptions (should not fail even if none found)
+            const result = await serviceWithCD.getSubmodelList({
+                preferRegistry: false,
+                includeConceptDescriptions: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodels.length).toBeGreaterThan(0);
+                expect(result.data.conceptDescriptions).toBeDefined();
+                // Concept descriptions may be empty array if none found
+                expect(Array.isArray(result.data.conceptDescriptions)).toBe(true);
+            }
+
+            // Cleanup
+            await submodelService.deleteSubmodel({ submodelIdentifier: testSubmodel.id });
+        });
+
+        test('getSubmodelById with includeConceptDescriptions should work', async () => {
+            const { testSubmodel } = createUniqueTestData();
+
+            // Create a submodel in repository
+            await submodelService.createSubmodel({
+                submodel: testSubmodel,
+            });
+
+            // Fetch with concept descriptions
+            const result = await serviceWithCD.getSubmodelById({
+                submodelIdentifier: testSubmodel.id,
+                useRegistryEndpoint: false,
+                includeConceptDescriptions: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodel.id).toBe(testSubmodel.id);
+                expect(result.data.conceptDescriptions).toBeDefined();
+                expect(Array.isArray(result.data.conceptDescriptions)).toBe(true);
+            }
+
+            // Cleanup
+            await submodelService.deleteSubmodel({ submodelIdentifier: testSubmodel.id });
+        });
+
+        test('getSubmodelByEndpoint with includeConceptDescriptions should work', async () => {
+            const { testSubmodel } = createUniqueTestData();
+
+            // Create a submodel in repository
+            await submodelService.createSubmodel({
+                submodel: testSubmodel,
+            });
+
+            const endpoint = `http://localhost:8082/submodels/${base64Encode(testSubmodel.id)}`;
+
+            // Fetch with concept descriptions
+            const result = await serviceWithCD.getSubmodelByEndpoint({
+                endpoint,
+                includeConceptDescriptions: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodel.id).toBe(testSubmodel.id);
+                expect(result.data.conceptDescriptions).toBeDefined();
+                expect(Array.isArray(result.data.conceptDescriptions)).toBe(true);
+            }
+
+            // Cleanup
+            await submodelService.deleteSubmodel({ submodelIdentifier: testSubmodel.id });
+        });
+    });
 });
