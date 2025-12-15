@@ -11,6 +11,7 @@ import {
     specificAssetIdFromJsonable,
     toJsonable,
 } from '@aas-core-works/aas-core3.0-typescript/jsonization';
+import { AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
 //import { AasRegistryService } from '../generated';
 import {
     AssetAdministrationShellDescriptor,
@@ -19,6 +20,23 @@ import {
     ProtocolInformationSecurityAttributes,
     SubmodelDescriptor,
 } from '../models/Descriptors';
+
+/**
+ * Convert AssetKind enum to its JSON string representation.
+ * The Core library uses numeric enums (e.g., Instance = 1), but the API expects strings.
+ */
+function assetKindToJsonable(assetKind: AssetKind): string {
+    switch (assetKind) {
+        case AssetKind.Instance:
+            return 'Instance';
+        case AssetKind.Type:
+            return 'Type';
+        case AssetKind.NotApplicable:
+            return 'NotApplicable';
+        default:
+            throw new Error(`Unknown AssetKind value: ${assetKind}`);
+    }
+}
 
 export function assetAdministrationShellDescriptorFromJsonable(
     json: JsonValue
@@ -207,7 +225,9 @@ export function toJsonableAssetAdministrationShellDescriptor(
             extensions: descriptor.extensions.map(toJsonable),
         }),
         ...(descriptor.administration !== null && { administration: toJsonable(descriptor.administration) }),
-        ...(descriptor.assetKind !== null && { assetKind: descriptor.assetKind }),
+        ...(descriptor.assetKind !== null && {
+            assetKind: assetKindToJsonable(descriptor.assetKind),
+        }),
         ...(descriptor.assetType !== null && { assetType: descriptor.assetType }),
         ...(descriptor.globalAssetId !== null && { globalAssetId: descriptor.globalAssetId }),
         ...(descriptor.specificAssetIds !== null && {
