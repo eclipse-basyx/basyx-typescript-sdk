@@ -15,11 +15,12 @@ export interface SubmodelServiceConfig {
 }
 
 /**
- * SubmodelService combines Submodel Registry and Repository clients to provide
- * higher-level functionality for working with Submodels.
+ * SubmodelService combines Submodel Registry, Submodel Repository, and Concept Description Repository clients
+ * to provide higher-level functionality for working with Submodels.
  *
  * This service demonstrates the multi-client pattern by orchestrating
- * operations across different BaSyx components.
+ * operations across different BaSyx components, including the Submodel Registry,
+ * Submodel Repository, and Concept Description Repository.
  */
 export class SubmodelService {
     private registryClient: SubmodelRegistryClient;
