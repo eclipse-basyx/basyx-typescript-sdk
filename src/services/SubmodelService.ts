@@ -612,13 +612,13 @@ export class SubmodelService {
         const descriptor = new SubmodelDescriptor(
             submodel.id,
             endpoints,
-            submodel.administration || null,
-            submodel.idShort || null,
-            submodel.semanticId || null,
-            submodel.supplementalSemanticIds || null,
-            submodel.displayName || null,
-            submodel.description || null,
-            submodel.extensions || null
+            submodel.administration ?? null,
+            submodel.idShort ?? null,
+            submodel.semanticId ?? null,
+            submodel.supplementalSemanticIds ?? null,
+            submodel.displayName ?? null,
+            submodel.description ?? null,
+            submodel.extensions ?? null
         );
         return descriptor;
     }

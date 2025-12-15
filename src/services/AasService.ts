@@ -870,17 +870,18 @@ export class AasService {
      * @returns AssetAdministrationShellDescriptor with all populated fields
      */
     private createDescriptorFromAas(shell: AssetAdministrationShell): AssetAdministrationShellDescriptor {
+        // Create descriptor with all fields from the shell
         const descriptor = new AssetAdministrationShellDescriptor(
             shell.id,
-            shell.displayName || null,
-            shell.description || null,
-            shell.extensions || null,
-            shell.administration || null,
-            shell.idShort || null,
-            shell.assetInformation?.assetKind || null,
-            shell.assetInformation?.assetType || null,
-            shell.assetInformation?.globalAssetId || null,
-            shell.assetInformation?.specificAssetIds || null,
+            shell.displayName ?? null,
+            shell.description ?? null,
+            shell.extensions ?? null,
+            shell.administration ?? null,
+            shell.idShort ?? null,
+            shell.assetInformation?.assetKind ?? null,
+            shell.assetInformation?.assetType ?? null,
+            shell.assetInformation?.globalAssetId ?? null,
+            shell.assetInformation?.specificAssetIds ?? null,
             null, // submodelDescriptors not included here
             null // endpoints set below
         );
