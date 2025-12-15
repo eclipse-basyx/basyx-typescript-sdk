@@ -26,11 +26,14 @@ export interface AasServiceConfig {
 }
 
 /**
- * AasService combines AAS Registry and Repository clients to provide
- * higher-level functionality for working with Asset Administration Shells.
+ * AasService combines and orchestrates multiple clients and services, including:
+ * - AasRegistryClient
+ * - AasRepositoryClient
+ * - AasDiscoveryClient
+ * - SubmodelService
  *
- * This service demonstrates the multi-client pattern by orchestrating
- * operations across different BaSyx components.
+ * It provides higher-level functionality for working with Asset Administration Shells
+ * by coordinating operations across these BaSyx components, demonstrating the multi-client pattern.
  */
 export class AasService {
     private registryClient: AasRegistryClient;
