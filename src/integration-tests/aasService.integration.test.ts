@@ -1,4 +1,10 @@
-import { Key, KeyTypes, Reference, ReferenceTypes, SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
+import {
+    Key,
+    KeyTypes,
+    Reference,
+    ReferenceTypes,
+    SpecificAssetId,
+} from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
@@ -797,7 +803,7 @@ describe('AasService Integration Tests', () => {
                 // Endpoint is constructed from repository config even if AAS doesn't exist
                 expect(result.data.aasEndpoint).toBeDefined();
                 expect(result.data.aasEndpoint).toContain('http://localhost:8081/shells/');
-                
+
                 // However, trying to use this endpoint should fail
                 const shellByEndpoint = await serviceWithSubmodels.getAasByEndpoint({
                     endpoint: result.data.aasEndpoint!,
