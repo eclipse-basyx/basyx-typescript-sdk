@@ -11,9 +11,10 @@ export default {
             moduleNameMapper: {
                 '^@/(.*)$': '<rootDir>/src/$1',
             },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'xml'],
             transform: {
                 '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
+                '^.+\\.xml$': '<rootDir>/jest-xml-transformer.js',
             },
             coveragePathIgnorePatterns: ['<rootDir>/src/generated/'],
             testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/', '<rootDir>/bundle/'],
