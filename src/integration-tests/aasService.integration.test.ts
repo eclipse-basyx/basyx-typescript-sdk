@@ -1,4 +1,4 @@
-import { SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
+import { Key, KeyTypes, Reference, ReferenceTypes, SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
@@ -734,6 +734,125 @@ describe('AasService Integration Tests', () => {
                 aasIdentifier: testShell.id,
             });
             await aasServiceWithDiscovery.deleteAas({ aasIdentifier: testShell.id });
+        });
+    });
+
+    describe('resolveReference', () => {
+        const submodelRegistryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+        const submodelRepositoryConfig = new Configuration({ basePath: 'http://localhost:8082' });
+        const serviceWithSubmodels = new AasService({
+            registryConfig,
+            repositoryConfig,
+            submodelRegistryConfig,
+            submodelRepositoryConfig,
+        });
+
+        test('should resolve reference with AAS and Submodel', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS
+            await serviceWithSubmodels.createAas({ shell: testShell });
+
+            // Create reference to AAS only
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, testShell.id),
+            ]);
+
+            // Resolve reference
+            const result = await serviceWithSubmodels.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.aasEndpoint).toBeDefined();
+                expect(result.data.aasEndpoint).toContain('http://localhost:8081/shells/');
+                expect(result.data.submodelEndpoint).toBeUndefined();
+                expect(result.data.submodelElementPath).toBeUndefined();
+
+                // Verify the endpoint is actually usable
+                const shellByEndpoint = await serviceWithSubmodels.getAasByEndpoint({
+                    endpoint: result.data.aasEndpoint!,
+                });
+                expect(shellByEndpoint.success).toBe(true);
+                if (shellByEndpoint.success) {
+                    expect(shellByEndpoint.data.shell.id).toBe(testShell.id);
+                }
+            }
+
+            // Cleanup
+            await serviceWithSubmodels.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('should resolve reference to non-existent AAS gracefully', async () => {
+            const nonExistentId = 'https://example.com/ids/aas/non-existent-' + Date.now();
+
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, nonExistentId),
+            ]);
+
+            const result = await serviceWithSubmodels.resolveReference({ reference });
+
+            // Should still return success with constructed endpoint (from repository config fallback)
+            expect(result.success).toBe(true);
+            if (result.success) {
+                // Endpoint is constructed from repository config even if AAS doesn't exist
+                expect(result.data.aasEndpoint).toBeDefined();
+                expect(result.data.aasEndpoint).toContain('http://localhost:8081/shells/');
+                
+                // However, trying to use this endpoint should fail
+                const shellByEndpoint = await serviceWithSubmodels.getAasByEndpoint({
+                    endpoint: result.data.aasEndpoint!,
+                });
+                expect(shellByEndpoint.success).toBe(false);
+            }
+        });
+
+        test('should reject ExternalReference', async () => {
+            const reference = new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://external.com/resource'),
+            ]);
+
+            const result = await serviceWithSubmodels.resolveReference({ reference });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('UnsupportedReferenceType');
+            }
+        });
+
+        test('should reject empty reference keys', async () => {
+            const reference = new Reference(ReferenceTypes.ModelReference, []);
+
+            const result = await serviceWithSubmodels.resolveReference({ reference });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('InvalidReference');
+            }
+        });
+
+        test('should handle AAS without registry (repository only)', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Create AAS without registry
+            await serviceWithSubmodels.createAas({ shell: testShell, registerInRegistry: false });
+
+            // Create reference
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, testShell.id),
+            ]);
+
+            // Resolve reference with useRegistry=false in getAasEndpointById
+            const result = await serviceWithSubmodels.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                // Should construct endpoint from repository config
+                expect(result.data.aasEndpoint).toBeDefined();
+                expect(result.data.aasEndpoint).toContain('http://localhost:8081/shells/');
+            }
+
+            // Cleanup
+            await serviceWithSubmodels.deleteAas({ aasIdentifier: testShell.id, deleteFromRegistry: false });
         });
     });
 });

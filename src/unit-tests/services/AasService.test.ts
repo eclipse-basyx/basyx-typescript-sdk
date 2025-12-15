@@ -1,10 +1,19 @@
-import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import {
+    AssetAdministrationShell,
+    AssetInformation,
+    AssetKind,
+    Key,
+    KeyTypes,
+    Reference,
+    ReferenceTypes,
+} from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { Configuration } from '../../generated/runtime';
 import { AssetAdministrationShellDescriptor } from '../../models/Descriptors';
 import { AasService } from '../../services/AasService';
+import { SubmodelService } from '../../services/SubmodelService';
 
 // Mock the clients
 jest.mock('../../clients/AasDiscoveryClient');
@@ -1120,6 +1129,178 @@ describe('AasService Unit Tests', () => {
 
             expect(result.success).toBe(true);
             // The actual submodel fetching is tested in integration tests
+        });
+    });
+
+    describe('resolveReference', () => {
+        let mockSubmodelService: jest.Mocked<SubmodelService>;
+
+        beforeEach(() => {
+            // Get the mocked SubmodelService instance
+            const allSubmodelServiceInstances = (SubmodelService as jest.MockedClass<typeof SubmodelService>).mock
+                .instances;
+            mockSubmodelService = allSubmodelServiceInstances[0] as jest.Mocked<SubmodelService>;
+        });
+
+        it('should resolve reference with AAS and Submodel', async () => {
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, testAasId),
+                new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/test-sm'),
+            ]);
+
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testDescriptor,
+            });
+
+            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+                success: true,
+                data: 'http://localhost:8082/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC1zbQ',
+            });
+
+            const result = await aasService.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.aasEndpoint).toBeDefined();
+                expect(result.data.submodelEndpoint).toBeDefined();
+                expect(result.data.submodelElementPath).toBeUndefined();
+            }
+        });
+
+        it('should resolve reference with AAS, Submodel, and SubmodelElement', async () => {
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, testAasId),
+                new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/test-sm'),
+                new Key(KeyTypes.Property, 'MyProperty'),
+            ]);
+
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testDescriptor,
+            });
+
+            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+                success: true,
+                data: 'http://localhost:8082/submodels/encoded-sm-id',
+            });
+
+            const result = await aasService.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.aasEndpoint).toBeDefined();
+                expect(result.data.submodelEndpoint).toBe('http://localhost:8082/submodels/encoded-sm-id');
+                expect(result.data.submodelElementPath).toBe(
+                    'http://localhost:8082/submodels/encoded-sm-id/submodel-elements/MyProperty'
+                );
+            }
+        });
+
+        it('should resolve reference with nested SubmodelElements', async () => {
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, testAasId),
+                new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/test-sm'),
+                new Key(KeyTypes.SubmodelElementCollection, 'MyCollection'),
+                new Key(KeyTypes.Property, 'NestedProperty'),
+            ]);
+
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: true,
+                data: testDescriptor,
+            });
+
+            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+                success: true,
+                data: 'http://localhost:8082/submodels/encoded-sm-id',
+            });
+
+            const result = await aasService.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.submodelElementPath).toBe(
+                    'http://localhost:8082/submodels/encoded-sm-id/submodel-elements/MyCollection.NestedProperty'
+                );
+            }
+        });
+
+        it('should resolve reference with only Submodel (no AAS)', async () => {
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/test-sm'),
+                new Key(KeyTypes.Property, 'MyProperty'),
+            ]);
+
+            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+                success: true,
+                data: 'http://localhost:8082/submodels/encoded-sm-id',
+            });
+
+            const result = await aasService.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.aasEndpoint).toBeUndefined();
+                expect(result.data.submodelEndpoint).toBe('http://localhost:8082/submodels/encoded-sm-id');
+                expect(result.data.submodelElementPath).toBe(
+                    'http://localhost:8082/submodels/encoded-sm-id/submodel-elements/MyProperty'
+                );
+            }
+        });
+
+        it('should return error for ExternalReference', async () => {
+            const reference = new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://example.com/external'),
+            ]);
+
+            const result = await aasService.resolveReference({ reference });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('UnsupportedReferenceType');
+            }
+        });
+
+        it('should return error for empty reference keys', async () => {
+            const reference = new Reference(ReferenceTypes.ModelReference, []);
+
+            const result = await aasService.resolveReference({ reference });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('InvalidReference');
+                expect(result.error.message).toContain('at least one key');
+            }
+        });
+
+        it('should handle failed endpoint resolution gracefully', async () => {
+            // Create a service without repository config to simulate failed endpoint resolution
+            const serviceWithoutRepo = new AasService({
+                registryConfig,
+            });
+
+            const reference = new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.AssetAdministrationShell, testAasId),
+            ]);
+
+            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+                .instances;
+            const mockRegistryClientForTest = allRegistryInstances[
+                allRegistryInstances.length - 1
+            ] as jest.Mocked<AasRegistryClient>;
+
+            mockRegistryClientForTest.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'NotFound', message: 'Descriptor not found' },
+            });
+
+            const result = await serviceWithoutRepo.resolveReference({ reference });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                // Even if endpoint resolution fails, we still return success with undefined values
+                expect(result.data.aasEndpoint).toBeUndefined();
+            }
         });
     });
 });

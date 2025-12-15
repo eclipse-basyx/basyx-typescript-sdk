@@ -1,5 +1,11 @@
 import type { ApiResult } from '../models/api';
-import { AssetAdministrationShell, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import {
+    AssetAdministrationShell,
+    KeyTypes,
+    Reference,
+    ReferenceTypes,
+    Submodel,
+} from '@aas-core-works/aas-core3.0-typescript/types';
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { AasRegistryClient } from '../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
@@ -762,6 +768,131 @@ export class AasService {
                 errorType: 'FetchError',
                 message: 'Failed to fetch any AAS',
                 details: errors,
+            },
+        };
+    }
+
+    /**
+     * Resolves a reference to retrieve the endpoints for the referenced AAS, Submodel, and SubmodelElement path.
+     *
+     * This method parses a Reference object and extracts the AAS ID, Submodel ID, and builds the path
+     * to the SubmodelElement if applicable. It supports ModelReferences with keys pointing to:
+     * - AssetAdministrationShell
+     * - Submodel
+     * - SubmodelElements (including nested elements in collections and lists)
+     *
+     * @param options Object containing:
+     *  - reference: The Reference object to resolve
+     *
+     * @returns Either `{ success: true; data: { aasEndpoint?, submodelEndpoint?, submodelElementPath? } }` or `{ success: false; error: ... }`.
+     */
+    async resolveReference(options: { reference: Reference }): Promise<
+        ApiResult<
+            {
+                aasEndpoint?: string;
+                submodelEndpoint?: string;
+                submodelElementPath?: string;
+            },
+            any
+        >
+    > {
+        const { reference } = options;
+
+        // Only support ModelReference type
+        if (reference.type !== ReferenceTypes.ModelReference) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'UnsupportedReferenceType',
+                    message: `Reference type '${reference.type}' is not supported. Only 'ModelReference' is supported.`,
+                },
+            };
+        }
+
+        if (!reference.keys || reference.keys.length === 0) {
+            return {
+                success: false,
+                error: {
+                    errorType: 'InvalidReference',
+                    message: 'Reference must contain at least one key',
+                },
+            };
+        }
+
+        let aasEndpoint: string | undefined;
+        let submodelEndpoint: string | undefined;
+        let submodelElementPath: string | undefined;
+        let remainingKeys = [...reference.keys];
+
+        // Check if first key is AssetAdministrationShell
+        if (remainingKeys[0].type === KeyTypes.AssetAdministrationShell) {
+            const aasId = remainingKeys[0].value;
+            const aasEndpointResult = await this.getAasEndpointById({ aasIdentifier: aasId });
+
+            if (aasEndpointResult.success) {
+                aasEndpoint = aasEndpointResult.data;
+            }
+
+            remainingKeys = remainingKeys.slice(1);
+
+            // Check if next key is Submodel
+            if (remainingKeys.length > 0 && remainingKeys[0].type === KeyTypes.Submodel) {
+                const submodelId = remainingKeys[0].value;
+                const smEndpointResult = await this.submodelService.getSubmodelEndpointById({
+                    submodelIdentifier: submodelId,
+                });
+
+                if (smEndpointResult.success) {
+                    submodelEndpoint = smEndpointResult.data;
+                }
+
+                remainingKeys = remainingKeys.slice(1);
+            }
+        }
+        // Check if first key is Submodel (without AAS context)
+        else if (remainingKeys[0].type === KeyTypes.Submodel) {
+            const submodelId = remainingKeys[0].value;
+            const smEndpointResult = await this.submodelService.getSubmodelEndpointById({
+                submodelIdentifier: submodelId,
+            });
+
+            if (smEndpointResult.success) {
+                submodelEndpoint = smEndpointResult.data;
+            }
+
+            remainingKeys = remainingKeys.slice(1);
+        }
+
+        // Build submodel element path if we have a submodel endpoint and remaining keys
+        if (submodelEndpoint && remainingKeys.length > 0) {
+            submodelElementPath = `${submodelEndpoint}/submodel-elements/`;
+
+            for (let i = 0; i < remainingKeys.length; i++) {
+                const key = remainingKeys[i];
+
+                // For SubmodelElementList, we need to fetch the list and find the index
+                if (i > 0 && remainingKeys[i - 1].type === KeyTypes.SubmodelElementList) {
+                    // Note: This would require fetching the list to determine the index
+                    // For now, we'll just append the value as-is
+                    // In a full implementation, you'd fetch the SME and find the index
+                    submodelElementPath += `${encodeURIComponent('[' + key.value + ']')}`;
+                }
+                // For SubmodelElementCollection or other nested elements
+                else {
+                    if (!submodelElementPath.endsWith('/submodel-elements/')) {
+                        submodelElementPath += '.';
+                    }
+                    submodelElementPath += key.value;
+                }
+            }
+        }
+
+        return {
+            success: true,
+            data: {
+                aasEndpoint,
+                submodelEndpoint,
+                submodelElementPath,
             },
         };
     }

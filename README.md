@@ -244,6 +244,58 @@ if (withConceptDescriptions.success) {
     // Concept descriptions are fetched for all semantic IDs in submodels and their elements
 }
 
+// Resolve a Reference to get endpoints for AAS, Submodel, or SubmodelElement
+import { Reference, Key, KeyTypes, ReferenceTypes } from '@aas-core-works/aas-core3.0-typescript/types';
+
+// Example 1: Reference to AAS and Submodel
+const reference1 = new Reference(
+    ReferenceTypes.ModelReference,
+    [
+        new Key(KeyTypes.AssetAdministrationShell, 'https://example.com/ids/aas/my-aas'),
+        new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
+    ]
+);
+
+const resolved1 = await service.resolveReference({ reference: reference1 });
+if (resolved1.success) {
+    console.log('AAS Endpoint:', resolved1.data.aasEndpoint);
+    // e.g., 'http://localhost:8081/shells/encoded-aas-id'
+    console.log('Submodel Endpoint:', resolved1.data.submodelEndpoint);
+    // e.g., 'http://localhost:8082/submodels/encoded-sm-id'
+}
+
+// Example 2: Reference to a specific SubmodelElement
+const reference2 = new Reference(
+    ReferenceTypes.ModelReference,
+    [
+        new Key(KeyTypes.AssetAdministrationShell, 'https://example.com/ids/aas/my-aas'),
+        new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
+        new Key(KeyTypes.Property, 'MyProperty'),
+    ]
+);
+
+const resolved2 = await service.resolveReference({ reference: reference2 });
+if (resolved2.success) {
+    console.log('SubmodelElement Path:', resolved2.data.submodelElementPath);
+    // e.g., 'http://localhost:8082/submodels/encoded-sm-id/submodel-elements/MyProperty'
+}
+
+// Example 3: Reference to nested SubmodelElements
+const reference3 = new Reference(
+    ReferenceTypes.ModelReference,
+    [
+        new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
+        new Key(KeyTypes.SubmodelElementCollection, 'MyCollection'),
+        new Key(KeyTypes.Property, 'NestedProperty'),
+    ]
+);
+
+const resolved3 = await service.resolveReference({ reference: reference3 });
+if (resolved3.success) {
+    console.log('SubmodelElement Path:', resolved3.data.submodelElementPath);
+    // e.g., 'http://localhost:8082/submodels/encoded-sm-id/submodel-elements/MyCollection.NestedProperty'
+}
+
 // Fetch all AAS with submodels and concept descriptions
 const allWithCD = await serviceWithCD.getAasList({
     includeSubmodels: true,
