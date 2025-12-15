@@ -424,26 +424,7 @@ export class SubmodelService {
 
         // Register descriptor in registry if configured and requested
         if (registerInRegistry && this.registryConfig) {
-            // Create descriptor from submodel
-            const descriptor = new SubmodelDescriptor(submodel.id, []);
-
-            // Set endpoint using repository base path
-            const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8082';
-            const encodedId = base64Encode(submodel.id);
-            descriptor.endpoints = [
-                {
-                    _interface: 'SUBMODEL-3.0',
-                    protocolInformation: {
-                        href: `${repositoryBasePath}/submodels/${encodedId}`,
-                        endpointProtocol: null,
-                        endpointProtocolVersion: null,
-                        subprotocol: null,
-                        subprotocolBody: null,
-                        subprotocolBodyEncoding: null,
-                        securityAttributes: null,
-                    },
-                },
-            ];
+            const descriptor = this.createDescriptorFromSubmodel(submodel);
 
             const descriptorResult = await this.registryClient.postSubmodelDescriptor({
                 configuration: this.registryConfig,
@@ -524,26 +505,7 @@ export class SubmodelService {
 
         // Update descriptor in registry if configured and requested
         if (updateInRegistry && this.registryConfig) {
-            // Create/update descriptor from submodel
-            const descriptor = new SubmodelDescriptor(submodel.id, []);
-
-            // Set endpoint using repository base path
-            const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8082';
-            const encodedId = base64Encode(submodel.id);
-            descriptor.endpoints = [
-                {
-                    _interface: 'SUBMODEL-3.0',
-                    protocolInformation: {
-                        href: `${repositoryBasePath}/submodels/${encodedId}`,
-                        endpointProtocol: null,
-                        endpointProtocolVersion: null,
-                        subprotocol: null,
-                        subprotocolBody: null,
-                        subprotocolBodyEncoding: null,
-                        securityAttributes: null,
-                    },
-                },
-            ];
+            const descriptor = this.createDescriptorFromSubmodel(submodel);
 
             const descriptorResult = await this.registryClient.putSubmodelDescriptorById({
                 configuration: this.registryConfig,
@@ -618,6 +580,46 @@ export class SubmodelService {
         }
 
         return { success: true, data: undefined };
+    }
+
+    /**
+     * Helper method to create a Submodel descriptor from a Submodel.
+     * Populates descriptor fields from the submodel including metadata and endpoint configuration.
+     *
+     * @param submodel The Submodel to create descriptor from
+     * @returns SubmodelDescriptor with all populated fields
+     */
+    private createDescriptorFromSubmodel(submodel: Submodel): SubmodelDescriptor {
+        // Set endpoint using repository base path
+        const repositoryBasePath = this.repositoryConfig!.basePath || 'http://localhost:8082';
+        const encodedId = base64Encode(submodel.id);
+        const endpoints = [
+            {
+                _interface: 'SUBMODEL-3.0',
+                protocolInformation: {
+                    href: `${repositoryBasePath}/submodels/${encodedId}`,
+                    endpointProtocol: null,
+                    endpointProtocolVersion: null,
+                    subprotocol: null,
+                    subprotocolBody: null,
+                    subprotocolBodyEncoding: null,
+                    securityAttributes: null,
+                },
+            },
+        ];
+
+        const descriptor = new SubmodelDescriptor(
+            submodel.id,
+            endpoints,
+            submodel.administration || null,
+            submodel.idShort || null,
+            submodel.semanticId || null,
+            submodel.supplementalSemanticIds || null,
+            submodel.displayName || null,
+            submodel.description || null,
+            submodel.extensions || null
+        );
+        return descriptor;
     }
 
     /**

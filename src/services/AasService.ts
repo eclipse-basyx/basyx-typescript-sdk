@@ -470,26 +470,7 @@ export class AasService {
 
         // Register descriptor in registry if configured and requested
         if (registerInRegistry && this.registryConfig) {
-            // Create descriptor from shell
-            const descriptor = new AssetAdministrationShellDescriptor(shell.id);
-
-            // Set endpoint using repository base path
-            const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8081';
-            const encodedId = base64Encode(shell.id);
-            descriptor.endpoints = [
-                {
-                    _interface: 'AAS-3.0',
-                    protocolInformation: {
-                        href: `${repositoryBasePath}/shells/${encodedId}`,
-                        endpointProtocol: null,
-                        endpointProtocolVersion: null,
-                        subprotocol: null,
-                        subprotocolBody: null,
-                        subprotocolBodyEncoding: null,
-                        securityAttributes: null,
-                    },
-                },
-            ];
+            const descriptor = this.createDescriptorFromAas(shell);
 
             const descriptorResult = await this.registryClient.postAssetAdministrationShellDescriptor({
                 configuration: this.registryConfig,
@@ -570,26 +551,7 @@ export class AasService {
 
         // Update descriptor in registry if configured and requested
         if (updateInRegistry && this.registryConfig) {
-            // Create/update descriptor from shell
-            const descriptor = new AssetAdministrationShellDescriptor(shell.id);
-
-            // Set endpoint using repository base path
-            const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8081';
-            const encodedId = base64Encode(shell.id);
-            descriptor.endpoints = [
-                {
-                    _interface: 'AAS-3.0',
-                    protocolInformation: {
-                        href: `${repositoryBasePath}/shells/${encodedId}`,
-                        endpointProtocol: null,
-                        endpointProtocolVersion: null,
-                        subprotocol: null,
-                        subprotocolBody: null,
-                        subprotocolBodyEncoding: null,
-                        securityAttributes: null,
-                    },
-                },
-            ];
+            const descriptor = this.createDescriptorFromAas(shell);
 
             const descriptorResult = await this.registryClient.putAssetAdministrationShellDescriptorById({
                 configuration: this.registryConfig,
@@ -895,6 +857,50 @@ export class AasService {
                 submodelElementPath,
             },
         };
+    }
+
+    /**
+     * Helper method to create an AAS descriptor from an AssetAdministrationShell.
+     * Populates descriptor fields from the shell including metadata and endpoint configuration.
+     *
+     * @param shell The AssetAdministrationShell to create descriptor from
+     * @returns AssetAdministrationShellDescriptor with all populated fields
+     */
+    private createDescriptorFromAas(shell: AssetAdministrationShell): AssetAdministrationShellDescriptor {
+        const descriptor = new AssetAdministrationShellDescriptor(
+            shell.id,
+            shell.displayName || null,
+            shell.description || null,
+            shell.extensions || null,
+            shell.administration || null,
+            shell.idShort || null,
+            shell.assetInformation?.assetKind || null,
+            shell.assetInformation?.assetType || null,
+            shell.assetInformation?.globalAssetId || null,
+            shell.assetInformation?.specificAssetIds || null,
+            null, // submodelDescriptors not included here
+            null // endpoints set below
+        );
+
+        // Set endpoint using repository base path
+        const repositoryBasePath = this.repositoryConfig!.basePath || 'http://localhost:8081';
+        const encodedId = base64Encode(shell.id);
+        descriptor.endpoints = [
+            {
+                _interface: 'AAS-3.0',
+                protocolInformation: {
+                    href: `${repositoryBasePath}/shells/${encodedId}`,
+                    endpointProtocol: null,
+                    endpointProtocolVersion: null,
+                    subprotocol: null,
+                    subprotocolBody: null,
+                    subprotocolBodyEncoding: null,
+                    securityAttributes: null,
+                },
+            },
+        ];
+
+        return descriptor;
     }
 
     /**
