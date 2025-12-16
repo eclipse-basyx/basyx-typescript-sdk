@@ -1,10 +1,32 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { XMLBuilder } from 'fast-xml-parser';
+import {
+    AdministrativeInformation,
+    AssetAdministrationShell,
+    AssetInformation,
+    AssetKind,
+    DataSpecificationIec61360,
+    DataTypeDefXsd,
+    EmbeddedDataSpecification,
+    Extension,
+    Key,
+    KeyTypes,
+    LangStringDefinitionTypeIec61360,
+    LangStringNameType,
+    LangStringPreferredNameTypeIec61360,
+    LangStringShortNameTypeIec61360,
+    LangStringTextType,
+    LevelType,
+    Reference,
+    ReferenceTypes,
+    Resource,
+    SpecificAssetId,
+    ValueList,
+    ValueReferencePair,
+} from '@aas-core-works/aas-core3.0-typescript/types';
+import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { BaSyxEnvironment } from '../../../src/models/BaSyxEnvironment';
 
 export function serializeXml(data: BaSyxEnvironment): string {
-    console.log('serializeXml called with data:', data);
-
     // Return empty string for empty environment
     if (!data.assetAdministrationShells?.length && !data.submodels?.length && !data.conceptDescriptions?.length) {
         return '';
@@ -477,6 +499,244 @@ function transformConceptDescription(cd: any): any {
 }
 
 export function deserializeXml(xmlString: string): BaSyxEnvironment {
-    console.log('deserializeXml called with xmlString:', xmlString);
-    return new BaSyxEnvironment();
+    if (!xmlString || xmlString.trim() === '') {
+        return new BaSyxEnvironment();
+    }
+
+    const parser = new XMLParser({
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+        parseAttributeValue: false,
+        parseTagValue: false,
+        trimValues: true,
+        removeNSPrefix: true, // Remove namespace prefixes like aas:
+        isArray: (name) => {
+            // Define which elements should always be treated as arrays
+            const arrayElements = [
+                'extension',
+                'langStringNameType',
+                'langStringTextType',
+                'langStringPreferredNameTypeIec61360',
+                'langStringShortNameTypeIec61360',
+                'langStringDefinitionTypeIec61360',
+                'reference',
+                'key',
+                'valueReferencePair',
+                'embeddedDataSpecification',
+                'specificAssetId',
+                'assetAdministrationShell',
+                'submodel',
+                'conceptDescription',
+            ];
+            return arrayElements.includes(name);
+        },
+    });
+
+    const parsed = parser.parse(xmlString);
+    const env = new BaSyxEnvironment();
+
+    // Extract the environment data
+    const envData = parsed.environment;
+    if (!envData) {
+        return env;
+    }
+
+    // Parse Asset Administration Shells
+    if (envData.assetAdministrationShells?.assetAdministrationShell) {
+        env.assetAdministrationShells =
+            envData.assetAdministrationShells.assetAdministrationShell.map(parseAssetAdministrationShell);
+    }
+
+    // TODO: Parse Submodels
+    // if (envData.submodels?.submodel) {
+    //     env.submodels = envData.submodels.submodel.map(parseSubmodel);
+    // }
+
+    // TODO: Parse Concept Descriptions
+    // if (envData.conceptDescriptions?.conceptDescription) {
+    //     env.conceptDescriptions = envData.conceptDescriptions.conceptDescription.map(parseConceptDescription);
+    // }
+
+    return env;
+}
+
+function parseAssetAdministrationShell(data: any): AssetAdministrationShell {
+    return new AssetAdministrationShell(
+        data.id,
+        parseAssetInformation(data.assetInformation),
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.administration ? parseAdministrativeInformation(data.administration) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.derivedFrom ? parseReference(data.derivedFrom) : undefined,
+        data.submodels?.reference ? data.submodels.reference.map(parseReference) : undefined
+    );
+}
+
+function parseExtension(data: any): Extension {
+    // Map XML valueType string to DataTypeDefXsd enum
+    let valueType = data.valueType || undefined;
+    if (valueType && typeof valueType === 'string' && valueType.startsWith('xs:')) {
+        // Extract the type after 'xs:' prefix and map to enum
+        const typeValue = valueType.substring(3);
+        const capitalizedType = typeValue.charAt(0).toUpperCase() + typeValue.slice(1);
+        // Map string to DataTypeDefXsd enum value
+        valueType = (DataTypeDefXsd as any)[capitalizedType];
+    }
+
+    return new Extension(
+        data.name,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        valueType,
+        data.value || undefined,
+        data.refersTo?.reference ? data.refersTo.reference.map(parseReference) : undefined
+    );
+}
+
+function parseLangStringNameType(data: any): LangStringNameType {
+    return new LangStringNameType(data.language, data.text);
+}
+
+function parseLangStringTextType(data: any): LangStringTextType {
+    return new LangStringTextType(data.language, data.text);
+}
+
+function parseAdministrativeInformation(data: any): AdministrativeInformation {
+    return new AdministrativeInformation(
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.version || undefined,
+        data.revision || undefined,
+        data.creator ? parseReference(data.creator) : undefined,
+        data.templateId || undefined
+    );
+}
+
+function parseEmbeddedDataSpecification(data: any): EmbeddedDataSpecification {
+    const dataSpecContent = data.dataSpecificationContent?.dataSpecificationIec61360
+        ? parseDataSpecificationIec61360(data.dataSpecificationContent.dataSpecificationIec61360)
+        : undefined;
+
+    return new EmbeddedDataSpecification(parseReference(data.dataSpecification), dataSpecContent as any);
+}
+
+function parseDataSpecificationIec61360(data: any): DataSpecificationIec61360 {
+    return new DataSpecificationIec61360(
+        data.preferredName?.langStringPreferredNameTypeIec61360
+            ? data.preferredName.langStringPreferredNameTypeIec61360.map(parseLangStringPreferredNameTypeIec61360)
+            : [],
+        data.shortName?.langStringShortNameTypeIec61360
+            ? data.shortName.langStringShortNameTypeIec61360.map(parseLangStringShortNameTypeIec61360)
+            : undefined,
+        data.unit || undefined,
+        data.unitId ? parseReference(data.unitId) : undefined,
+        data.sourceOfDefinition || undefined,
+        data.symbol || undefined,
+        data.dataType || undefined,
+        data.definition?.langStringDefinitionTypeIec61360
+            ? data.definition.langStringDefinitionTypeIec61360.map(parseLangStringDefinitionTypeIec61360)
+            : undefined,
+        data.valueFormat || undefined,
+        data.valueList ? parseValueList(data.valueList) : undefined,
+        data.value || undefined,
+        data.levelType ? parseLevelType(data.levelType) : undefined
+    );
+}
+
+function parseLangStringPreferredNameTypeIec61360(data: any): LangStringPreferredNameTypeIec61360 {
+    return new LangStringPreferredNameTypeIec61360(data.language, data.text);
+}
+
+function parseLangStringShortNameTypeIec61360(data: any): LangStringShortNameTypeIec61360 {
+    return new LangStringShortNameTypeIec61360(data.language, data.text);
+}
+
+function parseLangStringDefinitionTypeIec61360(data: any): LangStringDefinitionTypeIec61360 {
+    return new LangStringDefinitionTypeIec61360(data.language, data.text);
+}
+
+function parseValueList(data: any): ValueList {
+    return new ValueList(
+        data.valueReferencePairs?.valueReferencePair
+            ? data.valueReferencePairs.valueReferencePair.map(parseValueReferencePair)
+            : []
+    );
+}
+
+function parseValueReferencePair(data: any): ValueReferencePair {
+    const valueId = data.valueId ? parseReference(data.valueId) : undefined;
+    return new ValueReferencePair(data.value, valueId as any);
+}
+
+function parseLevelType(data: any): LevelType {
+    return new LevelType(
+        data.min === 'true' || data.min === true,
+        data.max === 'true' || data.max === true,
+        data.nom === 'true' || data.nom === true,
+        data.typ === 'true' || data.typ === true
+    );
+}
+
+function parseReference(data: any): Reference {
+    // Map string type to enum
+    const referenceType = (ReferenceTypes as any)[data.type] ?? data.type;
+
+    return new Reference(
+        referenceType,
+        data.keys?.key ? data.keys.key.map(parseKey) : [],
+        data.referredSemanticId ? parseReference(data.referredSemanticId) : undefined
+    );
+}
+
+function parseKey(data: any): Key {
+    // Map string type to enum
+    const keyType = (KeyTypes as any)[data.type] ?? data.type;
+    return new Key(keyType, data.value);
+}
+
+function parseAssetInformation(data: any): AssetInformation {
+    // Map string assetKind to enum
+    const assetKind = (AssetKind as any)[data.assetKind] ?? data.assetKind;
+
+    return new AssetInformation(
+        assetKind,
+        data.globalAssetId || undefined,
+        data.specificAssetIds?.specificAssetId
+            ? data.specificAssetIds.specificAssetId.map(parseSpecificAssetId)
+            : undefined,
+        data.assetType || undefined,
+        data.defaultThumbnail ? parseResource(data.defaultThumbnail) : undefined
+    );
+}
+
+function parseSpecificAssetId(data: any): SpecificAssetId {
+    const semanticId = data.semanticId ? parseReference(data.semanticId) : undefined;
+    const supplementalSemanticIds = data.supplementalSemanticIds?.reference
+        ? data.supplementalSemanticIds.reference.map(parseReference)
+        : undefined;
+
+    return new SpecificAssetId(
+        data.name,
+        data.value,
+        data.externalSubjectId ? parseReference(data.externalSubjectId) : undefined,
+        semanticId as any,
+        supplementalSemanticIds
+    );
+}
+
+function parseResource(data: any): Resource {
+    return new Resource(data.path, data.contentType || undefined);
 }
