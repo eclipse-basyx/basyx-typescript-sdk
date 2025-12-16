@@ -56,7 +56,7 @@ function addAasPrefix(obj: any): any {
     }
 
     if (Array.isArray(obj)) {
-        return obj.map(item => addAasPrefix(item));
+        return obj.map((item) => addAasPrefix(item));
     }
 
     if (typeof obj === 'object') {
@@ -83,21 +83,21 @@ function transformEnvironmentToXmlStructure(env: BaSyxEnvironment): any {
     // Transform Asset Administration Shells
     if (jsonableEnv.assetAdministrationShells && jsonableEnv.assetAdministrationShells.length > 0) {
         result['assetAdministrationShells'] = {
-            'assetAdministrationShell': jsonableEnv.assetAdministrationShells.map(transformAAS),
+            assetAdministrationShell: jsonableEnv.assetAdministrationShells.map(transformAAS),
         };
     }
 
     // Transform Submodels
     if (jsonableEnv.submodels && jsonableEnv.submodels.length > 0) {
         result['submodels'] = {
-            'submodel': jsonableEnv.submodels.map(transformSubmodel),
+            submodel: jsonableEnv.submodels.map(transformSubmodel),
         };
     }
 
     // Transform Concept Descriptions
     if (jsonableEnv.conceptDescriptions && jsonableEnv.conceptDescriptions.length > 0) {
         result['conceptDescriptions'] = {
-            'conceptDescription': jsonableEnv.conceptDescriptions.map(transformConceptDescription),
+            conceptDescription: jsonableEnv.conceptDescriptions.map(transformConceptDescription),
         };
     }
 
@@ -110,7 +110,7 @@ function transformAAS(aas: any): any {
     // hasExtensions (from referable)
     if (aas.extensions && aas.extensions.length > 0) {
         result['extensions'] = {
-            'extension': aas.extensions.map(transformExtension),
+            extension: aas.extensions.map(transformExtension),
         };
     }
 
@@ -127,14 +127,14 @@ function transformAAS(aas: any): any {
     // displayName (from referable)
     if (aas.displayName && aas.displayName.length > 0) {
         result['displayName'] = {
-            'langStringNameType': aas.displayName.map(transformLangString),
+            langStringNameType: aas.displayName.map(transformLangString),
         };
     }
 
     // description (from referable)
     if (aas.description && aas.description.length > 0) {
         result['description'] = {
-            'langStringTextType': aas.description.map(transformLangString),
+            langStringTextType: aas.description.map(transformLangString),
         };
     }
 
@@ -149,7 +149,7 @@ function transformAAS(aas: any): any {
     // embeddedDataSpecifications (from hasDataSpecification)
     if (aas.embeddedDataSpecifications && aas.embeddedDataSpecifications.length > 0) {
         result['embeddedDataSpecifications'] = {
-            'embeddedDataSpecification': aas.embeddedDataSpecifications.map(transformEmbeddedDataSpecification),
+            embeddedDataSpecification: aas.embeddedDataSpecifications.map(transformEmbeddedDataSpecification),
         };
     }
 
@@ -164,7 +164,7 @@ function transformAAS(aas: any): any {
     // submodels (specific to AAS)
     if (aas.submodels && aas.submodels.length > 0) {
         result['submodels'] = {
-            'reference': aas.submodels.map(transformReference),
+            reference: aas.submodels.map(transformReference),
         };
     }
 
@@ -401,7 +401,7 @@ function transformAssetInformation(assetInfo: any): any {
     // specificAssetIds
     if (assetInfo.specificAssetIds && assetInfo.specificAssetIds.length > 0) {
         result['specificAssetIds'] = {
-            'specificAssetId': assetInfo.specificAssetIds.map(transformSpecificAssetId),
+            specificAssetId: assetInfo.specificAssetIds.map(transformSpecificAssetId),
         };
     }
 
