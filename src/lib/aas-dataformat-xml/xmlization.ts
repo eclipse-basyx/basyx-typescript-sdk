@@ -41,7 +41,7 @@ export function serializeXml(data: BaSyxEnvironment): string {
         indentBy: '  ',
         suppressEmptyNode: true,
         suppressBooleanAttributes: false,
-        processEntities: true,
+        processEntities: false,
         cdataPropName: '__cdata',
         arrayNodeName: 'element',
         suppressUnpairedNode: false,
