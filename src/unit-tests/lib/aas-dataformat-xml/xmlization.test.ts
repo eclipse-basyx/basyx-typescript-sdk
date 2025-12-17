@@ -1,14 +1,23 @@
 import {
+    AasSubmodelElements,
     AdministrativeInformation,
+    AnnotatedRelationshipElement,
     AssetAdministrationShell,
     AssetInformation,
     AssetKind,
+    BasicEventElement,
+    Blob,
+    Capability,
     ConceptDescription,
     DataSpecificationIec61360,
     DataTypeDefXsd,
     DataTypeIec61360,
+    Direction,
     EmbeddedDataSpecification,
+    Entity,
+    EntityType,
     Extension,
+    File,
     Key,
     KeyTypes,
     LangStringDefinitionTypeIec61360,
@@ -17,10 +26,23 @@ import {
     LangStringShortNameTypeIec61360,
     LangStringTextType,
     LevelType,
+    ModellingKind,
+    MultiLanguageProperty,
+    Operation,
+    OperationVariable,
+    Property,
+    Qualifier,
+    Range,
     Reference,
+    ReferenceElement,
     ReferenceTypes,
+    RelationshipElement,
     Resource,
     SpecificAssetId,
+    StateOfEvent,
+    Submodel,
+    SubmodelElementCollection,
+    SubmodelElementList,
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.0-typescript/types';
@@ -152,6 +174,593 @@ const TEST_AAS: AssetAdministrationShell = new AssetAdministrationShell(
         new Reference(ReferenceTypes.ExternalReference, [
             new Key(KeyTypes.Submodel, 'http://i40.customer.com/type/1/1/1A7B62B529F19152'),
         ]),
+    ]
+);
+
+const TEST_SUBMODEL_IDENTIFICATION: Submodel = new Submodel(
+    'http://acplt.org/Submodels/Assets/TestAsset/Identification',
+    null,
+    null,
+    'Identification',
+    null,
+    [
+        new LangStringTextType('en-us', 'An example asset identification submodel for the test application'),
+        new LangStringTextType('de', 'Ein Beispiel-Identifikations-Submodel für eine Test-Anwendung'),
+    ],
+    new AdministrativeInformation(null, '0', '9'),
+    ModellingKind.Instance,
+    new Reference(ReferenceTypes.ExternalReference, [
+        new Key(KeyTypes.Submodel, 'http://acplt.org/SubmodelTemplates/AssetIdentification'),
+    ]),
+    null,
+    null,
+    null,
+    [
+        new Property(
+            DataTypeDefXsd.String,
+            null,
+            null,
+            'ManufacturerName',
+            [new LangStringNameType('en-us', 'Manufacturer Name')],
+            [
+                new LangStringTextType(
+                    'en-us',
+                    'Legally valid designation of the natural or judicial person which is directly responsible for the design, production, packaging and labeling of a product in respect to its being brought into circulation.'
+                ),
+                new LangStringTextType(
+                    'de',
+                    "Bezeichnung für eine natürliche oder juristische Person, die für die Auslegung, Herstellung und Verpackung sowie die Etikettierung eines Produkts im Hinblick auf das 'Inverkehrbringen' im eigenen Namen verantwortlich ist"
+                ),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, '0173-1#02-AAO677#002'),
+            ]),
+            null,
+            [
+                new Qualifier(
+                    'http://acplt.org/Qualifier/ExampleQualifier',
+                    DataTypeDefXsd.Int,
+                    null,
+                    null,
+                    null,
+                    '100'
+                ),
+                new Qualifier(
+                    'http://acplt.org/Qualifier/ExampleQualifier2',
+                    DataTypeDefXsd.Int,
+                    null,
+                    null,
+                    null,
+                    '50'
+                ),
+            ],
+            null,
+            'http://acplt.org/ValueId/ACPLT',
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ACPLT'),
+            ])
+        ),
+    ]
+);
+
+const TEST_SUBMODEL_BILL_OF_MATERIAL: Submodel = new Submodel(
+    'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial',
+    null,
+    null,
+    'BillOfMaterial',
+    null,
+    [
+        new LangStringTextType('en-us', 'An example bill of material submodel for the test application'),
+        new LangStringTextType('de', 'Ein Beispiel-BillofMaterial-Submodel für eine Test-Anwendung'),
+    ],
+    new AdministrativeInformation(null, '0'),
+    ModellingKind.Instance,
+    new Reference(ReferenceTypes.ExternalReference, [
+        new Key(KeyTypes.Submodel, 'http://acplt.org/SubmodelTemplates/BillOfMaterial'),
+    ]),
+    null,
+    null,
+    null,
+    [
+        new Entity(
+            EntityType.CoManagedEntity,
+            null,
+            null,
+            'ExampleEntity',
+            null,
+            [
+                new LangStringTextType(
+                    'en-us',
+                    'Legally valid designation of the natural or judicial person which is directly responsible for the design, production, packaging and labeling of a product in respect to its being brought into circulation.'
+                ),
+                new LangStringTextType(
+                    'de',
+                    "Bezeichnung für eine natürliche oder juristische Person, die für die Auslegung, Herstellung und Verpackung sowie die Etikettierung eines Produkts im Hinblick auf das 'Inverkehrbringen' im eigenen Namen verantwortlich ist"
+                ),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber'),
+            ]),
+            null,
+            null,
+            null,
+            [
+                new Property(
+                    DataTypeDefXsd.String,
+                    null,
+                    'CONSTANT',
+                    'ExampleProperty2',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example Property object'),
+                        new LangStringTextType('de', 'Beispiel Property Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    'ttp://acplt.org/ValueId/ExampleValue2',
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValue2'),
+                    ])
+                ),
+                new Property(
+                    DataTypeDefXsd.String,
+                    null,
+                    'CONSTANT',
+                    'ExampleProperty',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example Property object'),
+                        new LangStringTextType('de', 'Beispiel Property Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    'http://acplt.org/ValueId/ExampleValueId',
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                    ])
+                ),
+            ]
+        ),
+        new Entity(
+            EntityType.SelfManagedEntity,
+            null,
+            null,
+            'ExampleEntity2',
+            null,
+            [
+                new LangStringTextType(
+                    'en-us',
+                    'Legally valid designation of the natural or judicial person which is directly responsible for the design, production, packaging and labeling of a product in respect to its being brought into circulation.'
+                ),
+                new LangStringTextType(
+                    'de',
+                    "Bezeichnung für eine natürliche oder juristische Person, die für die Auslegung, Herstellung und Verpackung sowie die Etikettierung eines Produkts im Hinblick auf das 'Inverkehrbringen' im eigenen Namen verantwortlich ist"
+                ),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber'),
+            ]),
+            null,
+            null,
+            null,
+            null,
+            'https://acplt.org/Test_Asset2'
+        ),
+    ]
+);
+
+const TEST_SUBMODEL_1: Submodel = new Submodel(
+    'https://acplt.org/Test_Submodel',
+    null,
+    null,
+    'TestSubmodel',
+    null,
+    [
+        new LangStringTextType('en-us', 'An example submodel for the test application'),
+        new LangStringTextType('de', 'Ein Beispiel-Teilmodell für eine Test-Anwendung'),
+    ],
+    new AdministrativeInformation(null, '0', '9'),
+    ModellingKind.Instance,
+    new Reference(ReferenceTypes.ExternalReference, [
+        new Key(KeyTypes.GlobalReference, 'http://acplt.org/SubmodelTemplates/ExampleSubmodel'),
+    ]),
+    null,
+    null,
+    null,
+    [
+        new RelationshipElement(
+            new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
+            ]),
+            new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.Submodel, 'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial'),
+            ]),
+            null,
+            'PARAMETER',
+            'ExampleRelationshipElement',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example RelationshipElement object'),
+                new LangStringTextType('de', 'Beispiel RelationshipElement Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://acplt.org/RelationshipElements/ExampleRelationshipElement'),
+            ])
+        ),
+        new AnnotatedRelationshipElement(
+            new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
+                new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                new Key(KeyTypes.Property, 'ExampleProperty'),
+            ]),
+            new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.Submodel, 'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial'),
+                new Key(KeyTypes.Entity, 'ExampleEntity'),
+                new Key(KeyTypes.Property, 'ExampleProperty2'),
+            ]),
+            null,
+            'PARAMETER',
+            'ExampleAnnotatedRelationshipElement',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example AnnotatedRelationshipElement object'),
+                new LangStringTextType('de', 'Beispiel AnnotatedRelationshipElement Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(
+                    KeyTypes.GlobalReference,
+                    'http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement'
+                ),
+            ]),
+            null,
+            null,
+            null,
+            [
+                new Property(
+                    DataTypeDefXsd.String,
+                    null,
+                    'PARAMETER',
+                    'ExampleProperty3',
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    'some example annotation'
+                ),
+            ]
+        ),
+        new Operation(
+            null,
+            'PARAMETER',
+            'ExampleOperation',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example Operation object'),
+                new LangStringTextType('de', 'Beispiel Operation Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Operations/ExampleOperation'),
+            ]),
+            null,
+            null,
+            null,
+            [
+                new OperationVariable(
+                    new Property(
+                        DataTypeDefXsd.String,
+                        null,
+                        'CONSTANT',
+                        'ExampleProperty1',
+                        null,
+                        [
+                            new LangStringTextType('en-us', 'Example Property object'),
+                            new LangStringTextType('de', 'Beispiel Property Element'),
+                        ],
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                        ]),
+                        null,
+                        null,
+                        null,
+                        'http://acplt.org/ValueId/ExampleValueId',
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                        ])
+                    )
+                ),
+                new OperationVariable(
+                    new Property(
+                        DataTypeDefXsd.String,
+                        null,
+                        'CONSTANT',
+                        'ExampleProperty2',
+                        null,
+                        [
+                            new LangStringTextType('en-us', 'Example Property object'),
+                            new LangStringTextType('de', 'Beispiel Property Element'),
+                        ],
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                        ]),
+                        null,
+                        null,
+                        null,
+                        'http://acplt.org/ValueId/ExampleValueId',
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                        ])
+                    )
+                ),
+            ],
+            [
+                new OperationVariable(
+                    new Property(
+                        DataTypeDefXsd.String,
+                        null,
+                        'CONSTANT',
+                        'ExampleProperty2',
+                        null,
+                        [
+                            new LangStringTextType('en-us', 'Example Property object'),
+                            new LangStringTextType('de', 'Beispiel Property Element'),
+                        ],
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                        ]),
+                        null,
+                        null,
+                        null,
+                        'http://acplt.org/ValueId/ExampleValueId',
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                        ])
+                    )
+                ),
+            ],
+            [
+                new OperationVariable(
+                    new Property(
+                        DataTypeDefXsd.String,
+                        null,
+                        'CONSTANT',
+                        'ExampleProperty3',
+                        null,
+                        [
+                            new LangStringTextType('en-us', 'Example Property object'),
+                            new LangStringTextType('de', 'Beispiel Property Element'),
+                        ],
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                        ]),
+                        null,
+                        null,
+                        null,
+                        'http://acplt.org/ValueId/ExampleValueId',
+                        new Reference(ReferenceTypes.ExternalReference, [
+                            new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                        ])
+                    )
+                ),
+            ]
+        ),
+        new Capability(
+            null,
+            'PARAMETER',
+            'ExampleCapability',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example Capability object'),
+                new LangStringTextType('de', 'Beispiel Capability Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Capabilities/ExampleCapability'),
+            ])
+        ),
+        new BasicEventElement(
+            new Reference(ReferenceTypes.ModelReference, [
+                new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
+                new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                new Key(KeyTypes.Property, 'ExampleProperty'),
+            ]),
+            Direction.Input,
+            StateOfEvent.On,
+            null,
+            'PARAMETER',
+            'ExampleBasicEvent',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example BasicEvent object'),
+                new LangStringTextType('de', 'Beispiel BasicEvent Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Events/ExampleBasicEvent'),
+            ]),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        ),
+        new SubmodelElementList(
+            AasSubmodelElements.SubmodelElement,
+            null,
+            'PARAMETER',
+            'ExampleSubmodelElementListOrdered',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example ExampleSubmodelElementListOrdered object'),
+                new LangStringTextType('de', 'Beispiel ExampleSubmodelElementListOrdered Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(
+                    KeyTypes.GlobalReference,
+                    'http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered'
+                ),
+            ]),
+            null,
+            null,
+            null,
+            true,
+            null,
+            null,
+            [
+                new Property(
+                    DataTypeDefXsd.String,
+                    null,
+                    'CONSTANT',
+                    'ExampleProperty',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example Property object'),
+                        new LangStringTextType('de', 'Beispiel Property Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    'http://acplt.org/ValueId/ExampleValueId',
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                    ])
+                ),
+                new MultiLanguageProperty(
+                    null,
+                    'CONSTANT',
+                    'ExampleMultiLanguageProperty',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example MultiLanguageProperty object'),
+                        new LangStringTextType('de', 'Beispiel MultiLanguageProperty Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(
+                            KeyTypes.GlobalReference,
+                            'http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty'
+                        ),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example value of a MultiLanguageProperty element'),
+                        new LangStringTextType('de', 'Beispielswert für ein MultiLanguageProperty-Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleMultiLanguageValueId'),
+                    ])
+                ),
+                new Range(
+                    DataTypeDefXsd.Int,
+                    null,
+                    'PARAMETER',
+                    'ExampleRange',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example Range object'),
+                        new LangStringTextType('de', 'Beispiel Range Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/Ranges/ExampleRange'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    '0',
+                    '100'
+                ),
+            ]
+        ),
+        new SubmodelElementCollection(
+            null,
+            'PARAMETER',
+            'ExampleSubmodelElementCollection',
+            null,
+            [
+                new LangStringTextType('en-us', 'Example SubmodelElementCollection object'),
+                new LangStringTextType('de', 'Beispiel SubmodelElementCollection Element'),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(
+                    KeyTypes.GlobalReference,
+                    'http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection'
+                ),
+            ]),
+            null,
+            null,
+            null,
+            [
+                new Blob(
+                    'application/pdf',
+                    null,
+                    'PARAMETER',
+                    'ExampleBlob',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example Blob object'),
+                        new LangStringTextType('de', 'Beispiel Blob Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/Blobs/ExampleBlob'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    Uint8Array.from(Buffer.from('AQIDBAU=', 'base64'))
+                ),
+                new File(
+                    'application/pdf',
+                    null,
+                    'PARAMETER',
+                    'ExampleFile',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example File object'),
+                        new LangStringTextType('de', 'Beispiel File Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/Files/ExampleFile'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    'file:///TestFile.pdf'
+                ),
+                new ReferenceElement(
+                    null,
+                    'PARAMETER',
+                    'ExampleReferenceElement',
+                    null,
+                    [
+                        new LangStringTextType('en-us', 'Example Reference Element object'),
+                        new LangStringTextType('de', 'Beispiel Reference Element Element'),
+                    ],
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.GlobalReference, 'http://acplt.org/ReferenceElements/ExampleReferenceElement'),
+                    ]),
+                    null,
+                    null,
+                    null,
+                    new Reference(ReferenceTypes.ExternalReference, [
+                        new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
+                        new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                        new Key(KeyTypes.Property, 'ExampleProperty'),
+                    ])
+                ),
+            ]
+        ),
     ]
 );
 
