@@ -4,6 +4,7 @@ import {
     AssetAdministrationShell,
     AssetInformation,
     AssetKind,
+    ConceptDescription,
     DataSpecificationIec61360,
     DataTypeDefXsd,
     EmbeddedDataSpecification,
@@ -494,8 +495,62 @@ function transformSubmodel(submodel: any): any {
 }
 
 function transformConceptDescription(cd: any): any {
-    // TODO: Implement full ConceptDescription transformation according to XSD
-    return cd;
+    const result: any = {};
+
+    // hasExtensions (from referable)
+    if (cd.extensions && cd.extensions.length > 0) {
+        result['extensions'] = {
+            extension: cd.extensions.map(transformExtension),
+        };
+    }
+
+    // category (from referable)
+    if (cd.category) {
+        result['category'] = cd.category;
+    }
+
+    // idShort (from referable)
+    if (cd.idShort) {
+        result['idShort'] = cd.idShort;
+    }
+
+    // displayName (from referable)
+    if (cd.displayName && cd.displayName.length > 0) {
+        result['displayName'] = {
+            langStringNameType: cd.displayName.map(transformLangString),
+        };
+    }
+
+    // description (from referable)
+    if (cd.description && cd.description.length > 0) {
+        result['description'] = {
+            langStringTextType: cd.description.map(transformLangString),
+        };
+    }
+
+    // administration (from identifiable)
+    if (cd.administration) {
+        result['administration'] = transformAdministrativeInformation(cd.administration);
+    }
+
+    // id (from identifiable) - REQUIRED
+    result['id'] = cd.id;
+
+    // embeddedDataSpecifications (from hasDataSpecification)
+    if (cd.embeddedDataSpecifications && cd.embeddedDataSpecifications.length > 0) {
+        result['embeddedDataSpecifications'] = {
+            embeddedDataSpecification: cd.embeddedDataSpecifications.map(transformEmbeddedDataSpecification),
+        };
+    }
+
+    // isCaseOf (specific to ConceptDescription)
+    if (cd.isCaseOf && cd.isCaseOf.length > 0) {
+        result['isCaseOf'] = {
+            reference: cd.isCaseOf.map(transformReference),
+        };
+    }
+
+    return result;
 }
 
 export function deserializeXml(xmlString: string): BaSyxEnvironment {
@@ -552,10 +607,12 @@ export function deserializeXml(xmlString: string): BaSyxEnvironment {
     //     env.submodels = envData.submodels.submodel.map(parseSubmodel);
     // }
 
-    // TODO: Parse Concept Descriptions
-    // if (envData.conceptDescriptions?.conceptDescription) {
-    //     env.conceptDescriptions = envData.conceptDescriptions.conceptDescription.map(parseConceptDescription);
-    // }
+    // Parse Concept Descriptions
+    if (envData.conceptDescriptions?.conceptDescription) {
+        env.conceptDescriptions = Array.isArray(envData.conceptDescriptions.conceptDescription)
+            ? envData.conceptDescriptions.conceptDescription.map(parseConceptDescription)
+            : [parseConceptDescription(envData.conceptDescriptions.conceptDescription)];
+    }
 
     return env;
 }
@@ -634,6 +691,15 @@ function parseEmbeddedDataSpecification(data: any): EmbeddedDataSpecification {
 }
 
 function parseDataSpecificationIec61360(data: any): DataSpecificationIec61360 {
+    // Map string dataType to enum value using jsonization
+    let dataType = data.dataType;
+    if (dataType && typeof dataType === 'string') {
+        const result = jsonization.dataTypeIec61360FromJsonable(dataType);
+        if (result.error === null && result.value !== null) {
+            dataType = result.value;
+        }
+    }
+
     return new DataSpecificationIec61360(
         data.preferredName?.langStringPreferredNameTypeIec61360
             ? data.preferredName.langStringPreferredNameTypeIec61360.map(parseLangStringPreferredNameTypeIec61360)
@@ -645,7 +711,7 @@ function parseDataSpecificationIec61360(data: any): DataSpecificationIec61360 {
         data.unitId ? parseReference(data.unitId) : undefined,
         data.sourceOfDefinition || undefined,
         data.symbol || undefined,
-        data.dataType || undefined,
+        dataType || undefined,
         data.definition?.langStringDefinitionTypeIec61360
             ? data.definition.langStringDefinitionTypeIec61360.map(parseLangStringDefinitionTypeIec61360)
             : undefined,
@@ -684,9 +750,9 @@ function parseValueReferencePair(data: any): ValueReferencePair {
 function parseLevelType(data: any): LevelType {
     return new LevelType(
         data.min === 'true' || data.min === true,
-        data.max === 'true' || data.max === true,
         data.nom === 'true' || data.nom === true,
-        data.typ === 'true' || data.typ === true
+        data.typ === 'true' || data.typ === true,
+        data.max === 'true' || data.max === true
     );
 }
 
@@ -739,4 +805,24 @@ function parseSpecificAssetId(data: any): SpecificAssetId {
 
 function parseResource(data: any): Resource {
     return new Resource(data.path, data.contentType || undefined);
+}
+
+function parseConceptDescription(data: any): ConceptDescription {
+    return new ConceptDescription(
+        data.id,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.administration ? parseAdministrativeInformation(data.administration) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.isCaseOf?.reference ? data.isCaseOf.reference.map(parseReference) : undefined
+    );
 }
