@@ -240,6 +240,38 @@ const TEST_SUBMODEL_IDENTIFICATION: Submodel = new Submodel(
                 new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ACPLT'),
             ])
         ),
+        new Property(
+            DataTypeDefXsd.String,
+            null,
+            'VARIABLE',
+            'InstanceId',
+            null,
+            [
+                new LangStringTextType(
+                    'en-us',
+                    'Legally valid designation of the natural or judicial person which is directly responsible for the design, production, packaging and labeling of a product in respect to its being brought into circulation.'
+                ),
+                new LangStringTextType(
+                    'de',
+                    "Bezeichnung für eine natürliche oder juristische Person, die für die Auslegung, Herstellung und Verpackung sowie die Etikettierung eines Produkts im Hinblick auf das 'Inverkehrbringen' im eigenen Namen verantwortlich ist"
+                ),
+            ],
+            new Reference(ReferenceTypes.ExternalReference, [
+                new Key(KeyTypes.GlobalReference, 'http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber'),
+            ]),
+            [
+                new Reference(ReferenceTypes.ExternalReference, [
+                    new Key(KeyTypes.GlobalReference, 'something_random_e14ad770'),
+                ]),
+                new Reference(ReferenceTypes.ExternalReference, [
+                    new Key(KeyTypes.GlobalReference, 'something_random_bd061acd'),
+                ]),
+            ],
+            null,
+            null,
+            '978-8234-234-342',
+            new Reference(ReferenceTypes.ExternalReference, [new Key(KeyTypes.GlobalReference, '978-8234-234-342')])
+        ),
     ]
 );
 
@@ -379,9 +411,13 @@ const TEST_SUBMODEL_1: Submodel = new Submodel(
         new RelationshipElement(
             new Reference(ReferenceTypes.ModelReference, [
                 new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
+                new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                new Key(KeyTypes.Property, 'ExampleProperty'),
             ]),
             new Reference(ReferenceTypes.ModelReference, [
                 new Key(KeyTypes.Submodel, 'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial'),
+                new Key(KeyTypes.Entity, 'ExampleEntity'),
+                new Key(KeyTypes.Property, 'ExampleProperty2'),
             ]),
             null,
             'PARAMETER',
@@ -1096,7 +1132,6 @@ const TEST_SUBMODEL_MISSING: Submodel = new Submodel(
             ])
         ),
         new SubmodelElementList(
-            true,
             AasSubmodelElements.SubmodelElement,
             null,
             'PARAMETER',
@@ -1113,6 +1148,9 @@ const TEST_SUBMODEL_MISSING: Submodel = new Submodel(
                 ),
             ]),
             null,
+            null,
+            null,
+            true,
             null,
             null,
             [
@@ -1728,6 +1766,15 @@ describe('serializeXml', () => {
         // testEnvironment.xml
         const env = new BaSyxEnvironment();
         env.assetAdministrationShells = [TEST_AAS];
+        env.submodels = [
+            TEST_SUBMODEL_IDENTIFICATION,
+            TEST_SUBMODEL_BILL_OF_MATERIAL,
+            TEST_SUBMODEL_1,
+            TEST_SUBMODEL_MANDATORY,
+            TEST_SUBMODEL_TEMPLATE,
+            TEST_SUBMODEL_2_MANDATORY,
+            TEST_SUBMODEL_MISSING,
+        ];
         env.conceptDescriptions = [
             TEST_CONCEPT_DESCRIPTION,
             TEST_CONCEPT_DESCRIPTION_MINIMAL,

@@ -17,10 +17,13 @@ import {
     LangStringShortNameTypeIec61360,
     LangStringTextType,
     LevelType,
+    ModellingKind,
+    Qualifier,
     Reference,
     ReferenceTypes,
     Resource,
     SpecificAssetId,
+    Submodel,
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.0-typescript/types';
@@ -490,8 +493,589 @@ function transformResource(resource: any): any {
 }
 
 function transformSubmodel(submodel: any): any {
-    // TODO: Implement full Submodel transformation according to XSD
-    return submodel;
+    const result: any = {};
+
+    // hasExtensions (from referable)
+    if (submodel.extensions && submodel.extensions.length > 0) {
+        result['extensions'] = {
+            extension: submodel.extensions.map(transformExtension),
+        };
+    }
+
+    // category (from referable)
+    if (submodel.category) {
+        result['category'] = submodel.category;
+    }
+
+    // idShort (from referable)
+    if (submodel.idShort) {
+        result['idShort'] = submodel.idShort;
+    }
+
+    // displayName (from referable)
+    if (submodel.displayName && submodel.displayName.length > 0) {
+        result['displayName'] = {
+            langStringNameType: submodel.displayName.map(transformLangString),
+        };
+    }
+
+    // description (from referable)
+    if (submodel.description && submodel.description.length > 0) {
+        result['description'] = {
+            langStringTextType: submodel.description.map(transformLangString),
+        };
+    }
+
+    // administration (from identifiable)
+    if (submodel.administration) {
+        result['administration'] = transformAdministrativeInformation(submodel.administration);
+    }
+
+    // id (from identifiable) - REQUIRED
+    result['id'] = submodel.id;
+
+    // kind (from hasKind)
+    if (submodel.kind !== undefined && submodel.kind !== null) {
+        result['kind'] = submodel.kind;
+    }
+
+    // semanticId (from hasSemantics)
+    if (submodel.semanticId) {
+        result['semanticId'] = transformReference(submodel.semanticId);
+    }
+
+    // supplementalSemanticIds (from hasSemantics)
+    if (submodel.supplementalSemanticIds && submodel.supplementalSemanticIds.length > 0) {
+        result['supplementalSemanticIds'] = {
+            reference: submodel.supplementalSemanticIds.map(transformReference),
+        };
+    }
+
+    // qualifiers (from qualifiable)
+    if (submodel.qualifiers && submodel.qualifiers.length > 0) {
+        result['qualifiers'] = {
+            qualifier: submodel.qualifiers.map(transformQualifier),
+        };
+    }
+
+    // embeddedDataSpecifications (from hasDataSpecification)
+    if (submodel.embeddedDataSpecifications && submodel.embeddedDataSpecifications.length > 0) {
+        result['embeddedDataSpecifications'] = {
+            embeddedDataSpecification: submodel.embeddedDataSpecifications.map(transformEmbeddedDataSpecification),
+        };
+    }
+
+    // submodelElements (specific to Submodel)
+    if (submodel.submodelElements && submodel.submodelElements.length > 0) {
+        result['submodelElements'] = transformSubmodelElements(submodel.submodelElements);
+    }
+
+    return result;
+}
+
+function transformQualifier(qualifier: any): any {
+    const result: any = {};
+
+    // semanticId (from hasSemantics)
+    if (qualifier.semanticId) {
+        result['semanticId'] = transformReference(qualifier.semanticId);
+    }
+
+    // supplementalSemanticIds (from hasSemantics)
+    if (qualifier.supplementalSemanticIds && qualifier.supplementalSemanticIds.length > 0) {
+        result['supplementalSemanticIds'] = {
+            reference: qualifier.supplementalSemanticIds.map(transformReference),
+        };
+    }
+
+    // kind (from hasKind)
+    if (qualifier.kind !== undefined && qualifier.kind !== null) {
+        result['kind'] = qualifier.kind;
+    }
+
+    // type - REQUIRED
+    result['type'] = qualifier.type;
+
+    // valueType - REQUIRED
+    result['valueType'] = qualifier.valueType;
+
+    // value
+    if (qualifier.value !== undefined && qualifier.value !== null) {
+        result['value'] = qualifier.value;
+    }
+
+    // valueId
+    if (qualifier.valueId) {
+        result['valueId'] = transformReference(qualifier.valueId);
+    }
+
+    return result;
+}
+
+function transformSubmodelElements(elements: any[]): any {
+    const result: any = {};
+
+    for (const element of elements) {
+        const modelType = element.modelType;
+
+        if (!modelType) {
+            continue;
+        }
+
+        let transformedElement: any;
+
+        switch (modelType) {
+            case 'Property':
+                transformedElement = transformProperty(element);
+                break;
+            case 'MultiLanguageProperty':
+                transformedElement = transformMultiLanguageProperty(element);
+                break;
+            case 'Range':
+                transformedElement = transformRange(element);
+                break;
+            case 'ReferenceElement':
+                transformedElement = transformReferenceElement(element);
+                break;
+            case 'Blob':
+                transformedElement = transformBlob(element);
+                break;
+            case 'File':
+                transformedElement = transformFile(element);
+                break;
+            case 'Entity':
+                transformedElement = transformEntity(element);
+                break;
+            case 'RelationshipElement':
+                transformedElement = transformRelationshipElement(element);
+                break;
+            case 'AnnotatedRelationshipElement':
+                transformedElement = transformAnnotatedRelationshipElement(element);
+                break;
+            case 'SubmodelElementCollection':
+                transformedElement = transformSubmodelElementCollection(element);
+                break;
+            case 'SubmodelElementList':
+                transformedElement = transformSubmodelElementList(element);
+                break;
+            case 'Operation':
+                transformedElement = transformOperation(element);
+                break;
+            case 'Capability':
+                transformedElement = transformCapability(element);
+                break;
+            case 'BasicEventElement':
+                transformedElement = transformBasicEventElement(element);
+                break;
+            default:
+                // Unknown type, skip it
+                continue;
+        }
+
+        // Use modelType as the key with lowercase first letter
+        const key = modelType.charAt(0).toLowerCase() + modelType.slice(1);
+
+        if (!result[key]) {
+            result[key] = [];
+        }
+        result[key].push(transformedElement);
+    }
+
+    return result;
+}
+
+function transformProperty(property: any): any {
+    const result: any = {};
+
+    // Add common referable/qualifiable/semantic properties
+    addReferableProperties(result, property);
+    addSemanticProperties(result, property);
+    addQualifiableProperties(result, property);
+
+    // valueType - REQUIRED
+    result['valueType'] = property.valueType;
+
+    // value
+    if (property.value !== undefined && property.value !== null) {
+        result['value'] = property.value;
+    }
+
+    // valueId
+    if (property.valueId) {
+        result['valueId'] = transformReference(property.valueId);
+    }
+
+    return result;
+}
+
+function transformMultiLanguageProperty(mlp: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, mlp);
+    addSemanticProperties(result, mlp);
+    addQualifiableProperties(result, mlp);
+
+    // value
+    if (mlp.value && mlp.value.length > 0) {
+        result['value'] = {
+            langStringTextType: mlp.value.map(transformLangString),
+        };
+    }
+
+    // valueId
+    if (mlp.valueId) {
+        result['valueId'] = transformReference(mlp.valueId);
+    }
+
+    return result;
+}
+
+function transformRange(range: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, range);
+    addSemanticProperties(result, range);
+    addQualifiableProperties(result, range);
+
+    // valueType - REQUIRED
+    result['valueType'] = range.valueType;
+
+    // min
+    if (range.min !== undefined && range.min !== null) {
+        result['min'] = range.min;
+    }
+
+    // max
+    if (range.max !== undefined && range.max !== null) {
+        result['max'] = range.max;
+    }
+
+    return result;
+}
+
+function transformReferenceElement(refElem: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, refElem);
+    addSemanticProperties(result, refElem);
+    addQualifiableProperties(result, refElem);
+
+    // value
+    if (refElem.value) {
+        result['value'] = transformReference(refElem.value);
+    }
+
+    return result;
+}
+
+function transformBlob(blob: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, blob);
+    addSemanticProperties(result, blob);
+    addQualifiableProperties(result, blob);
+
+    // contentType - REQUIRED
+    result['contentType'] = blob.contentType;
+
+    // value
+    if (blob.value !== undefined && blob.value !== null) {
+        result['value'] = blob.value;
+    }
+
+    return result;
+}
+
+function transformFile(file: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, file);
+    addSemanticProperties(result, file);
+    addQualifiableProperties(result, file);
+
+    // contentType - REQUIRED
+    result['contentType'] = file.contentType;
+
+    // value
+    if (file.value !== undefined && file.value !== null) {
+        result['value'] = file.value;
+    }
+
+    return result;
+}
+
+function transformEntity(entity: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, entity);
+    addSemanticProperties(result, entity);
+    addQualifiableProperties(result, entity);
+
+    // statements (submodel elements)
+    if (entity.statements && entity.statements.length > 0) {
+        result['statements'] = transformSubmodelElements(entity.statements);
+    }
+
+    // entityType - REQUIRED
+    result['entityType'] = entity.entityType;
+
+    // globalAssetId
+    if (entity.globalAssetId) {
+        result['globalAssetId'] = entity.globalAssetId;
+    }
+
+    // specificAssetIds
+    if (entity.specificAssetIds && entity.specificAssetIds.length > 0) {
+        result['specificAssetIds'] = {
+            specificAssetId: entity.specificAssetIds.map(transformSpecificAssetId),
+        };
+    }
+
+    return result;
+}
+
+function transformRelationshipElement(rel: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, rel);
+    addSemanticProperties(result, rel);
+    addQualifiableProperties(result, rel);
+
+    // first - REQUIRED
+    result['first'] = transformReference(rel.first);
+
+    // second - REQUIRED
+    result['second'] = transformReference(rel.second);
+
+    return result;
+}
+
+function transformAnnotatedRelationshipElement(annotatedRel: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, annotatedRel);
+    addSemanticProperties(result, annotatedRel);
+    addQualifiableProperties(result, annotatedRel);
+
+    // first - REQUIRED
+    result['first'] = transformReference(annotatedRel.first);
+
+    // second - REQUIRED
+    result['second'] = transformReference(annotatedRel.second);
+
+    // annotations
+    if (annotatedRel.annotations && annotatedRel.annotations.length > 0) {
+        result['annotations'] = transformSubmodelElements(annotatedRel.annotations);
+    }
+
+    return result;
+}
+
+function transformSubmodelElementCollection(collection: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, collection);
+    addSemanticProperties(result, collection);
+    addQualifiableProperties(result, collection);
+
+    // value (submodel elements)
+    if (collection.value && collection.value.length > 0) {
+        result['value'] = transformSubmodelElements(collection.value);
+    }
+
+    return result;
+}
+
+function transformSubmodelElementList(list: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, list);
+    addSemanticProperties(result, list);
+    addQualifiableProperties(result, list);
+
+    // orderRelevant
+    if (list.orderRelevant !== undefined && list.orderRelevant !== null) {
+        result['orderRelevant'] = list.orderRelevant;
+    }
+
+    // semanticIdListElement
+    if (list.semanticIdListElement) {
+        result['semanticIdListElement'] = transformReference(list.semanticIdListElement);
+    }
+
+    // typeValueListElement - REQUIRED
+    result['typeValueListElement'] = list.typeValueListElement;
+
+    // valueTypeListElement
+    if (list.valueTypeListElement) {
+        result['valueTypeListElement'] = list.valueTypeListElement;
+    }
+
+    // value (submodel elements)
+    if (list.value && list.value.length > 0) {
+        result['value'] = transformSubmodelElements(list.value);
+    }
+
+    return result;
+}
+
+function transformOperation(operation: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, operation);
+    addSemanticProperties(result, operation);
+    addQualifiableProperties(result, operation);
+
+    // inputVariables
+    if (operation.inputVariables && operation.inputVariables.length > 0) {
+        result['inputVariables'] = {
+            operationVariable: operation.inputVariables.map(transformOperationVariable),
+        };
+    }
+
+    // outputVariables
+    if (operation.outputVariables && operation.outputVariables.length > 0) {
+        result['outputVariables'] = {
+            operationVariable: operation.outputVariables.map(transformOperationVariable),
+        };
+    }
+
+    // inoutputVariables
+    if (operation.inoutputVariables && operation.inoutputVariables.length > 0) {
+        result['inoutputVariables'] = {
+            operationVariable: operation.inoutputVariables.map(transformOperationVariable),
+        };
+    }
+
+    return result;
+}
+
+function transformOperationVariable(opVar: any): any {
+    const result: any = {};
+
+    // value - REQUIRED (a SubmodelElement)
+    if (opVar.value) {
+        const valueElements = transformSubmodelElements([opVar.value]);
+        // Get the first (and only) element from the transformed result
+        const keys = Object.keys(valueElements);
+        if (keys.length > 0) {
+            result['value'] = valueElements[keys[0]][0];
+        }
+    }
+
+    return result;
+}
+
+function transformCapability(capability: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, capability);
+    addSemanticProperties(result, capability);
+    addQualifiableProperties(result, capability);
+
+    return result;
+}
+
+function transformBasicEventElement(event: any): any {
+    const result: any = {};
+
+    addReferableProperties(result, event);
+    addSemanticProperties(result, event);
+    addQualifiableProperties(result, event);
+
+    // observed - REQUIRED
+    result['observed'] = transformReference(event.observed);
+
+    // direction - REQUIRED
+    result['direction'] = event.direction;
+
+    // state - REQUIRED
+    result['state'] = event.state;
+
+    // messageTopic
+    if (event.messageTopic) {
+        result['messageTopic'] = event.messageTopic;
+    }
+
+    // messageBroker
+    if (event.messageBroker) {
+        result['messageBroker'] = transformReference(event.messageBroker);
+    }
+
+    // lastUpdate
+    if (event.lastUpdate) {
+        result['lastUpdate'] = event.lastUpdate;
+    }
+
+    // minInterval
+    if (event.minInterval) {
+        result['minInterval'] = event.minInterval;
+    }
+
+    // maxInterval
+    if (event.maxInterval) {
+        result['maxInterval'] = event.maxInterval;
+    }
+
+    return result;
+}
+
+// Helper functions to add common properties
+
+function addReferableProperties(result: any, element: any): void {
+    // extensions
+    if (element.extensions && element.extensions.length > 0) {
+        result['extensions'] = {
+            extension: element.extensions.map(transformExtension),
+        };
+    }
+
+    // category
+    if (element.category) {
+        result['category'] = element.category;
+    }
+
+    // idShort
+    if (element.idShort) {
+        result['idShort'] = element.idShort;
+    }
+
+    // displayName
+    if (element.displayName && element.displayName.length > 0) {
+        result['displayName'] = {
+            langStringNameType: element.displayName.map(transformLangString),
+        };
+    }
+
+    // description
+    if (element.description && element.description.length > 0) {
+        result['description'] = {
+            langStringTextType: element.description.map(transformLangString),
+        };
+    }
+}
+
+function addSemanticProperties(result: any, element: any): void {
+    // semanticId
+    if (element.semanticId) {
+        result['semanticId'] = transformReference(element.semanticId);
+    }
+
+    // supplementalSemanticIds
+    if (element.supplementalSemanticIds && element.supplementalSemanticIds.length > 0) {
+        result['supplementalSemanticIds'] = {
+            reference: element.supplementalSemanticIds.map(transformReference),
+        };
+    }
+}
+
+function addQualifiableProperties(result: any, element: any): void {
+    // qualifiers
+    if (element.qualifiers && element.qualifiers.length > 0) {
+        result['qualifiers'] = {
+            qualifier: element.qualifiers.map(transformQualifier),
+        };
+    }
 }
 
 function transformConceptDescription(cd: any): any {
