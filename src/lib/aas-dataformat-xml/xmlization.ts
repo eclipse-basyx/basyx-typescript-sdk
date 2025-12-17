@@ -17,13 +17,10 @@ import {
     LangStringShortNameTypeIec61360,
     LangStringTextType,
     LevelType,
-    ModellingKind,
-    Qualifier,
     Reference,
     ReferenceTypes,
     Resource,
     SpecificAssetId,
-    Submodel,
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.0-typescript/types';
@@ -775,13 +772,13 @@ function transformBlob(blob: any): any {
     addSemanticProperties(result, blob);
     addQualifiableProperties(result, blob);
 
-    // contentType - REQUIRED
-    result['contentType'] = blob.contentType;
-
     // value
     if (blob.value !== undefined && blob.value !== null) {
         result['value'] = blob.value;
     }
+
+    // contentType - REQUIRED
+    result['contentType'] = blob.contentType;
 
     return result;
 }
@@ -793,13 +790,13 @@ function transformFile(file: any): any {
     addSemanticProperties(result, file);
     addQualifiableProperties(result, file);
 
-    // contentType - REQUIRED
-    result['contentType'] = file.contentType;
-
     // value
     if (file.value !== undefined && file.value !== null) {
         result['value'] = file.value;
     }
+
+    // contentType - REQUIRED
+    result['contentType'] = file.contentType;
 
     return result;
 }
