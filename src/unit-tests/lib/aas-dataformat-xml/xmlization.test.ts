@@ -870,7 +870,13 @@ const TEST_SUBMODEL_MANDATORY: Submodel = new Submodel(
             null,
             null,
             false,
-            null
+            null,
+            null,
+            [
+                new Property(DataTypeDefXsd.String, null, null, 'ExampleProperty'),
+                new MultiLanguageProperty(null, null, 'ExampleMultiLanguageProperty'),
+                new Range(DataTypeDefXsd.Int, null, null, 'ExampleRange'),
+            ]
         ),
         new SubmodelElementCollection(
             null,
@@ -883,32 +889,8 @@ const TEST_SUBMODEL_MANDATORY: Submodel = new Submodel(
             null,
             null,
             [
-                new Blob(
-                    'application/pdf',
-                    null,
-                    null,
-                    'ExampleBlob',
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    new Uint8Array([1, 2, 3, 4, 5])
-                ),
-                new File(
-                    'application/pdf',
-                    null,
-                    null,
-                    'ExampleFile',
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    'file:///TestFile.pdf'
-                ),
+                new Blob('application/pdf', null, null, 'ExampleBlob'),
+                new File('application/pdf', null, null, 'ExampleFile'),
                 new ReferenceElement(null, null, 'ExampleReferenceElement'),
             ]
         ),
@@ -1795,9 +1777,9 @@ describe('serializeXml', () => {
             TEST_SUBMODEL_BILL_OF_MATERIAL,
             TEST_SUBMODEL_1,
             TEST_SUBMODEL_MANDATORY,
-            TEST_SUBMODEL_TEMPLATE,
             TEST_SUBMODEL_2_MANDATORY,
             TEST_SUBMODEL_MISSING,
+            TEST_SUBMODEL_TEMPLATE,
         ];
         env.conceptDescriptions = [
             TEST_CONCEPT_DESCRIPTION,
