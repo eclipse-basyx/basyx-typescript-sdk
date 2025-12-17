@@ -1,14 +1,23 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import {
+    AasSubmodelElements,
     AdministrativeInformation,
+    AnnotatedRelationshipElement,
     AssetAdministrationShell,
     AssetInformation,
     AssetKind,
+    BasicEventElement,
+    Blob,
+    Capability,
     ConceptDescription,
     DataSpecificationIec61360,
     DataTypeDefXsd,
+    Direction,
     EmbeddedDataSpecification,
+    Entity,
+    EntityType,
     Extension,
+    File,
     Key,
     KeyTypes,
     LangStringDefinitionTypeIec61360,
@@ -17,10 +26,24 @@ import {
     LangStringShortNameTypeIec61360,
     LangStringTextType,
     LevelType,
+    ModellingKind,
+    MultiLanguageProperty,
+    Operation,
+    OperationVariable,
+    Property,
+    Qualifier,
+    QualifierKind,
+    Range,
     Reference,
+    ReferenceElement,
     ReferenceTypes,
+    RelationshipElement,
     Resource,
     SpecificAssetId,
+    StateOfEvent,
+    Submodel,
+    SubmodelElementCollection,
+    SubmodelElementList,
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.0-typescript/types';
@@ -1138,6 +1161,12 @@ function transformConceptDescription(cd: any): any {
     return result;
 }
 
+// Helper function to ensure a value is an array
+function ensureArray(val: any): any[] {
+    if (!val) return [];
+    return Array.isArray(val) ? val : [val];
+}
+
 export function deserializeXml(xmlString: string): BaSyxEnvironment {
     if (!xmlString || xmlString.trim() === '') {
         return new BaSyxEnvironment();
@@ -1167,6 +1196,8 @@ export function deserializeXml(xmlString: string): BaSyxEnvironment {
                 'assetAdministrationShell',
                 'submodel',
                 'conceptDescription',
+                'qualifier',
+                'operationVariable',
             ];
             return arrayElements.includes(name);
         },
@@ -1187,10 +1218,12 @@ export function deserializeXml(xmlString: string): BaSyxEnvironment {
             envData.assetAdministrationShells.assetAdministrationShell.map(parseAssetAdministrationShell);
     }
 
-    // TODO: Parse Submodels
-    // if (envData.submodels?.submodel) {
-    //     env.submodels = envData.submodels.submodel.map(parseSubmodel);
-    // }
+    // Parse Submodels
+    if (envData.submodels?.submodel) {
+        env.submodels = Array.isArray(envData.submodels.submodel)
+            ? envData.submodels.submodel.map(parseSubmodel)
+            : [parseSubmodel(envData.submodels.submodel)];
+    }
 
     // Parse Concept Descriptions
     if (envData.conceptDescriptions?.conceptDescription) {
@@ -1409,5 +1442,488 @@ function parseConceptDescription(data: any): ConceptDescription {
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
             : undefined,
         data.isCaseOf?.reference ? data.isCaseOf.reference.map(parseReference) : undefined
+    );
+}
+
+function parseSubmodel(data: any): Submodel {
+    return new Submodel(
+        data.id,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.administration ? parseAdministrativeInformation(data.administration) : undefined,
+        data.kind ? (jsonization.modellingKindFromJsonable(data.kind).value ?? data.kind) : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.submodelElements ? parseSubmodelElements(data.submodelElements) : undefined
+    );
+}
+
+function parseQualifier(data: any): Qualifier {
+    // Map XML valueType string to DataTypeDefXsd enum
+    let valueType = data.valueType || undefined;
+    if (valueType && typeof valueType === 'string') {
+        // Convert string to enum value using jsonization (expects xs: prefix)
+        const result = jsonization.dataTypeDefXsdFromJsonable(valueType);
+        if (result.error === null && result.value !== null) {
+            valueType = result.value;
+        }
+    }
+
+    return new Qualifier(
+        data.type,
+        valueType as DataTypeDefXsd,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.kind ? (jsonization.qualifierKindFromJsonable(data.kind).value ?? data.kind) : undefined,
+        data.value || undefined,
+        data.valueId ? parseReference(data.valueId) : undefined
+    );
+}
+
+function parseSubmodelElements(data: any): any[] {
+    const elements: any[] = [];
+
+    // Check for all possible submodel element types
+    const elementTypes = [
+        { key: 'property', parser: parseProperty },
+        { key: 'multiLanguageProperty', parser: parseMultiLanguageProperty },
+        { key: 'range', parser: parseRange },
+        { key: 'referenceElement', parser: parseReferenceElement },
+        { key: 'blob', parser: parseBlob },
+        { key: 'file', parser: parseFile },
+        { key: 'entity', parser: parseEntity },
+        { key: 'relationshipElement', parser: parseRelationshipElement },
+        { key: 'annotatedRelationshipElement', parser: parseAnnotatedRelationshipElement },
+        { key: 'submodelElementCollection', parser: parseSubmodelElementCollection },
+        { key: 'submodelElementList', parser: parseSubmodelElementList },
+        { key: 'operation', parser: parseOperation },
+        { key: 'capability', parser: parseCapability },
+        { key: 'basicEventElement', parser: parseBasicEventElement },
+    ];
+
+    for (const { key, parser } of elementTypes) {
+        if (data[key]) {
+            const items = Array.isArray(data[key]) ? data[key] : [data[key]];
+            elements.push(...items.map(parser));
+        }
+    }
+
+    return elements;
+}
+
+function parseProperty(data: any): Property {
+    // Map XML valueType string to DataTypeDefXsd enum
+    let valueType = data.valueType || undefined;
+    if (valueType && typeof valueType === 'string') {
+        // Convert string to enum value using jsonization (expects xs: prefix)
+        const result = jsonization.dataTypeDefXsdFromJsonable(valueType);
+        if (result.error === null && result.value !== null) {
+            valueType = result.value;
+        }
+    }
+
+    return new Property(
+        valueType as DataTypeDefXsd,
+        data.extensions?.extension ? ensureArray(data.extensions.extension).map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? ensureArray(data.displayName.langStringNameType).map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? ensureArray(data.description.langStringTextType).map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? ensureArray(data.supplementalSemanticIds.reference).map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? ensureArray(data.qualifiers.qualifier).map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? ensureArray(data.embeddedDataSpecifications.embeddedDataSpecification).map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.value || undefined,
+        data.valueId ? parseReference(data.valueId) : undefined
+    );
+}
+
+function parseMultiLanguageProperty(data: any): MultiLanguageProperty {
+    return new MultiLanguageProperty(
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.value?.langStringTextType ? data.value.langStringTextType.map(parseLangStringTextType) : undefined,
+        data.valueId ? parseReference(data.valueId) : undefined
+    );
+}
+
+function parseRange(data: any): Range {
+    // Map XML valueType string to DataTypeDefXsd enum
+    let valueType = data.valueType || undefined;
+    if (valueType && typeof valueType === 'string') {
+        // Convert string to enum value using jsonization (expects xs: prefix)
+        const result = jsonization.dataTypeDefXsdFromJsonable(valueType);
+        if (result.error === null && result.value !== null) {
+            valueType = result.value;
+        }
+    }
+
+    return new Range(
+        valueType as DataTypeDefXsd,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.min || undefined,
+        data.max || undefined
+    );
+}
+
+function parseReferenceElement(data: any): ReferenceElement {
+    return new ReferenceElement(
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.value ? parseReference(data.value) : undefined
+    );
+}
+
+function parseBlob(data: any): Blob {
+    return new Blob(
+        data.contentType,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.value || undefined
+    );
+}
+
+function parseFile(data: any): File {
+    return new File(
+        data.contentType,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.value || undefined
+    );
+}
+
+function parseEntity(data: any): Entity {
+    const entityType = data.entityType ? (jsonization.entityTypeFromJsonable(data.entityType).value ?? data.entityType) : undefined;
+    return new Entity(
+        entityType as EntityType,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.statements ? parseSubmodelElements(data.statements) : undefined,
+        data.globalAssetId || undefined,
+        data.specificAssetIds?.specificAssetId
+            ? data.specificAssetIds.specificAssetId.map(parseSpecificAssetId)
+            : undefined
+    );
+}
+
+function parseRelationshipElement(data: any): RelationshipElement {
+    return new RelationshipElement(
+        parseReference(data.first),
+        parseReference(data.second),
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined
+    );
+}
+
+function parseAnnotatedRelationshipElement(data: any): AnnotatedRelationshipElement {
+    return new AnnotatedRelationshipElement(
+        parseReference(data.first),
+        parseReference(data.second),
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.annotations ? parseSubmodelElements(data.annotations) : undefined
+    );
+}
+
+function parseSubmodelElementCollection(data: any): SubmodelElementCollection {
+    return new SubmodelElementCollection(
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.value ? parseSubmodelElements(data.value) : undefined
+    );
+}
+
+function parseSubmodelElementList(data: any): SubmodelElementList {
+    // Convert string to enum value
+    const typeValueListElement = data.typeValueListElement ? (jsonization.aasSubmodelElementsFromJsonable(data.typeValueListElement).value ?? data.typeValueListElement) : undefined;
+    return new SubmodelElementList(
+        typeValueListElement as AasSubmodelElements,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.orderRelevant !== undefined ? data.orderRelevant : undefined,
+        data.semanticIdListElement ? parseReference(data.semanticIdListElement) : undefined,
+        data.valueTypeListElement || undefined,
+        data.value ? parseSubmodelElements(data.value) : undefined
+    );
+}
+
+function parseOperation(data: any): Operation {
+    const ensureArray = (val: any) => (Array.isArray(val) ? val : val ? [val] : []);
+
+    return new Operation(
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.inputVariables?.operationVariable
+            ? (ensureArray(data.inputVariables.operationVariable)
+                  .map(parseOperationVariable)
+                  .filter((v: any) => v !== null) as OperationVariable[])
+            : undefined,
+        data.outputVariables?.operationVariable
+            ? (ensureArray(data.outputVariables.operationVariable)
+                  .map(parseOperationVariable)
+                  .filter((v: any) => v !== null) as OperationVariable[])
+            : undefined,
+        data.inoutputVariables?.operationVariable
+            ? (ensureArray(data.inoutputVariables.operationVariable)
+                  .map(parseOperationVariable)
+                  .filter((v: any) => v !== null) as OperationVariable[])
+            : undefined
+    );
+}
+
+function parseOperationVariable(data: any): OperationVariable | null {
+    // The value of an operation variable is a submodel element
+    // We need to determine which type it is and parse it accordingly
+    if (data.value) {
+        const subElements = parseSubmodelElements(data.value);
+        if (subElements.length > 0) {
+            return new OperationVariable(subElements[0]);
+        }
+    }
+    // OperationVariable requires a value, so return null if not available
+    // This will be filtered out when mapping
+    return null;
+}
+
+function parseCapability(data: any): Capability {
+    return new Capability(
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined
+    );
+}
+
+function parseBasicEventElement(data: any): BasicEventElement {
+    const direction = data.direction ? (jsonization.directionFromJsonable(data.direction).value ?? data.direction) : undefined;
+    const state = data.state ? (jsonization.stateOfEventFromJsonable(data.state).value ?? data.state) : undefined;
+    return new BasicEventElement(
+        parseReference(data.observed),
+        direction as Direction,
+        state as StateOfEvent,
+        data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
+        data.category || undefined,
+        data.idShort || undefined,
+        data.displayName?.langStringNameType
+            ? data.displayName.langStringNameType.map(parseLangStringNameType)
+            : undefined,
+        data.description?.langStringTextType
+            ? data.description.langStringTextType.map(parseLangStringTextType)
+            : undefined,
+        data.semanticId ? parseReference(data.semanticId) : undefined,
+        data.supplementalSemanticIds?.reference
+            ? data.supplementalSemanticIds.reference.map(parseReference)
+            : undefined,
+        data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
+        data.embeddedDataSpecifications?.embeddedDataSpecification
+            ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
+            : undefined,
+        data.messageTopic || undefined,
+        data.messageBroker ? parseReference(data.messageBroker) : undefined,
+        data.lastUpdate || undefined,
+        data.minInterval || undefined,
+        data.maxInterval || undefined
     );
 }

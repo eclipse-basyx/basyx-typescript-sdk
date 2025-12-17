@@ -46,9 +46,10 @@ import {
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.0-typescript/types';
+import * as fs from 'fs';
+import * as path from 'path';
 import { deserializeXml, serializeXml } from '../../../lib/aas-dataformat-xml';
 import { BaSyxEnvironment } from '../../../models/BaSyxEnvironment';
-import xmlContent from './test-full.xml';
 
 const TEST_AAS: AssetAdministrationShell = new AssetAdministrationShell(
     'http://customer.com/aas/9175_7013_7091_9168',
@@ -1787,6 +1788,8 @@ describe('serializeXml', () => {
             TEST_CONCEPT_DESCRIPTION_1,
             TEST_CONCEPT_DESCRIPTION_FULL,
         ];
+        const xmlPath = path.join(__dirname, 'test-full.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
         expect(serializeXml(env)).toBe(xmlContent);
     });
 });
@@ -1957,5 +1960,269 @@ describe('deserializeXml', () => {
         expect(iec61360.value).toBe('TEST');
         expect(iec61360.levelType).toBeDefined();
         expect(iec61360.levelType!.max).toBe(true);
+    });
+
+    test('should deserialize XML with Submodels including Properties', () => {
+        const env = new BaSyxEnvironment();
+        env.assetAdministrationShells = [TEST_AAS];
+        env.submodels = [TEST_SUBMODEL_IDENTIFICATION];
+
+        // Serialize to XML
+        const xml = serializeXml(env);
+
+        // Deserialize back
+        const result = deserializeXml(xml);
+
+        // Validate submodels
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+
+        const submodel = result.submodels![0];
+        expect(submodel.id).toBe('http://acplt.org/Submodels/Assets/TestAsset/Identification');
+        expect(submodel.idShort).toBe('Identification');
+        expect(submodel.kind).toBe(ModellingKind.Instance);
+
+        // Check description
+        expect(submodel.description).toHaveLength(2);
+        expect(submodel.description![0].language).toBe('en-us');
+        expect(submodel.description![0].text).toBe('An example asset identification submodel for the test application');
+
+        // Check administration
+        expect(submodel.administration).toBeDefined();
+        expect(submodel.administration!.version).toBe('0');
+        expect(submodel.administration!.revision).toBe('9');
+
+        // Check semantic ID
+        expect(submodel.semanticId).toBeDefined();
+        expect(submodel.semanticId!.type).toBe(ReferenceTypes.ExternalReference);
+        expect(submodel.semanticId!.keys[0].value).toBe('http://acplt.org/SubmodelTemplates/AssetIdentification');
+
+        // Check submodel elements
+        expect(submodel.submodelElements).toBeDefined();
+        expect(submodel.submodelElements).toHaveLength(2);
+
+        // Check first property
+        const prop1 = submodel.submodelElements![0] as Property;
+        expect(prop1.idShort).toBe('ManufacturerName');
+        expect(prop1.valueType).toBe(DataTypeDefXsd.String);
+        expect(prop1.displayName).toHaveLength(1);
+        expect(prop1.displayName![0].language).toBe('en-us');
+        expect(prop1.displayName![0].text).toBe('Manufacturer Name');
+        expect(prop1.description).toHaveLength(2);
+        expect(prop1.semanticId).toBeDefined();
+        expect(prop1.semanticId!.keys[0].value).toBe('0173-1#02-AAO677#002');
+        expect(prop1.qualifiers).toHaveLength(2);
+        expect(prop1.qualifiers![0].type).toBe('http://acplt.org/Qualifier/ExampleQualifier');
+        expect(prop1.qualifiers![0].valueType).toBe(DataTypeDefXsd.Int);
+        expect(prop1.qualifiers![0].value).toBe('100');
+        expect(prop1.value).toBe('http://acplt.org/ValueId/ACPLT');
+        expect(prop1.valueId).toBeDefined();
+
+        // Check second property
+        const prop2 = submodel.submodelElements![1] as Property;
+        expect(prop2.idShort).toBe('InstanceId');
+        expect(prop2.valueType).toBe(DataTypeDefXsd.String);
+        expect(prop2.category).toBe('VARIABLE');
+        expect(prop2.description).toHaveLength(2);
+        expect(prop2.semanticId).toBeDefined();
+        expect(prop2.supplementalSemanticIds).toHaveLength(2);
+        expect(prop2.value).toBe('978-8234-234-342');
+        expect(prop2.valueId).toBeDefined();
+    });
+
+    test('should deserialize XML with complex Submodel including various element types', () => {
+        const env = new BaSyxEnvironment();
+        env.submodels = [TEST_SUBMODEL_TEMPLATE];
+
+        // Serialize to XML
+        const xml = serializeXml(env);
+
+        // Deserialize back
+        const result = deserializeXml(xml);
+
+        // Validate submodel
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+
+        const submodel = result.submodels![0];
+        expect(submodel.id).toBe('https://acplt.org/Test_Submodel_Template');
+        expect(submodel.idShort).toBe('TestSubmodelTemplate');
+        expect(submodel.kind).toBe(ModellingKind.Template);
+
+        // Check submodel elements
+        expect(submodel.submodelElements).toBeDefined();
+        expect(submodel.submodelElements!.length).toBeGreaterThan(0);
+
+        // Find and check RelationshipElement
+        const relElement = submodel.submodelElements!.find(
+            (el: any) => el.idShort === 'ExampleRelationshipElement'
+        ) as RelationshipElement;
+        expect(relElement).toBeDefined();
+        expect(relElement.first).toBeDefined();
+        expect(relElement.first.keys[0].type).toBe(KeyTypes.Submodel);
+        expect(relElement.second).toBeDefined();
+        expect(relElement.second.keys[0].type).toBe(KeyTypes.Submodel);
+
+        // Find and check AnnotatedRelationshipElement
+        const annotatedRel = submodel.submodelElements!.find(
+            (el: any) => el.idShort === 'ExampleAnnotatedRelationshipElement'
+        ) as AnnotatedRelationshipElement;
+        expect(annotatedRel).toBeDefined();
+        expect(annotatedRel.first).toBeDefined();
+        expect(annotatedRel.second).toBeDefined();
+        expect(annotatedRel.annotations).toBeDefined();
+        expect(annotatedRel.annotations!.length).toBeGreaterThan(0);
+
+        // Find and check Operation
+        const operation = submodel.submodelElements!.find((el: any) => el.idShort === 'ExampleOperation') as Operation;
+        expect(operation).toBeDefined();
+        expect(operation.inputVariables).toBeDefined();
+        expect(operation.outputVariables).toBeDefined();
+        expect(operation.inoutputVariables).toBeDefined();
+
+        // Find and check Capability
+        const capability = submodel.submodelElements!.find(
+            (el: any) => el.idShort === 'ExampleCapability'
+        ) as Capability;
+        expect(capability).toBeDefined();
+        expect(capability.semanticId).toBeDefined();
+
+        // Find and check BasicEventElement
+        const eventElement = submodel.submodelElements!.find(
+            (el: any) => el.idShort === 'ExampleBasicEvent'
+        ) as BasicEventElement;
+        expect(eventElement).toBeDefined();
+        expect(eventElement.observed).toBeDefined();
+        expect(eventElement.direction).toBe(Direction.Output);
+        expect(eventElement.state).toBe(StateOfEvent.Off);
+
+        // Find and check SubmodelElementList
+        const submodelList = submodel.submodelElements!.find(
+            (el: any) => el.idShort === 'ExampleSubmodelList2'
+        ) as SubmodelElementList;
+        expect(submodelList).toBeDefined();
+        expect(submodelList.typeValueListElement).toBeDefined();
+        expect(submodelList.orderRelevant).toBe(true);
+        expect(submodelList.value).toBeDefined();
+
+        // Find and check SubmodelElementCollection
+        const collection = submodel.submodelElements!.find(
+            (el: any) => el.idShort === 'ExampleSubmodelCollection'
+        ) as SubmodelElementCollection;
+        expect(collection).toBeDefined();
+        expect(collection.value).toBeDefined();
+        expect(collection.value!.length).toBeGreaterThan(0);
+    });
+
+    test('should deserialize XML with Submodel including Entity', () => {
+        const env = new BaSyxEnvironment();
+        env.submodels = [TEST_SUBMODEL_BILL_OF_MATERIAL];
+
+        // Serialize to XML
+        const xml = serializeXml(env);
+
+        // Deserialize back
+        const result = deserializeXml(xml);
+
+        // Validate submodel
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+
+        const submodel = result.submodels![0];
+        expect(submodel.id).toBe('http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial');
+
+        // Find Entity elements
+        const entities = submodel.submodelElements!.filter((el: any) => el.modelType === 'Entity');
+        expect(entities.length).toBeGreaterThan(0);
+
+        const entity = entities[0] as Entity;
+        expect(entity.entityType).toBeDefined();
+        expect(entity.idShort).toBeDefined();
+        expect(entity.statements).toBeDefined();
+    });
+
+    test('should deserialize XML with full BaSyxEnvironment from test-full.xml', () => {
+        // Read the test XML file
+        const xmlPath = path.join(__dirname, 'test-full.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        // Deserialize the full XML
+        const result = deserializeXml(xmlContent);
+
+        // Validate the result
+        expect(result).toBeInstanceOf(BaSyxEnvironment);
+
+        // Check Asset Administration Shells
+        expect(result.assetAdministrationShells).toBeDefined();
+        expect(result.assetAdministrationShells!.length).toBeGreaterThan(0);
+
+        // Check Submodels
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels!.length).toBeGreaterThan(0);
+
+        // Verify we can find the Identification submodel
+        const identificationSubmodel = result.submodels!.find((sm: Submodel) => sm.idShort === 'Identification');
+        expect(identificationSubmodel).toBeDefined();
+        expect(identificationSubmodel!.submodelElements).toBeDefined();
+
+        // Verify we can find the TestSubmodel
+        const testSubmodel = result.submodels!.find((sm: Submodel) => sm.idShort === 'TestSubmodel');
+        expect(testSubmodel).toBeDefined();
+        expect(testSubmodel!.submodelElements).toBeDefined();
+
+        // Check various element types in TestSubmodel
+        const relationshipElements = testSubmodel!.submodelElements!.filter(
+            (el: any) => el.modelType === 'RelationshipElement'
+        );
+        expect(relationshipElements.length).toBeGreaterThan(0);
+
+        const annotatedRelElements = testSubmodel!.submodelElements!.filter(
+            (el: any) => el.modelType === 'AnnotatedRelationshipElement'
+        );
+        expect(annotatedRelElements.length).toBeGreaterThan(0);
+
+        const operations = testSubmodel!.submodelElements!.filter((el: any) => el.modelType === 'Operation');
+        expect(operations.length).toBeGreaterThan(0);
+
+        const capabilities = testSubmodel!.submodelElements!.filter((el: any) => el.modelType === 'Capability');
+        expect(capabilities.length).toBeGreaterThan(0);
+
+        const basicEventElements = testSubmodel!.submodelElements!.filter(
+            (el: any) => el.modelType === 'BasicEventElement'
+        );
+        expect(basicEventElements.length).toBeGreaterThan(0);
+
+        const submodelLists = testSubmodel!.submodelElements!.filter(
+            (el: any) => el.modelType === 'SubmodelElementList'
+        );
+        expect(submodelLists.length).toBeGreaterThan(0);
+
+        const submodelCollections = testSubmodel!.submodelElements!.filter(
+            (el: any) => el.modelType === 'SubmodelElementCollection'
+        );
+        expect(submodelCollections.length).toBeGreaterThan(0);
+
+        // Check Concept Descriptions
+        expect(result.conceptDescriptions).toBeDefined();
+        expect(result.conceptDescriptions!.length).toBeGreaterThan(0);
+    });
+
+    test('should deserialize and re-serialize maintaining consistency', () => {
+        const env = new BaSyxEnvironment();
+        env.assetAdministrationShells = [TEST_AAS];
+        env.submodels = [TEST_SUBMODEL_IDENTIFICATION, TEST_SUBMODEL_BILL_OF_MATERIAL, TEST_SUBMODEL_TEMPLATE];
+        env.conceptDescriptions = [TEST_CONCEPT_DESCRIPTION];
+
+        // First serialization
+        const xml1 = serializeXml(env);
+
+        // Deserialize
+        const deserialized = deserializeXml(xml1);
+
+        // Second serialization
+        const xml2 = serializeXml(deserialized);
+
+        // Both XML outputs should be identical
+        expect(xml2).toBe(xml1);
     });
 });
