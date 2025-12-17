@@ -705,7 +705,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value> http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
+                <aas:value>http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>

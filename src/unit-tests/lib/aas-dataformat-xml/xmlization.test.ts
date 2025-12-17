@@ -333,7 +333,7 @@ const TEST_SUBMODEL_BILL_OF_MATERIAL: Submodel = new Submodel(
                     null,
                     null,
                     null,
-                    'ttp://acplt.org/ValueId/ExampleValue2',
+                    'http://acplt.org/ValueId/ExampleValue2',
                     new Reference(ReferenceTypes.ExternalReference, [
                         new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValue2'),
                     ])
