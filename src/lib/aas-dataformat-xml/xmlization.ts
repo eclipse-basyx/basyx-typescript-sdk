@@ -1399,7 +1399,7 @@ function parseAssetInformation(data: any): AssetInformation {
         assetKind,
         data.globalAssetId || undefined,
         data.specificAssetIds?.specificAssetId
-            ? data.specificAssetIds.specificAssetId.map(parseSpecificAssetId)
+            ? ensureArray(data.specificAssetIds.specificAssetId).map(parseSpecificAssetId)
             : undefined,
         data.assetType || undefined,
         data.defaultThumbnail ? parseResource(data.defaultThumbnail) : undefined
@@ -1409,15 +1409,15 @@ function parseAssetInformation(data: any): AssetInformation {
 function parseSpecificAssetId(data: any): SpecificAssetId {
     const semanticId = data.semanticId ? parseReference(data.semanticId) : undefined;
     const supplementalSemanticIds = data.supplementalSemanticIds?.reference
-        ? data.supplementalSemanticIds.reference.map(parseReference)
+        ? ensureArray(data.supplementalSemanticIds.reference).map(parseReference)
         : undefined;
 
     return new SpecificAssetId(
         data.name,
         data.value,
-        data.externalSubjectId ? parseReference(data.externalSubjectId) : undefined,
         semanticId as any,
-        supplementalSemanticIds
+        supplementalSemanticIds,
+        data.externalSubjectId ? parseReference(data.externalSubjectId) : undefined
     );
 }
 
@@ -1692,7 +1692,9 @@ function parseFile(data: any): File {
 }
 
 function parseEntity(data: any): Entity {
-    const entityType = data.entityType ? (jsonization.entityTypeFromJsonable(data.entityType).value ?? data.entityType) : undefined;
+    const entityType = data.entityType
+        ? (jsonization.entityTypeFromJsonable(data.entityType).value ?? data.entityType)
+        : undefined;
     return new Entity(
         entityType as EntityType,
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
@@ -1794,7 +1796,9 @@ function parseSubmodelElementCollection(data: any): SubmodelElementCollection {
 
 function parseSubmodelElementList(data: any): SubmodelElementList {
     // Convert string to enum value
-    const typeValueListElement = data.typeValueListElement ? (jsonization.aasSubmodelElementsFromJsonable(data.typeValueListElement).value ?? data.typeValueListElement) : undefined;
+    const typeValueListElement = data.typeValueListElement
+        ? (jsonization.aasSubmodelElementsFromJsonable(data.typeValueListElement).value ?? data.typeValueListElement)
+        : undefined;
     return new SubmodelElementList(
         typeValueListElement as AasSubmodelElements,
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
@@ -1814,7 +1818,7 @@ function parseSubmodelElementList(data: any): SubmodelElementList {
         data.embeddedDataSpecifications?.embeddedDataSpecification
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
             : undefined,
-        data.orderRelevant !== undefined ? data.orderRelevant : undefined,
+        data.orderRelevant !== undefined ? data.orderRelevant === 'true' || data.orderRelevant === true : undefined,
         data.semanticIdListElement ? parseReference(data.semanticIdListElement) : undefined,
         data.valueTypeListElement || undefined,
         data.value ? parseSubmodelElements(data.value) : undefined
@@ -1897,7 +1901,9 @@ function parseCapability(data: any): Capability {
 }
 
 function parseBasicEventElement(data: any): BasicEventElement {
-    const direction = data.direction ? (jsonization.directionFromJsonable(data.direction).value ?? data.direction) : undefined;
+    const direction = data.direction
+        ? (jsonization.directionFromJsonable(data.direction).value ?? data.direction)
+        : undefined;
     const state = data.state ? (jsonization.stateOfEventFromJsonable(data.state).value ?? data.state) : undefined;
     return new BasicEventElement(
         parseReference(data.observed),

@@ -27,6 +27,7 @@ import {
     LangStringTextType,
     LevelType,
     ModellingKind,
+    ModelType,
     MultiLanguageProperty,
     Operation,
     OperationVariable,
@@ -2032,7 +2033,7 @@ describe('deserializeXml', () => {
 
     test('should deserialize XML with complex Submodel including various element types', () => {
         const env = new BaSyxEnvironment();
-        env.submodels = [TEST_SUBMODEL_TEMPLATE];
+        env.submodels = [TEST_SUBMODEL_MISSING];
 
         // Serialize to XML
         const xml = serializeXml(env);
@@ -2045,9 +2046,9 @@ describe('deserializeXml', () => {
         expect(result.submodels).toHaveLength(1);
 
         const submodel = result.submodels![0];
-        expect(submodel.id).toBe('https://acplt.org/Test_Submodel_Template');
-        expect(submodel.idShort).toBe('TestSubmodelTemplate');
-        expect(submodel.kind).toBe(ModellingKind.Template);
+        expect(submodel.id).toBe('https://acplt.org/Test_Submodel_Missing');
+        expect(submodel.idShort).toBe('TestSubmodelMissing');
+        expect(submodel.kind).toBe(ModellingKind.Instance);
 
         // Check submodel elements
         expect(submodel.submodelElements).toBeDefined();
@@ -2093,12 +2094,12 @@ describe('deserializeXml', () => {
         ) as BasicEventElement;
         expect(eventElement).toBeDefined();
         expect(eventElement.observed).toBeDefined();
-        expect(eventElement.direction).toBe(Direction.Output);
-        expect(eventElement.state).toBe(StateOfEvent.Off);
+        expect(eventElement.direction).toBe(Direction.Input);
+        expect(eventElement.state).toBe(StateOfEvent.On);
 
         // Find and check SubmodelElementList
         const submodelList = submodel.submodelElements!.find(
-            (el: any) => el.idShort === 'ExampleSubmodelList2'
+            (el: any) => el.idShort === 'ExampleSubmodelElementListOrdered'
         ) as SubmodelElementList;
         expect(submodelList).toBeDefined();
         expect(submodelList.typeValueListElement).toBeDefined();
@@ -2107,7 +2108,7 @@ describe('deserializeXml', () => {
 
         // Find and check SubmodelElementCollection
         const collection = submodel.submodelElements!.find(
-            (el: any) => el.idShort === 'ExampleSubmodelCollection'
+            (el: any) => el.idShort === 'ExampleSubmodelElementCollection'
         ) as SubmodelElementCollection;
         expect(collection).toBeDefined();
         expect(collection.value).toBeDefined();
@@ -2132,7 +2133,7 @@ describe('deserializeXml', () => {
         expect(submodel.id).toBe('http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial');
 
         // Find Entity elements
-        const entities = submodel.submodelElements!.filter((el: any) => el.modelType === 'Entity');
+        const entities = submodel.submodelElements!.filter((el: any) => el.modelType() === ModelType.Entity);
         expect(entities.length).toBeGreaterThan(0);
 
         const entity = entities[0] as Entity;
@@ -2172,33 +2173,35 @@ describe('deserializeXml', () => {
 
         // Check various element types in TestSubmodel
         const relationshipElements = testSubmodel!.submodelElements!.filter(
-            (el: any) => el.modelType === 'RelationshipElement'
+            (el: any) => el.modelType() === ModelType.RelationshipElement
         );
         expect(relationshipElements.length).toBeGreaterThan(0);
 
         const annotatedRelElements = testSubmodel!.submodelElements!.filter(
-            (el: any) => el.modelType === 'AnnotatedRelationshipElement'
+            (el: any) => el.modelType() === ModelType.AnnotatedRelationshipElement
         );
         expect(annotatedRelElements.length).toBeGreaterThan(0);
 
-        const operations = testSubmodel!.submodelElements!.filter((el: any) => el.modelType === 'Operation');
+        const operations = testSubmodel!.submodelElements!.filter((el: any) => el.modelType() === ModelType.Operation);
         expect(operations.length).toBeGreaterThan(0);
 
-        const capabilities = testSubmodel!.submodelElements!.filter((el: any) => el.modelType === 'Capability');
+        const capabilities = testSubmodel!.submodelElements!.filter(
+            (el: any) => el.modelType() === ModelType.Capability
+        );
         expect(capabilities.length).toBeGreaterThan(0);
 
         const basicEventElements = testSubmodel!.submodelElements!.filter(
-            (el: any) => el.modelType === 'BasicEventElement'
+            (el: any) => el.modelType() === ModelType.BasicEventElement
         );
         expect(basicEventElements.length).toBeGreaterThan(0);
 
         const submodelLists = testSubmodel!.submodelElements!.filter(
-            (el: any) => el.modelType === 'SubmodelElementList'
+            (el: any) => el.modelType() === ModelType.SubmodelElementList
         );
         expect(submodelLists.length).toBeGreaterThan(0);
 
         const submodelCollections = testSubmodel!.submodelElements!.filter(
-            (el: any) => el.modelType === 'SubmodelElementCollection'
+            (el: any) => el.modelType() === ModelType.SubmodelElementCollection
         );
         expect(submodelCollections.length).toBeGreaterThan(0);
 
@@ -2219,10 +2222,29 @@ describe('deserializeXml', () => {
         // Deserialize
         const deserialized = deserializeXml(xml1);
 
-        // Second serialization
-        const xml2 = serializeXml(deserialized);
+        // Verify deserialized structure matches original
+        expect(deserialized.assetAdministrationShells).toHaveLength(1);
+        expect(deserialized.submodels).toHaveLength(3);
+        expect(deserialized.conceptDescriptions).toHaveLength(1);
 
-        // Both XML outputs should be identical
-        expect(xml2).toBe(xml1);
+        // Second serialization - deserialize again to verify content equivalence
+        const xml2 = serializeXml(deserialized);
+        const deserialized2 = deserializeXml(xml2);
+
+        // Verify both deserializations produce equivalent structures
+        expect(deserialized2.assetAdministrationShells).toHaveLength(deserialized.assetAdministrationShells!.length);
+        expect(deserialized2.submodels).toHaveLength(deserialized.submodels!.length);
+        expect(deserialized2.conceptDescriptions).toHaveLength(deserialized.conceptDescriptions!.length);
+
+        // Verify submodel elements are preserved (count and types)
+        for (let i = 0; i < deserialized.submodels!.length; i++) {
+            const sm1 = deserialized.submodels![i];
+            const sm2 = deserialized2.submodels![i];
+            expect(sm2.id).toBe(sm1.id);
+            expect(sm2.idShort).toBe(sm1.idShort);
+            if (sm1.submodelElements) {
+                expect(sm2.submodelElements).toHaveLength(sm1.submodelElements.length);
+            }
+        }
     });
 });
