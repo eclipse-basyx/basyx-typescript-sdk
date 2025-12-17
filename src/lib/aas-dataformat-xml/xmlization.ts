@@ -67,7 +67,15 @@ export function serializeXml(data: BaSyxEnvironment): string {
         },
     };
 
-    return builder.build(xmlObject);
+    let xml = builder.build(xmlObject);
+
+    // Format the root element attributes to be on separate lines
+    xml = xml.replace(
+        /<aas:environment xmlns:aas="https:\/\/admin-shell\.io\/aas\/3\/1" xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" xsi:schemaLocation="https:\/\/admin-shell\.io\/aas\/3\/1 AAS\.xsd">/,
+        '<aas:environment xmlns:aas="https://admin-shell.io/aas/3/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">'
+    );
+
+    return xml;
 }
 
 /**
