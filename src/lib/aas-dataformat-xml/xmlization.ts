@@ -953,11 +953,7 @@ function transformOperationVariable(opVar: any): any {
     // value - REQUIRED (a SubmodelElement)
     if (opVar.value) {
         const valueElements = transformSubmodelElements([opVar.value]);
-        // Get the first (and only) element from the transformed result
-        const keys = Object.keys(valueElements);
-        if (keys.length > 0) {
-            result['value'] = valueElements[keys[0]][0];
-        }
+        result['value'] = valueElements;
     }
 
     return result;

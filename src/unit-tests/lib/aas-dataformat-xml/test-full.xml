@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<aas:environment xmlns:aas="https://admin-shell.io/aas/3/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">
+<aas:environment xmlns:aas="https://admin-shell.io/aas/3/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">
   <aas:assetAdministrationShells>
     <aas:assetAdministrationShell>
       <aas:extensions>
@@ -416,8 +418,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber</aas:value>
+                <aas:value>http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -499,8 +500,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber</aas:value>
+                <aas:value>http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -593,8 +593,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber</aas:value>
+                <aas:value>http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -649,8 +648,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/RelationshipElements/ExampleRelationshipElement</aas:value>
+                <aas:value>http://acplt.org/RelationshipElements/ExampleRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -676,8 +674,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>Submodel</aas:type>
-                <aas:value>
-                  http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial</aas:value>
+                <aas:value>http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial</aas:value>
               </aas:key>
               <aas:key>
                 <aas:type>Entity</aas:type>
@@ -708,8 +705,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
+                <aas:value> http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -735,8 +731,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>Submodel</aas:type>
-                <aas:value>
-                  http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial</aas:value>
+                <aas:value>http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial</aas:value>
               </aas:key>
               <aas:key>
                 <aas:type>Entity</aas:type>
@@ -800,8 +795,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -839,8 +833,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -880,8 +873,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -921,8 +913,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -1025,8 +1016,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -1085,8 +1075,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty</aas:value>
+                    <aas:value>http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:semanticId>
@@ -1105,8 +1094,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/ValueId/ExampleMultiLanguageValueId</aas:value>
+                    <aas:value>http://acplt.org/ValueId/ExampleMultiLanguageValueId</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:valueId>
@@ -1157,8 +1145,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -1231,8 +1218,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/ReferenceElements/ExampleReferenceElement</aas:value>
+                    <aas:value>http://acplt.org/ReferenceElements/ExampleReferenceElement</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:semanticId>
@@ -1455,8 +1441,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/RelationshipElements/ExampleRelationshipElement</aas:value>
+                <aas:value>http://acplt.org/RelationshipElements/ExampleRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -1513,8 +1498,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
+                <aas:value>http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -1604,8 +1588,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -1642,8 +1625,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -1680,8 +1662,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -1781,8 +1762,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -1838,8 +1818,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty</aas:value>
+                    <aas:value>http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:semanticId>
@@ -1900,8 +1879,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -1974,8 +1952,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/ReferenceElements/ExampleReferenceElement</aas:value>
+                    <aas:value>http://acplt.org/ReferenceElements/ExampleReferenceElement</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:semanticId>
@@ -2047,8 +2024,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/RelationshipElements/ExampleRelationshipElement</aas:value>
+                <aas:value>http://acplt.org/RelationshipElements/ExampleRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -2105,8 +2081,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
+                <aas:value>http://acplt.org/RelationshipElements/ExampleAnnotatedRelationshipElement</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -2188,8 +2163,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -2219,8 +2193,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -2250,8 +2223,7 @@
                     <aas:keys>
                       <aas:key>
                         <aas:type>GlobalReference</aas:type>
-                        <aas:value>
-                          http://acplt.org/Properties/ExampleProperty</aas:value>
+                        <aas:value>http://acplt.org/Properties/ExampleProperty</aas:value>
                       </aas:key>
                     </aas:keys>
                   </aas:semanticId>
@@ -2344,8 +2316,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementLists/ExampleSubmodelElementListOrdered</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -2394,8 +2365,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty</aas:value>
+                    <aas:value>http://acplt.org/MultiLanguageProperties/ExampleMultiLanguageProperty</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:semanticId>
@@ -2470,8 +2440,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
@@ -2542,8 +2511,7 @@
                 <aas:keys>
                   <aas:key>
                     <aas:type>GlobalReference</aas:type>
-                    <aas:value>
-                      http://acplt.org/ReferenceElements/ExampleReferenceElement</aas:value>
+                    <aas:value>http://acplt.org/ReferenceElements/ExampleReferenceElement</aas:value>
                   </aas:key>
                 </aas:keys>
               </aas:semanticId>
@@ -2568,8 +2536,7 @@
             <aas:keys>
               <aas:key>
                 <aas:type>GlobalReference</aas:type>
-                <aas:value>
-                  http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
+                <aas:value>http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection</aas:value>
               </aas:key>
             </aas:keys>
           </aas:semanticId>
