@@ -883,8 +883,32 @@ const TEST_SUBMODEL_MANDATORY: Submodel = new Submodel(
             null,
             null,
             [
-                new Blob('application/pdf', null, null, 'ExampleBlob'),
-                new File('application/pdf', null, null, 'ExampleFile'),
+                new Blob(
+                    'application/pdf',
+                    null,
+                    null,
+                    'ExampleBlob',
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    new Uint8Array([1, 2, 3, 4, 5])
+                ),
+                new File(
+                    'application/pdf',
+                    null,
+                    null,
+                    'ExampleFile',
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    'file:///TestFile.pdf'
+                ),
                 new ReferenceElement(null, null, 'ExampleReferenceElement'),
             ]
         ),
