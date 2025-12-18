@@ -9,8 +9,8 @@ import { base64Decode, base64Encode } from '../lib/base64Url';
 import { SubmodelDescriptor } from '../models/Descriptors';
 
 export interface SubmodelServiceConfig {
-    registryConfig?: Configuration;
-    repositoryConfig?: Configuration;
+    submodelRegistryConfig?: Configuration;
+    submodelRepositoryConfig?: Configuration;
     conceptDescriptionRepositoryConfig?: Configuration;
 }
 
@@ -23,19 +23,19 @@ export interface SubmodelServiceConfig {
  * Submodel Repository, and Concept Description Repository.
  */
 export class SubmodelService {
-    private registryClient: SubmodelRegistryClient;
-    private repositoryClient: SubmodelRepositoryClient;
+    private submodelRegistryClient: SubmodelRegistryClient;
+    private submodelRepositoryClient: SubmodelRepositoryClient;
     private conceptDescriptionClient: ConceptDescriptionRepositoryClient;
-    private registryConfig?: Configuration;
-    private repositoryConfig?: Configuration;
+    private submodelRegistryConfig?: Configuration;
+    private submodelRepositoryConfig?: Configuration;
     private conceptDescriptionRepositoryConfig?: Configuration;
 
     constructor(config: SubmodelServiceConfig) {
-        this.registryClient = new SubmodelRegistryClient();
-        this.repositoryClient = new SubmodelRepositoryClient();
+        this.submodelRegistryClient = new SubmodelRegistryClient();
+        this.submodelRepositoryClient = new SubmodelRepositoryClient();
         this.conceptDescriptionClient = new ConceptDescriptionRepositoryClient();
-        this.registryConfig = config.registryConfig;
-        this.repositoryConfig = config.repositoryConfig;
+        this.submodelRegistryConfig = config.submodelRegistryConfig;
+        this.submodelRepositoryConfig = config.submodelRepositoryConfig;
         this.conceptDescriptionRepositoryConfig = config.conceptDescriptionRepositoryConfig;
     }
 
@@ -74,9 +74,9 @@ export class SubmodelService {
         const includeConceptDescriptions = options?.includeConceptDescriptions ?? false;
 
         // Try registry first if configured and preferred
-        if (preferRegistry && this.registryConfig) {
-            const registryResult = await this.registryClient.getAllSubmodelDescriptors({
-                configuration: this.registryConfig,
+        if (preferRegistry && this.submodelRegistryConfig) {
+            const registryResult = await this.submodelRegistryClient.getAllSubmodelDescriptors({
+                configuration: this.submodelRegistryConfig,
                 limit: options?.limit,
                 cursor: options?.cursor,
             });
@@ -115,9 +115,9 @@ export class SubmodelService {
         }
 
         // Fall back to repository if registry failed or not configured
-        if (this.repositoryConfig) {
-            const repositoryResult = await this.repositoryClient.getAllSubmodels({
-                configuration: this.repositoryConfig,
+        if (this.submodelRepositoryConfig) {
+            const repositoryResult = await this.submodelRepositoryClient.getAllSubmodels({
+                configuration: this.submodelRepositoryConfig,
                 limit: options?.limit,
                 cursor: options?.cursor,
             });
@@ -184,9 +184,9 @@ export class SubmodelService {
         const { submodelIdentifier, useRegistryEndpoint = true, includeConceptDescriptions = false } = options;
 
         // Try registry-based flow first
-        if (useRegistryEndpoint && this.registryConfig) {
-            const descriptorResult = await this.registryClient.getSubmodelDescriptorById({
-                configuration: this.registryConfig,
+        if (useRegistryEndpoint && this.submodelRegistryConfig) {
+            const descriptorResult = await this.submodelRegistryClient.getSubmodelDescriptorById({
+                configuration: this.submodelRegistryConfig,
                 submodelIdentifier,
             });
 
@@ -218,7 +218,7 @@ export class SubmodelService {
         }
 
         // Fall back to repository
-        if (!this.repositoryConfig) {
+        if (!this.submodelRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -228,8 +228,8 @@ export class SubmodelService {
             };
         }
 
-        const submodelResult = await this.repositoryClient.getSubmodelById({
-            configuration: this.repositoryConfig,
+        const submodelResult = await this.submodelRepositoryClient.getSubmodelById({
+            configuration: this.submodelRepositoryConfig,
             submodelIdentifier,
         });
 
@@ -275,9 +275,9 @@ export class SubmodelService {
         const { submodelIdentifier, useRegistry = true } = options;
 
         // Try registry first if configured and requested
-        if (useRegistry && this.registryConfig) {
-            const descriptorResult = await this.registryClient.getSubmodelDescriptorById({
-                configuration: this.registryConfig,
+        if (useRegistry && this.submodelRegistryConfig) {
+            const descriptorResult = await this.submodelRegistryClient.getSubmodelDescriptorById({
+                configuration: this.submodelRegistryConfig,
                 submodelIdentifier,
             });
 
@@ -290,7 +290,7 @@ export class SubmodelService {
         }
 
         // Fall back to constructing from repository base
-        if (!this.repositoryConfig) {
+        if (!this.submodelRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -300,7 +300,7 @@ export class SubmodelService {
             };
         }
 
-        const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8082';
+        const repositoryBasePath = this.submodelRepositoryConfig.basePath || 'http://localhost:8082';
         const encodedId = base64Encode(submodelIdentifier);
         const endpoint = `${repositoryBasePath}/submodels/${encodedId}`;
 
@@ -353,7 +353,7 @@ export class SubmodelService {
         const config = new Configuration({ basePath: baseUrl });
 
         // Fetch the submodel
-        const submodelResult = await this.repositoryClient.getSubmodelById({
+        const submodelResult = await this.submodelRepositoryClient.getSubmodelById({
             configuration: config,
             submodelIdentifier,
         });
@@ -403,7 +403,7 @@ export class SubmodelService {
     > {
         const { submodel, registerInRegistry = true } = options;
 
-        if (!this.repositoryConfig) {
+        if (!this.submodelRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -414,8 +414,8 @@ export class SubmodelService {
         }
 
         // Create Submodel in repository
-        const submodelResult = await this.repositoryClient.postSubmodel({
-            configuration: this.repositoryConfig,
+        const submodelResult = await this.submodelRepositoryClient.postSubmodel({
+            configuration: this.submodelRepositoryConfig,
             submodel: submodel,
         });
 
@@ -424,11 +424,11 @@ export class SubmodelService {
         }
 
         // Register descriptor in registry if configured and requested
-        if (registerInRegistry && this.registryConfig) {
+        if (registerInRegistry && this.submodelRegistryConfig) {
             const descriptor = this.createDescriptorFromSubmodel(submodel);
 
-            const descriptorResult = await this.registryClient.postSubmodelDescriptor({
-                configuration: this.registryConfig,
+            const descriptorResult = await this.submodelRegistryClient.postSubmodelDescriptor({
+                configuration: this.submodelRegistryConfig,
                 submodelDescriptor: descriptor,
             });
 
@@ -480,7 +480,7 @@ export class SubmodelService {
     > {
         const { submodel, updateInRegistry = true } = options;
 
-        if (!this.repositoryConfig) {
+        if (!this.submodelRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -491,8 +491,8 @@ export class SubmodelService {
         }
 
         // Update Submodel in repository
-        const submodelResult = await this.repositoryClient.putSubmodelById({
-            configuration: this.repositoryConfig,
+        const submodelResult = await this.submodelRepositoryClient.putSubmodelById({
+            configuration: this.submodelRepositoryConfig,
             submodelIdentifier: submodel.id,
             submodel: submodel,
         });
@@ -505,11 +505,11 @@ export class SubmodelService {
         const updatedSubmodel = submodelResult.data || submodel;
 
         // Update descriptor in registry if configured and requested
-        if (updateInRegistry && this.registryConfig) {
+        if (updateInRegistry && this.submodelRegistryConfig) {
             const descriptor = this.createDescriptorFromSubmodel(submodel);
 
-            const descriptorResult = await this.registryClient.putSubmodelDescriptorById({
-                configuration: this.registryConfig,
+            const descriptorResult = await this.submodelRegistryClient.putSubmodelDescriptorById({
+                configuration: this.submodelRegistryConfig,
                 submodelIdentifier: submodel.id,
                 submodelDescriptor: descriptor,
             });
@@ -557,9 +557,9 @@ export class SubmodelService {
         const { submodelIdentifier, deleteFromRegistry = true } = options;
 
         // Remove from registry first if configured and requested
-        if (deleteFromRegistry && this.registryConfig) {
-            const registryResult = await this.registryClient.deleteSubmodelDescriptorById({
-                configuration: this.registryConfig,
+        if (deleteFromRegistry && this.submodelRegistryConfig) {
+            const registryResult = await this.submodelRegistryClient.deleteSubmodelDescriptorById({
+                configuration: this.submodelRegistryConfig,
                 submodelIdentifier,
             });
 
@@ -569,9 +569,9 @@ export class SubmodelService {
         }
 
         // Remove from repository
-        if (this.repositoryConfig) {
-            const repositoryResult = await this.repositoryClient.deleteSubmodelById({
-                configuration: this.repositoryConfig,
+        if (this.submodelRepositoryConfig) {
+            const repositoryResult = await this.submodelRepositoryClient.deleteSubmodelById({
+                configuration: this.submodelRepositoryConfig,
                 submodelIdentifier,
             });
 
@@ -592,7 +592,7 @@ export class SubmodelService {
      */
     private createDescriptorFromSubmodel(submodel: Submodel): SubmodelDescriptor {
         // Set endpoint using repository base path
-        const repositoryBasePath = this.repositoryConfig!.basePath || 'http://localhost:8082';
+        const repositoryBasePath = this.submodelRepositoryConfig!.basePath || 'http://localhost:8082';
         const encodedId = base64Encode(submodel.id);
         const endpoints = [
             {

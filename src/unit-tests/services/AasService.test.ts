@@ -25,8 +25,8 @@ describe('AasService Unit Tests', () => {
     let aasService: AasService;
     let mockRegistryClient: jest.Mocked<AasRegistryClient>;
     let mockRepositoryClient: jest.Mocked<AasRepositoryClient>;
-    let registryConfig: Configuration;
-    let repositoryConfig: Configuration;
+    let aasRegistryConfig: Configuration;
+    let aasRepositoryConfig: Configuration;
 
     const testAasId = 'https://example.com/ids/aas/test-123';
     const testDescriptor = new AssetAdministrationShellDescriptor(
@@ -63,13 +63,13 @@ describe('AasService Unit Tests', () => {
         jest.clearAllMocks();
 
         // Create configuration objects
-        registryConfig = new Configuration({ basePath: 'http://localhost:8084' });
-        repositoryConfig = new Configuration({ basePath: 'http://localhost:8081' });
+        aasRegistryConfig = new Configuration({ basePath: 'http://localhost:8084' });
+        aasRepositoryConfig = new Configuration({ basePath: 'http://localhost:8081' });
 
         // Initialize service with configs
         aasService = new AasService({
-            registryConfig,
-            repositoryConfig,
+            aasRegistryConfig,
+            aasRepositoryConfig,
         });
 
         // Get mocked instances
@@ -211,7 +211,7 @@ describe('AasService Unit Tests', () => {
                 expect(result.data.descriptor).toEqual(testDescriptor);
             }
             expect(mockRegistryClient.getAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
-                configuration: registryConfig,
+                configuration: aasRegistryConfig,
                 aasIdentifier: testAasId,
             });
             // Should use descriptor endpoint, not repository config
@@ -240,7 +240,7 @@ describe('AasService Unit Tests', () => {
             }
             expect(mockRegistryClient.getAssetAdministrationShellDescriptorById).not.toHaveBeenCalled();
             expect(mockRepositoryClient.getAssetAdministrationShellById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: aasRepositoryConfig,
                 aasIdentifier: testAasId,
             });
         });
@@ -261,7 +261,7 @@ describe('AasService Unit Tests', () => {
 
             expect(result.success).toBe(true);
             expect(mockRepositoryClient.getAssetAdministrationShellById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: aasRepositoryConfig,
                 aasIdentifier: testAasId,
             });
         });
@@ -309,7 +309,7 @@ describe('AasService Unit Tests', () => {
                 );
             }
             expect(mockRegistryClient.getAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
-                configuration: registryConfig,
+                configuration: aasRegistryConfig,
                 aasIdentifier: testAasId,
             });
         });
@@ -346,7 +346,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when no repository config available', async () => {
-            const serviceWithoutRepo = new AasService({ registryConfig });
+            const serviceWithoutRepo = new AasService({ aasRegistryConfig });
 
             // Get the mock instance for the new service
             const newMockRegistryClient = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
@@ -480,12 +480,12 @@ describe('AasService Unit Tests', () => {
                 expect(result.data.descriptor!.id).toBe(testShell.id);
             }
             expect(mockRepositoryClient.postAssetAdministrationShell).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: aasRepositoryConfig,
                 assetAdministrationShell: testShell,
             });
             expect(mockRegistryClient.postAssetAdministrationShellDescriptor).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    configuration: registryConfig,
+                    configuration: aasRegistryConfig,
                 })
             );
         });
@@ -528,7 +528,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should work without registry when only repository is configured', async () => {
-            const serviceWithoutRegistry = new AasService({ repositoryConfig });
+            const serviceWithoutRegistry = new AasService({ aasRepositoryConfig });
             const mockRepoClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
                 .instances[1] as jest.Mocked<AasRepositoryClient>;
 
@@ -573,13 +573,13 @@ describe('AasService Unit Tests', () => {
                 expect(result.data.descriptor!.id).toBe(testShell.id);
             }
             expect(mockRepositoryClient.putAssetAdministrationShellById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: aasRepositoryConfig,
                 aasIdentifier: testShell.id,
                 assetAdministrationShell: testShell,
             });
             expect(mockRegistryClient.putAssetAdministrationShellDescriptorById).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    configuration: registryConfig,
+                    configuration: aasRegistryConfig,
                     aasIdentifier: testShell.id,
                 })
             );
@@ -623,7 +623,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should work without registry when only repository is configured', async () => {
-            const serviceWithoutRegistry = new AasService({ repositoryConfig });
+            const serviceWithoutRegistry = new AasService({ aasRepositoryConfig });
             const mockRepoClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
                 .instances[1] as jest.Mocked<AasRepositoryClient>;
 
@@ -659,11 +659,11 @@ describe('AasService Unit Tests', () => {
 
             expect(result.success).toBe(true);
             expect(mockRegistryClient.deleteAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
-                configuration: registryConfig,
+                configuration: aasRegistryConfig,
                 aasIdentifier: testAasId,
             });
             expect(mockRepositoryClient.deleteAssetAdministrationShellById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: aasRepositoryConfig,
                 aasIdentifier: testAasId,
             });
         });
@@ -702,7 +702,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should work without registry when only repository is configured', async () => {
-            const serviceWithoutRegistry = new AasService({ repositoryConfig });
+            const serviceWithoutRegistry = new AasService({ aasRepositoryConfig });
             const mockRepoClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
                 .instances[1] as jest.Mocked<AasRepositoryClient>;
 
@@ -744,7 +744,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when createAas has no repository config', async () => {
-            const serviceWithoutRepo = new AasService({ registryConfig });
+            const serviceWithoutRepo = new AasService({ aasRegistryConfig });
 
             const result = await serviceWithoutRepo.createAas({
                 shell: testShell,
@@ -814,8 +814,8 @@ describe('AasService Unit Tests', () => {
         it('should resolve asset IDs and fetch corresponding AAS', async () => {
             const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
             const aasServiceWithDiscovery = new AasService({
-                registryConfig,
-                repositoryConfig,
+                aasRegistryConfig,
+                aasRepositoryConfig,
                 discoveryConfig,
             });
 
@@ -882,8 +882,8 @@ describe('AasService Unit Tests', () => {
         it('should return empty arrays when no AAS IDs are found', async () => {
             const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
             const aasServiceWithDiscovery = new AasService({
-                registryConfig,
-                repositoryConfig,
+                aasRegistryConfig,
+                aasRepositoryConfig,
                 discoveryConfig,
             });
 
@@ -915,8 +915,8 @@ describe('AasService Unit Tests', () => {
         it('should handle discovery service errors', async () => {
             const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
             const aasServiceWithDiscovery = new AasService({
-                registryConfig,
-                repositoryConfig,
+                aasRegistryConfig,
+                aasRepositoryConfig,
                 discoveryConfig,
             });
 
@@ -956,8 +956,8 @@ describe('AasService Unit Tests', () => {
         it('should handle multiple AAS IDs and partial failures', async () => {
             const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
             const aasServiceWithDiscovery = new AasService({
-                registryConfig,
-                repositoryConfig,
+                aasRegistryConfig,
+                aasRepositoryConfig,
                 discoveryConfig,
             });
 
@@ -1020,8 +1020,8 @@ describe('AasService Unit Tests', () => {
         it('should return error when all AAS fetches fail', async () => {
             const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
             const aasServiceWithDiscovery = new AasService({
-                registryConfig,
-                repositoryConfig,
+                aasRegistryConfig,
+                aasRepositoryConfig,
                 discoveryConfig,
             });
 
@@ -1077,8 +1077,8 @@ describe('AasService Unit Tests', () => {
         it('should accept includeSubmodels parameter', async () => {
             const discoveryConfig = new Configuration({ basePath: 'http://localhost:8085' });
             const aasServiceWithDiscovery = new AasService({
-                registryConfig,
-                repositoryConfig,
+                aasRegistryConfig,
+                aasRepositoryConfig,
                 discoveryConfig,
             });
 
@@ -1276,7 +1276,7 @@ describe('AasService Unit Tests', () => {
         it('should handle failed endpoint resolution gracefully', async () => {
             // Create a service without repository config to simulate failed endpoint resolution
             const serviceWithoutRepo = new AasService({
-                registryConfig,
+                aasRegistryConfig,
             });
 
             const reference = new Reference(ReferenceTypes.ModelReference, [

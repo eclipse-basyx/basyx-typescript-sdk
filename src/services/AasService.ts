@@ -17,8 +17,8 @@ import { extractEndpointHref } from '../utils/DescriptorUtils';
 import { SubmodelService } from './SubmodelService';
 
 export interface AasServiceConfig {
-    registryConfig?: Configuration;
-    repositoryConfig?: Configuration;
+    aasRegistryConfig?: Configuration;
+    aasRepositoryConfig?: Configuration;
     submodelRegistryConfig?: Configuration;
     submodelRepositoryConfig?: Configuration;
     conceptDescriptionRepositoryConfig?: Configuration;
@@ -36,26 +36,26 @@ export interface AasServiceConfig {
  * by coordinating operations across these BaSyx components, demonstrating the multi-client pattern.
  */
 export class AasService {
-    private registryClient: AasRegistryClient;
-    private repositoryClient: AasRepositoryClient;
+    private aasRegistryClient: AasRegistryClient;
+    private aasRepositoryClient: AasRepositoryClient;
     private discoveryClient: AasDiscoveryClient;
-    private registryConfig?: Configuration;
-    private repositoryConfig?: Configuration;
+    private aasRegistryConfig?: Configuration;
+    private aasRepositoryConfig?: Configuration;
     private discoveryConfig?: Configuration;
     private submodelService: SubmodelService;
 
     constructor(config: AasServiceConfig) {
-        this.registryClient = new AasRegistryClient();
-        this.repositoryClient = new AasRepositoryClient();
+        this.aasRegistryClient = new AasRegistryClient();
+        this.aasRepositoryClient = new AasRepositoryClient();
         this.discoveryClient = new AasDiscoveryClient();
-        this.registryConfig = config.registryConfig;
-        this.repositoryConfig = config.repositoryConfig;
+        this.aasRegistryConfig = config.aasRegistryConfig;
+        this.aasRepositoryConfig = config.aasRepositoryConfig;
         this.discoveryConfig = config.discoveryConfig;
 
         // Use separate submodel configs if provided, otherwise fall back to AAS configs
         this.submodelService = new SubmodelService({
-            registryConfig: config.submodelRegistryConfig ?? config.registryConfig,
-            repositoryConfig: config.submodelRepositoryConfig ?? config.repositoryConfig,
+            submodelRegistryConfig: config.submodelRegistryConfig ?? config.aasRegistryConfig,
+            submodelRepositoryConfig: config.submodelRepositoryConfig ?? config.aasRepositoryConfig,
             conceptDescriptionRepositoryConfig: config.conceptDescriptionRepositoryConfig,
         });
     }
@@ -97,9 +97,9 @@ export class AasService {
         const includeSubmodels = options?.includeSubmodels ?? false;
 
         // Try registry first if configured and preferred
-        if (preferRegistry && this.registryConfig) {
-            const registryResult = await this.registryClient.getAllAssetAdministrationShellDescriptors({
-                configuration: this.registryConfig,
+        if (preferRegistry && this.aasRegistryConfig) {
+            const registryResult = await this.aasRegistryClient.getAllAssetAdministrationShellDescriptors({
+                configuration: this.aasRegistryConfig,
                 limit: options?.limit,
                 cursor: options?.cursor,
             });
@@ -113,7 +113,7 @@ export class AasService {
                         // Extract base URL from endpoint (remove /shells/{id} part)
                         const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
                         const config = new Configuration({ basePath: baseUrl });
-                        const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+                        const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
                             configuration: config,
                             aasIdentifier: descriptor.id,
                         });
@@ -141,9 +141,9 @@ export class AasService {
         }
 
         // Fall back to repository if registry failed or not configured
-        if (this.repositoryConfig) {
-            const repositoryResult = await this.repositoryClient.getAllAssetAdministrationShells({
-                configuration: this.repositoryConfig,
+        if (this.aasRepositoryConfig) {
+            const repositoryResult = await this.aasRepositoryClient.getAllAssetAdministrationShells({
+                configuration: this.aasRepositoryConfig,
                 limit: options?.limit,
                 cursor: options?.cursor,
             });
@@ -212,9 +212,9 @@ export class AasService {
         const { aasIdentifier, useRegistryEndpoint = true, includeSubmodels = false } = options;
 
         // Try registry-based flow first
-        if (useRegistryEndpoint && this.registryConfig) {
-            const descriptorResult = await this.registryClient.getAssetAdministrationShellDescriptorById({
-                configuration: this.registryConfig,
+        if (useRegistryEndpoint && this.aasRegistryConfig) {
+            const descriptorResult = await this.aasRegistryClient.getAssetAdministrationShellDescriptorById({
+                configuration: this.aasRegistryConfig,
                 aasIdentifier,
             });
 
@@ -227,7 +227,7 @@ export class AasService {
                     const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
                     // Try to fetch from descriptor endpoint
                     const config = new Configuration({ basePath: baseUrl });
-                    const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+                    const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
                         configuration: config,
                         aasIdentifier,
                     });
@@ -259,7 +259,7 @@ export class AasService {
         }
 
         // Fall back to repository
-        if (!this.repositoryConfig) {
+        if (!this.aasRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -269,8 +269,8 @@ export class AasService {
             };
         }
 
-        const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
-            configuration: this.repositoryConfig,
+        const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
+            configuration: this.aasRepositoryConfig,
             aasIdentifier,
         });
 
@@ -317,9 +317,9 @@ export class AasService {
         const { aasIdentifier, useRegistry = true } = options;
 
         // Try registry first if configured and requested
-        if (useRegistry && this.registryConfig) {
-            const descriptorResult = await this.registryClient.getAssetAdministrationShellDescriptorById({
-                configuration: this.registryConfig,
+        if (useRegistry && this.aasRegistryConfig) {
+            const descriptorResult = await this.aasRegistryClient.getAssetAdministrationShellDescriptorById({
+                configuration: this.aasRegistryConfig,
                 aasIdentifier,
             });
 
@@ -332,7 +332,7 @@ export class AasService {
         }
 
         // Fall back to constructing from repository base
-        if (!this.repositoryConfig) {
+        if (!this.aasRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -342,7 +342,7 @@ export class AasService {
             };
         }
 
-        const repositoryBasePath = this.repositoryConfig.basePath || 'http://localhost:8081';
+        const repositoryBasePath = this.aasRepositoryConfig.basePath || 'http://localhost:8081';
         const encodedId = base64Encode(aasIdentifier);
         const endpoint = `${repositoryBasePath}/shells/${encodedId}`;
 
@@ -400,7 +400,7 @@ export class AasService {
         const config = new Configuration({ basePath: baseUrl });
 
         // Fetch the shell
-        const shellResult = await this.repositoryClient.getAssetAdministrationShellById({
+        const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
             configuration: config,
             aasIdentifier,
         });
@@ -451,7 +451,7 @@ export class AasService {
     > {
         const { shell, registerInRegistry = true } = options;
 
-        if (!this.repositoryConfig) {
+        if (!this.aasRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -462,8 +462,8 @@ export class AasService {
         }
 
         // Create AAS in repository
-        const shellResult = await this.repositoryClient.postAssetAdministrationShell({
-            configuration: this.repositoryConfig,
+        const shellResult = await this.aasRepositoryClient.postAssetAdministrationShell({
+            configuration: this.aasRepositoryConfig,
             assetAdministrationShell: shell,
         });
 
@@ -472,11 +472,11 @@ export class AasService {
         }
 
         // Register descriptor in registry if configured and requested
-        if (registerInRegistry && this.registryConfig) {
+        if (registerInRegistry && this.aasRegistryConfig) {
             const descriptor = this.createDescriptorFromAas(shell);
 
-            const descriptorResult = await this.registryClient.postAssetAdministrationShellDescriptor({
-                configuration: this.registryConfig,
+            const descriptorResult = await this.aasRegistryClient.postAssetAdministrationShellDescriptor({
+                configuration: this.aasRegistryConfig,
                 assetAdministrationShellDescriptor: descriptor,
             });
 
@@ -528,7 +528,7 @@ export class AasService {
     > {
         const { shell, updateInRegistry = true } = options;
 
-        if (!this.repositoryConfig) {
+        if (!this.aasRepositoryConfig) {
             return {
                 success: false,
                 error: {
@@ -539,8 +539,8 @@ export class AasService {
         }
 
         // Update AAS in repository
-        const shellResult = await this.repositoryClient.putAssetAdministrationShellById({
-            configuration: this.repositoryConfig,
+        const shellResult = await this.aasRepositoryClient.putAssetAdministrationShellById({
+            configuration: this.aasRepositoryConfig,
             aasIdentifier: shell.id,
             assetAdministrationShell: shell,
         });
@@ -553,11 +553,11 @@ export class AasService {
         const updatedShell = shellResult.data || shell;
 
         // Update descriptor in registry if configured and requested
-        if (updateInRegistry && this.registryConfig) {
+        if (updateInRegistry && this.aasRegistryConfig) {
             const descriptor = this.createDescriptorFromAas(shell);
 
-            const descriptorResult = await this.registryClient.putAssetAdministrationShellDescriptorById({
-                configuration: this.registryConfig,
+            const descriptorResult = await this.aasRegistryClient.putAssetAdministrationShellDescriptorById({
+                configuration: this.aasRegistryConfig,
                 aasIdentifier: shell.id,
                 assetAdministrationShellDescriptor: descriptor,
             });
@@ -605,9 +605,9 @@ export class AasService {
         const { aasIdentifier, deleteFromRegistry = true } = options;
 
         // Remove from registry first if configured and requested
-        if (deleteFromRegistry && this.registryConfig) {
-            const registryResult = await this.registryClient.deleteAssetAdministrationShellDescriptorById({
-                configuration: this.registryConfig,
+        if (deleteFromRegistry && this.aasRegistryConfig) {
+            const registryResult = await this.aasRegistryClient.deleteAssetAdministrationShellDescriptorById({
+                configuration: this.aasRegistryConfig,
                 aasIdentifier,
             });
 
@@ -617,9 +617,9 @@ export class AasService {
         }
 
         // Remove from repository
-        if (this.repositoryConfig) {
-            const repoResult = await this.repositoryClient.deleteAssetAdministrationShellById({
-                configuration: this.repositoryConfig,
+        if (this.aasRepositoryConfig) {
+            const repoResult = await this.aasRepositoryClient.deleteAssetAdministrationShellById({
+                configuration: this.aasRepositoryConfig,
                 aasIdentifier,
             });
 
@@ -887,7 +887,7 @@ export class AasService {
         );
 
         // Set endpoint using repository base path
-        const repositoryBasePath = this.repositoryConfig!.basePath || 'http://localhost:8081';
+        const repositoryBasePath = this.aasRepositoryConfig!.basePath || 'http://localhost:8081';
         const encodedId = base64Encode(shell.id);
         descriptor.endpoints = [
             {

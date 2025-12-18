@@ -13,8 +13,8 @@ describe('SubmodelService Unit Tests', () => {
     let submodelService: SubmodelService;
     let mockRegistryClient: jest.Mocked<SubmodelRegistryClient>;
     let mockRepositoryClient: jest.Mocked<SubmodelRepositoryClient>;
-    let registryConfig: Configuration;
-    let repositoryConfig: Configuration;
+    let submodelRegistryConfig: Configuration;
+    let submodelRepositoryConfig: Configuration;
 
     const testSubmodelId = 'https://example.com/ids/sm/test-123';
     const testDescriptor = new SubmodelDescriptor(testSubmodelId, [
@@ -47,13 +47,13 @@ describe('SubmodelService Unit Tests', () => {
         jest.clearAllMocks();
 
         // Create configuration objects
-        registryConfig = new Configuration({ basePath: 'http://localhost:8084' });
-        repositoryConfig = new Configuration({ basePath: 'http://localhost:8081' });
+        submodelRegistryConfig = new Configuration({ basePath: 'http://localhost:8084' });
+        submodelRepositoryConfig = new Configuration({ basePath: 'http://localhost:8081' });
 
         // Initialize service with configs
         submodelService = new SubmodelService({
-            registryConfig,
-            repositoryConfig,
+            submodelRegistryConfig,
+            submodelRepositoryConfig,
         });
 
         // Get mocked instances
@@ -195,7 +195,7 @@ describe('SubmodelService Unit Tests', () => {
                 expect(result.data.descriptor).toEqual(testDescriptor);
             }
             expect(mockRegistryClient.getSubmodelDescriptorById).toHaveBeenCalledWith({
-                configuration: registryConfig,
+                configuration: submodelRegistryConfig,
                 submodelIdentifier: testSubmodelId,
             });
             // Should use descriptor endpoint, not repository config
@@ -224,7 +224,7 @@ describe('SubmodelService Unit Tests', () => {
             }
             expect(mockRegistryClient.getSubmodelDescriptorById).not.toHaveBeenCalled();
             expect(mockRepositoryClient.getSubmodelById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: submodelRepositoryConfig,
                 submodelIdentifier: testSubmodelId,
             });
         });
@@ -245,7 +245,7 @@ describe('SubmodelService Unit Tests', () => {
 
             expect(result.success).toBe(true);
             expect(mockRepositoryClient.getSubmodelById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: submodelRepositoryConfig,
                 submodelIdentifier: testSubmodelId,
             });
         });
@@ -293,7 +293,7 @@ describe('SubmodelService Unit Tests', () => {
                 );
             }
             expect(mockRegistryClient.getSubmodelDescriptorById).toHaveBeenCalledWith({
-                configuration: registryConfig,
+                configuration: submodelRegistryConfig,
                 submodelIdentifier: testSubmodelId,
             });
         });
@@ -328,7 +328,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when no repository config available', async () => {
-            const serviceWithoutRepo = new SubmodelService({ registryConfig });
+            const serviceWithoutRepo = new SubmodelService({ submodelRegistryConfig });
 
             // Get the mock instance for the new service
             const newMockRegistryClient = (SubmodelRegistryClient as jest.MockedClass<typeof SubmodelRegistryClient>)
@@ -448,12 +448,12 @@ describe('SubmodelService Unit Tests', () => {
                 expect(result.data.descriptor).toEqual(testDescriptor);
             }
             expect(mockRepositoryClient.postSubmodel).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: submodelRepositoryConfig,
                 submodel: testSubmodel,
             });
             expect(mockRegistryClient.postSubmodelDescriptor).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    configuration: registryConfig,
+                    configuration: submodelRegistryConfig,
                 })
             );
         });
@@ -493,7 +493,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should work without registry when only repository is configured', async () => {
-            const serviceWithoutRegistry = new SubmodelService({ repositoryConfig });
+            const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
             const newMockRepositoryClient = (
                 SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>
             ).mock.instances[1] as jest.Mocked<SubmodelRepositoryClient>;
@@ -536,13 +536,13 @@ describe('SubmodelService Unit Tests', () => {
                 expect(result.data.descriptor).toEqual(testDescriptor);
             }
             expect(mockRepositoryClient.putSubmodelById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: submodelRepositoryConfig,
                 submodelIdentifier: testSubmodel.id,
                 submodel: testSubmodel,
             });
             expect(mockRegistryClient.putSubmodelDescriptorById).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    configuration: registryConfig,
+                    configuration: submodelRegistryConfig,
                     submodelIdentifier: testSubmodel.id,
                 })
             );
@@ -583,7 +583,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should work without registry when only repository is configured', async () => {
-            const serviceWithoutRegistry = new SubmodelService({ repositoryConfig });
+            const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
             const newMockRepositoryClient = (
                 SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>
             ).mock.instances[1] as jest.Mocked<SubmodelRepositoryClient>;
@@ -620,11 +620,11 @@ describe('SubmodelService Unit Tests', () => {
 
             expect(result.success).toBe(true);
             expect(mockRegistryClient.deleteSubmodelDescriptorById).toHaveBeenCalledWith({
-                configuration: registryConfig,
+                configuration: submodelRegistryConfig,
                 submodelIdentifier: testSubmodelId,
             });
             expect(mockRepositoryClient.deleteSubmodelById).toHaveBeenCalledWith({
-                configuration: repositoryConfig,
+                configuration: submodelRepositoryConfig,
                 submodelIdentifier: testSubmodelId,
             });
         });
@@ -657,7 +657,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should work without registry when only repository is configured', async () => {
-            const serviceWithoutRegistry = new SubmodelService({ repositoryConfig });
+            const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
             const newMockRepositoryClient = (
                 SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>
             ).mock.instances[1] as jest.Mocked<SubmodelRepositoryClient>;
@@ -700,7 +700,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when createSubmodel has no repository config', async () => {
-            const serviceWithoutRepo = new SubmodelService({ registryConfig });
+            const serviceWithoutRepo = new SubmodelService({ submodelRegistryConfig });
 
             const result = await serviceWithoutRepo.createSubmodel({
                 submodel: testSubmodel,
