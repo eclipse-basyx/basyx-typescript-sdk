@@ -1545,3 +1545,129 @@ export function createTestSubmodelTemplate(): Submodel {
         ]
     );
 }
+
+export function createTestSubmodelWithOperation(): Submodel {
+    return new Submodel(
+        'https://acplt.org/Test_Submodel',
+        null,
+        null,
+        'TestSubmodel',
+        null,
+        [
+            new LangStringTextType('en-us', 'An example submodel for the test application'),
+            new LangStringTextType('de', 'Ein Beispiel-Teilmodell für eine Test-Anwendung'),
+        ],
+        new AdministrativeInformation(null, '0', '9'),
+        ModellingKind.Instance,
+        new Reference(ReferenceTypes.ExternalReference, [
+            new Key(KeyTypes.GlobalReference, 'http://acplt.org/SubmodelTemplates/ExampleSubmodel'),
+        ]),
+        null,
+        null,
+        null,
+        [
+            new Operation(
+                null,
+                'PARAMETER',
+                'ExampleOperation',
+                null,
+                [
+                    new LangStringTextType('en-us', 'Example Operation object'),
+                    new LangStringTextType('de', 'Beispiel Operation Element'),
+                ],
+                new Reference(ReferenceTypes.ExternalReference, [
+                    new Key(KeyTypes.GlobalReference, 'http://acplt.org/Operations/ExampleOperation'),
+                ]),
+                null,
+                null,
+                null,
+                [
+                    new OperationVariable(
+                        new Property(
+                            DataTypeDefXsd.String,
+                            null,
+                            'CONSTANT',
+                            'ExampleProperty1',
+                            null,
+                            null,
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                            ]),
+                            null,
+                            null,
+                            null,
+                            'http://acplt.org/ValueId/ExampleValueId',
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                            ])
+                        )
+                    ),
+                    new OperationVariable(
+                        new Property(
+                            DataTypeDefXsd.String,
+                            null,
+                            'VARIABLE',
+                            'ExampleProperty2',
+                            null,
+                            null,
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                            ]),
+                            null,
+                            null,
+                            null,
+                            'http://acplt.org/ValueId/ExampleValueId',
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                            ])
+                        )
+                    ),
+                ],
+                [
+                    new OperationVariable(
+                        new Property(
+                            DataTypeDefXsd.String,
+                            null,
+                            'CONSTANT',
+                            'ExampleProperty2',
+                            null,
+                            null,
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                            ]),
+                            null,
+                            null,
+                            null,
+                            'http://acplt.org/ValueId/ExampleValueId',
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                            ])
+                        )
+                    ),
+                ],
+                [
+                    new OperationVariable(
+                        new Property(
+                            DataTypeDefXsd.String,
+                            null,
+                            'CONSTANT',
+                            'ExampleProperty3',
+                            null,
+                            null,
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/Properties/ExampleProperty'),
+                            ]),
+                            null,
+                            null,
+                            null,
+                            'http://acplt.org/ValueId/ExampleValueId',
+                            new Reference(ReferenceTypes.ExternalReference, [
+                                new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
+                            ])
+                        )
+                    ),
+                ]
+            ),
+        ]
+    );
+}

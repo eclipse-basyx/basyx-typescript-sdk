@@ -41,6 +41,7 @@ import {
     createTestSubmodelMandatory2,
     createTestSubmodelMissing,
     createTestSubmodelTemplate,
+    createTestSubmodelWithOperation,
 } from './fixtures/submodels';
 
 const TEST_AAS: AssetAdministrationShell = createTestAas();
@@ -59,6 +60,8 @@ const TEST_SUBMODEL_MISSING: Submodel = createTestSubmodelMissing();
 
 const TEST_SUBMODEL_TEMPLATE: Submodel = createTestSubmodelTemplate();
 
+const TEST_SUBMODEL_WITH_OPERATION: Submodel = createTestSubmodelWithOperation();
+
 const TEST_CONCEPT_DESCRIPTION: ConceptDescription = createTestConceptDescription();
 
 const TEST_CONCEPT_DESCRIPTION_MINIMAL: ConceptDescription = createTestConceptDescriptionMinimal();
@@ -72,8 +75,8 @@ describe('serializeXml', () => {
         // testEnvironment.xml
         expect(serializeXml(new BaSyxEnvironment())).toBe('');
     });
-    test('should return the correct XML when encoding a valid AssetAdministrationShell', () => {
-        // testEnvironment.xml
+
+    test('should return the correct XML when encoding a valid Environment', () => {
         const env = new BaSyxEnvironment();
         env.assetAdministrationShells = [TEST_AAS];
         env.submodels = [
@@ -92,6 +95,14 @@ describe('serializeXml', () => {
             TEST_CONCEPT_DESCRIPTION_FULL,
         ];
         const xmlPath = path.join(__dirname, 'xml-test-files/test-full.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+        expect(serializeXml(env)).toBe(xmlContent);
+    });
+
+    test('should return the correct XML when encoding an Environment with an Operation Submodel Element', () => {
+        const env = new BaSyxEnvironment();
+        env.submodels = [TEST_SUBMODEL_WITH_OPERATION];
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-operation.xml');
         const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
         expect(serializeXml(env)).toBe(xmlContent);
     });
@@ -548,5 +559,23 @@ describe('deserializeXml', () => {
                 expect(sm2.submodelElements).toHaveLength(sm1.submodelElements.length);
             }
         }
+    });
+
+    test('should deserialize a Submodel including an Operation Submodel Element', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-operation.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        const result = deserializeXml(xmlContent);
+
+        // Validate entire environment
+        expect(result).toBeInstanceOf(BaSyxEnvironment);
+        expect(result.assetAdministrationShells).toBeNull();
+        expect(result.submodels).toBeDefined();
+        expect(result.conceptDescriptions).toBeNull();
+
+        // Validate submodel
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+        expect(result.submodels![0]).toEqual(TEST_SUBMODEL_WITH_OPERATION);
     });
 });
