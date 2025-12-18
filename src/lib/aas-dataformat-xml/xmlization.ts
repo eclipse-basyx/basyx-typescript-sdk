@@ -48,7 +48,7 @@ import {
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { BaSyxEnvironment } from '../../models/BaSyxEnvironment';
 
-export function serializeXml(data: BaSyxEnvironment): string {
+export function serializeXml(data: BaSyxEnvironment, namespacePrefix: string = 'aas'): string {
     // Return empty string for empty environment
     if (!data.assetAdministrationShells?.length && !data.submodels?.length && !data.conceptDescriptions?.length) {
         return '';
@@ -70,9 +70,9 @@ export function serializeXml(data: BaSyxEnvironment): string {
         tagValueProcessor: (name, val) => val,
     });
 
-    // Transform and add aas: prefix to all elements
+    // Transform and add namespace prefix to all elements
     const envData = transformEnvironmentToXmlStructure(data);
-    const prefixedData = addAasPrefix(envData);
+    const prefixedData = addNamespacePrefix(envData, namespacePrefix);
 
     // Wrap the environment data with proper XML declaration and namespace
     const xmlObject = {
@@ -80,8 +80,8 @@ export function serializeXml(data: BaSyxEnvironment): string {
             '@_version': '1.0',
             '@_encoding': 'UTF-8',
         },
-        'aas:environment': {
-            '@_xmlns:aas': 'https://admin-shell.io/aas/3/1',
+        [`${namespacePrefix}:environment`]: {
+            [`@_xmlns:${namespacePrefix}`]: 'https://admin-shell.io/aas/3/1',
             '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
             '@_xsi:schemaLocation': 'https://admin-shell.io/aas/3/1 AAS.xsd',
             ...prefixedData,
@@ -91,34 +91,39 @@ export function serializeXml(data: BaSyxEnvironment): string {
     let xml = builder.build(xmlObject);
 
     // Format the root element attributes to be on separate lines
+    const escapedPrefix = namespacePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(
+        `<${escapedPrefix}:environment xmlns:${escapedPrefix}="https:\\/\\/admin-shell\\.io\\/aas\\/3\\/1" xmlns:xsi="http:\\/\\/www\\.w3\\.org\\/2001\\/XMLSchema-instance" xsi:schemaLocation="https:\\/\\/admin-shell\\.io\\/aas\\/3\\/1 AAS\\.xsd">`,
+        'g'
+    );
     xml = xml.replace(
-        /<aas:environment xmlns:aas="https:\/\/admin-shell\.io\/aas\/3\/1" xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" xsi:schemaLocation="https:\/\/admin-shell\.io\/aas\/3\/1 AAS\.xsd">/,
-        '<aas:environment xmlns:aas="https://admin-shell.io/aas/3/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">'
+        regex,
+        `<${namespacePrefix}:environment xmlns:${namespacePrefix}="https://admin-shell.io/aas/3/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">`
     );
 
     return xml;
 }
 
 /**
- * Recursively adds 'aas:' prefix to all object keys except attributes
+ * Recursively adds namespace prefix to all object keys except attributes
  */
-function addAasPrefix(obj: any): any {
+function addNamespacePrefix(obj: any, prefix: string): any {
     if (obj === null || obj === undefined) {
         return obj;
     }
 
     if (Array.isArray(obj)) {
-        return obj.map((item) => addAasPrefix(item));
+        return obj.map((item) => addNamespacePrefix(item, prefix));
     }
 
     if (typeof obj === 'object') {
         const result: any = {};
         for (const key in obj) {
-            // Skip attributes (they start with @_) and keys that already have aas: prefix
-            if (key.startsWith('@_') || key.startsWith('aas:')) {
-                result[key] = addAasPrefix(obj[key]);
+            // Skip attributes (they start with @_) and keys that already have a namespace prefix
+            if (key.startsWith('@_') || key.includes(':')) {
+                result[key] = addNamespacePrefix(obj[key], prefix);
             } else {
-                result[`aas:${key}`] = addAasPrefix(obj[key]);
+                result[`${prefix}:${key}`] = addNamespacePrefix(obj[key], prefix);
             }
         }
         return result;

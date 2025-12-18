@@ -127,6 +127,20 @@ describe('serializeXml', () => {
         const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
         expect(serializeXml(env)).toBe(xmlContent);
     });
+
+    test('should serialize with modified namespace prefix', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-modified-prefixes.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        // Deserialize the XML to get the environment structure
+        const env = deserializeXml(xmlContent);
+
+        // Serialize with 'test' namespace prefix instead of default 'aas'
+        const serializedXml = serializeXml(env, 'test');
+
+        // Verify the serialized XML matches the original
+        expect(serializedXml).toBe(xmlContent);
+    });
 });
 
 describe('deserializeXml', () => {
