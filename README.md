@@ -441,3 +441,53 @@ const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
 const encoded = base64Encode('https://example.com/ids/aas/my-aas');
 // Use in URL: http://localhost:8081/shells/{encoded}
 ```
+
+### XML Serialization and Deserialization
+
+```typescript
+import { serializeXml, deserializeXml } from 'basyx-typescript-sdk';
+import { BaSyxEnvironment } from 'basyx-typescript-sdk';
+import { AssetAdministrationShell, AssetInformation, AssetKind, Submodel, ModellingKind } from '@aas-core-works/aas-core3.0-typescript/types';
+
+// Create an environment with AAS and Submodels
+const environment = new BaSyxEnvironment(
+    [
+        new AssetAdministrationShell(
+            'https://example.com/ids/aas/my-aas',
+            new AssetInformation(AssetKind.Instance)
+        )
+    ],
+    [
+        new Submodel(
+            'https://example.com/ids/sm/my-submodel',
+            null,
+            null,
+            'MySubmodel',
+            null,
+            null,
+            null,
+            ModellingKind.Instance
+        )
+    ],
+    [] // conceptDescriptions
+);
+
+// Serialize to XML string
+const xmlString = serializeXml(environment);
+console.log(xmlString);
+// Output:
+// <?xml version="1.0" encoding="UTF-8"?>
+// <aas:environment xmlns:aas="https://admin-shell.io/aas/3/1"
+//   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+//   xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">
+//   ...
+// </aas:environment>
+
+// Customize namespace prefix (default is 'aas')
+const xmlWithCustomPrefix = serializeXml(environment, 'custom');
+
+// Deserialize XML back to BaSyxEnvironment
+const deserializedEnv = deserializeXml(xmlString);
+console.log('AAS:', deserializedEnv.assetAdministrationShells);
+console.log('Submodels:', deserializedEnv.submodels);
+```
