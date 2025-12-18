@@ -168,3 +168,10 @@ export function createTestAas(): AssetAdministrationShell {
         ]
     );
 }
+
+export function createTestAasMinimal(): AssetAdministrationShell {
+    return new AssetAdministrationShell(
+        'https://acplt.org/Test_AssetAdministrationShell',
+        new AssetInformation(AssetKind.Instance)
+    );
+}

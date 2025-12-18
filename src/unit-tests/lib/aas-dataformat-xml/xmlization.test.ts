@@ -32,7 +32,7 @@ import {
     createTestConceptDescriptionFull,
     createTestConceptDescriptionMinimal,
 } from './fixtures/concept-descriptions';
-import { createTestAas } from './fixtures/shells';
+import { createTestAas, createTestAasMinimal } from './fixtures/shells';
 import {
     createTestSubmodel1,
     createTestSubmodelBillOfMaterials,
@@ -46,6 +46,8 @@ import {
 } from './fixtures/submodels';
 
 const TEST_AAS: AssetAdministrationShell = createTestAas();
+
+const TEST_AAS_MINIMAL: AssetAdministrationShell = createTestAasMinimal();
 
 const TEST_SUBMODEL_IDENTIFICATION: Submodel = createTestSubmodelIdentification();
 
@@ -114,6 +116,14 @@ describe('serializeXml', () => {
         const env = new BaSyxEnvironment();
         env.submodels = [TEST_SUBMODEL_WITH_QUALIFIER];
         const xmlPath = path.join(__dirname, 'xml-test-files/test-qualifier.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+        expect(serializeXml(env)).toBe(xmlContent);
+    });
+
+    test('should return the correct XML when encoding an Asset Administration Shell with minimal attributes', () => {
+        const env = new BaSyxEnvironment();
+        env.assetAdministrationShells = [TEST_AAS_MINIMAL];
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-minimal.xml');
         const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
         expect(serializeXml(env)).toBe(xmlContent);
     });
@@ -624,5 +634,23 @@ describe('deserializeXml', () => {
         expect(submodel.idShort).toBe('Nameplate');
         expect(submodel.id).toBe('https://example.com/ids/sm/2593_9052_1042_2364');
         expect(submodel.kind).toBe(ModellingKind.Template);
+    });
+
+    test('should deserialize XML with minimal Asset Administration Shell', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-minimal.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        const result = deserializeXml(xmlContent);
+
+        // Validate entire environment
+        expect(result).toBeInstanceOf(BaSyxEnvironment);
+        expect(result.assetAdministrationShells).toBeDefined();
+        expect(result.assetAdministrationShells).toHaveLength(1);
+        expect(result.submodels).toBeNull();
+        expect(result.conceptDescriptions).toBeNull();
+
+        // Validate Asset Administration Shell
+        const aas = result.assetAdministrationShells![0];
+        expect(aas).toEqual(TEST_AAS_MINIMAL);
     });
 });
