@@ -1671,3 +1671,57 @@ export function createTestSubmodelWithOperation(): Submodel {
         ]
     );
 }
+
+export function createTestSubmodelWithQualifier(): Submodel {
+    return new Submodel(
+        'https://acplt.org/Test_Submodel',
+        null,
+        null,
+        'TestSubmodel',
+        null,
+        null,
+        new AdministrativeInformation(null, '0', '9'),
+        ModellingKind.Instance,
+        null,
+        null,
+        null,
+        null,
+        [
+            new Property(
+                DataTypeDefXsd.String,
+                null,
+                null,
+                'ManufacturerName',
+                null,
+                null,
+                new Reference(ReferenceTypes.ExternalReference, [
+                    new Key(KeyTypes.GlobalReference, '0173-1#02-AAO677#002'),
+                ]),
+                null,
+                [
+                    new Qualifier(
+                        'http://acplt.org/Qualifier/ExampleQualifier',
+                        DataTypeDefXsd.Int,
+                        null,
+                        null,
+                        null,
+                        '100'
+                    ),
+                    new Qualifier(
+                        'http://acplt.org/Qualifier/ExampleQualifier2',
+                        DataTypeDefXsd.Int,
+                        null,
+                        null,
+                        null,
+                        '50'
+                    ),
+                ],
+                null,
+                'http://acplt.org/ValueId/ACPLT',
+                new Reference(ReferenceTypes.ExternalReference, [
+                    new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ACPLT'),
+                ])
+            ),
+        ]
+    );
+}

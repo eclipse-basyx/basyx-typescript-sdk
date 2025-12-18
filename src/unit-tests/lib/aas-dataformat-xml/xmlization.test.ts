@@ -42,6 +42,7 @@ import {
     createTestSubmodelMissing,
     createTestSubmodelTemplate,
     createTestSubmodelWithOperation,
+    createTestSubmodelWithQualifier,
 } from './fixtures/submodels';
 
 const TEST_AAS: AssetAdministrationShell = createTestAas();
@@ -61,6 +62,8 @@ const TEST_SUBMODEL_MISSING: Submodel = createTestSubmodelMissing();
 const TEST_SUBMODEL_TEMPLATE: Submodel = createTestSubmodelTemplate();
 
 const TEST_SUBMODEL_WITH_OPERATION: Submodel = createTestSubmodelWithOperation();
+
+const TEST_SUBMODEL_WITH_QUALIFIER: Submodel = createTestSubmodelWithQualifier();
 
 const TEST_CONCEPT_DESCRIPTION: ConceptDescription = createTestConceptDescription();
 
@@ -103,6 +106,14 @@ describe('serializeXml', () => {
         const env = new BaSyxEnvironment();
         env.submodels = [TEST_SUBMODEL_WITH_OPERATION];
         const xmlPath = path.join(__dirname, 'xml-test-files/test-operation.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+        expect(serializeXml(env)).toBe(xmlContent);
+    });
+
+    test('should return the correct XML when encoding an Environment with a Qualifier on a Property', () => {
+        const env = new BaSyxEnvironment();
+        env.submodels = [TEST_SUBMODEL_WITH_QUALIFIER];
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-qualifier.xml');
         const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
         expect(serializeXml(env)).toBe(xmlContent);
     });
@@ -577,6 +588,24 @@ describe('deserializeXml', () => {
         expect(result.submodels).toBeDefined();
         expect(result.submodels).toHaveLength(1);
         expect(result.submodels![0]).toEqual(TEST_SUBMODEL_WITH_OPERATION);
+    });
+
+    test('should deserialize XML with Submodel containing Property having Qualifiers', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-qualifier.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        const result = deserializeXml(xmlContent);
+
+        // Validate entire environment
+        expect(result).toBeInstanceOf(BaSyxEnvironment);
+        expect(result.assetAdministrationShells).toBeNull();
+        expect(result.submodels).toBeDefined();
+        expect(result.conceptDescriptions).toBeNull();
+
+        // Validate submodel
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+        expect(result.submodels![0]).toEqual(TEST_SUBMODEL_WITH_QUALIFIER);
     });
 
     test('should deserialize XML with empty entries without throwing errors', () => {
