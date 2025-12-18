@@ -46,7 +46,7 @@ import {
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.0-typescript/types';
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
-import { BaSyxEnvironment } from '../../../src/models/BaSyxEnvironment';
+import { BaSyxEnvironment } from '../../models/BaSyxEnvironment';
 
 export function serializeXml(data: BaSyxEnvironment): string {
     // Return empty string for empty environment
