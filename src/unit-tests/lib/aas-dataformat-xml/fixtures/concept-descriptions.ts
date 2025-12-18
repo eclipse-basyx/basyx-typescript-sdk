@@ -83,7 +83,7 @@ export function createTestConceptDescriptionFull(): ConceptDescription {
                 new DataSpecificationIec61360(
                     [
                         new LangStringPreferredNameTypeIec61360('de', 'Test Specification'),
-                        new LangStringShortNameTypeIec61360('en-us', 'TestSpecification'),
+                        new LangStringPreferredNameTypeIec61360('en-us', 'TestSpecification'),
                     ],
                     [
                         new LangStringShortNameTypeIec61360('de', 'Test Spec'),
