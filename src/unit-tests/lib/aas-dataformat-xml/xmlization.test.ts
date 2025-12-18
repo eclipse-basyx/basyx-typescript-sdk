@@ -667,4 +667,56 @@ describe('deserializeXml', () => {
         const aas = result.assetAdministrationShells![0];
         expect(aas).toEqual(TEST_AAS_MINIMAL);
     });
+
+    test('should deserialize invalid XML with empty elements but produce incomplete objects', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-invalid.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        // Deserialize the invalid XML - it won't throw but will produce incomplete objects
+        const result = deserializeXml(xmlContent);
+
+        expect(result).toBeInstanceOf(BaSyxEnvironment);
+
+        // The XML has empty assetAdministrationShell and conceptDescriptions elements
+        // These should be parsed but be incomplete/invalid
+        expect(result.assetAdministrationShells).toBeDefined();
+        expect(result.conceptDescriptions).toBeDefined();
+
+        // The empty elements should result in arrays with incomplete objects
+        // that are missing required fields
+        if (result.assetAdministrationShells && result.assetAdministrationShells.length > 0) {
+            const aas = result.assetAdministrationShells[0];
+            // Empty AAS should not have required fields like id or assetInformation
+            expect(aas.id).toBeUndefined();
+            expect(aas.assetInformation).toBeUndefined();
+        }
+    });
+
+    test('should successfully deserialize and re-serialize valid XML files', () => {
+        const validXmlFiles = [
+            'test-full.xml',
+            'test-operation.xml',
+            'test-qualifier.xml',
+            'test-minimal.xml',
+            'test-empty-entries.xml',
+            'test-modified-prefixes.xml',
+        ];
+
+        validXmlFiles.forEach((filename) => {
+            const xmlPath = path.join(__dirname, 'xml-test-files', filename);
+            const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+            // Should not throw during deserialization
+            const env = deserializeXml(xmlContent);
+            expect(env).toBeInstanceOf(BaSyxEnvironment);
+
+            // Should be able to re-serialize without errors
+            const reserialized = serializeXml(env);
+            expect(reserialized).toBeTruthy();
+
+            // Should be able to deserialize the re-serialized XML
+            const reDeserialized = deserializeXml(reserialized);
+            expect(reDeserialized).toBeInstanceOf(BaSyxEnvironment);
+        });
+    });
 });
