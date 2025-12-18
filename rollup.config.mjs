@@ -1,4 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
+import string from 'rollup-plugin-string';
 
 export default [
     // CommonJS build
@@ -9,7 +10,12 @@ export default [
             format: 'cjs',
             sourcemap: true,
         },
-        plugins: [resolve()],
+        plugins: [
+            string({
+                include: '**/*.xml',
+            }),
+            resolve(),
+        ],
         external: ['@aas-core-works/aas-core3.0-typescript', '@hey-api/client-fetch'],
     },
     // ES Module build
@@ -20,7 +26,12 @@ export default [
             format: 'esm',
             sourcemap: true,
         },
-        plugins: [resolve()],
+        plugins: [
+            string({
+                include: '**/*.xml',
+            }),
+            resolve(),
+        ],
         external: ['@aas-core-works/aas-core3.0-typescript', '@hey-api/client-fetch'],
     },
 ];

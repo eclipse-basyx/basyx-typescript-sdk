@@ -10,7 +10,8 @@
     "src/clients/**/*",
     "src/lib/**/*",
     "src/models/**/*",
-    "src/index.ts"
+    "src/index.ts",
+    "src/types.d.ts"
   ],
   "exclude": [
     "node_modules",
