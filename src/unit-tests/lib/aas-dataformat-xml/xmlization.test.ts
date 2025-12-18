@@ -578,4 +578,22 @@ describe('deserializeXml', () => {
         expect(result.submodels).toHaveLength(1);
         expect(result.submodels![0]).toEqual(TEST_SUBMODEL_WITH_OPERATION);
     });
+
+    test('should deserialize XML with empty entries without throwing errors', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-empty-entries.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        // This should not throw an error even with empty keys and preferredName elements
+        const result = deserializeXml(xmlContent);
+
+        // Validate the result is a valid BaSyxEnvironment
+        expect(result).toBeInstanceOf(BaSyxEnvironment);
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+
+        const submodel = result.submodels![0];
+        expect(submodel.idShort).toBe('Nameplate');
+        expect(submodel.id).toBe('https://example.com/ids/sm/2593_9052_1042_2364');
+        expect(submodel.kind).toBe(ModellingKind.Template);
+    });
 });
