@@ -13,9 +13,9 @@ import { createTestShell } from './fixtures/aasFixtures';
 import { createTestShellDescriptor } from './fixtures/aasregistryFixtures';
 
 describe('AasService Integration Tests', () => {
-    const registryConfig = new Configuration({ basePath: 'http://localhost:8084' });
-    const repositoryConfig = new Configuration({ basePath: 'http://localhost:8081' });
-    const aasService = new AasService({ registryConfig, repositoryConfig });
+    const aasRegistryConfig = new Configuration({ basePath: 'http://localhost:8084' });
+    const aasRepositoryConfig = new Configuration({ basePath: 'http://localhost:8081' });
+    const aasService = new AasService({ aasRegistryConfig, aasRepositoryConfig });
 
     // Helper function to create unique test data for each test
     function createUniqueTestData() {
@@ -355,8 +355,8 @@ describe('AasService Integration Tests', () => {
 
             // Create service with invalid registry config
             const serviceWithBadRegistry = new AasService({
-                registryConfig: new Configuration({ basePath: 'http://localhost:9999' }),
-                repositoryConfig,
+                aasRegistryConfig: new Configuration({ basePath: 'http://localhost:9999' }),
+                aasRepositoryConfig,
             });
 
             // Register AAS using standard service
@@ -379,7 +379,7 @@ describe('AasService Integration Tests', () => {
     });
 
     describe('service with only repository config', () => {
-        const repoOnlyService = new AasService({ repositoryConfig });
+        const repoOnlyService = new AasService({ aasRepositoryConfig });
 
         test('should work with only repository configuration', async () => {
             const result = await repoOnlyService.getAasList();
@@ -510,8 +510,8 @@ describe('AasService Integration Tests', () => {
     describe('includeConceptDescriptions functionality', () => {
         const cdRepositoryConfig = new Configuration({ basePath: 'http://localhost:8083' });
         const serviceWithCD = new AasService({
-            registryConfig,
-            repositoryConfig,
+            aasRegistryConfig,
+            aasRepositoryConfig,
             conceptDescriptionRepositoryConfig: cdRepositoryConfig,
         });
 
@@ -593,7 +593,7 @@ describe('AasService Integration Tests', () => {
 
     describe('getAasByAssetId', () => {
         const discoveryConfig = new Configuration({ basePath: 'http://localhost:8086' });
-        const aasServiceWithDiscovery = new AasService({ registryConfig, repositoryConfig, discoveryConfig });
+        const aasServiceWithDiscovery = new AasService({ aasRegistryConfig, aasRepositoryConfig, discoveryConfig });
 
         test('should find AAS by asset IDs', async () => {
             const { testShell } = createUniqueTestData();
@@ -747,8 +747,8 @@ describe('AasService Integration Tests', () => {
         const submodelRegistryConfig = new Configuration({ basePath: 'http://localhost:8085' });
         const submodelRepositoryConfig = new Configuration({ basePath: 'http://localhost:8082' });
         const serviceWithSubmodels = new AasService({
-            registryConfig,
-            repositoryConfig,
+            aasRegistryConfig,
+            aasRepositoryConfig,
             submodelRegistryConfig,
             submodelRepositoryConfig,
         });
