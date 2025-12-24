@@ -5,9 +5,9 @@ import { createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
 import { createTestSubmodel } from './fixtures/submodelFixtures';
 
 describe('SubmodelService Integration Tests', () => {
-    const registryConfig = new Configuration({ basePath: 'http://localhost:8085' });
-    const repositoryConfig = new Configuration({ basePath: 'http://localhost:8082' });
-    const submodelService = new SubmodelService({ registryConfig, repositoryConfig });
+    const submodelRegistryConfig = new Configuration({ basePath: 'http://localhost:8085' });
+    const submodelRepositoryConfig = new Configuration({ basePath: 'http://localhost:8082' });
+    const submodelService = new SubmodelService({ submodelRegistryConfig, submodelRepositoryConfig });
 
     // Helper function to create unique test data for each test
     function createUniqueTestData() {
@@ -347,8 +347,8 @@ describe('SubmodelService Integration Tests', () => {
 
             // Create service with invalid registry config
             const serviceWithBadRegistry = new SubmodelService({
-                registryConfig: new Configuration({ basePath: 'http://localhost:9999' }),
-                repositoryConfig,
+                submodelRegistryConfig: new Configuration({ basePath: 'http://localhost:9999' }),
+                submodelRepositoryConfig,
             });
 
             // Register Submodel using standard service
@@ -371,7 +371,7 @@ describe('SubmodelService Integration Tests', () => {
     });
 
     describe('service with only repository config', () => {
-        const repoOnlyService = new SubmodelService({ repositoryConfig });
+        const repoOnlyService = new SubmodelService({ submodelRepositoryConfig });
 
         test('should work with only repository configuration', async () => {
             const result = await repoOnlyService.getSubmodelList();
@@ -399,8 +399,8 @@ describe('SubmodelService Integration Tests', () => {
     describe('includeConceptDescriptions functionality', () => {
         const cdRepositoryConfig = new Configuration({ basePath: 'http://localhost:8083' });
         const serviceWithCD = new SubmodelService({
-            registryConfig,
-            repositoryConfig,
+            submodelRegistryConfig,
+            submodelRepositoryConfig,
             conceptDescriptionRepositoryConfig: cdRepositoryConfig,
         });
 
