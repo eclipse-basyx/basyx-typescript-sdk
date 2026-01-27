@@ -4,7 +4,7 @@ import type {
     ISubmodelElement,
     Reference,
     Submodel,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasRepositoryService } from '../generated';

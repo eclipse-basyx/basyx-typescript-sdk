@@ -1,15 +1,15 @@
-//import { types } from '@aas-core-works/aas-core3.0-typescript';
+//import { types } from '@aas-core-works/aas-core3.1-typescript';
 import {
     LangStringTextType as CoreLangStringTextType,
     MultiLanguageProperty as CoreMultiLanguageProperty,
     //isMultiLanguageProperty,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { firstLangStringSetText, hasValue, valueToDisplay } from '../../utils/MultiLanguagePropertyUtils';
 
 /**
  * Mock the isMultiLanguageProperty method used in MultiLanguagePropertyUtils.ts
  */
-// jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
+// jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
 //     types: {
 //         isMultiLanguageProperty: jest.fn(),
 //     },

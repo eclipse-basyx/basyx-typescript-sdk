@@ -16,7 +16,7 @@ export default [
             }),
             resolve(),
         ],
-        external: ['@aas-core-works/aas-core3.0-typescript', '@hey-api/client-fetch'],
+        external: ['@aas-core-works/aas-core3.1-typescript', '@hey-api/client-fetch'],
     },
     // ES Module build
     {
@@ -32,6 +32,6 @@ export default [
             }),
             resolve(),
         ],
-        external: ['@aas-core-works/aas-core3.0-typescript', '@hey-api/client-fetch'],
+        external: ['@aas-core-works/aas-core3.1-typescript', '@hey-api/client-fetch'],
     },
 ];

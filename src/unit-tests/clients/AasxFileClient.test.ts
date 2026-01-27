@@ -3,7 +3,7 @@ import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     AssetKind,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasxFileClient } from '../../clients/AasxFileClient';
 import { AasxFileService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

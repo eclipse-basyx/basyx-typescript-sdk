@@ -1,4 +1,4 @@
-import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import { SubmodelRepositoryService } from '../generated'; // Updated import
 import { Configuration } from '../generated/runtime';

@@ -1,8 +1,8 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import {
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { SubmodelRepositoryService } from '../../generated';
 import {
     convertApiSubmodelElementToCoreSubmodelElement,
@@ -14,7 +14,7 @@ import {
 /**
  * Mock the jsonization methods used in convertSubmodelTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
+jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
         submodelFromJsonable: jest.fn(),
         toJsonable: jest.fn(),

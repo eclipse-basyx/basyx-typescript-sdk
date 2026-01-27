@@ -37,10 +37,10 @@
     "gen-aasxfileserver": "openapi-generator-cli generate -i openapi/aasxfileserver.yaml -g typescript-fetch -o src/generated/AasxFileService --additional-properties=withoutRuntimeChecks=true"
   },
   "peerDependencies": {
-    "@aas-core-works/aas-core3.0-typescript": "^1.0.3"
+    "@aas-core-works/aas-core3.1-typescript": "^1.0.0"
   },
   "devDependencies": {
-    "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
+    "@aas-core-works/aas-core3.1-typescript": "^1.0.0",
     "@openapitools/openapi-generator-cli": "^2.18.4",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@types/jest": "^30.0.0",

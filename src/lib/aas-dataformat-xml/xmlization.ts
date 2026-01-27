@@ -1,4 +1,4 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import {
     AasSubmodelElements,
     AdministrativeInformation,
@@ -44,7 +44,7 @@ import {
     SubmodelElementList,
     ValueList,
     ValueReferencePair,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { BaSyxEnvironment } from '../../models/BaSyxEnvironment';
 

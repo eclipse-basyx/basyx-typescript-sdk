@@ -1,4 +1,4 @@
-import { KeyTypes } from '@aas-core-works/aas-core3.0-typescript/types';
+import { KeyTypes } from '@aas-core-works/aas-core3.1-typescript/types';
 import { getKeyTypeAbbreviation } from '../../utils/KeyTypesUtil';
 
 describe('KeyTypesUtil', () => {

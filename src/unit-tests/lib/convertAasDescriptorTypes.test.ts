@@ -1,4 +1,4 @@
-//import { AssetKind as CoreAssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+//import { AssetKind as CoreAssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryService } from '../../generated';
 import {
     convertApiAasDescriptorToCoreAasDescriptor,

@@ -21,7 +21,7 @@ import {
     Submodel,
     SubmodelElementCollection,
     SubmodelElementList,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import * as fs from 'fs';
 import * as path from 'path';
 import { deserializeXml, serializeXml } from '../../../lib/aas-dataformat-xml';

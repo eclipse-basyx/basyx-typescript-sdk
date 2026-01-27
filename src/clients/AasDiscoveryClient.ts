@@ -1,4 +1,4 @@
-import type { SpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { SpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasDiscoveryService } from '../generated';

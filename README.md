@@ -49,12 +49,12 @@ yarn add basyx-typescript-sdk
 ---
 
 > [!IMPORTANT]
-> Make sure to also install `@aas-core-works/aas-core3.0-typescript` in your project:
+> Make sure to also install `@aas-core-works/aas-core3.1-typescript` in your project:
 
 ```bash
-npm install @aas-core-works/aas-core3.0-typescript
+npm install @aas-core-works/aas-core3.1-typescript
 # or
-yarn add @aas-core-works/aas-core3.0-typescript
+yarn add @aas-core-works/aas-core3.1-typescript
 ```
 
 ## Import Styles
@@ -133,7 +133,7 @@ async function getAllShells() {
 
 ```typescript
 import { AasService, Configuration } from 'basyx-typescript-sdk';
-import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Initialize service with both registry and repository
 const service = new AasService({
@@ -245,7 +245,7 @@ if (withConceptDescriptions.success) {
 }
 
 // Resolve a Reference to get endpoints for AAS, Submodel, or SubmodelElement
-import { Reference, Key, KeyTypes, ReferenceTypes } from '@aas-core-works/aas-core3.0-typescript/types';
+import { Reference, Key, KeyTypes, ReferenceTypes } from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Example 1: Reference to AAS and Submodel
 const reference1 = new Reference(
@@ -314,7 +314,7 @@ if (allWithCD.success) {
 
 ```typescript
 import { SubmodelService, Configuration } from 'basyx-typescript-sdk';
-import { Submodel, ModellingKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import { Submodel, ModellingKind } from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Initialize service with both registry and repository
 const service = new SubmodelService({
@@ -429,7 +429,7 @@ const byEndpointWithCD = await serviceWithCD.getSubmodelByEndpoint({
 
 ```typescript
 import { getSubmodelElementByIdShort, extractEndpointHref, base64Encode } from 'basyx-typescript-sdk';
-import { Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import { Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Get a submodel element by its idShort
 const element = getSubmodelElementByIdShort(submodel, 'MyProperty');
@@ -447,7 +447,7 @@ const encoded = base64Encode('https://example.com/ids/aas/my-aas');
 ```typescript
 import { serializeXml, deserializeXml } from 'basyx-typescript-sdk';
 import { BaSyxEnvironment } from 'basyx-typescript-sdk';
-import { AssetAdministrationShell, AssetInformation, AssetKind, Submodel, ModellingKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AssetAdministrationShell, AssetInformation, AssetKind, Submodel, ModellingKind } from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Create an environment with AAS and Submodels
 const environment = new BaSyxEnvironment(

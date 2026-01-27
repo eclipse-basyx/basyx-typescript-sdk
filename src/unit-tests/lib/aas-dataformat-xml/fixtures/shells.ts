@@ -22,7 +22,7 @@ import {
     SpecificAssetId,
     ValueList,
     ValueReferencePair,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 
 export function createTestAas(): AssetAdministrationShell {
     return new AssetAdministrationShell(

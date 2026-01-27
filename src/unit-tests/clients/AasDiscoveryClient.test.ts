@@ -4,7 +4,7 @@ import {
     AssetInformation as CoreAssetInformation,
     AssetKind,
     SpecificAssetId as CoreSpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasDiscoveryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

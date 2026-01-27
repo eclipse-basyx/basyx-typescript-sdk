@@ -1,4 +1,4 @@
-import { ModellingKind, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import { ModellingKind, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
 import { SubmodelRegistryClient } from '../../clients/SubmodelRegistryClient';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
 import { Configuration } from '../../generated/runtime';

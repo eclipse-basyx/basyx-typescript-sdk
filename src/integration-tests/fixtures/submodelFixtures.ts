@@ -8,7 +8,7 @@ import {
     Property,
     Submodel,
     SubmodelElementCollection,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { OperationRequest, OperationResult, PropertyValue } from '../../generated/SubmodelRepositoryService';
 
 export function createTestSubmodel(): Submodel {

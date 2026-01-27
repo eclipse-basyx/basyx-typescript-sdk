@@ -1,4 +1,4 @@
-import type { KeyTypes, Reference } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { KeyTypes, Reference } from '@aas-core-works/aas-core3.1-typescript/types';
 //import {keyTypes} from '../utils/KeyTypesUtil';
 /**
  * Extracts the ID (Key) from a Reference object based on the given Key Type.

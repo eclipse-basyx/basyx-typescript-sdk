@@ -1,9 +1,9 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
     Reference as CoreReference,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRepositoryService } from '../generated';
 // import {
 //     AssetAdministrationShell as ApiAssetAdministrationShell,

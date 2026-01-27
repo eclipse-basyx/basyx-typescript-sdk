@@ -29,7 +29,7 @@ import {
     Submodel,
     SubmodelElementCollection,
     SubmodelElementList,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 
 export function createTestSubmodelIdentification(): Submodel {
     return new Submodel(
