@@ -1648,7 +1648,6 @@ function parseReferenceElement(data: any): ReferenceElement {
 
 function parseBlob(data: any): Blob {
     return new Blob(
-        data.contentType,
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
         data.category || undefined,
         data.idShort || undefined,
@@ -1666,13 +1665,13 @@ function parseBlob(data: any): Blob {
         data.embeddedDataSpecifications?.embeddedDataSpecification
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
             : undefined,
-        data.value || undefined
+        data.value || undefined,
+        data.contentType
     );
 }
 
 function parseFile(data: any): File {
     return new File(
-        data.contentType,
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
         data.category || undefined,
         data.idShort || undefined,
@@ -1690,7 +1689,8 @@ function parseFile(data: any): File {
         data.embeddedDataSpecifications?.embeddedDataSpecification
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
             : undefined,
-        data.value || undefined
+        data.value || undefined,
+        data.contentType
     );
 }
 
@@ -1699,7 +1699,6 @@ function parseEntity(data: any): Entity {
         ? (jsonization.entityTypeFromJsonable(data.entityType).value ?? data.entityType)
         : undefined;
     return new Entity(
-        entityType as EntityType,
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
         data.category || undefined,
         data.idShort || undefined,
@@ -1718,6 +1717,7 @@ function parseEntity(data: any): Entity {
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
             : undefined,
         data.statements ? parseSubmodelElements(data.statements) : undefined,
+        entityType as EntityType,
         data.globalAssetId || undefined,
         data.specificAssetIds?.specificAssetId
             ? data.specificAssetIds.specificAssetId.map(parseSpecificAssetId)
@@ -1727,8 +1727,6 @@ function parseEntity(data: any): Entity {
 
 function parseRelationshipElement(data: any): RelationshipElement {
     return new RelationshipElement(
-        parseReference(data.first),
-        parseReference(data.second),
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
         data.category || undefined,
         data.idShort || undefined,
@@ -1745,14 +1743,14 @@ function parseRelationshipElement(data: any): RelationshipElement {
         data.qualifiers?.qualifier ? data.qualifiers.qualifier.map(parseQualifier) : undefined,
         data.embeddedDataSpecifications?.embeddedDataSpecification
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
-            : undefined
+            : undefined,
+        parseReference(data.first),
+        parseReference(data.second)
     );
 }
 
 function parseAnnotatedRelationshipElement(data: any): AnnotatedRelationshipElement {
     return new AnnotatedRelationshipElement(
-        parseReference(data.first),
-        parseReference(data.second),
         data.extensions?.extension ? data.extensions.extension.map(parseExtension) : undefined,
         data.category || undefined,
         data.idShort || undefined,
@@ -1770,6 +1768,8 @@ function parseAnnotatedRelationshipElement(data: any): AnnotatedRelationshipElem
         data.embeddedDataSpecifications?.embeddedDataSpecification
             ? data.embeddedDataSpecifications.embeddedDataSpecification.map(parseEmbeddedDataSpecification)
             : undefined,
+        parseReference(data.first),
+        parseReference(data.second),
         data.annotations ? parseSubmodelElements(data.annotations) : undefined
     );
 }

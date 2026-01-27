@@ -152,7 +152,6 @@ export function createTestSubmodelBillOfMaterials(): Submodel {
         null,
         [
             new Entity(
-                EntityType.CoManagedEntity,
                 null,
                 null,
                 'ExampleEntity',
@@ -216,10 +215,10 @@ export function createTestSubmodelBillOfMaterials(): Submodel {
                             new Key(KeyTypes.GlobalReference, 'http://acplt.org/ValueId/ExampleValueId'),
                         ])
                     ),
-                ]
+                ],
+                EntityType.CoManagedEntity
             ),
             new Entity(
-                EntityType.SelfManagedEntity,
                 null,
                 null,
                 'ExampleEntity2',
@@ -241,6 +240,7 @@ export function createTestSubmodelBillOfMaterials(): Submodel {
                 null,
                 null,
                 null,
+                EntityType.SelfManagedEntity,
                 'https://acplt.org/Test_Asset2'
             ),
         ]
@@ -268,16 +268,6 @@ export function createTestSubmodel1(): Submodel {
         null,
         [
             new RelationshipElement(
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
-                    new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
-                    new Key(KeyTypes.Property, 'ExampleProperty'),
-                ]),
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial'),
-                    new Key(KeyTypes.Entity, 'ExampleEntity'),
-                    new Key(KeyTypes.Property, 'ExampleProperty2'),
-                ]),
                 null,
                 'PARAMETER',
                 'ExampleRelationshipElement',
@@ -291,9 +281,10 @@ export function createTestSubmodel1(): Submodel {
                         KeyTypes.GlobalReference,
                         'http://acplt.org/RelationshipElements/ExampleRelationshipElement'
                     ),
-                ])
-            ),
-            new AnnotatedRelationshipElement(
+                ]),
+                null,
+                null,
+                null,
                 new Reference(ReferenceTypes.ModelReference, [
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
                     new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
@@ -303,7 +294,9 @@ export function createTestSubmodel1(): Submodel {
                     new Key(KeyTypes.Submodel, 'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial'),
                     new Key(KeyTypes.Entity, 'ExampleEntity'),
                     new Key(KeyTypes.Property, 'ExampleProperty2'),
-                ]),
+                ])
+            ),
+            new AnnotatedRelationshipElement(
                 null,
                 'PARAMETER',
                 'ExampleAnnotatedRelationshipElement',
@@ -321,6 +314,16 @@ export function createTestSubmodel1(): Submodel {
                 null,
                 null,
                 null,
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel'),
+                    new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                    new Key(KeyTypes.Property, 'ExampleProperty'),
+                ]),
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial'),
+                    new Key(KeyTypes.Entity, 'ExampleEntity'),
+                    new Key(KeyTypes.Property, 'ExampleProperty2'),
+                ]),
                 [
                     new Property(
                         DataTypeDefXsd.String,
@@ -601,7 +604,6 @@ export function createTestSubmodel1(): Submodel {
                 null,
                 [
                     new Blob(
-                        'application/pdf',
                         null,
                         'PARAMETER',
                         'ExampleBlob',
@@ -616,10 +618,10 @@ export function createTestSubmodel1(): Submodel {
                         null,
                         null,
                         null,
-                        Uint8Array.from(Buffer.from('AQIDBAU=', 'base64'))
+                        Uint8Array.from(Buffer.from('AQIDBAU=', 'base64')),
+                        'application/pdf'
                     ),
                     new File(
-                        'application/pdf',
                         null,
                         'PARAMETER',
                         'ExampleFile',
@@ -634,7 +636,8 @@ export function createTestSubmodel1(): Submodel {
                         null,
                         null,
                         null,
-                        'file:///TestFile.pdf'
+                        'file:///TestFile.pdf',
+                        'application/pdf'
                     ),
                     new ReferenceElement(
                         null,
@@ -682,6 +685,15 @@ export function createTestSubmodelMandatory(): Submodel {
         null,
         [
             new RelationshipElement(
+                null,
+                null,
+                'ExampleRelationshipElement',
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 new Reference(ReferenceTypes.ModelReference, [
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Mandatory'),
                     new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListUnordered'),
@@ -691,12 +703,18 @@ export function createTestSubmodelMandatory(): Submodel {
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Mandatory'),
                     new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListUnordered'),
                     new Key(KeyTypes.MultiLanguageProperty, 'ExampleMultiLanguageProperty'),
-                ]),
-                null,
-                null,
-                'ExampleRelationshipElement'
+                ])
             ),
             new AnnotatedRelationshipElement(
+                null,
+                null,
+                'ExampleAnnotatedRelationshipElement',
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 new Reference(ReferenceTypes.ModelReference, [
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Mandatory'),
                     new Key(KeyTypes.SubmodelElementCollection, 'ExampleSubmodelElementCollection'),
@@ -706,10 +724,7 @@ export function createTestSubmodelMandatory(): Submodel {
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Mandatory'),
                     new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListUnordered'),
                     new Key(KeyTypes.MultiLanguageProperty, 'ExampleMultiLanguageProperty'),
-                ]),
-                null,
-                null,
-                'ExampleAnnotatedRelationshipElement'
+                ])
             ),
             new Operation(null, null, 'ExampleOperation'),
             new Capability(null, null, 'ExampleCapability'),
@@ -756,8 +771,8 @@ export function createTestSubmodelMandatory(): Submodel {
                 null,
                 null,
                 [
-                    new Blob('application/pdf', null, null, 'ExampleBlob'),
-                    new File('application/pdf', null, null, 'ExampleFile'),
+                    new Blob(null, null, 'ExampleBlob', null, null, null, null, null, null, null, 'application/pdf'),
+                    new File(null, null, 'ExampleFile', null, null, null, null, null, null, null, 'application/pdf'),
                     new ReferenceElement(null, null, 'ExampleReferenceElement'),
                 ]
             ),
@@ -800,16 +815,6 @@ export function createTestSubmodelMissing(): Submodel {
         null,
         [
             new RelationshipElement(
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Missing'),
-                    new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
-                    new Key(KeyTypes.Property, 'ExampleProperty'),
-                ]),
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Missing'),
-                    new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
-                    new Key(KeyTypes.MultiLanguageProperty, 'ExampleMultiLanguageProperty'),
-                ]),
                 null,
                 'PARAMETER',
                 'ExampleRelationshipElement',
@@ -823,9 +828,10 @@ export function createTestSubmodelMissing(): Submodel {
                         KeyTypes.GlobalReference,
                         'http://acplt.org/RelationshipElements/ExampleRelationshipElement'
                     ),
-                ])
-            ),
-            new AnnotatedRelationshipElement(
+                ]),
+                null,
+                null,
+                null,
                 new Reference(ReferenceTypes.ModelReference, [
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Missing'),
                     new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
@@ -835,7 +841,9 @@ export function createTestSubmodelMissing(): Submodel {
                     new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Missing'),
                     new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
                     new Key(KeyTypes.MultiLanguageProperty, 'ExampleMultiLanguageProperty'),
-                ]),
+                ])
+            ),
+            new AnnotatedRelationshipElement(
                 null,
                 'PARAMETER',
                 'ExampleAnnotatedRelationshipElement',
@@ -853,6 +861,16 @@ export function createTestSubmodelMissing(): Submodel {
                 null,
                 null,
                 null,
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Missing'),
+                    new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                    new Key(KeyTypes.Property, 'ExampleProperty'),
+                ]),
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Missing'),
+                    new Key(KeyTypes.SubmodelElementList, 'ExampleSubmodelElementListOrdered'),
+                    new Key(KeyTypes.MultiLanguageProperty, 'ExampleMultiLanguageProperty'),
+                ]),
                 [
                     new Property(
                         DataTypeDefXsd.String,
@@ -1125,7 +1143,6 @@ export function createTestSubmodelMissing(): Submodel {
                 null,
                 [
                     new Blob(
-                        'application/pdf',
                         null,
                         'PARAMETER',
                         'ExampleBlob',
@@ -1140,10 +1157,10 @@ export function createTestSubmodelMissing(): Submodel {
                         null,
                         null,
                         null,
-                        Uint8Array.from(Buffer.from('AQIDBAU=', 'base64'))
+                        Uint8Array.from(Buffer.from('AQIDBAU=', 'base64')),
+                        'application/pdf'
                     ),
                     new File(
-                        'application/pdf',
                         null,
                         'PARAMETER',
                         'ExampleFile',
@@ -1158,7 +1175,8 @@ export function createTestSubmodelMissing(): Submodel {
                         null,
                         null,
                         null,
-                        'file:///TestFile.pdf'
+                        'file:///TestFile.pdf',
+                        'application/pdf'
                     ),
                     new ReferenceElement(
                         null,
@@ -1211,16 +1229,6 @@ export function createTestSubmodelTemplate(): Submodel {
         null,
         [
             new RelationshipElement(
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
-                    new Key(KeyTypes.Operation, 'ExampleOperation'),
-                    new Key(KeyTypes.Property, 'ExampleProperty'),
-                ]),
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
-                    new Key(KeyTypes.Operation, 'ExampleOperation'),
-                    new Key(KeyTypes.Property, 'ExampleProperty'),
-                ]),
                 null,
                 'PARAMETER',
                 'ExampleRelationshipElement',
@@ -1234,19 +1242,22 @@ export function createTestSubmodelTemplate(): Submodel {
                         KeyTypes.GlobalReference,
                         'http://acplt.org/RelationshipElements/ExampleRelationshipElement'
                     ),
+                ]),
+                null,
+                null,
+                null,
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
+                    new Key(KeyTypes.Operation, 'ExampleOperation'),
+                    new Key(KeyTypes.Property, 'ExampleProperty'),
+                ]),
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
+                    new Key(KeyTypes.Operation, 'ExampleOperation'),
+                    new Key(KeyTypes.Property, 'ExampleProperty'),
                 ])
             ),
             new AnnotatedRelationshipElement(
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
-                    new Key(KeyTypes.Operation, 'ExampleOperation'),
-                    new Key(KeyTypes.Property, 'ExampleProperty'),
-                ]),
-                new Reference(ReferenceTypes.ModelReference, [
-                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
-                    new Key(KeyTypes.Operation, 'ExampleOperation'),
-                    new Key(KeyTypes.Property, 'ExampleProperty'),
-                ]),
                 null,
                 'PARAMETER',
                 'ExampleAnnotatedRelationshipElement',
@@ -1263,7 +1274,17 @@ export function createTestSubmodelTemplate(): Submodel {
                 ]),
                 null,
                 null,
-                null
+                null,
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
+                    new Key(KeyTypes.Operation, 'ExampleOperation'),
+                    new Key(KeyTypes.Property, 'ExampleProperty'),
+                ]),
+                new Reference(ReferenceTypes.ModelReference, [
+                    new Key(KeyTypes.Submodel, 'https://acplt.org/Test_Submodel_Template'),
+                    new Key(KeyTypes.Operation, 'ExampleOperation'),
+                    new Key(KeyTypes.Property, 'ExampleProperty'),
+                ])
             ),
             new Operation(
                 null,
@@ -1481,7 +1502,6 @@ export function createTestSubmodelTemplate(): Submodel {
                 null,
                 [
                     new Blob(
-                        'application/pdf',
                         null,
                         'PARAMETER',
                         'ExampleBlob',
@@ -1492,10 +1512,14 @@ export function createTestSubmodelTemplate(): Submodel {
                         ],
                         new Reference(ReferenceTypes.ExternalReference, [
                             new Key(KeyTypes.GlobalReference, 'http://acplt.org/Blobs/ExampleBlob'),
-                        ])
+                        ]),
+                        null,
+                        null,
+                        null,
+                        null,
+                        'application/pdf'
                     ),
                     new File(
-                        'application/pdf',
                         null,
                         'PARAMETER',
                         'ExampleFile',
@@ -1506,7 +1530,12 @@ export function createTestSubmodelTemplate(): Submodel {
                         ],
                         new Reference(ReferenceTypes.ExternalReference, [
                             new Key(KeyTypes.GlobalReference, 'http://acplt.org/Files/ExampleFile'),
-                        ])
+                        ]),
+                        null,
+                        null,
+                        null,
+                        null,
+                        'application/pdf'
                     ),
                     new ReferenceElement(
                         null,
