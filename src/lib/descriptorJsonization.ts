@@ -1,4 +1,4 @@
-import { common } from '@aas-core-works/aas-core3.0-typescript';
+import { common } from '@aas-core-works/aas-core3.1-typescript';
 import {
     administrativeInformationFromJsonable,
     assetKindFromJsonable,
@@ -10,8 +10,8 @@ import {
     referenceFromJsonable,
     specificAssetIdFromJsonable,
     toJsonable,
-} from '@aas-core-works/aas-core3.0-typescript/jsonization';
-import { AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/jsonization';
+import { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 //import { AasRegistryService } from '../generated';
 import {
     AssetAdministrationShellDescriptor,

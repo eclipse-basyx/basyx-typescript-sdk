@@ -1,5 +1,5 @@
 // Import necessary types
-//import { AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+//import { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
 import { AasRegistryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

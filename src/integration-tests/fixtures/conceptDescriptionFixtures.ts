@@ -1,4 +1,4 @@
-import { ConceptDescription, LangStringTextType } from '@aas-core-works/aas-core3.0-typescript/types';
+import { ConceptDescription, LangStringTextType } from '@aas-core-works/aas-core3.1-typescript/types';
 
 export function createTestCD(): ConceptDescription {
     const demoCD = new ConceptDescription('https://example.com/ids/cd/1234');

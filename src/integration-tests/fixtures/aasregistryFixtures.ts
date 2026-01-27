@@ -1,4 +1,4 @@
-import { LangStringNameType, LangStringTextType } from '@aas-core-works/aas-core3.0-typescript/types';
+import { LangStringNameType, LangStringTextType } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AssetAdministrationShellDescriptor, SubmodelDescriptor } from '../../models/Descriptors';
 
 export function createTestShellDescriptor(): AssetAdministrationShellDescriptor {

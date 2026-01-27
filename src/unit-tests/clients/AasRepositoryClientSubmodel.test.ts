@@ -10,7 +10,7 @@ import {
     Reference as CoreReference,
     ReferenceTypes,
     Submodel as CoreSubmodel,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
 import { ModelType } from '../../generated/AasRepositoryService';

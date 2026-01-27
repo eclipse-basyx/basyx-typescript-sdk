@@ -1,4 +1,4 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import {
     AssetAdministrationShell as CoreAssetAdministrationShell,
     AssetInformation as CoreAssetInformation,
@@ -7,7 +7,7 @@ import {
     KeyTypes as CoreKeyTypes,
     Reference as CoreReference,
     ReferenceTypes as CoreReferenceTypes,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRepositoryService } from '../../generated';
 // import {
 //     AssetAdministrationShell as ApiAssetAdministrationShell,
@@ -30,7 +30,7 @@ import {
 /**
  * Mock the jsonization methods used in convertAasTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
+jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
         assetAdministrationShellFromJsonable: jest.fn(),
         toJsonable: jest.fn(),

@@ -8,7 +8,7 @@ import {
     KeyTypes,
     Reference as CoreReference,
     ReferenceTypes,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

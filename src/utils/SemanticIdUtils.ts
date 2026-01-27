@@ -4,7 +4,7 @@ import {
     Submodel,
     SubmodelElementCollection,
     SubmodelElementList,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 
 const versionRevisionRegex = /\/(\d{1,})\/(\d{1,})(\/|$)/; // This regex matches the version/revision string of a semanticId ".../version/revision"
 

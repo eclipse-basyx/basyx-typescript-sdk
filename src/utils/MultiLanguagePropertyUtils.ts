@@ -1,4 +1,4 @@
-import { isMultiLanguageProperty, MultiLanguageProperty } from '@aas-core-works/aas-core3.0-typescript/types';
+import { isMultiLanguageProperty, MultiLanguageProperty } from '@aas-core-works/aas-core3.1-typescript/types';
 
 /**
  * Checks whether the given multi-language property object has a non-empty value.

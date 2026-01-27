@@ -1,12 +1,12 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
+import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
 import { ConceptDescriptionRepositoryService } from '../../generated';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertConceptDescriptionTypes';
 
 /**
  * Mock the jsonization methods used in convertConceptDescriptionTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
+jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
         conceptDescriptionFromJsonable: jest.fn(),
         toJsonable: jest.fn(),

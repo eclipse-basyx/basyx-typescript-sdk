@@ -3,7 +3,7 @@ import {
     AssetInformation,
     AssetKind,
     SpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 
 export function createTestSpecificAssetId1(): SpecificAssetId {
     const demoId = new SpecificAssetId('globalAssetId', 'https://example.com/ids/asset/7600_5912_3951_6917');

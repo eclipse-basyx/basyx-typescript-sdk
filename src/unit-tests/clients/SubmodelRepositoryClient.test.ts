@@ -6,7 +6,7 @@ import {
     AssetKind,
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
 import { SubmodelRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

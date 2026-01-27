@@ -1,5 +1,5 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
+import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasDiscoveryService } from '../generated';
 
 /**

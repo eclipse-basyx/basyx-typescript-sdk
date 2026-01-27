@@ -1,4 +1,4 @@
-import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.0-typescript/types';
+import { AssetAdministrationShell, AssetInformation, AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { PackageDescription } from '../../generated/AasxFileService';
 
 export function createTestShell(): AssetAdministrationShell {

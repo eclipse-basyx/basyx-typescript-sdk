@@ -3,7 +3,7 @@ import {
     KeyTypes,
     Reference as CoreReference,
     ReferenceTypes,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { extractId } from '../../utils/ReferenceUtil';
 
 const CORE_REFERENCE1: CoreReference = new CoreReference(ReferenceTypes.ExternalReference, [

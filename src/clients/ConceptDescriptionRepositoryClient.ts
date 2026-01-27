@@ -1,4 +1,4 @@
-import type { ConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import { ConceptDescriptionRepositoryService } from '../generated'; // Updated import
 import { Configuration } from '../generated/runtime';

@@ -21,7 +21,7 @@ import {
     Submodel,
     SubmodelElementCollection,
     SubmodelElementList,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import * as fs from 'fs';
 import * as path from 'path';
 import { deserializeXml, serializeXml } from '../../../lib/aas-dataformat-xml';
@@ -408,9 +408,9 @@ describe('deserializeXml', () => {
         ) as RelationshipElement;
         expect(relElement).toBeDefined();
         expect(relElement.first).toBeDefined();
-        expect(relElement.first.keys[0].type).toBe(KeyTypes.Submodel);
+        expect(relElement.first!.keys[0].type).toBe(KeyTypes.Submodel);
         expect(relElement.second).toBeDefined();
-        expect(relElement.second.keys[0].type).toBe(KeyTypes.Submodel);
+        expect(relElement.second!.keys[0].type).toBe(KeyTypes.Submodel);
 
         // Find and check AnnotatedRelationshipElement
         const annotatedRel = submodel.submodelElements!.find(

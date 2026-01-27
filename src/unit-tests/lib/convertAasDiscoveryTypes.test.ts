@@ -1,12 +1,12 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.0-typescript/types';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
+import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasDiscoveryService } from '../../generated';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../../lib/convertAasDiscoveryTypes';
 
 /**
  * Mock the jsonization methods used in convertAasDiscoveryTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.0-typescript', () => ({
+jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
         specificAssetIdFromJsonable: jest.fn(),
         toJsonable: jest.fn(),

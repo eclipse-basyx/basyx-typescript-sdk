@@ -1,6 +1,6 @@
-import type { ConceptDescription, ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.0-typescript/types';
+import type { ConceptDescription, ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
-import { ModelType } from '@aas-core-works/aas-core3.0-typescript/types';
+import { ModelType } from '@aas-core-works/aas-core3.1-typescript/types';
 import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptionRepositoryClient';
 import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';

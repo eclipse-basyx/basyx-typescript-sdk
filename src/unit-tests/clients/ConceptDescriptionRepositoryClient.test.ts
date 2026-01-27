@@ -1,4 +1,4 @@
-import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.0-typescript/types';
+import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
 import { ConceptDescriptionRepositoryClient } from '../../clients/ConceptDescriptionRepositoryClient';
 import { ConceptDescriptionRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

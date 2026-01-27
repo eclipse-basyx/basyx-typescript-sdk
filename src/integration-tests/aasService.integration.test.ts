@@ -4,7 +4,7 @@ import {
     Reference,
     ReferenceTypes,
     SpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';

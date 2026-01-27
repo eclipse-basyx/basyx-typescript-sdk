@@ -6,7 +6,7 @@ import type {
     LangStringTextType,
     Reference,
     SpecificAssetId,
-} from '@aas-core-works/aas-core3.0-typescript/types';
+} from '@aas-core-works/aas-core3.1-typescript/types';
 export class AssetAdministrationShellDescriptor {
     constructor(
         public id: string,
