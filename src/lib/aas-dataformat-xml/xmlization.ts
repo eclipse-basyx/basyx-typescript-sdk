@@ -45,7 +45,7 @@ import {
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import { XMLBuilder, XMLParser } from 'fast-xml-parser';
+import { buildObject, buildXmlNode, parseXmlString, serializeXml as serializeXmlNode, XmlNode } from 'xml-sax-ts';
 import { BaSyxEnvironment } from '../../models/BaSyxEnvironment';
 
 export function serializeXml(data: BaSyxEnvironment, namespacePrefix: string = 'aas'): string {
@@ -54,41 +54,25 @@ export function serializeXml(data: BaSyxEnvironment, namespacePrefix: string = '
         return '';
     }
 
-    const builder = new XMLBuilder({
-        ignoreAttributes: false,
-        attributeNamePrefix: '@_',
-        attributeValueProcessor: (name, val) => val,
-        format: true,
-        indentBy: '  ',
-        suppressEmptyNode: true,
-        suppressBooleanAttributes: false,
-        processEntities: false,
-        cdataPropName: '__cdata',
-        arrayNodeName: 'element',
-        suppressUnpairedNode: false,
-        unpairedTags: [],
-        tagValueProcessor: (name, val) => val,
-    });
-
     // Transform and add namespace prefix to all elements
     const envData = transformEnvironmentToXmlStructure(data);
     const prefixedData = addNamespacePrefix(envData, namespacePrefix);
 
-    // Wrap the environment data with proper XML declaration and namespace
-    const xmlObject = {
-        '?xml': {
-            '@_version': '1.0',
-            '@_encoding': 'UTF-8',
-        },
+    const rootNode: XmlNode = buildXmlNode({
         [`${namespacePrefix}:environment`]: {
             [`@_xmlns:${namespacePrefix}`]: 'https://admin-shell.io/aas/3/1',
             '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
             '@_xsi:schemaLocation': 'https://admin-shell.io/aas/3/1 AAS.xsd',
             ...prefixedData,
         },
-    };
+    });
 
-    let xml = builder.build(xmlObject);
+    let xml = serializeXmlNode(rootNode, {
+        pretty: true,
+        xmlDeclaration: true,
+        indent: '  ',
+        newline: '\n',
+    });
 
     // Format the root element attributes to be on separate lines
     const escapedPrefix = namespacePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1175,42 +1159,15 @@ export function deserializeXml(xmlString: string): BaSyxEnvironment {
         return new BaSyxEnvironment();
     }
 
-    const parser = new XMLParser({
-        ignoreAttributes: false,
-        attributeNamePrefix: '@_',
-        parseAttributeValue: false,
-        parseTagValue: false,
-        trimValues: true,
-        removeNSPrefix: true, // Remove namespace prefixes like aas:
-        isArray: (name) => {
-            // Define which elements should always be treated as arrays
-            const arrayElements = [
-                'extension',
-                'langStringNameType',
-                'langStringTextType',
-                'langStringPreferredNameTypeIec61360',
-                'langStringShortNameTypeIec61360',
-                'langStringDefinitionTypeIec61360',
-                'reference',
-                'key',
-                'valueReferencePair',
-                'embeddedDataSpecification',
-                'specificAssetId',
-                'assetAdministrationShell',
-                'submodel',
-                'conceptDescription',
-                'qualifier',
-                'operationVariable',
-            ];
-            return arrayElements.includes(name);
-        },
+    const rootNode = parseXmlString(xmlString);
+    const parsed = buildObject(rootNode, {
+        stripNamespaces: true,
+        arrayElements: ARRAY_ELEMENTS,
     });
-
-    const parsed = parser.parse(xmlString);
     const env = new BaSyxEnvironment();
 
     // Extract the environment data
-    const envData = parsed.environment;
+    const envData = (parsed as any).environment ?? parsed;
     if (!envData) {
         return env;
     }
@@ -1237,6 +1194,25 @@ export function deserializeXml(xmlString: string): BaSyxEnvironment {
 
     return env;
 }
+
+const ARRAY_ELEMENTS = new Set([
+    'extension',
+    'langStringNameType',
+    'langStringTextType',
+    'langStringPreferredNameTypeIec61360',
+    'langStringShortNameTypeIec61360',
+    'langStringDefinitionTypeIec61360',
+    'reference',
+    'key',
+    'valueReferencePair',
+    'embeddedDataSpecification',
+    'specificAssetId',
+    'assetAdministrationShell',
+    'submodel',
+    'conceptDescription',
+    'qualifier',
+    'operationVariable',
+]);
 
 function parseAssetAdministrationShell(data: any): AssetAdministrationShell {
     return new AssetAdministrationShell(
