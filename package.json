@@ -64,6 +64,6 @@
     "typescript-eslint": "^8.21.0"
   },
   "dependencies": {
-    "fast-xml-parser": "^5.3.3"
+    "xml-sax-ts": "^0.3.0"
   }
 }
