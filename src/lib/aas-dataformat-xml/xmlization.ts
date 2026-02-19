@@ -1214,6 +1214,29 @@ const ARRAY_ELEMENTS = new Set([
     'operationVariable',
 ]);
 
+function parseDataTypeDefXsd(dataType: unknown): DataTypeDefXsd | undefined {
+    if (dataType === undefined || dataType === null || dataType === '') {
+        return undefined;
+    }
+
+    if (typeof dataType !== 'string' || !dataType.startsWith('xs:')) {
+        throw new Error(`Invalid literal of DataTypeDefXsd: ${String(dataType)}`);
+    }
+
+    const result = jsonization.dataTypeDefXsdFromJsonable(dataType);
+    if (result.error !== null || result.value === null) {
+        const errorMessage =
+            typeof result.error === 'string'
+                ? result.error
+                : typeof (result.error as any)?.message === 'string'
+                  ? (result.error as any).message
+                  : `Invalid literal of DataTypeDefXsd: ${dataType}`;
+        throw new Error(errorMessage);
+    }
+
+    return result.value;
+}
+
 function parseAssetAdministrationShell(data: any): AssetAdministrationShell {
     return new AssetAdministrationShell(
         data.id,
@@ -1237,15 +1260,7 @@ function parseAssetAdministrationShell(data: any): AssetAdministrationShell {
 }
 
 function parseExtension(data: any): Extension {
-    // Map XML valueType string to DataTypeDefXsd enum
-    let valueType = data.valueType || undefined;
-    if (valueType && typeof valueType === 'string' && valueType.startsWith('xs:')) {
-        // Extract the type after 'xs:' prefix and map to enum
-        const typeValue = valueType.substring(3);
-        const capitalizedType = typeValue.charAt(0).toUpperCase() + typeValue.slice(1);
-        // Map string to DataTypeDefXsd enum value
-        valueType = (DataTypeDefXsd as any)[capitalizedType];
-    }
+    const valueType = parseDataTypeDefXsd(data.valueType);
 
     return new Extension(
         data.name,
@@ -1451,15 +1466,7 @@ function parseSubmodel(data: any): Submodel {
 }
 
 function parseQualifier(data: any): Qualifier {
-    // Map XML valueType string to DataTypeDefXsd enum
-    let valueType = data.valueType || undefined;
-    if (valueType && typeof valueType === 'string') {
-        // Convert string to enum value using jsonization (expects xs: prefix)
-        const result = jsonization.dataTypeDefXsdFromJsonable(valueType);
-        if (result.error === null && result.value !== null) {
-            valueType = result.value;
-        }
-    }
+    const valueType = parseDataTypeDefXsd(data.valueType);
 
     return new Qualifier(
         data.type,
@@ -1506,15 +1513,7 @@ function parseSubmodelElements(data: any): any[] {
 }
 
 function parseProperty(data: any): Property {
-    // Map XML valueType string to DataTypeDefXsd enum
-    let valueType = data.valueType || undefined;
-    if (valueType && typeof valueType === 'string') {
-        // Convert string to enum value using jsonization (expects xs: prefix)
-        const result = jsonization.dataTypeDefXsdFromJsonable(valueType);
-        if (result.error === null && result.value !== null) {
-            valueType = result.value;
-        }
-    }
+    const valueType = parseDataTypeDefXsd(data.valueType);
 
     return new Property(
         valueType as DataTypeDefXsd,
@@ -1565,15 +1564,7 @@ function parseMultiLanguageProperty(data: any): MultiLanguageProperty {
 }
 
 function parseRange(data: any): Range {
-    // Map XML valueType string to DataTypeDefXsd enum
-    let valueType = data.valueType || undefined;
-    if (valueType && typeof valueType === 'string') {
-        // Convert string to enum value using jsonization (expects xs: prefix)
-        const result = jsonization.dataTypeDefXsdFromJsonable(valueType);
-        if (result.error === null && result.value !== null) {
-            valueType = result.value;
-        }
-    }
+    const valueType = parseDataTypeDefXsd(data.valueType);
 
     return new Range(
         valueType as DataTypeDefXsd,
@@ -1799,7 +1790,7 @@ function parseSubmodelElementList(data: any): SubmodelElementList {
             : undefined,
         data.orderRelevant !== undefined ? data.orderRelevant === 'true' || data.orderRelevant === true : undefined,
         data.semanticIdListElement ? parseReference(data.semanticIdListElement) : undefined,
-        data.valueTypeListElement || undefined,
+        parseDataTypeDefXsd(data.valueTypeListElement),
         data.value ? parseSubmodelElements(data.value) : undefined
     );
 }

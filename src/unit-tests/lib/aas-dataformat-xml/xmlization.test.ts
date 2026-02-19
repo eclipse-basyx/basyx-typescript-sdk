@@ -650,6 +650,65 @@ describe('deserializeXml', () => {
         expect(submodel.kind).toBe(ModellingKind.Template);
     });
 
+    test('should deserialize list valueTypeListElement from test-lists.xml as DataTypeDefXsd enum', () => {
+        const xmlPath = path.join(__dirname, 'xml-test-files/test-lists.xml');
+        const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
+
+        const result = deserializeXml(xmlContent);
+        expect(result.submodels).toBeDefined();
+        expect(result.submodels).toHaveLength(1);
+
+        const submodel = result.submodels![0];
+        expect(submodel.submodelElements).toBeDefined();
+
+        const usersList = submodel.submodelElements!.find((el: any) => el.idShort === 'Users') as SubmodelElementList;
+        const groupsList = submodel.submodelElements!.find((el: any) => el.idShort === 'Groups') as SubmodelElementList;
+
+        expect(usersList).toBeDefined();
+        expect(groupsList).toBeDefined();
+        expect(usersList.valueTypeListElement).toBe(DataTypeDefXsd.String);
+        expect(groupsList.valueTypeListElement).toBe(DataTypeDefXsd.String);
+    });
+
+    test('should throw on non-xs DataTypeDefXsd literals in valueTypeListElement', () => {
+        const xmlContent = `<?xml version='1.0' encoding='UTF-8'?>
+<aas:environment xmlns:aas="https://admin-shell.io/aas/3/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">
+    <aas:submodels>
+        <aas:submodel>
+            <aas:id>sm-1</aas:id>
+            <aas:submodelElements>
+                <aas:submodelElementList>
+                    <aas:idShort>Users</aas:idShort>
+                    <aas:typeValueListElement>SubmodelElement</aas:typeValueListElement>
+                    <aas:valueTypeListElement>string</aas:valueTypeListElement>
+                </aas:submodelElementList>
+            </aas:submodelElements>
+        </aas:submodel>
+    </aas:submodels>
+</aas:environment>`;
+
+        expect(() => deserializeXml(xmlContent)).toThrow('Invalid literal of DataTypeDefXsd: string');
+    });
+
+    test('should throw on unknown xs-prefixed DataTypeDefXsd literals', () => {
+        const xmlContent = `<?xml version='1.0' encoding='UTF-8'?>
+<aas:environment xmlns:aas="https://admin-shell.io/aas/3/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://admin-shell.io/aas/3/1 AAS.xsd">
+    <aas:submodels>
+        <aas:submodel>
+            <aas:id>sm-1</aas:id>
+            <aas:submodelElements>
+                <aas:property>
+                    <aas:idShort>Prop</aas:idShort>
+                    <aas:valueType>xs:notAType</aas:valueType>
+                </aas:property>
+            </aas:submodelElements>
+        </aas:submodel>
+    </aas:submodels>
+</aas:environment>`;
+
+        expect(() => deserializeXml(xmlContent)).toThrow(/DataTypeDefXsd: xs:notAType/);
+    });
+
     test('should deserialize XML with minimal Asset Administration Shell', () => {
         const xmlPath = path.join(__dirname, 'xml-test-files/test-minimal.xml');
         const xmlContent = fs.readFileSync(xmlPath, 'utf-8');
