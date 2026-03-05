@@ -1159,7 +1159,11 @@ export function deserializeXml(xmlString: string): BaSyxEnvironment {
         return new BaSyxEnvironment();
     }
 
-    const rootNode = parseXmlString(xmlString);
+    const rootNode = parseXmlString(xmlString, {
+        // Merge adjacent text callbacks and skip line/column tracking for faster parse.
+        coalesceText: true,
+        trackPosition: false,
+    });
     const parsed = buildObject(rootNode, {
         stripNamespaces: true,
         arrayElements: ARRAY_ELEMENTS,
