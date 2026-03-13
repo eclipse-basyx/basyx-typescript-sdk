@@ -4419,10 +4419,10 @@ write-file-atomic@^5.0.1:
     imurmurhash "^0.1.4"
     signal-exit "^4.0.1"
 
-xml-sax-ts@^0.4.0:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/xml-sax-ts/-/xml-sax-ts-0.4.1.tgz#6a7c9504af6ae89341ca47883c81f7593dd04930"
-  integrity sha512-4sCl2NNC9JVbzY8n6D8EPSHVMd1ReLoflNfdp4LNRn4cY0lxzLM56+iMaQmIqMICgZBKuoW5Dx96mhlMPLfuRg==
+xml-sax-ts@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/xml-sax-ts/-/xml-sax-ts-0.5.0.tgz#d769130031ef408c3d4f3acbe1b950013207777b"
+  integrity sha512-LFlSiZMDEyvCsHhOmX9+jqe7hViH5IauWttdUrarw/ZsAoZ7oQZBNvMo2Og608gl3QOLDs5c8rZsKJVaMKxwbg==
 
 y18n@^5.0.5:
   version "5.0.8"
