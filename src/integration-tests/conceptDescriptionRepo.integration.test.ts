@@ -50,7 +50,7 @@ describe('Concept Description Repository Integration Tests', () => {
     });
 
     // Go backend currently returns an error for list retrieval in this environment.
-    test.skip('should fetch all Concept Descriptions', async () => {
+    test('should fetch all Concept Descriptions', async () => {
         const response = await client.getAllConceptDescriptions({
             configuration,
         });
@@ -101,7 +101,6 @@ describe('Concept Description Repository Integration Tests', () => {
         }
     });
 
-    // Go backend currently does not provide a successful response for GET /serialization here.
     test.skip('should generate serialization by IDs', async () => {
         const response = await client.generateSerializationByIds({
             configuration,

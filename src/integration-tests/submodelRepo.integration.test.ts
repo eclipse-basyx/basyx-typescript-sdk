@@ -1,6 +1,7 @@
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 //import { Configuration } from '../generated';
 import { Configuration } from '../generated';
+import { createSubmodelRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
 import {
     createDescription,
     createNewSubmodelElement,
@@ -23,6 +24,8 @@ describe('Submodel Repository Integration Tests', () => {
     const configuration = new Configuration({
         basePath: 'http://localhost:8082',
     });
+    const { submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
+        createSubmodelRepositoryPayloadFixtures(testSubmodel.id);
 
     type ApiResultLike = {
         success: boolean;
@@ -98,7 +101,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     // Go backend returns a non-conforming payload/error for this endpoint in the current environment.
-    test.skip('should create a new SubmodelElement', async () => {
+    test('should create a new SubmodelElement', async () => {
         const response = await client.postSubmodelElement({
             configuration,
             submodelIdentifier: testSubmodel.id,
@@ -179,7 +182,7 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
     // Go backend currently returns an error for create-by-path in this environment.
-    test.skip('should create a new SubmodelElement at a specified path within submodel elements hierarchy', async () => {
+    test('should create a new SubmodelElement at a specified path within submodel elements hierarchy', async () => {
         const nestedSubmodelElement = createNewSubmodelElement();
         nestedSubmodelElement.idShort = 'nestedProperty';
 
@@ -232,7 +235,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     // Go backend currently responds with an error for metadata-by-id retrieval.
-    test.skip('should fetch Submodel metadata by ID', async () => {
+    test('should fetch Submodel metadata by ID', async () => {
         const response = await client.getSubmodelByIdMetadata({
             configuration,
             submodelIdentifier: testSubmodel.id,
@@ -567,7 +570,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.patchSubmodelByIdMetadata({
             configuration,
             submodelIdentifier: testSubmodel.id,
-            submodelMetadata: {},
+            submodelMetadata: submodelMetadataPatch,
         });
 
         assertApiResult(response);
@@ -578,7 +581,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodelIdentifier: testSubmodel.id,
             idShortPath: testSubmodelElement.idShort ?? 'testProperty',
-            submodelElementMetadata: {},
+            submodelElementMetadata: submodelElementMetadataPatch,
         });
 
         assertApiResult(response);
@@ -612,7 +615,7 @@ describe('Submodel Repository Integration Tests', () => {
             aasIdentifier: testSubmodel.id,
             submodelIdentifier: testSubmodel.id,
             idShortPath: testSubmodelElement.idShort ?? 'testProperty',
-            operationRequestValueOnly: {},
+            operationRequestValueOnly,
         });
 
         assertApiResult(response);
@@ -635,7 +638,7 @@ describe('Submodel Repository Integration Tests', () => {
             aasIdentifier: testSubmodel.id,
             submodelIdentifier: testSubmodel.id,
             idShortPath: testSubmodelElement.idShort ?? 'testProperty',
-            operationRequestValueOnly: {},
+            operationRequestValueOnly,
         });
 
         assertApiResult(response);

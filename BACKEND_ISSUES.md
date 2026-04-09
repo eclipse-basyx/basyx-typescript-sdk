@@ -20,27 +20,7 @@ Policy:
 
 ## Submodel Repository (port 8082)
 
-### Create element endpoints failing
-
-- Endpoint: `POST /submodels/{submodelIdentifier}/submodel-elements`
-- Observed: Non-conforming payload/error in current integration environment.
-- Expected: `201` with created SubmodelElement.
-- Affected tests:
-  - `src/integration-tests/submodelRepo.integration.test.ts` (`should create a new SubmodelElement`)
-
-- Endpoint: `POST /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}`
-- Observed: Error response in current integration environment.
-- Expected: `201` with created nested SubmodelElement.
-- Affected tests:
-  - `src/integration-tests/submodelRepo.integration.test.ts` (`should create a new SubmodelElement at a specified path within submodel elements hierarchy`)
-
 ### Metadata/path variants failing
-
-- Endpoint: `GET /submodels/{submodelIdentifier}/$metadata`
-- Observed: Error response in current integration environment.
-- Expected: Submodel metadata payload.
-- Affected tests:
-  - `src/integration-tests/submodelRepo.integration.test.ts` (`should fetch Submodel metadata by ID`)
 
 - Endpoint: `GET /submodels/$path`
 - Observed: Error response in current integration environment.
@@ -75,14 +55,6 @@ Policy:
   - `src/integration-tests/submodelRepo.integration.test.ts` (`should generate serialization by IDs`)
 
 ## Concept Description Repository (port 8083)
-
-### List endpoint failing
-
-- Endpoint: `GET /concept-descriptions`
-- Observed: Error response in current integration environment.
-- Expected: Concept description list payload.
-- Affected tests:
-  - `src/integration-tests/conceptDescriptionRepo.integration.test.ts` (`should fetch all Concept Descriptions`)
 
 ### Serialization endpoint instability (Concept Description Repository)
 

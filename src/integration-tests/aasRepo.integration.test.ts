@@ -1,6 +1,7 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
+import { createAasRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
 import { createTestOperationRequest, createTestSubmodel, createTestSubmodelElement } from './fixtures/submodelFixtures';
 
 describe('AAS Repository Integration Tests', () => {
@@ -11,6 +12,8 @@ describe('AAS Repository Integration Tests', () => {
     const configuration = new Configuration({
         basePath: 'http://localhost:8081',
     });
+    const { submodelReference, submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
+        createAasRepositoryPayloadFixtures(testSubmodel.id);
 
     type ApiResultLike = {
         success: boolean;
@@ -222,7 +225,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.postSubmodelReference({
             configuration,
             aasIdentifier: testShell.id,
-            submodelReference: {},
+            submodelReference,
         });
 
         assertApiResult(response);
@@ -275,7 +278,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            submodelMetadata: {},
+            submodelMetadata: submodelMetadataPatch,
         });
 
         assertApiResult(response);
@@ -447,7 +450,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
             idShortPath: 'testProperty',
-            submodelElementMetadata: {},
+            submodelElementMetadata: submodelElementMetadataPatch,
         });
 
         assertApiResult(response);
@@ -540,7 +543,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
             idShortPath: 'testProperty',
-            operationRequestValueOnly: {},
+            operationRequestValueOnly,
         });
 
         assertApiResult(response);
@@ -564,7 +567,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
             idShortPath: 'testProperty',
-            operationRequestValueOnly: {},
+            operationRequestValueOnly,
         });
 
         assertApiResult(response);
