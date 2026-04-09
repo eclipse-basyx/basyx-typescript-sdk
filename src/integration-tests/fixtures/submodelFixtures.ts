@@ -1,5 +1,6 @@
 import {
     DataTypeDefXsd,
+    File as AasFile,
     ISubmodelElement,
     LangStringTextType,
     ModellingKind,
@@ -59,6 +60,28 @@ export function createNewSubmodelElement(): ISubmodelElement {
     );
 
     return property;
+}
+
+export function createTestFileSubmodelElement(): ISubmodelElement {
+    const fileElement = new AasFile(
+        null, // extensions
+        null, // category
+        'testFileElement', // idShort (REQUIRED)
+        null, // displayName
+        null, // description
+        null, // semanticId
+        null, // supplementalSemanticIds
+        null, // qualifiers
+        null, // embeddedDataSpecifications
+        'file:///coverage-file.txt',
+        'text/plain'
+    );
+
+    return fileElement;
+}
+
+export function createAttachmentBlob(payload = 'coverage-attachment-payload'): Blob {
+    return new Blob([payload], { type: 'text/plain' });
 }
 
 export function createTestSubmodelElementCollection(): ISubmodelElement {

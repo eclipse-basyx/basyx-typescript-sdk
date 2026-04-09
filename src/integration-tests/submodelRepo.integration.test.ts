@@ -3,8 +3,10 @@ import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 import { Configuration } from '../generated';
 import { createSubmodelRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
 import {
+    createAttachmentBlob,
     createDescription,
     createNewSubmodelElement,
+    createTestFileSubmodelElement,
     createTestOperationRequest,
     createTestSubmodel,
     createTestSubmodelElement,
@@ -16,8 +18,12 @@ describe('Submodel Repository Integration Tests', () => {
     const client = new SubmodelRepositoryClient();
     const testSubmodel = createTestSubmodel();
     const testSubmodelElement = createTestSubmodelElement();
+    const testFileSubmodelElement = createTestFileSubmodelElement();
     const newSubmodelElement = createNewSubmodelElement();
     const testSubmodelElementCollection = createTestSubmodelElementCollection();
+    const attachmentPayload = 'coverage-attachment-payload';
+    const attachmentBlob = createAttachmentBlob(attachmentPayload);
+    const attachmentIdShortPath = testFileSubmodelElement.idShort ?? 'testFileElement';
     //const OPERATION_REQUEST = createTestOperationRequest();
     //const OPERATION_RESULT = createTestOperationResult();
     //const testOperationSubmodelElement = createTestOperationElement();
@@ -39,6 +45,15 @@ describe('Submodel Repository Integration Tests', () => {
             expect(response.error).toBeUndefined();
         } else {
             expect(response.error).toBeDefined();
+        }
+    }
+
+    function assertApiFailureCode(response: ApiResultLike, expectedCode: string): void {
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            const errorPayload = response.error as { messages?: Array<{ code?: string }> } | undefined;
+            const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
+            expect(messageCodes).toContain(expectedCode);
         }
     }
 
@@ -121,7 +136,12 @@ describe('Submodel Repository Integration Tests', () => {
 
     test('should update a Submodel', async () => {
         const updatedSubmodel = createTestSubmodel();
-        updatedSubmodel.submodelElements = [testSubmodelElement, testSubmodelElementCollection, newSubmodelElement];
+        updatedSubmodel.submodelElements = [
+            testSubmodelElement,
+            testSubmodelElementCollection,
+            newSubmodelElement,
+            testFileSubmodelElement,
+        ];
 
         const updateResponse = await client.putSubmodelById({
             configuration,
@@ -148,6 +168,7 @@ describe('Submodel Repository Integration Tests', () => {
             expect(idShorts).toContain(testSubmodelElement.idShort);
             expect(idShorts).toContain(testSubmodelElementCollection.idShort);
             expect(idShorts).toContain(newSubmodelElement.idShort);
+            expect(idShorts).toContain(testFileSubmodelElement.idShort);
         }
     });
 
@@ -328,9 +349,10 @@ describe('Submodel Repository Integration Tests', () => {
         expect(response.success).toBe(true);
         if (response.success) {
             console.log('Element ValueOnly response:', JSON.stringify(response.data, null, 2));
+            const newPropertyElement = newSubmodelElement as { value?: unknown };
 
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual((newSubmodelElement as any).value);
+            expect(response.data).toEqual(newPropertyElement.value);
             //expect(response.data).toEqual((testSubmodelElement as Property).value);
         }
     });
@@ -339,8 +361,8 @@ describe('Submodel Repository Integration Tests', () => {
         //const updatedValue = (testSubmodelElement as any).value;
         const updatedPropertyValue = createValue();
         //const updatedValue = (testSubmodelElement as any).updatedPropertyValue;
-        const updatedSubmodelElement = testSubmodelElement;
-        (updatedSubmodelElement as any).value = updatedPropertyValue;
+        const updatedSubmodelElement = testSubmodelElement as { value?: unknown };
+        updatedSubmodelElement.value = updatedPropertyValue;
         // const updatedSubmodel = testSubmodel;
         // const description = createDescription();
 
@@ -587,26 +609,56 @@ describe('Submodel Repository Integration Tests', () => {
         assertApiResult(response);
     });
 
-    test('should get file by path', async () => {
+    test('should upload file by path to a File submodel element', async () => {
+        const response = await client.putFileByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file.txt',
+            file: attachmentBlob,
+        });
+
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            console.error('API Error:', JSON.stringify(response.error, null, 2));
+        }
+    });
+
+    test('should download uploaded file by path from a File submodel element', async () => {
+        const response = await client.getFileByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.size).toBe(attachmentBlob.size);
+            await expect(response.data.text()).resolves.toBe(attachmentPayload);
+        }
+    });
+
+    test('should reject file download on non-File submodel element with 405', async () => {
         const response = await client.getFileByPath({
             configuration,
             submodelIdentifier: testSubmodel.id,
             idShortPath: testSubmodelElement.idShort ?? 'testProperty',
         });
 
-        assertApiResult(response);
+        assertApiFailureCode(response, '405');
     });
 
-    test('should put file by path', async () => {
+    test('should reject file upload by path for missing submodel element with 404', async () => {
         const response = await client.putFileByPath({
             configuration,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
-            fileName: 'coverage-file.txt',
-            file: new Blob(['coverage'], { type: 'text/plain' }),
+            idShortPath: 'missingAttachmentPath',
+            fileName: 'missing-element-file.txt',
+            file: createAttachmentBlob('missing-element-payload'),
         });
 
-        assertApiResult(response);
+        assertApiFailureCode(response, '404');
     });
 
     test('should post invoke operation value-only', async () => {
@@ -677,14 +729,27 @@ describe('Submodel Repository Integration Tests', () => {
         assertApiResult(response);
     });
 
-    test('should delete file by path', async () => {
+    test('should delete file by path from a File submodel element', async () => {
         const response = await client.deleteFileByPath({
             configuration,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            idShortPath: attachmentIdShortPath,
         });
 
-        assertApiResult(response);
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            console.error('API Error:', JSON.stringify(response.error, null, 2));
+        }
+    });
+
+    test('should return not found when downloading a deleted file by path', async () => {
+        const response = await client.getFileByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+        });
+
+        assertApiFailureCode(response, '404');
     });
 
     test('should delete SubmodelElement by path', async () => {

@@ -2,13 +2,23 @@ import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 import { createAasRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
-import { createTestOperationRequest, createTestSubmodel, createTestSubmodelElement } from './fixtures/submodelFixtures';
+import {
+    createAttachmentBlob,
+    createTestFileSubmodelElement,
+    createTestOperationRequest,
+    createTestSubmodel,
+    createTestSubmodelElement,
+} from './fixtures/submodelFixtures';
 
 describe('AAS Repository Integration Tests', () => {
     const client = new AasRepositoryClient();
     const testShell = createTestShell();
     const testSubmodel = createTestSubmodel();
     const testSubmodelElement = createTestSubmodelElement();
+    const testFileSubmodelElement = createTestFileSubmodelElement();
+    const attachmentPayload = 'coverage-attachment-payload';
+    const attachmentBlob = createAttachmentBlob(attachmentPayload);
+    const attachmentIdShortPath = testFileSubmodelElement.idShort ?? 'testFileElement';
     const configuration = new Configuration({
         basePath: 'http://localhost:8081',
     });
@@ -27,6 +37,15 @@ describe('AAS Repository Integration Tests', () => {
             expect(response.error).toBeUndefined();
         } else {
             expect(response.error).toBeDefined();
+        }
+    }
+
+    function assertApiFailureCode(response: ApiResultLike, expectedCode: string): void {
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            const errorPayload = response.error as { messages?: Array<{ code?: string }> } | undefined;
+            const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
+            expect(messageCodes).toContain(expectedCode);
         }
     }
 
@@ -242,6 +261,8 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should put Submodel by ID through AAS repository superpath', async () => {
+        testSubmodel.submodelElements = [testSubmodelElement, testFileSubmodelElement];
+
         const response = await client.putSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -501,28 +522,60 @@ describe('AAS Repository Integration Tests', () => {
         assertApiResult(response);
     });
 
-    test('should get file by path through AAS repository superpath', async () => {
+    test('should upload file by path through AAS repository superpath for a File submodel element', async () => {
+        const response = await client.putFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file.txt',
+            file: attachmentBlob,
+        });
+
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            console.error('API Error:', JSON.stringify(response.error, null, 2));
+        }
+    });
+
+    test('should download uploaded file by path through AAS repository superpath', async () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
+            idShortPath: attachmentIdShortPath,
         });
 
-        assertApiResult(response);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.size).toBe(attachmentBlob.size);
+            await expect(response.data.text()).resolves.toBe(attachmentPayload);
+        }
     });
 
-    test('should put file by path through AAS repository superpath', async () => {
+    test('should reject file upload on non-File submodel element through AAS repository superpath with 405', async () => {
         const response = await client.putFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
             idShortPath: 'testProperty',
-            fileName: 'coverage-file.txt',
-            file: new Blob(['coverage'], { type: 'text/plain' }),
+            fileName: 'invalid-property-file.txt',
+            file: createAttachmentBlob('invalid-property-payload'),
         });
 
-        assertApiResult(response);
+        assertApiFailureCode(response, '405');
+    });
+
+    test('should reject file download for missing submodel element through AAS repository superpath with 404', async () => {
+        const response = await client.getFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'missingAttachmentPath',
+        });
+
+        assertApiFailureCode(response, '404');
     });
 
     test('should invoke operation through AAS repository superpath', async () => {
@@ -609,15 +662,29 @@ describe('AAS Repository Integration Tests', () => {
         assertApiResult(response);
     });
 
-    test('should delete file by path through AAS repository superpath', async () => {
+    test('should delete file by path through AAS repository superpath for a File submodel element', async () => {
         const response = await client.deleteFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
+            idShortPath: attachmentIdShortPath,
         });
 
-        assertApiResult(response);
+        expect(response.success).toBe(true);
+        if (!response.success) {
+            console.error('API Error:', JSON.stringify(response.error, null, 2));
+        }
+    });
+
+    test('should return not found when downloading a deleted file through AAS repository superpath', async () => {
+        const response = await client.getFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+        });
+
+        assertApiFailureCode(response, '404');
     });
 
     test('should delete SubmodelElement by path through AAS repository superpath', async () => {
