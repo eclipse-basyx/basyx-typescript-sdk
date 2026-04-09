@@ -1,5 +1,4 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
-//import { Configuration } from '../generated';
 import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 

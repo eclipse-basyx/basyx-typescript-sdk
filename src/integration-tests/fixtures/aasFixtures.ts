@@ -6,10 +6,13 @@ import {
 } from '@aas-core-works/aas-core3.1-typescript/types';
 
 export function createTestShell(): AssetAdministrationShell {
+    const globalAssetId = createGlobalAssetId();
     const demoAas = new AssetAdministrationShell(
         'https://example.com/ids/aas/7600_5912_3951_6917',
         new AssetInformation(AssetKind.Instance)
     );
+    demoAas.assetInformation.globalAssetId = globalAssetId;
+
     return demoAas;
 }
 
@@ -19,4 +22,8 @@ export function createDescription(): LangStringTextType {
 
 export function createGlobalAssetId(): string {
     return 'https://example.com/ids/asset/7600_5912_3951_6917';
+}
+
+export function createGlobalAssetIdFromAasId(aasId: string): string {
+    return aasId.replace('/aas/', '/asset/');
 }

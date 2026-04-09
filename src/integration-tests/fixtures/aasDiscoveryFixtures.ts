@@ -20,5 +20,7 @@ export function createTestShell(): AssetAdministrationShell {
         'https://example.com/ids/aas/7600_5912_3951_6917',
         new AssetInformation(AssetKind.Instance)
     );
+    demoAas.assetInformation.globalAssetId = 'https://example.com/ids/asset/7600_5912_3951_6917';
+
     return demoAas;
 }

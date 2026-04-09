@@ -9,7 +9,7 @@ import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { AasService } from '../services/AasService';
-import { createTestShell } from './fixtures/aasFixtures';
+import { createGlobalAssetIdFromAasId, createTestShell } from './fixtures/aasFixtures';
 import { createTestShellDescriptor } from './fixtures/aasregistryFixtures';
 
 describe('AasService Integration Tests', () => {
@@ -22,6 +22,7 @@ describe('AasService Integration Tests', () => {
         const uniqueId = `https://example.com/ids/aas/${Date.now()}-${Math.random().toString(36).substring(7)}`;
         const testShell = createTestShell();
         testShell.id = uniqueId;
+        testShell.assetInformation.globalAssetId = createGlobalAssetIdFromAasId(uniqueId);
 
         const testDescriptor = createTestShellDescriptor();
         testDescriptor.id = uniqueId;
