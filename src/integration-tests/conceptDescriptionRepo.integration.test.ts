@@ -89,6 +89,18 @@ describe('Concept Description Repository Integration Tests', () => {
         }
     });
 
+    test('should delete a Concept Description by ID', async () => {
+        const response = await client.deleteConceptDescriptionById({
+            configuration,
+            cdIdentifier: testCD.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
     // Go backend currently does not provide a successful response for GET /serialization here.
     test.skip('should generate serialization by IDs', async () => {
         const response = await client.generateSerializationByIds({

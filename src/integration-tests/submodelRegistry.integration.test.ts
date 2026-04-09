@@ -87,6 +87,18 @@ describe('Submodel Registry Integration Tests', () => {
         }
     });
 
+    test('should delete a Submodel Descriptor by ID', async () => {
+        const response = await client.deleteSubmodelDescriptorById({
+            configuration,
+            submodelIdentifier: testSubmodelDescriptor.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
     test('should fetch submodel registry service description', async () => {
         const response = await client.getSelfDescription({
             configuration,

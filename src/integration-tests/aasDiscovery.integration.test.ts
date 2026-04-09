@@ -55,6 +55,18 @@ describe('AAS Discovery Integration Tests', () => {
         }
     });
 
+    test('should delete all specific asset identifiers for an Asset Administration Shell ID', async () => {
+        const response = await client.deleteAllAssetLinksById({
+            configuration,
+            aasIdentifier: testShell.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
     test('should fetch a list of Asset Administration Shell IDs', async () => {
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration,

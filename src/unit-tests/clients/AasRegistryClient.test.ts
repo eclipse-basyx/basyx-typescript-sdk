@@ -142,9 +142,9 @@ describe('AasRegistryClient', () => {
         (
             jest.requireMock('../../generated').AasRegistryService.AssetAdministrationShellRegistryAPIApi as jest.Mock
         ).mockImplementation(MockAasRegistry);
-        (
-            jest.requireMock('../../generated').AasRegistryService.DescriptionAPIApi as jest.Mock
-        ).mockImplementation(MockAasRegistry);
+        (jest.requireMock('../../generated').AasRegistryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+            MockAasRegistry
+        );
         // Setup mocks for conversion functions
         (convertApiAasDescriptorToCoreAasDescriptor as jest.Mock).mockImplementation((aasDescriptor) => {
             if (aasDescriptor.id === API_AAS_DESCRIPTOR1.id) return CORE_AAS_DESCRIPTOR1;

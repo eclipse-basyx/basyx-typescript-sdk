@@ -136,12 +136,12 @@ describe('AasRepositoryClient', () => {
             jest.requireMock('../../generated').AasRepositoryService
                 .AssetAdministrationShellRepositoryAPIApi as jest.Mock
         ).mockImplementation(MockAasRepository);
-        (
-            jest.requireMock('../../generated').AasRepositoryService.SerializationAPIApi as jest.Mock
-        ).mockImplementation(MockAasRepository);
-        (
-            jest.requireMock('../../generated').AasRepositoryService.DescriptionAPIApi as jest.Mock
-        ).mockImplementation(MockAasRepository);
+        (jest.requireMock('../../generated').AasRepositoryService.SerializationAPIApi as jest.Mock).mockImplementation(
+            MockAasRepository
+        );
+        (jest.requireMock('../../generated').AasRepositoryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+            MockAasRepository
+        );
         // Setup mocks for conversion functions
         (convertApiAasToCoreAas as jest.Mock).mockImplementation((aas) => {
             if (aas.id === API_AAS1.id) return CORE_AAS1;

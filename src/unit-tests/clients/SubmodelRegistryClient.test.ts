@@ -112,9 +112,9 @@ describe('SubmodelRegistryClient', () => {
         (
             jest.requireMock('../../generated').SubmodelRegistryService.SubmodelRegistryAPIApi as jest.Mock
         ).mockImplementation(MockSubmodelRegistry);
-        (
-            jest.requireMock('../../generated').SubmodelRegistryService.DescriptionAPIApi as jest.Mock
-        ).mockImplementation(MockSubmodelRegistry);
+        (jest.requireMock('../../generated').SubmodelRegistryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+            MockSubmodelRegistry
+        );
         // Setup mocks for conversion functions
         (convertApiSubmodelDescriptorToCoreSubmodelDescriptor as jest.Mock).mockImplementation((submodelDescriptor) => {
             if (submodelDescriptor.id === API_SUBMODEL_DESCRIPTOR1.id) return CORE_SUBMODEL_DESCRIPTOR1;

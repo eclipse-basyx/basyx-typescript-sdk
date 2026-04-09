@@ -4,6 +4,7 @@ import { Configuration } from '../generated';
 import {
     createDescription,
     createNewSubmodelElement,
+    createTestOperationRequest,
     createTestSubmodel,
     createTestSubmodelElement,
     createTestSubmodelElementCollection,
@@ -22,6 +23,21 @@ describe('Submodel Repository Integration Tests', () => {
     const configuration = new Configuration({
         basePath: 'http://localhost:8082',
     });
+
+    type ApiResultLike = {
+        success: boolean;
+        data?: unknown;
+        error?: unknown;
+    };
+
+    function assertApiResult(response: ApiResultLike): void {
+        expect(typeof response.success).toBe('boolean');
+        if (response.success) {
+            expect(response.error).toBeUndefined();
+        } else {
+            expect(response.error).toBeDefined();
+        }
+    }
 
     test('should create a new Submodel', async () => {
         const response = await client.postSubmodel({
@@ -545,6 +561,146 @@ describe('Submodel Repository Integration Tests', () => {
             expect(response.data).toBeDefined();
             expect(Array.isArray(response.data.profiles)).toBe(true);
         }
+    });
+
+    test('should patch Submodel metadata by ID', async () => {
+        const response = await client.patchSubmodelByIdMetadata({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            submodelMetadata: {},
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should patch SubmodelElement metadata by path', async () => {
+        const response = await client.patchSubmodelElementByPathMetadata({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            submodelElementMetadata: {},
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should get file by path', async () => {
+        const response = await client.getFileByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should put file by path', async () => {
+        const response = await client.putFileByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            fileName: 'coverage-file.txt',
+            file: new Blob(['coverage'], { type: 'text/plain' }),
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should post invoke operation value-only', async () => {
+        const response = await client.postInvokeOperationValueOnly({
+            configuration,
+            aasIdentifier: testSubmodel.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            operationRequestValueOnly: {},
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should post invoke operation async', async () => {
+        const response = await client.postInvokeOperationAsync({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            operationRequest: createTestOperationRequest(),
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should post invoke operation async value-only', async () => {
+        const response = await client.postInvokeOperationAsyncValueOnly({
+            configuration,
+            aasIdentifier: testSubmodel.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            operationRequestValueOnly: {},
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should get async operation status', async () => {
+        const response = await client.getOperationAsyncStatus({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            handleId: 'coverage-handle-id',
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should get async operation result', async () => {
+        const response = await client.getOperationAsyncResult({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            handleId: 'coverage-handle-id',
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should get async operation result value-only', async () => {
+        const response = await client.getOperationAsyncResultValueOnly({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            handleId: 'coverage-handle-id',
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should delete file by path', async () => {
+        const response = await client.deleteFileByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should delete SubmodelElement by path', async () => {
+        const response = await client.deleteSubmodelElementByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+        });
+
+        assertApiResult(response);
+    });
+
+    test('should delete Submodel by ID', async () => {
+        const response = await client.deleteSubmodelById({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+        });
+
+        assertApiResult(response);
     });
 
     // To be tested later

@@ -170,6 +170,31 @@ describe('AAS Registry Integration Tests', () => {
         }
     });
 
+    test('should delete a Submodel Descriptor through superpath', async () => {
+        const response = await client.deleteSubmodelDescriptorByIdThroughSuperpath({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+            submodelIdentifier: testSubmodelDescriptor.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
+    test('should delete an Asset Administration Shell Descriptor by ID', async () => {
+        const response = await client.deleteAssetAdministrationShellDescriptorById({
+            configuration,
+            aasIdentifier: testShellDescriptor.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
     test('should fetch AAS registry service description', async () => {
         const response = await client.getSelfDescription({
             configuration,

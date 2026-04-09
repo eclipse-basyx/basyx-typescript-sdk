@@ -90,9 +90,9 @@ describe('AasDiscoveryClient', () => {
             jest.requireMock('../../generated').AasDiscoveryService
                 .AssetAdministrationShellBasicDiscoveryAPIApi as jest.Mock
         ).mockImplementation(MockAasDiscovery);
-        (
-            jest.requireMock('../../generated').AasDiscoveryService.DescriptionAPIApi as jest.Mock
-        ).mockImplementation(MockAasDiscovery);
+        (jest.requireMock('../../generated').AasDiscoveryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+            MockAasDiscovery
+        );
         // Setup mocks for conversion functions
         (convertApiAssetIdToCoreAssetId as jest.Mock).mockImplementation((assetId) => {
             if (assetId.value === API_SPECIFIC_ASSET_ID1.value) return CORE_SPECIFIC_ASSET_ID1;
