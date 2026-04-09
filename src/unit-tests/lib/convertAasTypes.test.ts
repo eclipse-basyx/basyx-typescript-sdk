@@ -8,6 +8,7 @@ import {
     Reference as CoreReference,
     ReferenceTypes as CoreReferenceTypes,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import {type Mock, vi } from 'vitest';
 import { AasRepositoryService } from '../../generated';
 // import {
 //     AssetAdministrationShell as ApiAssetAdministrationShell,
@@ -30,12 +31,12 @@ import {
 /**
  * Mock the jsonization methods used in convertAasTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
+vi.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
-        assetAdministrationShellFromJsonable: jest.fn(),
-        toJsonable: jest.fn(),
-        assetInformationFromJsonable: jest.fn(),
-        referenceFromJsonable: jest.fn(),
+        assetAdministrationShellFromJsonable: vi.fn(),
+        toJsonable: vi.fn(),
+        assetInformationFromJsonable: vi.fn(),
+        referenceFromJsonable: vi.fn(),
     },
 }));
 
@@ -85,12 +86,12 @@ const JSONABLE_REFERENCE: jsonization.JsonObject = {
 
 describe('convertAasTypes', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('convertApiAasToCoreAas', () => {
         it('should convert ApiAssetAdministrationShell to CoreAssetAdministrationShell successfully', () => {
-            (jsonization.assetAdministrationShellFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.assetAdministrationShellFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_AAS,
             });
@@ -106,7 +107,7 @@ describe('convertAasTypes', () => {
         it('should throw an error if jsonization.assetAdministrationShellFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.assetAdministrationShellFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.assetAdministrationShellFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -119,7 +120,7 @@ describe('convertAasTypes', () => {
 
     describe('convertCoreAasToApiAas', () => {
         it('should convert CoreAssetAdministrationShell to ApiAssetAdministrationShell successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_AAS);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_AAS);
 
             const result = convertCoreAasToApiAas(CORE_AAS);
 
@@ -130,7 +131,7 @@ describe('convertAasTypes', () => {
 
     describe('convertApiAssetInformationToCoreAssetInformation', () => {
         it('should convert ApiAssetInformation to CoreAssetInformation successfully', () => {
-            (jsonization.assetInformationFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.assetInformationFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_ASSET_INFO,
             });
@@ -146,7 +147,7 @@ describe('convertAasTypes', () => {
         it('should throw an error if jsonization.assetInformationFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.assetInformationFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.assetInformationFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -159,7 +160,7 @@ describe('convertAasTypes', () => {
 
     describe('convertCoreAssetInformationToApiAssetInformation', () => {
         it('should convert CoreAssetInformation to ApiAssetInformation successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_ASSET_INFO);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_ASSET_INFO);
 
             const result = convertCoreAssetInformationToApiAssetInformation(CORE_ASSET_INFO);
 
@@ -170,7 +171,7 @@ describe('convertAasTypes', () => {
 
     describe('convertApiReferenceToCoreReference', () => {
         it('should convert ApiReference to CoreReference successfully', () => {
-            (jsonization.referenceFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.referenceFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_REFERENCE,
             });
@@ -184,7 +185,7 @@ describe('convertAasTypes', () => {
         it('should throw an error if jsonization.referenceFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.referenceFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.referenceFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -195,7 +196,7 @@ describe('convertAasTypes', () => {
 
     describe('convertCoreReferenceToApiReference', () => {
         it('should convert CoreReference to ApiReference successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_REFERENCE);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_REFERENCE);
 
             const result = convertCoreReferenceToApiReference(CORE_REFERENCE);
 

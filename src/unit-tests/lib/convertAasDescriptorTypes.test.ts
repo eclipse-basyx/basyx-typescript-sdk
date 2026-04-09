@@ -1,3 +1,4 @@
+import {type Mock, vi } from 'vitest';
 //import { AssetKind as CoreAssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryService } from '../../generated';
 import {
@@ -20,11 +21,11 @@ import {
 /**
  * Mock the jsonization methods used in convertAasDescriptorTypes.ts
  */
-jest.mock('../../lib/descriptorJsonization', () => ({
-    assetAdministrationShellDescriptorFromJsonable: jest.fn(),
-    toJsonableAssetAdministrationShellDescriptor: jest.fn(),
-    submodelDescriptorFromJsonable: jest.fn(),
-    toJsonableSubmodelDescriptor: jest.fn(),
+vi.mock('../../lib/descriptorJsonization', () => ({
+    assetAdministrationShellDescriptorFromJsonable: vi.fn(),
+    toJsonableAssetAdministrationShellDescriptor: vi.fn(),
+    submodelDescriptorFromJsonable: vi.fn(),
+    toJsonableSubmodelDescriptor: vi.fn(),
 }));
 
 // Define mock constants
@@ -80,12 +81,12 @@ const JSONABLE_SUBMODEL_DESCRIPTOR = {
 
 describe('convertAasDescriptorTypes', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('convertApiAasDescriptorToCoreAasDescriptor', () => {
         it('should convert ApiAssetAdministrationShellDescriptor to CoreAssetAdministrationShellDescriptor successfully', () => {
-            (assetAdministrationShellDescriptorFromJsonable as jest.Mock).mockReturnValue({
+            (assetAdministrationShellDescriptorFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_AAS_DESCRIPTOR,
             });
@@ -101,7 +102,7 @@ describe('convertAasDescriptorTypes', () => {
         it('should throw an error if assetAdministrationShellDescriptorFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (assetAdministrationShellDescriptorFromJsonable as jest.Mock).mockReturnValue({
+            (assetAdministrationShellDescriptorFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -114,7 +115,7 @@ describe('convertAasDescriptorTypes', () => {
 
     describe('convertCoreAasDescriptorToApiAasDescriptor', () => {
         it('should convert CoreAssetAdministrationShellDescriptor to ApiAssetAdministrationShellDescriptor successfully', () => {
-            (toJsonableAssetAdministrationShellDescriptor as jest.Mock).mockReturnValue(JSONABLE_AAS_DESCRIPTOR);
+            (toJsonableAssetAdministrationShellDescriptor as Mock).mockReturnValue(JSONABLE_AAS_DESCRIPTOR);
 
             const result = convertCoreAasDescriptorToApiAasDescriptor(CORE_AAS_DESCRIPTOR);
 
@@ -125,7 +126,7 @@ describe('convertAasDescriptorTypes', () => {
 
     describe('convertApiSubmodelDescriptorToCoreSubmodelDescriptor', () => {
         it('should convert ApiSubmodelDescriptor to CoreSubmodelDescriptor successfully', () => {
-            (submodelDescriptorFromJsonable as jest.Mock).mockReturnValue({
+            (submodelDescriptorFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_SUBMODEL_DESCRIPTOR,
             });
@@ -141,7 +142,7 @@ describe('convertAasDescriptorTypes', () => {
         it('should throw an error if submodelDescriptorFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (submodelDescriptorFromJsonable as jest.Mock).mockReturnValue({
+            (submodelDescriptorFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -154,7 +155,7 @@ describe('convertAasDescriptorTypes', () => {
 
     describe('convertCoreSubmodelDescriptorToApiSubmodelDescriptor', () => {
         it('should convert CoreSubmodelDescriptor to ApiSubmodelDescriptor successfully', () => {
-            (toJsonableSubmodelDescriptor as jest.Mock).mockReturnValue(JSONABLE_SUBMODEL_DESCRIPTOR);
+            (toJsonableSubmodelDescriptor as Mock).mockReturnValue(JSONABLE_SUBMODEL_DESCRIPTOR);
 
             const result = convertCoreSubmodelDescriptorToApiSubmodelDescriptor(CORE_SUBMODEL_DESCRIPTOR);
 

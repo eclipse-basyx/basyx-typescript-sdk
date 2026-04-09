@@ -1,15 +1,16 @@
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
+import {type Mock, vi } from 'vitest';
 import { ConceptDescriptionRepositoryService } from '../../generated';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertConceptDescriptionTypes';
 
 /**
  * Mock the jsonization methods used in convertConceptDescriptionTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
+vi.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
-        conceptDescriptionFromJsonable: jest.fn(),
-        toJsonable: jest.fn(),
+        conceptDescriptionFromJsonable: vi.fn(),
+        toJsonable: vi.fn(),
     },
 }));
 
@@ -27,12 +28,12 @@ const JSONABLE_CD: jsonization.JsonObject = {
 
 describe('convertConceptDescriptionTypes', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('convertApiCDToCoreCD', () => {
         it('should convert ApiConceptDescription to CoreConceptDescription successfully', () => {
-            (jsonization.conceptDescriptionFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.conceptDescriptionFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_CD,
             });
@@ -46,7 +47,7 @@ describe('convertConceptDescriptionTypes', () => {
         it('should throw an error if jsonization.conceptDescriptionFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.conceptDescriptionFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.conceptDescriptionFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -57,7 +58,7 @@ describe('convertConceptDescriptionTypes', () => {
 
     describe('convertCoreCDToApiCD', () => {
         it('should convert CoreConceptDescription to ApiConceptDescription successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_CD);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_CD);
 
             const result = convertCoreCDToApiCD(CORE_CD);
 

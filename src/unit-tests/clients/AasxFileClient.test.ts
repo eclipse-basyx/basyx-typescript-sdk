@@ -4,6 +4,7 @@ import {
     AssetInformation as CoreAssetInformation,
     AssetKind,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import {type Mock, vi } from 'vitest';
 import { AasxFileClient } from '../../clients/AasxFileClient';
 import { AasxFileService } from '../../generated';
 import { Configuration } from '../../generated/runtime';
@@ -11,9 +12,9 @@ import { base64Encode } from '../../lib/base64Url';
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
-jest.mock('../../generated');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+vi.mock('../../generated');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 
 // Define mock constants
 const CORE_AAS1: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
@@ -46,27 +47,27 @@ describe('AasxFileClient', () => {
 
     // Create mock for AASXFileServerAPIApi
     const mockApiInstance = {
-        getAllAASXPackageIds: jest.fn(),
-        postAASXPackage: jest.fn(),
-        getAASXByPackageId: jest.fn(),
-        putAASXByPackageId: jest.fn(),
-        deleteAASXByPackageId: jest.fn(),
+        getAllAASXPackageIds: vi.fn(),
+        postAASXPackage: vi.fn(),
+        getAASXByPackageId: vi.fn(),
+        putAASXByPackageId: vi.fn(),
+        deleteAASXByPackageId: vi.fn(),
     };
 
     // Mock constructor
-    const MockAasxFile = jest.fn(() => mockApiInstance);
+    const MockAasxFile = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (jest.requireMock('../../generated').AasxFileService.AASXFileServerAPIApi as jest.Mock).mockImplementation(
-            MockAasxFile
-        );
+        (AasxFileService.AASXFileServerAPIApi as unknown as Mock).mockImplementation(MockAasxFile);
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -85,11 +86,11 @@ describe('AasxFileClient', () => {
 
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should return a list of available AASX packages on successful response', async () => {
@@ -129,7 +130,7 @@ describe('AasxFileClient', () => {
             ],
         };
         mockApiInstance.getAllAASXPackageIds.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasxFileClient();
 
@@ -187,7 +188,7 @@ describe('AasxFileClient', () => {
             ],
         };
         mockApiInstance.postAASXPackage.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasxFileClient();
 
@@ -242,7 +243,7 @@ describe('AasxFileClient', () => {
             ],
         };
         mockApiInstance.getAASXByPackageId.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasxFileClient();
 
@@ -293,7 +294,7 @@ describe('AasxFileClient', () => {
             ],
         };
         mockApiInstance.deleteAASXByPackageId.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasxFileClient();
 
@@ -352,7 +353,7 @@ describe('AasxFileClient', () => {
             ],
         };
         mockApiInstance.putAASXByPackageId.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasxFileClient();
 

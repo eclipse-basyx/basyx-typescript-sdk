@@ -2,6 +2,12 @@
 build/
 dist/
 bundle/
+coverage/
+docs/
+
+# Ignore generated and specification sources
+src/generated/
+openapi/
 
 # Ignore node modules
 node_modules/
@@ -14,8 +20,14 @@ node_modules/
 .env.*
 
 # Ignore lock files
-yarn.lock
 package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Ignore config/spec formats managed separately
+*.json
+*.yaml
+*.yml
 
 # Ignore logs
 *.log
@@ -30,6 +42,3 @@ package-lock.json
 *.jpeg
 *.gif
 *.svg
-
-# Ignore other generated files
-coverage/

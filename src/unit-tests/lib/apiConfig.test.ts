@@ -5,10 +5,10 @@ describe('apiConfig', () => {
     describe('applyDefaults', () => {
         it('should preserve all provided configuration values', () => {
             // Arrange
-            const mockFetch = jest.fn();
-            const mockMiddleware = [{ pre: jest.fn() }];
-            const mockQueryParamsStringify = jest.fn();
-            const mockApiKey = jest.fn();
+            const mockFetch = vi.fn();
+            const mockMiddleware = [{ pre: vi.fn() }];
+            const mockQueryParamsStringify = vi.fn();
+            const mockApiKey = vi.fn();
             const mockHeaders = { 'Content-Type': 'application/json' };
 
             const config = new Configuration({
@@ -115,7 +115,7 @@ describe('apiConfig', () => {
 
         it('should preserve middleware configuration', () => {
             // Arrange
-            const mockMiddleware = [{ pre: jest.fn() }, { post: jest.fn() }, { onError: jest.fn() }];
+            const mockMiddleware = [{ pre: vi.fn() }, { post: vi.fn() }, { onError: vi.fn() }];
             const config = new Configuration({
                 middleware: mockMiddleware,
             });
@@ -129,7 +129,7 @@ describe('apiConfig', () => {
 
         it('should handle custom queryParamsStringify function', () => {
             // Arrange
-            const customStringify = jest.fn();
+            const customStringify = vi.fn();
             const config = new Configuration({
                 queryParamsStringify: customStringify,
             });

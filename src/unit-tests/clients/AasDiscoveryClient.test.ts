@@ -5,6 +5,7 @@ import {
     AssetKind,
     SpecificAssetId as CoreSpecificAssetId,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import {type Mock, vi } from 'vitest';
 import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasDiscoveryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';
@@ -13,11 +14,11 @@ import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
-//jest.mock('../../generated');
-jest.mock('../../generated');
-jest.mock('../../lib/convertAasDiscoveryTypes');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+//vi.mock('../../generated');
+vi.mock('../../generated');
+vi.mock('../../lib/convertAasDiscoveryTypes');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 
 // Define mock constants
 const LIMIT = 10;
@@ -70,43 +71,42 @@ describe('AasDiscoveryClient', () => {
 
     // Create mock for AssetAdministrationShellBasicDiscoveryAPIApi
     const mockApiInstance = {
-        getAllAssetAdministrationShellIdsByAssetLink: jest.fn(),
-        searchAllAssetAdministrationShellIdsByAssetLink: jest.fn(),
-        postAllAssetLinksById: jest.fn(),
-        deleteAllAssetLinksById: jest.fn(),
-        getAllAssetLinksById: jest.fn(),
-        getSelfDescription: jest.fn(),
+        getAllAssetAdministrationShellIdsByAssetLink: vi.fn(),
+        searchAllAssetAdministrationShellIdsByAssetLink: vi.fn(),
+        postAllAssetLinksById: vi.fn(),
+        deleteAllAssetLinksById: vi.fn(),
+        getAllAssetLinksById: vi.fn(),
+        getSelfDescription: vi.fn(),
     };
 
     // Mock constructor
-    const MockAasDiscovery = jest.fn(() => mockApiInstance);
+    const MockAasDiscovery = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (
-            jest.requireMock('../../generated').AasDiscoveryService
-                .AssetAdministrationShellBasicDiscoveryAPIApi as jest.Mock
-        ).mockImplementation(MockAasDiscovery);
-        (jest.requireMock('../../generated').AasDiscoveryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+        (AasDiscoveryService.AssetAdministrationShellBasicDiscoveryAPIApi as unknown as Mock).mockImplementation(
             MockAasDiscovery
         );
+        (AasDiscoveryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockAasDiscovery);
         // Setup mocks for conversion functions
-        (convertApiAssetIdToCoreAssetId as jest.Mock).mockImplementation((assetId) => {
+        (convertApiAssetIdToCoreAssetId as Mock).mockImplementation((assetId) => {
             if (assetId.value === API_SPECIFIC_ASSET_ID1.value) return CORE_SPECIFIC_ASSET_ID1;
             if (assetId.value === API_SPECIFIC_ASSET_ID2.value) return CORE_SPECIFIC_ASSET_ID2;
             return null;
         });
-        (convertCoreAssetIdToApiAssetId as jest.Mock).mockImplementation((assetId) => {
+        (convertCoreAssetIdToApiAssetId as Mock).mockImplementation((assetId) => {
             if (assetId.value === CORE_SPECIFIC_ASSET_ID1.value) return API_SPECIFIC_ASSET_ID1;
             if (assetId.value === CORE_SPECIFIC_ASSET_ID2.value) return API_SPECIFIC_ASSET_ID2;
             return null;
         });
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -125,11 +125,11 @@ describe('AasDiscoveryClient', () => {
 
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should return list of Asset Administration Shell IDs on successful response', async () => {
@@ -182,7 +182,7 @@ describe('AasDiscoveryClient', () => {
         mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
 
@@ -240,7 +240,7 @@ describe('AasDiscoveryClient', () => {
             ],
         };
         mockApiInstance.postAllAssetLinksById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
 
@@ -292,7 +292,7 @@ describe('AasDiscoveryClient', () => {
             ],
         };
         mockApiInstance.deleteAllAssetLinksById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
 
@@ -347,7 +347,7 @@ describe('AasDiscoveryClient', () => {
             ],
         };
         mockApiInstance.getAllAssetLinksById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
 
@@ -413,7 +413,7 @@ describe('AasDiscoveryClient', () => {
         mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
 
@@ -462,7 +462,7 @@ describe('AasDiscoveryClient', () => {
             ],
         };
         mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
 

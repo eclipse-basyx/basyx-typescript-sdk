@@ -50,7 +50,7 @@ function createSubmodelElementWithSemanticId(keyValues: string[]): CoreSubmodelE
 
 describe('SemanticIdUtils', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('checkSemanticId', () => {

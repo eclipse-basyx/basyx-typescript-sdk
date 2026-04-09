@@ -32,7 +32,8 @@
         {
             "files": "*.md",
             "options": {
-                "proseWrap": "always"
+                "proseWrap": "always",
+                "tabWidth": 2
             }
         },
         {

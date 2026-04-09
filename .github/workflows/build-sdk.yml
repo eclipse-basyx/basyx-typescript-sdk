@@ -18,14 +18,23 @@ jobs:
       uses: actions/setup-node@v6
       with:
         node-version: '22'
+        cache: 'pnpm'
 
-    - name: Install Yarn
-      run: npm install -g yarn
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v5
 
     - name: Install Dependencies
       run: |
-        yarn install
+        pnpm install --frozen-lockfile
 
     - name: Build
       run: |
-        yarn build
+        pnpm build
+
+    - name: Bundle
+      run: |
+        pnpm bundle
+
+    - name: Verify Consumer Compatibility
+      run: |
+        pnpm verify:compat

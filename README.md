@@ -10,6 +10,7 @@ BaSyx TypeScript SDK for developing applications and components for the Asset Ad
 ## Features
 
 High-level orchestration services:
+
 - **AasService**: Unified API for AAS operations across registry and repository
   - Create, read, update, delete AAS with automatic registry synchronization
   - Fetch AAS with their submodels in a single call
@@ -20,6 +21,7 @@ High-level orchestration services:
   - Automatic fallback to repository when registry unavailable
 
 Clients for the AAS API components:
+
 - AAS Repository
 - Submodel Repository
 - Concept Description Repository
@@ -29,6 +31,7 @@ Clients for the AAS API components:
 - AASX File Service
 
 Utility functions for working with AAS data:
+
 - Utils for Descriptors
 - Utils for KeyTypes
 - Utils for MultiLanguageProperties
@@ -41,20 +44,38 @@ Utility functions for working with AAS data:
 ```bash
 npm install basyx-typescript-sdk
 # or
-yarn add basyx-typescript-sdk
+pnpm add basyx-typescript-sdk
 ```
 
 > See https://www.npmjs.com/package/basyx-typescript-sdk
 
 ---
 
-> [!IMPORTANT]
-> Make sure to also install `@aas-core-works/aas-core3.1-typescript` in your project:
+> [!IMPORTANT] Make sure to also install `@aas-core-works/aas-core3.1-typescript` in your project:
 
 ```bash
 npm install @aas-core-works/aas-core3.1-typescript
 # or
-yarn add @aas-core-works/aas-core3.1-typescript
+pnpm add @aas-core-works/aas-core3.1-typescript
+```
+
+## Development
+
+```bash
+pnpm install
+pnpm format:check
+pnpm lint:check
+pnpm type-check
+pnpm build
+pnpm bundle
+pnpm test
+pnpm verify:compat
+```
+
+Use `.nvmrc` to align local Node.js with CI:
+
+```bash
+nvm use
 ```
 
 ## Import Styles
@@ -92,12 +113,7 @@ const encoded = Lib.base64Encode('my-id');
 
 ```typescript
 // Combine direct and namespaced imports
-import { 
-    AasService, 
-    Configuration, 
-    Utils,
-    base64Encode 
-} from 'basyx-typescript-sdk';
+import { AasService, Configuration, Utils, base64Encode } from 'basyx-typescript-sdk';
 
 // Use directly imported functions
 const id = base64Encode('my-id');
@@ -166,14 +182,14 @@ if (listResult.success) {
 }
 
 // Get AAS by ID (uses registry endpoint if available)
-const getResult = await service.getAasById({ 
-    aasIdentifier: 'https://example.com/ids/aas/my-aas' 
+const getResult = await service.getAasById({
+    aasIdentifier: 'https://example.com/ids/aas/my-aas',
 });
 
 // Get AAS with its submodels in a single call
 const withSubmodels = await service.getAasById({
     aasIdentifier: 'https://example.com/ids/aas/my-aas',
-    includeSubmodels: true
+    includeSubmodels: true,
 });
 if (withSubmodels.success) {
     console.log('Shell:', withSubmodels.data.shell);
@@ -195,17 +211,17 @@ const updateResult = await service.updateAas({ shell });
 
 // Get endpoint for an AAS
 const endpointResult = await service.getAasEndpointById({
-    aasIdentifier: 'https://example.com/ids/aas/my-aas'
+    aasIdentifier: 'https://example.com/ids/aas/my-aas',
 });
 
 // Get AAS directly by endpoint URL
 const byEndpointResult = await service.getAasByEndpoint({
-    endpoint: 'http://localhost:8081/shells/encoded-id'
+    endpoint: 'http://localhost:8081/shells/encoded-id',
 });
 
 // Delete AAS (removes from both registry and repository)
-await service.deleteAas({ 
-    aasIdentifier: 'https://example.com/ids/aas/my-aas' 
+await service.deleteAas({
+    aasIdentifier: 'https://example.com/ids/aas/my-aas',
 });
 
 // Find AAS by asset IDs using discovery service
@@ -214,9 +230,9 @@ const assetIds = [
     { name: 'deviceId', value: 'device-001' },
 ];
 
-const byAssetIdResult = await service.getAasByAssetId({ 
+const byAssetIdResult = await service.getAasByAssetId({
     assetIds,
-    includeSubmodels: true  // Optionally include submodels
+    includeSubmodels: true, // Optionally include submodels
 });
 if (byAssetIdResult.success) {
     console.log('Found AAS IDs:', byAssetIdResult.data.aasIds);
@@ -248,13 +264,10 @@ if (withConceptDescriptions.success) {
 import { Reference, Key, KeyTypes, ReferenceTypes } from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Example 1: Reference to AAS and Submodel
-const reference1 = new Reference(
-    ReferenceTypes.ModelReference,
-    [
-        new Key(KeyTypes.AssetAdministrationShell, 'https://example.com/ids/aas/my-aas'),
-        new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
-    ]
-);
+const reference1 = new Reference(ReferenceTypes.ModelReference, [
+    new Key(KeyTypes.AssetAdministrationShell, 'https://example.com/ids/aas/my-aas'),
+    new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
+]);
 
 const resolved1 = await service.resolveReference({ reference: reference1 });
 if (resolved1.success) {
@@ -265,14 +278,11 @@ if (resolved1.success) {
 }
 
 // Example 2: Reference to a specific SubmodelElement
-const reference2 = new Reference(
-    ReferenceTypes.ModelReference,
-    [
-        new Key(KeyTypes.AssetAdministrationShell, 'https://example.com/ids/aas/my-aas'),
-        new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
-        new Key(KeyTypes.Property, 'MyProperty'),
-    ]
-);
+const reference2 = new Reference(ReferenceTypes.ModelReference, [
+    new Key(KeyTypes.AssetAdministrationShell, 'https://example.com/ids/aas/my-aas'),
+    new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
+    new Key(KeyTypes.Property, 'MyProperty'),
+]);
 
 const resolved2 = await service.resolveReference({ reference: reference2 });
 if (resolved2.success) {
@@ -281,14 +291,11 @@ if (resolved2.success) {
 }
 
 // Example 3: Reference to nested SubmodelElements
-const reference3 = new Reference(
-    ReferenceTypes.ModelReference,
-    [
-        new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
-        new Key(KeyTypes.SubmodelElementCollection, 'MyCollection'),
-        new Key(KeyTypes.Property, 'NestedProperty'),
-    ]
-);
+const reference3 = new Reference(ReferenceTypes.ModelReference, [
+    new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/my-submodel'),
+    new Key(KeyTypes.SubmodelElementCollection, 'MyCollection'),
+    new Key(KeyTypes.Property, 'NestedProperty'),
+]);
 
 const resolved3 = await service.resolveReference({ reference: reference3 });
 if (resolved3.success) {
@@ -350,7 +357,7 @@ if (listResult.success) {
 // Get Submodel by ID (uses registry endpoint if available)
 const getResult = await service.getSubmodelById({
     submodelIdentifier: 'https://example.com/ids/sm/my-submodel',
-    useRegistryEndpoint: true
+    useRegistryEndpoint: true,
 });
 if (getResult.success) {
     console.log('Submodel:', getResult.data.submodel);
@@ -363,7 +370,7 @@ const updateResult = await service.updateSubmodel({ submodel });
 
 // Get endpoint for a Submodel
 const endpointResult = await service.getSubmodelEndpointById({
-    submodelIdentifier: 'https://example.com/ids/sm/my-submodel'
+    submodelIdentifier: 'https://example.com/ids/sm/my-submodel',
 });
 if (endpointResult.success) {
     console.log('Endpoint:', endpointResult.data);
@@ -371,17 +378,17 @@ if (endpointResult.success) {
 
 // Get Submodel directly by endpoint URL
 const byEndpointResult = await service.getSubmodelByEndpoint({
-    endpoint: 'http://localhost:8082/submodels/encoded-id'
+    endpoint: 'http://localhost:8082/submodels/encoded-id',
 });
 
 // Delete Submodel (removes from both registry and repository)
 await service.deleteSubmodel({
-    submodelIdentifier: 'https://example.com/ids/sm/my-submodel'
+    submodelIdentifier: 'https://example.com/ids/sm/my-submodel',
 });
 
 // Service works with only repository (no registry)
 const repoOnlyService = new SubmodelService({
-    repositoryConfig: new Configuration({ basePath: 'http://localhost:8082' })
+    repositoryConfig: new Configuration({ basePath: 'http://localhost:8082' }),
 });
 
 const repoList = await repoOnlyService.getSubmodelList();
@@ -447,16 +454,17 @@ const encoded = base64Encode('https://example.com/ids/aas/my-aas');
 ```typescript
 import { serializeXml, deserializeXml } from 'basyx-typescript-sdk';
 import { BaSyxEnvironment } from 'basyx-typescript-sdk';
-import { AssetAdministrationShell, AssetInformation, AssetKind, Submodel, ModellingKind } from '@aas-core-works/aas-core3.1-typescript/types';
+import {
+    AssetAdministrationShell,
+    AssetInformation,
+    AssetKind,
+    Submodel,
+    ModellingKind,
+} from '@aas-core-works/aas-core3.1-typescript/types';
 
 // Create an environment with AAS and Submodels
 const environment = new BaSyxEnvironment(
-    [
-        new AssetAdministrationShell(
-            'https://example.com/ids/aas/my-aas',
-            new AssetInformation(AssetKind.Instance)
-        )
-    ],
+    [new AssetAdministrationShell('https://example.com/ids/aas/my-aas', new AssetInformation(AssetKind.Instance))],
     [
         new Submodel(
             'https://example.com/ids/sm/my-submodel',
@@ -467,7 +475,7 @@ const environment = new BaSyxEnvironment(
             null,
             null,
             ModellingKind.Instance
-        )
+        ),
     ],
     [] // conceptDescriptions
 );

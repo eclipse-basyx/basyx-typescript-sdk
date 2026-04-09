@@ -1,6 +1,5 @@
 import js from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
-import prettier from 'eslint-plugin-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import ts from 'typescript-eslint';
 
@@ -13,6 +12,7 @@ export default [
         languageOptions: {
             ecmaVersion: 'latest',
             globals: {
+                console: 'readonly',
                 process: 'readonly',
             },
         },
@@ -47,16 +47,6 @@ export default [
             ],
             'simple-import-sort/exports': 'error',
             '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: true }],
-        },
-    },
-
-    // Prettier
-    {
-        plugins: {
-            prettier,
-        },
-        rules: {
-            'prettier/prettier': 'error',
         },
     },
 

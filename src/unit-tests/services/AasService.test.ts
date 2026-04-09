@@ -7,6 +7,7 @@ import {
     Reference,
     ReferenceTypes,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mocked, type MockedClass, vi } from 'vitest';
 import { AasDiscoveryClient } from '../../clients/AasDiscoveryClient';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
@@ -16,15 +17,15 @@ import { AasService } from '../../services/AasService';
 import { SubmodelService } from '../../services/SubmodelService';
 
 // Mock the clients
-jest.mock('../../clients/AasDiscoveryClient');
-jest.mock('../../clients/AasRegistryClient');
-jest.mock('../../clients/AasRepositoryClient');
-jest.mock('../../services/SubmodelService');
+vi.mock('../../clients/AasDiscoveryClient');
+vi.mock('../../clients/AasRegistryClient');
+vi.mock('../../clients/AasRepositoryClient');
+vi.mock('../../services/SubmodelService');
 
 describe('AasService Unit Tests', () => {
     let aasService: AasService;
-    let mockRegistryClient: jest.Mocked<AasRegistryClient>;
-    let mockRepositoryClient: jest.Mocked<AasRepositoryClient>;
+    let mockRegistryClient: Mocked<AasRegistryClient>;
+    let mockRepositoryClient: Mocked<AasRepositoryClient>;
     let aasRegistryConfig: Configuration;
     let aasRepositoryConfig: Configuration;
 
@@ -60,7 +61,7 @@ describe('AasService Unit Tests', () => {
 
     beforeEach(() => {
         // Clear all mocks before each test
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Create configuration objects
         aasRegistryConfig = new Configuration({ basePath: 'http://localhost:8084' });
@@ -73,23 +74,23 @@ describe('AasService Unit Tests', () => {
         });
 
         // Get mocked instances
-        mockRegistryClient = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
-            .instances[0] as jest.Mocked<AasRegistryClient>;
-        mockRepositoryClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
-            .instances[0] as jest.Mocked<AasRepositoryClient>;
+        mockRegistryClient = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
+            .instances[0] as Mocked<AasRegistryClient>;
+        mockRepositoryClient = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
+            .instances[0] as Mocked<AasRepositoryClient>;
     });
 
     describe('getAasList', () => {
         it("should return shells from registry descriptors' endpoints", async () => {
             const mockDescriptors = [testDescriptor];
-            mockRegistryClient.getAllAssetAdministrationShellDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockDescriptors,
                     pagedResult: undefined,
                 },
             });
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -108,11 +109,11 @@ describe('AasService Unit Tests', () => {
 
         it('should fall back to repository when registry fails', async () => {
             const mockShells = [testShell];
-            mockRegistryClient.getAllAssetAdministrationShellDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
-            mockRepositoryClient.getAllAssetAdministrationShells = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllAssetAdministrationShells = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockShells,
@@ -133,7 +134,7 @@ describe('AasService Unit Tests', () => {
 
         it('should use repository directly when preferRegistry is false', async () => {
             const mockShells = [testShell];
-            mockRepositoryClient.getAllAssetAdministrationShells = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllAssetAdministrationShells = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockShells,
@@ -152,11 +153,11 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when repository fails', async () => {
-            mockRegistryClient.getAllAssetAdministrationShellDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
-            mockRepositoryClient.getAllAssetAdministrationShells = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllAssetAdministrationShells = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Repository unavailable' },
             });
@@ -173,7 +174,7 @@ describe('AasService Unit Tests', () => {
             const limit = 10;
             const cursor = 'cursor-123';
 
-            mockRegistryClient.getAllAssetAdministrationShellDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: [],
@@ -194,11 +195,11 @@ describe('AasService Unit Tests', () => {
 
     describe('getAasById', () => {
         it('should fetch AAS using endpoint from registry descriptor', async () => {
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -223,7 +224,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should use repository directly when useRegistryEndpoint is false', async () => {
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -248,11 +249,11 @@ describe('AasService Unit Tests', () => {
         it('should fall back to repository config when descriptor has no endpoint', async () => {
             const descriptorWithoutEndpoint = new AssetAdministrationShellDescriptor(testAasId);
 
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: descriptorWithoutEndpoint,
             });
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -267,11 +268,11 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when both descriptor endpoint and repository fail', async () => {
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
-            mockRepositoryClient.getAssetAdministrationShellById = jest
+            mockRepositoryClient.getAssetAdministrationShellById = vi
                 .fn()
                 .mockResolvedValueOnce({
                     success: false,
@@ -295,7 +296,7 @@ describe('AasService Unit Tests', () => {
 
     describe('getAasEndpointById', () => {
         it('should get endpoint from registry descriptor', async () => {
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
@@ -315,7 +316,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should construct endpoint from repository config when registry not available', async () => {
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Not found' },
             });
@@ -349,10 +350,10 @@ describe('AasService Unit Tests', () => {
             const serviceWithoutRepo = new AasService({ aasRegistryConfig });
 
             // Get the mock instance for the new service
-            const newMockRegistryClient = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
-                .instances[1] as jest.Mocked<AasRegistryClient>;
+            const newMockRegistryClient = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
+                .instances[1] as Mocked<AasRegistryClient>;
 
-            newMockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            newMockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Not found' },
             });
@@ -370,7 +371,7 @@ describe('AasService Unit Tests', () => {
         it('should extract ID from endpoint and fetch shell', async () => {
             const endpoint = 'http://localhost:8081/shells/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvYWFzL3Rlc3QtMTIz';
 
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -392,7 +393,7 @@ describe('AasService Unit Tests', () => {
         it('should handle endpoints with different ports', async () => {
             const endpoint = 'http://example.com:9090/shells/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvYWFzL3Rlc3QtMTIz';
 
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -411,7 +412,7 @@ describe('AasService Unit Tests', () => {
         it('should handle https endpoints', async () => {
             const endpoint = 'https://secure.example.com/shells/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvYWFzL3Rlc3QtMTIz';
 
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -442,7 +443,7 @@ describe('AasService Unit Tests', () => {
         it('should return error when shell fetch fails', async () => {
             const endpoint = 'http://localhost:8081/shells/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvYWFzL3Rlc3QtMTIz';
 
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Shell not found' },
             });
@@ -458,13 +459,13 @@ describe('AasService Unit Tests', () => {
 
     describe('createAas', () => {
         it('should create AAS in repository and register in registry', async () => {
-            mockRepositoryClient.postAssetAdministrationShell = jest.fn().mockResolvedValue({
+            mockRepositoryClient.postAssetAdministrationShell = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
 
             const createdDescriptor = new AssetAdministrationShellDescriptor(testShell.id);
-            mockRegistryClient.postAssetAdministrationShellDescriptor = jest.fn().mockResolvedValue({
+            mockRegistryClient.postAssetAdministrationShellDescriptor = vi.fn().mockResolvedValue({
                 success: true,
                 data: createdDescriptor,
             });
@@ -491,7 +492,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when repository creation fails', async () => {
-            mockRepositoryClient.postAssetAdministrationShell = jest.fn().mockResolvedValue({
+            mockRepositoryClient.postAssetAdministrationShell = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'ConflictError', message: 'AAS already exists' },
             });
@@ -508,11 +509,11 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when registry registration fails', async () => {
-            mockRepositoryClient.postAssetAdministrationShell = jest.fn().mockResolvedValue({
+            mockRepositoryClient.postAssetAdministrationShell = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
-            mockRegistryClient.postAssetAdministrationShellDescriptor = jest.fn().mockResolvedValue({
+            mockRegistryClient.postAssetAdministrationShellDescriptor = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
@@ -529,10 +530,10 @@ describe('AasService Unit Tests', () => {
 
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new AasService({ aasRepositoryConfig });
-            const mockRepoClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
-                .instances[1] as jest.Mocked<AasRepositoryClient>;
+            const mockRepoClient = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
+                .instances[1] as Mocked<AasRepositoryClient>;
 
-            mockRepoClient.postAssetAdministrationShell = jest.fn().mockResolvedValue({
+            mockRepoClient.postAssetAdministrationShell = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -551,13 +552,13 @@ describe('AasService Unit Tests', () => {
 
     describe('updateAas', () => {
         it('should update AAS in repository and registry', async () => {
-            mockRepositoryClient.putAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.putAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
 
             const updatedDescriptor = new AssetAdministrationShellDescriptor(testShell.id);
-            mockRegistryClient.putAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.putAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: updatedDescriptor,
             });
@@ -586,7 +587,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when repository update fails', async () => {
-            mockRepositoryClient.putAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.putAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'AAS not found' },
             });
@@ -603,11 +604,11 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when registry update fails', async () => {
-            mockRepositoryClient.putAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.putAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
-            mockRegistryClient.putAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.putAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
@@ -624,10 +625,10 @@ describe('AasService Unit Tests', () => {
 
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new AasService({ aasRepositoryConfig });
-            const mockRepoClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
-                .instances[1] as jest.Mocked<AasRepositoryClient>;
+            const mockRepoClient = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
+                .instances[1] as Mocked<AasRepositoryClient>;
 
-            mockRepoClient.putAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepoClient.putAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -646,11 +647,11 @@ describe('AasService Unit Tests', () => {
 
     describe('deleteAas', () => {
         it('should remove from registry and repository', async () => {
-            mockRegistryClient.deleteAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.deleteAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
-            mockRepositoryClient.deleteAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.deleteAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
@@ -669,7 +670,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when registry deletion fails', async () => {
-            mockRegistryClient.deleteAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.deleteAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Descriptor not found' },
             });
@@ -684,11 +685,11 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should return error when repository deletion fails', async () => {
-            mockRegistryClient.deleteAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.deleteAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
-            mockRepositoryClient.deleteAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.deleteAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'AAS not found' },
             });
@@ -703,10 +704,10 @@ describe('AasService Unit Tests', () => {
 
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new AasService({ aasRepositoryConfig });
-            const mockRepoClient = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
-                .instances[1] as jest.Mocked<AasRepositoryClient>;
+            const mockRepoClient = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
+                .instances[1] as Mocked<AasRepositoryClient>;
 
-            mockRepoClient.deleteAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepoClient.deleteAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
@@ -762,7 +763,7 @@ describe('AasService Unit Tests', () => {
         // These unit tests just verify the basic structure and mocking
 
         it('should accept includeSubmodels parameter in getAasList', async () => {
-            mockRepositoryClient.getAllAssetAdministrationShells = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllAssetAdministrationShells = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: [testShell],
@@ -777,7 +778,7 @@ describe('AasService Unit Tests', () => {
         });
 
         it('should accept includeSubmodels parameter in getAasById', async () => {
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -795,7 +796,7 @@ describe('AasService Unit Tests', () => {
         it('should accept includeSubmodels parameter in getAasByEndpoint', async () => {
             const endpoint = 'http://localhost:8081/shells/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvYWFzL3Rlc3QtMTIz';
 
-            mockRepositoryClient.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -826,26 +827,26 @@ describe('AasService Unit Tests', () => {
             const discoveredAasIds = [testAasId];
 
             // Get the mocked instances for the service with discovery
-            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
                 .instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
-            ] as jest.Mocked<AasDiscoveryClient>;
+            ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
                 .instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
-            ] as jest.Mocked<AasRepositoryClient>;
+            ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
                 .instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
-            ] as jest.Mocked<AasRegistryClient>;
+            ] as Mocked<AasRegistryClient>;
 
             // Mock discovery service response
-            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: discoveredAasIds,
@@ -854,13 +855,13 @@ describe('AasService Unit Tests', () => {
             });
 
             // Mock registry response (getAasById will try registry first)
-            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFound', message: 'Descriptor not found' },
             });
 
             // Mock repository response
-            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -889,13 +890,13 @@ describe('AasService Unit Tests', () => {
 
             const assetIds = [{ name: 'serialNumber', value: 'nonexistent' }];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
                 .instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
-            ] as jest.Mocked<AasDiscoveryClient>;
+            ] as Mocked<AasDiscoveryClient>;
 
-            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: [],
@@ -922,13 +923,13 @@ describe('AasService Unit Tests', () => {
 
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
                 .instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
-            ] as jest.Mocked<AasDiscoveryClient>;
+            ] as Mocked<AasDiscoveryClient>;
 
-            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Discovery service unavailable' },
             });
@@ -964,25 +965,25 @@ describe('AasService Unit Tests', () => {
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
             const discoveredAasIds = ['aas-1', 'aas-2'];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
                 .instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
-            ] as jest.Mocked<AasDiscoveryClient>;
+            ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
                 .instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
-            ] as jest.Mocked<AasRepositoryClient>;
+            ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
                 .instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
-            ] as jest.Mocked<AasRegistryClient>;
+            ] as Mocked<AasRegistryClient>;
 
-            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: discoveredAasIds,
@@ -991,13 +992,13 @@ describe('AasService Unit Tests', () => {
             });
 
             // Mock registry response
-            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFound', message: 'Descriptor not found' },
             });
 
             // First AAS fetch succeeds, second fails
-            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = vi
                 .fn()
                 .mockResolvedValueOnce({
                     success: true,
@@ -1028,25 +1029,25 @@ describe('AasService Unit Tests', () => {
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
             const discoveredAasIds = ['aas-1'];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
                 .instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
-            ] as jest.Mocked<AasDiscoveryClient>;
+            ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
                 .instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
-            ] as jest.Mocked<AasRepositoryClient>;
+            ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
                 .instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
-            ] as jest.Mocked<AasRegistryClient>;
+            ] as Mocked<AasRegistryClient>;
 
-            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: discoveredAasIds,
@@ -1055,12 +1056,12 @@ describe('AasService Unit Tests', () => {
             });
 
             // Mock registry response
-            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFound', message: 'Descriptor not found' },
             });
 
-            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFound', message: 'AAS not found' },
             });
@@ -1085,25 +1086,25 @@ describe('AasService Unit Tests', () => {
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
             const discoveredAasIds = [testAasId];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as jest.MockedClass<typeof AasDiscoveryClient>).mock
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
                 .instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
-            ] as jest.Mocked<AasDiscoveryClient>;
+            ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as jest.MockedClass<typeof AasRepositoryClient>).mock
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
                 .instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
-            ] as jest.Mocked<AasRepositoryClient>;
+            ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
                 .instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
-            ] as jest.Mocked<AasRegistryClient>;
+            ] as Mocked<AasRegistryClient>;
 
-            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = jest.fn().mockResolvedValue({
+            mockDiscoveryClient.getAllAssetAdministrationShellIdsByAssetLink = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: discoveredAasIds,
@@ -1112,12 +1113,12 @@ describe('AasService Unit Tests', () => {
             });
 
             // Mock registry response
-            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClientForDiscovery.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFound', message: 'Descriptor not found' },
             });
 
-            mockRepoClientForDiscovery.getAssetAdministrationShellById = jest.fn().mockResolvedValue({
+            mockRepoClientForDiscovery.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testShell,
             });
@@ -1133,13 +1134,13 @@ describe('AasService Unit Tests', () => {
     });
 
     describe('resolveReference', () => {
-        let mockSubmodelService: jest.Mocked<SubmodelService>;
+        let mockSubmodelService: Mocked<SubmodelService>;
 
         beforeEach(() => {
             // Get the mocked SubmodelService instance
-            const allSubmodelServiceInstances = (SubmodelService as jest.MockedClass<typeof SubmodelService>).mock
+            const allSubmodelServiceInstances = (SubmodelService as MockedClass<typeof SubmodelService>).mock
                 .instances;
-            mockSubmodelService = allSubmodelServiceInstances[0] as jest.Mocked<SubmodelService>;
+            mockSubmodelService = allSubmodelServiceInstances[0] as Mocked<SubmodelService>;
         });
 
         it('should resolve reference with AAS and Submodel', async () => {
@@ -1148,12 +1149,12 @@ describe('AasService Unit Tests', () => {
                 new Key(KeyTypes.Submodel, 'https://example.com/ids/sm/test-sm'),
             ]);
 
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
 
-            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+            mockSubmodelService.getSubmodelEndpointById = vi.fn().mockResolvedValue({
                 success: true,
                 data: 'http://localhost:8082/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC1zbQ',
             });
@@ -1175,12 +1176,12 @@ describe('AasService Unit Tests', () => {
                 new Key(KeyTypes.Property, 'MyProperty'),
             ]);
 
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
 
-            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+            mockSubmodelService.getSubmodelEndpointById = vi.fn().mockResolvedValue({
                 success: true,
                 data: 'http://localhost:8082/submodels/encoded-sm-id',
             });
@@ -1205,12 +1206,12 @@ describe('AasService Unit Tests', () => {
                 new Key(KeyTypes.Property, 'NestedProperty'),
             ]);
 
-            mockRegistryClient.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
 
-            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+            mockSubmodelService.getSubmodelEndpointById = vi.fn().mockResolvedValue({
                 success: true,
                 data: 'http://localhost:8082/submodels/encoded-sm-id',
             });
@@ -1231,7 +1232,7 @@ describe('AasService Unit Tests', () => {
                 new Key(KeyTypes.Property, 'MyProperty'),
             ]);
 
-            mockSubmodelService.getSubmodelEndpointById = jest.fn().mockResolvedValue({
+            mockSubmodelService.getSubmodelEndpointById = vi.fn().mockResolvedValue({
                 success: true,
                 data: 'http://localhost:8082/submodels/encoded-sm-id',
             });
@@ -1283,13 +1284,13 @@ describe('AasService Unit Tests', () => {
                 new Key(KeyTypes.AssetAdministrationShell, testAasId),
             ]);
 
-            const allRegistryInstances = (AasRegistryClient as jest.MockedClass<typeof AasRegistryClient>).mock
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
                 .instances;
             const mockRegistryClientForTest = allRegistryInstances[
                 allRegistryInstances.length - 1
-            ] as jest.Mocked<AasRegistryClient>;
+            ] as Mocked<AasRegistryClient>;
 
-            mockRegistryClientForTest.getAssetAdministrationShellDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClientForTest.getAssetAdministrationShellDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFound', message: 'Descriptor not found' },
             });

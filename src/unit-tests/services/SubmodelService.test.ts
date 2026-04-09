@@ -1,4 +1,5 @@
 import { ModellingKind, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mocked, type MockedClass, vi } from 'vitest';
 import { SubmodelRegistryClient } from '../../clients/SubmodelRegistryClient';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
 import { Configuration } from '../../generated/runtime';
@@ -6,13 +7,13 @@ import { SubmodelDescriptor } from '../../models/Descriptors';
 import { SubmodelService } from '../../services/SubmodelService';
 
 // Mock the clients
-jest.mock('../../clients/SubmodelRegistryClient');
-jest.mock('../../clients/SubmodelRepositoryClient');
+vi.mock('../../clients/SubmodelRegistryClient');
+vi.mock('../../clients/SubmodelRepositoryClient');
 
 describe('SubmodelService Unit Tests', () => {
     let submodelService: SubmodelService;
-    let mockRegistryClient: jest.Mocked<SubmodelRegistryClient>;
-    let mockRepositoryClient: jest.Mocked<SubmodelRepositoryClient>;
+    let mockRegistryClient: Mocked<SubmodelRegistryClient>;
+    let mockRepositoryClient: Mocked<SubmodelRepositoryClient>;
     let submodelRegistryConfig: Configuration;
     let submodelRepositoryConfig: Configuration;
 
@@ -44,7 +45,7 @@ describe('SubmodelService Unit Tests', () => {
 
     beforeEach(() => {
         // Clear all mocks before each test
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Create configuration objects
         submodelRegistryConfig = new Configuration({ basePath: 'http://localhost:8084' });
@@ -57,23 +58,23 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         // Get mocked instances
-        mockRegistryClient = (SubmodelRegistryClient as jest.MockedClass<typeof SubmodelRegistryClient>).mock
-            .instances[0] as jest.Mocked<SubmodelRegistryClient>;
-        mockRepositoryClient = (SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>).mock
-            .instances[0] as jest.Mocked<SubmodelRepositoryClient>;
+        mockRegistryClient = (SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>).mock
+            .instances[0] as Mocked<SubmodelRegistryClient>;
+        mockRepositoryClient = (SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>).mock
+            .instances[0] as Mocked<SubmodelRepositoryClient>;
     });
 
     describe('getSubmodelList', () => {
         it("should return submodels from registry descriptors' endpoints", async () => {
             const mockDescriptors = [testDescriptor];
-            mockRegistryClient.getAllSubmodelDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockDescriptors,
                     pagedResult: undefined,
                 },
             });
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -92,11 +93,11 @@ describe('SubmodelService Unit Tests', () => {
 
         it('should fall back to repository when registry fails', async () => {
             const mockSubmodels = [testSubmodel];
-            mockRegistryClient.getAllSubmodelDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
-            mockRepositoryClient.getAllSubmodels = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllSubmodels = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockSubmodels,
@@ -117,7 +118,7 @@ describe('SubmodelService Unit Tests', () => {
 
         it('should use repository directly when preferRegistry is false', async () => {
             const mockSubmodels = [testSubmodel];
-            mockRepositoryClient.getAllSubmodels = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllSubmodels = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockSubmodels,
@@ -136,11 +137,11 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when repository fails', async () => {
-            mockRegistryClient.getAllSubmodelDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
-            mockRepositoryClient.getAllSubmodels = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllSubmodels = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Repository unavailable' },
             });
@@ -157,7 +158,7 @@ describe('SubmodelService Unit Tests', () => {
             const limit = 10;
             const cursor = 'cursor-123';
 
-            mockRegistryClient.getAllSubmodelDescriptors = jest.fn().mockResolvedValue({
+            mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: [],
@@ -178,11 +179,11 @@ describe('SubmodelService Unit Tests', () => {
 
     describe('getSubmodelById', () => {
         it('should fetch Submodel using endpoint from registry descriptor', async () => {
-            mockRegistryClient.getSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -207,7 +208,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should use repository directly when useRegistryEndpoint is false', async () => {
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -232,11 +233,11 @@ describe('SubmodelService Unit Tests', () => {
         it('should fall back to repository config when descriptor has no endpoint', async () => {
             const descriptorWithoutEndpoint = new SubmodelDescriptor(testSubmodelId, []);
 
-            mockRegistryClient.getSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: descriptorWithoutEndpoint,
             });
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -251,11 +252,11 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when both descriptor endpoint and repository fail', async () => {
-            mockRegistryClient.getSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
-            mockRepositoryClient.getSubmodelById = jest
+            mockRepositoryClient.getSubmodelById = vi
                 .fn()
                 .mockResolvedValueOnce({
                     success: false,
@@ -279,7 +280,7 @@ describe('SubmodelService Unit Tests', () => {
 
     describe('getSubmodelEndpointById', () => {
         it('should get endpoint from registry descriptor', async () => {
-            mockRegistryClient.getSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
@@ -299,7 +300,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should construct endpoint from repository config when registry not available', async () => {
-            mockRegistryClient.getSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Not found' },
             });
@@ -331,10 +332,10 @@ describe('SubmodelService Unit Tests', () => {
             const serviceWithoutRepo = new SubmodelService({ submodelRegistryConfig });
 
             // Get the mock instance for the new service
-            const newMockRegistryClient = (SubmodelRegistryClient as jest.MockedClass<typeof SubmodelRegistryClient>)
-                .mock.instances[1] as jest.Mocked<SubmodelRegistryClient>;
+            const newMockRegistryClient = (SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>)
+                .mock.instances[1] as Mocked<SubmodelRegistryClient>;
 
-            newMockRegistryClient.getSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            newMockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Not found' },
             });
@@ -352,7 +353,7 @@ describe('SubmodelService Unit Tests', () => {
         it('should extract ID from endpoint and fetch submodel', async () => {
             const endpoint = 'http://localhost:8081/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC0xMjM';
 
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -373,7 +374,7 @@ describe('SubmodelService Unit Tests', () => {
         it('should handle endpoints with different ports', async () => {
             const endpoint = 'http://localhost:9999/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC0xMjM';
 
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -389,7 +390,7 @@ describe('SubmodelService Unit Tests', () => {
         it('should handle https endpoints', async () => {
             const endpoint = 'https://example.com/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC0xMjM';
 
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -416,7 +417,7 @@ describe('SubmodelService Unit Tests', () => {
         it('should return error when submodel fetch fails', async () => {
             const endpoint = 'http://localhost:8081/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC0xMjM';
 
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Submodel not found' },
             });
@@ -429,11 +430,11 @@ describe('SubmodelService Unit Tests', () => {
 
     describe('createSubmodel', () => {
         it('should create Submodel in repository and register in registry', async () => {
-            mockRepositoryClient.postSubmodel = jest.fn().mockResolvedValue({
+            mockRepositoryClient.postSubmodel = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
-            mockRegistryClient.postSubmodelDescriptor = jest.fn().mockResolvedValue({
+            mockRegistryClient.postSubmodelDescriptor = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
@@ -459,7 +460,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when repository creation fails', async () => {
-            mockRepositoryClient.postSubmodel = jest.fn().mockResolvedValue({
+            mockRepositoryClient.postSubmodel = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'ValidationError', message: 'Invalid submodel' },
             });
@@ -476,11 +477,11 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when registry registration fails', async () => {
-            mockRepositoryClient.postSubmodel = jest.fn().mockResolvedValue({
+            mockRepositoryClient.postSubmodel = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
-            mockRegistryClient.postSubmodelDescriptor = jest.fn().mockResolvedValue({
+            mockRegistryClient.postSubmodelDescriptor = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
@@ -495,10 +496,10 @@ describe('SubmodelService Unit Tests', () => {
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
             const newMockRepositoryClient = (
-                SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>
-            ).mock.instances[1] as jest.Mocked<SubmodelRepositoryClient>;
+                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
+            ).mock.instances[1] as Mocked<SubmodelRepositoryClient>;
 
-            newMockRepositoryClient.postSubmodel = jest.fn().mockResolvedValue({
+            newMockRepositoryClient.postSubmodel = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -517,11 +518,11 @@ describe('SubmodelService Unit Tests', () => {
 
     describe('updateSubmodel', () => {
         it('should update Submodel in repository and registry', async () => {
-            mockRepositoryClient.putSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.putSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
-            mockRegistryClient.putSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.putSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testDescriptor,
             });
@@ -549,7 +550,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when repository update fails', async () => {
-            mockRepositoryClient.putSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.putSubmodelById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Submodel not found' },
             });
@@ -566,11 +567,11 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when registry update fails', async () => {
-            mockRepositoryClient.putSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.putSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
-            mockRegistryClient.putSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.putSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NetworkError', message: 'Registry unavailable' },
             });
@@ -585,10 +586,10 @@ describe('SubmodelService Unit Tests', () => {
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
             const newMockRepositoryClient = (
-                SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>
-            ).mock.instances[1] as jest.Mocked<SubmodelRepositoryClient>;
+                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
+            ).mock.instances[1] as Mocked<SubmodelRepositoryClient>;
 
-            newMockRepositoryClient.putSubmodelById = jest.fn().mockResolvedValue({
+            newMockRepositoryClient.putSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -607,11 +608,11 @@ describe('SubmodelService Unit Tests', () => {
 
     describe('deleteSubmodel', () => {
         it('should remove from registry and repository', async () => {
-            mockRegistryClient.deleteSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.deleteSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
-            mockRepositoryClient.deleteSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.deleteSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
@@ -630,7 +631,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when registry deletion fails', async () => {
-            mockRegistryClient.deleteSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.deleteSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Descriptor not found' },
             });
@@ -642,11 +643,11 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('should return error when repository deletion fails', async () => {
-            mockRegistryClient.deleteSubmodelDescriptorById = jest.fn().mockResolvedValue({
+            mockRegistryClient.deleteSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
-            mockRepositoryClient.deleteSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.deleteSubmodelById = vi.fn().mockResolvedValue({
                 success: false,
                 error: { errorType: 'NotFoundError', message: 'Submodel not found' },
             });
@@ -659,10 +660,10 @@ describe('SubmodelService Unit Tests', () => {
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
             const newMockRepositoryClient = (
-                SubmodelRepositoryClient as jest.MockedClass<typeof SubmodelRepositoryClient>
-            ).mock.instances[1] as jest.Mocked<SubmodelRepositoryClient>;
+                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
+            ).mock.instances[1] as Mocked<SubmodelRepositoryClient>;
 
-            newMockRepositoryClient.deleteSubmodelById = jest.fn().mockResolvedValue({
+            newMockRepositoryClient.deleteSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: undefined,
             });
@@ -716,7 +717,7 @@ describe('SubmodelService Unit Tests', () => {
     describe('includeConceptDescriptions functionality', () => {
         it('getSubmodelList should support includeConceptDescriptions parameter', async () => {
             const mockSubmodels = [testSubmodel];
-            mockRepositoryClient.getAllSubmodels = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getAllSubmodels = vi.fn().mockResolvedValue({
                 success: true,
                 data: {
                     result: mockSubmodels,
@@ -737,7 +738,7 @@ describe('SubmodelService Unit Tests', () => {
         });
 
         it('getSubmodelById should support includeConceptDescriptions parameter', async () => {
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });
@@ -757,7 +758,7 @@ describe('SubmodelService Unit Tests', () => {
 
         it('getSubmodelByEndpoint should support includeConceptDescriptions parameter', async () => {
             const endpoint = 'http://localhost:8081/submodels/aHR0cHM6Ly9leGFtcGxlLmNvbS9pZHMvc20vdGVzdC0xMjM';
-            mockRepositoryClient.getSubmodelById = jest.fn().mockResolvedValue({
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
                 data: testSubmodel,
             });

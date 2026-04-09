@@ -1,3 +1,4 @@
+import {type Mock, vi } from 'vitest';
 // Import necessary types
 import { SubmodelRegistryClient } from '../../clients/SubmodelRegistryClient';
 import { SubmodelRegistryService } from '../../generated';
@@ -11,10 +12,10 @@ import { handleApiError } from '../../lib/errorHandler';
 import { SubmodelDescriptor as CoreSubmodelDescriptor } from '../../models/Descriptors';
 
 // Mock the dependencies
-jest.mock('../../generated');
-jest.mock('../../lib/convertAasDescriptorTypes');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+vi.mock('../../generated');
+vi.mock('../../lib/convertAasDescriptorTypes');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 
 // Define mock constants
 const LIMIT = 10;
@@ -93,42 +94,40 @@ describe('SubmodelRegistryClient', () => {
 
     // Create mock for SubmodelRegistryAPIApi
     const mockApiInstance = {
-        getAllSubmodelDescriptors: jest.fn(),
-        postSubmodelDescriptor: jest.fn(),
-        deleteSubmodelDescriptorById: jest.fn(),
-        getSubmodelDescriptorById: jest.fn(),
-        putSubmodelDescriptorById: jest.fn(),
-        getSelfDescription: jest.fn(),
+        getAllSubmodelDescriptors: vi.fn(),
+        postSubmodelDescriptor: vi.fn(),
+        deleteSubmodelDescriptorById: vi.fn(),
+        getSubmodelDescriptorById: vi.fn(),
+        putSubmodelDescriptorById: vi.fn(),
+        getSelfDescription: vi.fn(),
     };
 
     // Mock constructor
-    const MockSubmodelRegistry = jest.fn(() => mockApiInstance);
+    const MockSubmodelRegistry = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (
-            jest.requireMock('../../generated').SubmodelRegistryService.SubmodelRegistryAPIApi as jest.Mock
-        ).mockImplementation(MockSubmodelRegistry);
-        (jest.requireMock('../../generated').SubmodelRegistryService.DescriptionAPIApi as jest.Mock).mockImplementation(
-            MockSubmodelRegistry
-        );
+        (SubmodelRegistryService.SubmodelRegistryAPIApi as unknown as Mock).mockImplementation(MockSubmodelRegistry);
+        (SubmodelRegistryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockSubmodelRegistry);
         // Setup mocks for conversion functions
-        (convertApiSubmodelDescriptorToCoreSubmodelDescriptor as jest.Mock).mockImplementation((submodelDescriptor) => {
+        (convertApiSubmodelDescriptorToCoreSubmodelDescriptor as Mock).mockImplementation((submodelDescriptor) => {
             if (submodelDescriptor.id === API_SUBMODEL_DESCRIPTOR1.id) return CORE_SUBMODEL_DESCRIPTOR1;
             if (submodelDescriptor.id === API_SUBMODEL_DESCRIPTOR2.id) return CORE_SUBMODEL_DESCRIPTOR2;
             return null;
         });
-        (convertCoreSubmodelDescriptorToApiSubmodelDescriptor as jest.Mock).mockImplementation((submodelDescriptor) => {
+        (convertCoreSubmodelDescriptorToApiSubmodelDescriptor as Mock).mockImplementation((submodelDescriptor) => {
             if (submodelDescriptor.id === CORE_SUBMODEL_DESCRIPTOR1.id) return API_SUBMODEL_DESCRIPTOR1;
             if (submodelDescriptor.id === CORE_SUBMODEL_DESCRIPTOR2.id) return API_SUBMODEL_DESCRIPTOR2;
             return null;
         });
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -147,11 +146,11 @@ describe('SubmodelRegistryClient', () => {
 
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should return Submodel Descriptors on successful response', async () => {
@@ -201,7 +200,7 @@ describe('SubmodelRegistryClient', () => {
             ],
         };
         mockApiInstance.getAllSubmodelDescriptors.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRegistryClient();
 
@@ -255,7 +254,7 @@ describe('SubmodelRegistryClient', () => {
             ],
         };
         mockApiInstance.postSubmodelDescriptor.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRegistryClient();
 
@@ -306,7 +305,7 @@ describe('SubmodelRegistryClient', () => {
             ],
         };
         mockApiInstance.deleteSubmodelDescriptorById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRegistryClient();
 
@@ -361,7 +360,7 @@ describe('SubmodelRegistryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelDescriptorById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRegistryClient();
 
@@ -443,7 +442,7 @@ describe('SubmodelRegistryClient', () => {
             ],
         };
         mockApiInstance.putSubmodelDescriptorById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRegistryClient();
 
@@ -494,7 +493,7 @@ describe('SubmodelRegistryClient', () => {
             ],
         };
         mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRegistryClient();
 
