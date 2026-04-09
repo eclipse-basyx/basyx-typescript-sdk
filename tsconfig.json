@@ -3,6 +3,7 @@
     "target": "esnext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "rewriteRelativeImportExtensions": true,
     "useDefineForClassFields": true,
     "allowSyntheticDefaultImports": true,
     "composite": true,
