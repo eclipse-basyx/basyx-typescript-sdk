@@ -1,6 +1,6 @@
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/eclipse-basyx/basyx-typescript-sdk/publish.yml)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/eclipse-basyx/basyx-typescript-sdk/build-sdk.yml)
 ![NPM Downloads](https://img.shields.io/npm/dw/basyx-typescript-sdk)
-![NPM Version](https://img.shields.io/npm/v/basyx-typescript-sdk)
+[![NPM Version](https://img.shields.io/npm/v/basyx-typescript-sdk)](https://www.npmjs.com/package/basyx-typescript-sdk)
 ![GitHub License](https://img.shields.io/github/license/eclipse-basyx/basyx-typescript-sdk)
 
 # basyx-typescript-sdk
