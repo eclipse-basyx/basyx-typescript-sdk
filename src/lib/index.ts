@@ -39,3 +39,6 @@ export {
 export { applyDefaults } from './apiConfig';
 export { base64Decode, base64Encode } from './base64Url';
 export { handleApiError } from './errorHandler';
+
+// XML Data Format
+export { deserializeXml, serializeXml } from './aas-dataformat-xml';
