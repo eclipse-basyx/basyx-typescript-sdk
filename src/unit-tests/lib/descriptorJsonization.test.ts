@@ -100,7 +100,7 @@ const JSONABLE_SECURITY_ATTRIBUTES = {
 
 describe('descriptorJsonization', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('assetAdministrationShellDescriptorFromJsonable', () => {

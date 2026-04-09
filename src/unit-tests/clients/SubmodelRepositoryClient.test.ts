@@ -7,6 +7,7 @@ import {
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mock, vi } from 'vitest';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
 import { SubmodelRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';
@@ -21,11 +22,11 @@ import {
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
-//jest.mock('../../generated');
-jest.mock('../../generated');
-jest.mock('../../lib/convertSubmodelTypes');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+//vi.mock('../../generated');
+vi.mock('../../generated');
+vi.mock('../../lib/convertSubmodelTypes');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 
 // Define mock constants
 
@@ -174,88 +175,86 @@ describe('SubmodelRepositoryClient', () => {
 
     // Create mock for SubmodelRepositoryAPIApi
     const mockApiInstance = {
-        getAllSubmodels: jest.fn(),
-        getAllSubmodelsMetadata: jest.fn(),
-        getAllSubmodelsValueOnly: jest.fn(),
-        getAllSubmodelsReference: jest.fn(),
-        getAllSubmodelsPath: jest.fn(),
-        postSubmodel: jest.fn(),
-        deleteSubmodelById: jest.fn(),
-        getSubmodelById: jest.fn(),
-        getSubmodelByIdReference: jest.fn(),
-        getSubmodelByIdPath: jest.fn(),
-        putSubmodelById: jest.fn(),
-        patchSubmodelById: jest.fn(),
-        patchSubmodelByIdMetadata: jest.fn(),
-        getAllSubmodelElements: jest.fn(),
-        getAllSubmodelElementsMetadataSubmodelRepo: jest.fn(),
-        getAllSubmodelElementsValueOnlySubmodelRepo: jest.fn(),
-        getAllSubmodelElementsReferenceSubmodelRepo: jest.fn(),
-        getAllSubmodelElementsPathSubmodelRepo: jest.fn(),
-        postSubmodelElementSubmodelRepo: jest.fn(),
-        getSubmodelElementByPathSubmodelRepo: jest.fn(),
-        getSubmodelElementByPathMetadataSubmodelRepo: jest.fn(),
-        getSubmodelElementByPathReferenceSubmodelRepo: jest.fn(),
-        getSubmodelElementByPathPathSubmodelRepo: jest.fn(),
-        postSubmodelElementByPathSubmodelRepo: jest.fn(),
-        deleteSubmodelElementByPathSubmodelRepo: jest.fn(),
-        putSubmodelElementByPathSubmodelRepo: jest.fn(),
-        patchSubmodelElementByPathSubmodelRepo: jest.fn(),
-        patchSubmodelElementByPathMetadataSubmodelRepo: jest.fn(),
-        getSubmodelByIdMetadata: jest.fn(),
-        getSubmodelByIdValueOnly: jest.fn(),
-        patchSubmodelByIdValueOnly: jest.fn(),
-        getSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
-        patchSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
-        getFileByPathSubmodelRepo: jest.fn(),
-        putFileByPathSubmodelRepo: jest.fn(),
-        deleteFileByPathSubmodelRepo: jest.fn(),
-        invokeOperationSubmodelRepo: jest.fn(),
-        invokeOperationValueOnly: jest.fn(),
-        invokeOperationAsync: jest.fn(),
-        invokeOperationAsyncValueOnly: jest.fn(),
-        getOperationAsyncStatus: jest.fn(),
-        getOperationAsyncResult: jest.fn(),
-        getOperationAsyncResultValueOnly: jest.fn(),
-        generateSerializationByIds: jest.fn(),
-        getSelfDescription: jest.fn(),
+        getAllSubmodels: vi.fn(),
+        getAllSubmodelsMetadata: vi.fn(),
+        getAllSubmodelsValueOnly: vi.fn(),
+        getAllSubmodelsReference: vi.fn(),
+        getAllSubmodelsPath: vi.fn(),
+        postSubmodel: vi.fn(),
+        deleteSubmodelById: vi.fn(),
+        getSubmodelById: vi.fn(),
+        getSubmodelByIdReference: vi.fn(),
+        getSubmodelByIdPath: vi.fn(),
+        putSubmodelById: vi.fn(),
+        patchSubmodelById: vi.fn(),
+        patchSubmodelByIdMetadata: vi.fn(),
+        getAllSubmodelElements: vi.fn(),
+        getAllSubmodelElementsMetadataSubmodelRepo: vi.fn(),
+        getAllSubmodelElementsValueOnlySubmodelRepo: vi.fn(),
+        getAllSubmodelElementsReferenceSubmodelRepo: vi.fn(),
+        getAllSubmodelElementsPathSubmodelRepo: vi.fn(),
+        postSubmodelElementSubmodelRepo: vi.fn(),
+        getSubmodelElementByPathSubmodelRepo: vi.fn(),
+        getSubmodelElementByPathMetadataSubmodelRepo: vi.fn(),
+        getSubmodelElementByPathReferenceSubmodelRepo: vi.fn(),
+        getSubmodelElementByPathPathSubmodelRepo: vi.fn(),
+        postSubmodelElementByPathSubmodelRepo: vi.fn(),
+        deleteSubmodelElementByPathSubmodelRepo: vi.fn(),
+        putSubmodelElementByPathSubmodelRepo: vi.fn(),
+        patchSubmodelElementByPathSubmodelRepo: vi.fn(),
+        patchSubmodelElementByPathMetadataSubmodelRepo: vi.fn(),
+        getSubmodelByIdMetadata: vi.fn(),
+        getSubmodelByIdValueOnly: vi.fn(),
+        patchSubmodelByIdValueOnly: vi.fn(),
+        getSubmodelElementByPathValueOnlySubmodelRepo: vi.fn(),
+        patchSubmodelElementByPathValueOnlySubmodelRepo: vi.fn(),
+        getFileByPathSubmodelRepo: vi.fn(),
+        putFileByPathSubmodelRepo: vi.fn(),
+        deleteFileByPathSubmodelRepo: vi.fn(),
+        invokeOperationSubmodelRepo: vi.fn(),
+        invokeOperationValueOnly: vi.fn(),
+        invokeOperationAsync: vi.fn(),
+        invokeOperationAsyncValueOnly: vi.fn(),
+        getOperationAsyncStatus: vi.fn(),
+        getOperationAsyncResult: vi.fn(),
+        getOperationAsyncResultValueOnly: vi.fn(),
+        generateSerializationByIds: vi.fn(),
+        getSelfDescription: vi.fn(),
     };
 
     // Mock constructor
-    const MockSubmodelRepository = jest.fn(() => mockApiInstance);
+    const MockSubmodelRepository = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (
-            jest.requireMock('../../generated').SubmodelRepositoryService.SubmodelRepositoryAPIApi as jest.Mock
-        ).mockImplementation(MockSubmodelRepository);
-        (
-            jest.requireMock('../../generated').SubmodelRepositoryService.SerializationAPIApi as jest.Mock
-        ).mockImplementation(MockSubmodelRepository);
-        (
-            jest.requireMock('../../generated').SubmodelRepositoryService.DescriptionAPIApi as jest.Mock
-        ).mockImplementation(MockSubmodelRepository);
+        (SubmodelRepositoryService.SubmodelRepositoryAPIApi as unknown as Mock).mockImplementation(
+            MockSubmodelRepository
+        );
+        (SubmodelRepositoryService.SerializationAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
+        (SubmodelRepositoryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
         // Setup mocks for conversion functions
-        (convertApiSubmodelToCoreSubmodel as jest.Mock).mockImplementation((submodel) => {
+        (convertApiSubmodelToCoreSubmodel as Mock).mockImplementation((submodel) => {
             if (submodel.id === API_SUBMODEL1.id) return CORE_SUBMODEL1;
             if (submodel.id === API_SUBMODEL2.id) return CORE_SUBMODEL2;
             return null;
         });
-        (convertCoreSubmodelToApiSubmodel as jest.Mock).mockImplementation((submodel) => {
+        (convertCoreSubmodelToApiSubmodel as Mock).mockImplementation((submodel) => {
             if (submodel.id === CORE_SUBMODEL1.id) return API_SUBMODEL1;
             if (submodel.id === CORE_SUBMODEL2.id) return API_SUBMODEL2;
             return null;
         });
-        (convertApiSubmodelElementToCoreSubmodelElement as jest.Mock).mockImplementation((submodelElement) => {
+        (convertApiSubmodelElementToCoreSubmodelElement as Mock).mockImplementation((submodelElement) => {
             if (submodelElement === API_SUBMODELELEMENT1) return CORE_SUBMODELELEMENT1;
             if (submodelElement === API_SUBMODELELEMENT2) return CORE_SUBMODELELEMENT2;
             if (submodelElement === API_SUBMODELELEMENT_PROPERTY) return CORE_SUBMODELELEMENT_PROPERTY;
             return null;
         });
-        (convertCoreSubmodelElementToApiSubmodelElement as jest.Mock).mockImplementation((submodelElement) => {
+        (convertCoreSubmodelElementToApiSubmodelElement as Mock).mockImplementation((submodelElement) => {
             if (submodelElement === CORE_SUBMODELELEMENT1) return API_SUBMODELELEMENT1;
             if (submodelElement === CORE_SUBMODELELEMENT2) return API_SUBMODELELEMENT2;
             if (submodelElement === CORE_SUBMODELELEMENT_PROPERTY) return API_SUBMODELELEMENT_PROPERTY;
@@ -263,7 +262,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -281,11 +280,11 @@ describe('SubmodelRepositoryClient', () => {
     });
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should return Submodels on successful response', async () => {
@@ -343,7 +342,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.getAllSubmodels.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -397,7 +396,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.postSubmodel.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -448,7 +447,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.deleteSubmodelById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -507,7 +506,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -589,7 +588,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.putSubmodelById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -646,7 +645,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelByIdMetadata.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -706,7 +705,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelByIdValueOnly.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -762,7 +761,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.patchSubmodelByIdValueOnly.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -827,7 +826,7 @@ describe('SubmodelRepositoryClient', () => {
         mockApiInstance.getSubmodelElementByPathValueOnlySubmodelRepo.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -888,7 +887,7 @@ describe('SubmodelRepositoryClient', () => {
         mockApiInstance.patchSubmodelElementByPathValueOnlySubmodelRepo.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -961,7 +960,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.getAllSubmodelElements.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1019,7 +1018,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.postSubmodelElementSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1082,7 +1081,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelElementByPathSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1145,7 +1144,7 @@ describe('SubmodelRepositoryClient', () => {
         mockApiInstance.postSubmodelElementByPathSubmodelRepo.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1202,7 +1201,7 @@ describe('SubmodelRepositoryClient', () => {
         mockApiInstance.deleteSubmodelElementByPathSubmodelRepo.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1293,7 +1292,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.putSubmodelElementByPathSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1357,7 +1356,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.invokeOperationSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1420,7 +1419,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.invokeOperationValueOnly.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1478,7 +1477,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.invokeOperationAsync.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 
@@ -1538,7 +1537,7 @@ describe('SubmodelRepositoryClient', () => {
             ],
         };
         mockApiInstance.invokeOperationAsyncValueOnly.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
 

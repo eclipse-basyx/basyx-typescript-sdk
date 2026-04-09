@@ -3,6 +3,7 @@ import {
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mock, vi } from 'vitest';
 import { SubmodelRepositoryService } from '../../generated';
 import {
     convertApiSubmodelElementToCoreSubmodelElement,
@@ -14,11 +15,11 @@ import {
 /**
  * Mock the jsonization methods used in convertSubmodelTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
+vi.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
-        submodelFromJsonable: jest.fn(),
-        toJsonable: jest.fn(),
-        submodelElementFromJsonable: jest.fn(),
+        submodelFromJsonable: vi.fn(),
+        toJsonable: vi.fn(),
+        submodelElementFromJsonable: vi.fn(),
     },
 }));
 
@@ -42,12 +43,12 @@ const JSONABLE_SUBMODELELEMENT: jsonization.JsonObject = {
 
 describe('convertSubmodelTypes', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('convertApiSubmodelToCoreSubmodel', () => {
         it('should convert ApiSubmodel to CoreSubmodel successfully', () => {
-            (jsonization.submodelFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.submodelFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_SUBMODEL,
             });
@@ -61,7 +62,7 @@ describe('convertSubmodelTypes', () => {
         it('should throw an error if jsonization.submodelFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.submodelFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.submodelFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -72,7 +73,7 @@ describe('convertSubmodelTypes', () => {
 
     describe('convertCoreSubmodelToApiSubmodel', () => {
         it('should convert CoreSubmodel to ApiSubmodel successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_SUBMODEL);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_SUBMODEL);
 
             const result = convertCoreSubmodelToApiSubmodel(CORE_SUBMODEL);
 
@@ -83,7 +84,7 @@ describe('convertSubmodelTypes', () => {
 
     describe('convertApiSubmodelElementToCoreSubmodelElement', () => {
         it('should convert ApiSubmodelElement to CoreSubmodelElement successfully', () => {
-            (jsonization.submodelElementFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.submodelElementFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_SUBMODELELEMENT,
             });
@@ -99,7 +100,7 @@ describe('convertSubmodelTypes', () => {
         it('should throw an error if jsonization.submodelElementFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.submodelElementFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.submodelElementFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -112,7 +113,7 @@ describe('convertSubmodelTypes', () => {
 
     describe('convertCoreSubmodelElementToApiSubmodelElement', () => {
         it('should convert CoreSubmodelElement to ApiSubmodelElement successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_SUBMODELELEMENT);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_SUBMODELELEMENT);
 
             const result = convertCoreSubmodelElementToApiSubmodelElement(CORE_SUBMODELELEMENT);
 

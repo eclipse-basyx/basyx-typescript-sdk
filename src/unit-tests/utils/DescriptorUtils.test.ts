@@ -30,7 +30,7 @@ const CORE_SUBMODEL_DESCRIPTOR1: CoreSubmodelDescriptor = new CoreSubmodelDescri
 
 describe('DescriptorUtils', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('extractEndpointHref', () => {

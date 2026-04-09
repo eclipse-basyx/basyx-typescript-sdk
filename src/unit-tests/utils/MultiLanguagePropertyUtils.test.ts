@@ -4,19 +4,19 @@ import {
     MultiLanguageProperty as CoreMultiLanguageProperty,
     //isMultiLanguageProperty,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import { vi } from 'vitest';
 import { firstLangStringSetText, hasValue, valueToDisplay } from '../../utils/MultiLanguagePropertyUtils';
 
 /**
  * Mock the isMultiLanguageProperty method used in MultiLanguagePropertyUtils.ts
  */
-// jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
+// vi.mock('@aas-core-works/aas-core3.1-typescript', () => ({
 //     types: {
-//         isMultiLanguageProperty: jest.fn(),
+//         isMultiLanguageProperty: vi.fn(),
 //     },
 // }));
-// jest.mock('../../utils/MultiLanguagePropertyUtils', () => ({
-//     ...jest.requireActual('../../utils/MultiLanguagePropertyUtils'),
-//     hasValue: jest.fn(),
+// vi.mock('../../utils/MultiLanguagePropertyUtils', () => ({
+//     hasValue: vi.fn(),
 // }));
 
 // Define mock constants
@@ -29,13 +29,13 @@ const CORE_MULTILANGUAGEPROPERTY2: CoreMultiLanguageProperty = new CoreMultiLang
 CORE_MULTILANGUAGEPROPERTY2.value = [];
 describe('MultiLanguagePropertyUtils', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('hasValue', () => {
         it('should successfully check whether the given multi-language property object has a non-empty value.', () => {
-            //(types.isMultiLanguageProperty as jest.Mock).mockReturnValue(true);
-            //jest.spyOn(types, 'isMultiLanguageProperty').mockReturnValue(true);
+            //(types.isMultiLanguageProperty as Mock).mockReturnValue(true);
+            //vi.spyOn(types, 'isMultiLanguageProperty').mockReturnValue(true);
             //mockedIsMultiLanguageProperty.mockReturnValue(true);
             const result = hasValue(CORE_MULTILANGUAGEPROPERTY1);
             //expect(mockedIsMultiLanguageProperty).toHaveBeenCalledWith(CORE_MULTILANGUAGEPROPERTY1); //types.isMultiLanguageProperty

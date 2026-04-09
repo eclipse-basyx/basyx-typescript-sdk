@@ -16,7 +16,7 @@ const CORE_REFERENCE2: CoreReference = new CoreReference(ReferenceTypes.External
 
 describe('ReferenceUtil', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('extractId', () => {

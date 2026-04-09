@@ -1,4 +1,5 @@
 import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mock, vi } from 'vitest';
 import { ConceptDescriptionRepositoryClient } from '../../clients/ConceptDescriptionRepositoryClient';
 import { ConceptDescriptionRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';
@@ -7,10 +8,10 @@ import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertCon
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
-jest.mock('../../generated');
-jest.mock('../../lib/convertConceptDescriptionTypes');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+vi.mock('../../generated');
+vi.mock('../../lib/convertConceptDescriptionTypes');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 
 // Define mock constants
 
@@ -64,47 +65,46 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     // Create mock for ConceptDescriptionRepositoryAPIApi
     const mockApiInstance = {
-        getAllConceptDescriptions: jest.fn(),
-        postConceptDescription: jest.fn(),
-        deleteConceptDescriptionById: jest.fn(),
-        getConceptDescriptionById: jest.fn(),
-        putConceptDescriptionById: jest.fn(),
-        generateSerializationByIds: jest.fn(),
-        getSelfDescription: jest.fn(),
+        getAllConceptDescriptions: vi.fn(),
+        postConceptDescription: vi.fn(),
+        deleteConceptDescriptionById: vi.fn(),
+        getConceptDescriptionById: vi.fn(),
+        putConceptDescriptionById: vi.fn(),
+        generateSerializationByIds: vi.fn(),
+        getSelfDescription: vi.fn(),
     };
 
     // Mock constructor
-    const MockCDRepository = jest.fn(() => mockApiInstance);
+    const MockCDRepository = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (
-            jest.requireMock('../../generated').ConceptDescriptionRepositoryService
-                .ConceptDescriptionRepositoryAPIApi as jest.Mock
-        ).mockImplementation(MockCDRepository);
-        (
-            jest.requireMock('../../generated').ConceptDescriptionRepositoryService.SerializationAPIApi as jest.Mock
-        ).mockImplementation(MockCDRepository);
-        (
-            jest.requireMock('../../generated').ConceptDescriptionRepositoryService.DescriptionAPIApi as jest.Mock
-        ).mockImplementation(MockCDRepository);
+        (ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi as unknown as Mock).mockImplementation(
+            MockCDRepository
+        );
+        (ConceptDescriptionRepositoryService.SerializationAPIApi as unknown as Mock).mockImplementation(
+            MockCDRepository
+        );
+        (ConceptDescriptionRepositoryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockCDRepository);
         // Setup mocks for conversion functions
-        (convertApiCDToCoreCD as jest.Mock).mockImplementation((conceptDescription) => {
+        (convertApiCDToCoreCD as Mock).mockImplementation((conceptDescription) => {
             if (conceptDescription.id === API_CD1.id) return CORE_CD1;
             if (conceptDescription.id === API_CD2.id) return CORE_CD2;
             return null;
         });
-        (convertCoreCDToApiCD as jest.Mock).mockImplementation((conceptDescription) => {
+        (convertCoreCDToApiCD as Mock).mockImplementation((conceptDescription) => {
             if (conceptDescription.id === CORE_CD1.id) return API_CD1;
             if (conceptDescription.id === CORE_CD2.id) return API_CD2;
             return null;
         });
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -123,11 +123,11 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should return Concept Descriptions on successful response', async () => {
@@ -183,7 +183,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.getAllConceptDescriptions.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -237,7 +237,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.postConceptDescription.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -288,7 +288,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.deleteConceptDescriptionById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -343,7 +343,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.getConceptDescriptionById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -425,7 +425,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.putConceptDescriptionById.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -483,7 +483,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.generateSerializationByIds.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -532,7 +532,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
 

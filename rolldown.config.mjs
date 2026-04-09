@@ -1,8 +1,20 @@
-import resolve from '@rollup/plugin-node-resolve';
-import { string } from 'rollup-plugin-string';
+function xmlStringPlugin() {
+    return {
+        name: 'xml-string-plugin',
+        transform(code, id) {
+            if (!id.endsWith('.xml')) {
+                return null;
+            }
+
+            return {
+                code: `export default ${JSON.stringify(code)};`,
+                map: null,
+            };
+        },
+    };
+}
 
 export default [
-    // CommonJS build
     {
         input: 'dist/index.js',
         output: {
@@ -10,15 +22,9 @@ export default [
             format: 'cjs',
             sourcemap: true,
         },
-        plugins: [
-            string({
-                include: '**/*.xml',
-            }),
-            resolve(),
-        ],
+        plugins: [xmlStringPlugin()],
         external: ['@hey-api/client-fetch'],
     },
-    // ES Module build
     {
         input: 'dist/index.js',
         output: {
@@ -26,12 +32,7 @@ export default [
             format: 'esm',
             sourcemap: true,
         },
-        plugins: [
-            string({
-                include: '**/*.xml',
-            }),
-            resolve(),
-        ],
+        plugins: [xmlStringPlugin()],
         external: ['@hey-api/client-fetch'],
     },
 ];

@@ -44,7 +44,7 @@ const REFERABLE_WITH_DESCRIPTION: IReferable = {
 
 describe('ReferableUtils', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('nameToDisplay', () => {

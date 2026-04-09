@@ -1,15 +1,16 @@
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mock, vi } from 'vitest';
 import { AasDiscoveryService } from '../../generated';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../../lib/convertAasDiscoveryTypes';
 
 /**
  * Mock the jsonization methods used in convertAasDiscoveryTypes.ts
  */
-jest.mock('@aas-core-works/aas-core3.1-typescript', () => ({
+vi.mock('@aas-core-works/aas-core3.1-typescript', () => ({
     jsonization: {
-        specificAssetIdFromJsonable: jest.fn(),
-        toJsonable: jest.fn(),
+        specificAssetIdFromJsonable: vi.fn(),
+        toJsonable: vi.fn(),
     },
 }));
 
@@ -29,12 +30,12 @@ const JSONABLE_SPECIFIC_ASSET_ID: jsonization.JsonObject = {
 
 describe('convertAasDiscoveryTypes', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('convertApiAssetIdToCoreAssetId', () => {
         it('should convert ApiSpecificAssetId to CoreSpecificAssetId successfully', () => {
-            (jsonization.specificAssetIdFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.specificAssetIdFromJsonable as Mock).mockReturnValue({
                 error: null,
                 mustValue: () => CORE_SPECIFIC_ASSET_ID,
             });
@@ -50,7 +51,7 @@ describe('convertAasDiscoveryTypes', () => {
         it('should throw an error if jsonization.specificAssetIdFromJsonable returns an error', () => {
             const error = new Error('Conversion failed');
 
-            (jsonization.specificAssetIdFromJsonable as jest.Mock).mockReturnValue({
+            (jsonization.specificAssetIdFromJsonable as Mock).mockReturnValue({
                 error: error,
             });
 
@@ -63,7 +64,7 @@ describe('convertAasDiscoveryTypes', () => {
 
     describe('convertCoreAssetIdToApiAssetId', () => {
         it('should convert CoreSpecificAssetId to ApiSpecificAssetId successfully', () => {
-            (jsonization.toJsonable as jest.Mock).mockReturnValue(JSONABLE_SPECIFIC_ASSET_ID);
+            (jsonization.toJsonable as Mock).mockReturnValue(JSONABLE_SPECIFIC_ASSET_ID);
 
             const result = convertCoreAssetIdToApiAssetId(CORE_SPECIFIC_ASSET_ID);
 

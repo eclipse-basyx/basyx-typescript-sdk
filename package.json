@@ -1,6 +1,6 @@
 {
   "name": "basyx-typescript-sdk",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "BaSyx TypeScript SDK for developing applications and components for the Asset Administration Shell (AAS)",
   "main": "bundle/index.cjs",
   "module": "bundle/index.mjs",
@@ -15,6 +15,7 @@
   "repository": "https://github.com/eclipse-basyx/basyx-typescript-sdk.git",
   "author": "Aaron Zielstorff <aaron.zielstorff@iese.fraunhofer.de>",
   "license": "MIT",
+  "packageManager": "pnpm@10.17.1",
   "files": [
     "bundle",
     "dist",
@@ -23,10 +24,18 @@
   ],
   "scripts": {
     "build": "tsc",
-    "bundle": "rollup -c",
+    "bundle": "rolldown -c rolldown.config.mjs",
+    "verify:compat": "node scripts/verify-consumer-compat.mjs",
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./",
-    "test": "jest --coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --project unit-tests",
+    "test:integration": "vitest run --project integration-tests",
     "docs": "typedoc --options typedoc.json",
     "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true",
     "gen-submodelrepo": "openapi-generator-cli generate -i openapi/smrepository.yaml -g typescript-fetch -o src/generated/SubmodelRepositoryService --additional-properties=withoutRuntimeChecks=true",
@@ -43,28 +52,30 @@
     "@aas-core-works/aas-core3.1-typescript": "^1.0.0",
     "@eslint/js": "^10.0.1",
     "@openapitools/openapi-generator-cli": "^2.18.4",
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "@types/jest": "^30.0.0",
+    "@vitest/coverage-v8": "^4.1.4",
     "@types/node": "^25.0.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.20.0",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-simple-import-sort": "^13.0.0",
-    "jest": "^30.0.0",
     "jiti": "^2.4.2",
     "prettier": "^3.4.2",
-    "rollup": "^4.34.6",
-    "rollup-plugin-string": "^3.0.0",
-    "ts-jest": "^29.2.5",
+    "rolldown": "^1.0.0-rc.15",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typedoc": "^0.28.1",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.21.0"
+    "typescript-eslint": "^8.21.0",
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "xml-sax-ts": "^0.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@openapitools/openapi-generator-cli"
+    ]
   }
 }

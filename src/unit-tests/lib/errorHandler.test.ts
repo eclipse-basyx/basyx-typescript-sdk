@@ -9,11 +9,11 @@ describe('handleApiError', () => {
 
     beforeEach(() => {
         // Mock Date.getTime to return a consistent timestamp for testing
-        jest.spyOn(Date.prototype, 'getTime').mockReturnValue(1744752054631.86);
+        vi.spyOn(Date.prototype, 'getTime').mockReturnValue(1744752054631.86);
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it('should handle errors that already have messages array', async () => {
@@ -54,7 +54,7 @@ describe('handleApiError', () => {
     });
 
     it('should handle ResponseError with parseable JSON response', async () => {
-        const mockJson = jest.fn().mockResolvedValue({
+        const mockJson = vi.fn().mockResolvedValue({
             messages: [
                 {
                     code: '403',
@@ -75,7 +75,7 @@ describe('handleApiError', () => {
     });
 
     it('should handle ResponseError with unparseable JSON response', async () => {
-        const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
+        const mockJson = vi.fn().mockRejectedValue(new Error('Invalid JSON'));
         const mockResponse = createMockResponse(500, mockJson);
         const originalError = new ResponseError(mockResponse, 'Server error');
         const result = await handleApiError(originalError);
@@ -140,7 +140,7 @@ describe('handleApiError', () => {
         ];
 
         for (const testCase of testCases) {
-            const mockJson = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
+            const mockJson = vi.fn().mockRejectedValue(new Error('Invalid JSON'));
             const mockResponse = createMockResponse(testCase.status, mockJson);
             const originalError = new ResponseError(mockResponse, 'Error message');
             const result = await handleApiError(originalError);
@@ -151,7 +151,7 @@ describe('handleApiError', () => {
     });
 
     it('should handle ResponseError with valid JSON containing messages', async () => {
-        const mockJson = jest.fn().mockResolvedValue({
+        const mockJson = vi.fn().mockResolvedValue({
             messages: [
                 {
                     code: '422',

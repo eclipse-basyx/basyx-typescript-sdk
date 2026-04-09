@@ -11,6 +11,7 @@ import {
     ReferenceTypes,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
+import { type Mock, vi } from 'vitest';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
 import { ModelType } from '../../generated/AasRepositoryService';
@@ -26,12 +27,12 @@ import {
 import { handleApiError } from '../../lib/errorHandler';
 
 // Mock the dependencies
-//jest.mock('../../generated');
-jest.mock('../../generated');
-jest.mock('../../lib/convertAasTypes');
-jest.mock('../../lib/convertSubmodelTypes');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+//vi.mock('../../generated');
+vi.mock('../../generated');
+vi.mock('../../lib/convertAasTypes');
+vi.mock('../../lib/convertSubmodelTypes');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 
 // Define mock constants
 const ID_SHORT_PATH = 'temperature';
@@ -234,89 +235,90 @@ describe('AasRepositoryClient', () => {
 
     // Create mock for AssetAdministrationShellRepositoryAPIApi
     const mockApiInstance = {
-        getSubmodelByIdAasRepository: jest.fn(),
-        putSubmodelByIdAasRepository: jest.fn(),
-        deleteSubmodelByIdAasRepository: jest.fn(),
-        patchSubmodelAasRepository: jest.fn(),
-        getSubmodelByIdMetadataAasRepository: jest.fn(),
-        patchSubmodelByIdMetadataAasRepository: jest.fn(),
-        getSubmodelByIdValueOnlyAasRepository: jest.fn(),
-        patchSubmodelByIdValueOnlyAasRepository: jest.fn(),
-        getSubmodelByIdReferenceAasRepository: jest.fn(),
-        getSubmodelByIdPathAasRepository: jest.fn(),
-        getAllSubmodelElementsAasRepository: jest.fn(),
-        postSubmodelElementAasRepository: jest.fn(),
-        getAllSubmodelElementsMetadataAasRepository: jest.fn(),
-        getAllSubmodelElementsValueOnlyAasRepository: jest.fn(),
-        getAllSubmodelElementsReferenceAasRepository: jest.fn(),
-        getAllSubmodelElementsPathAasRepository: jest.fn(),
-        getSubmodelElementByPathAasRepository: jest.fn(),
-        postSubmodelElementByPathAasRepository: jest.fn(),
-        deleteSubmodelElementByPathAasRepository: jest.fn(),
-        putSubmodelElementByPathAasRepository: jest.fn(),
-        patchSubmodelElementValueByPathAasRepository: jest.fn(),
-        getSubmodelElementByPathMetadataAasRepository: jest.fn(),
-        patchSubmodelElementValueByPathMetadata: jest.fn(),
-        getSubmodelElementByPathValueOnlyAasRepository: jest.fn(),
-        patchSubmodelElementValueByPathValueOnly: jest.fn(),
-        getSubmodelElementByPathReferenceAasRepository: jest.fn(),
-        getSubmodelElementByPathPathAasRepository: jest.fn(),
-        getFileByPathAasRepository: jest.fn(),
-        putFileByPathAasRepository: jest.fn(),
-        deleteFileByPathAasRepository: jest.fn(),
-        invokeOperationAasRepository: jest.fn(),
-        invokeOperationValueOnlyAasRepository: jest.fn(),
-        invokeOperationAsyncAasRepository: jest.fn(),
-        invokeOperationAsyncValueOnlyAasRepository: jest.fn(),
-        getOperationAsyncStatusAasRepository: jest.fn(),
-        getOperationAsyncResultAasRepository: jest.fn(),
-        getOperationAsyncResultValueOnlyAasRepository: jest.fn(),
+        getSubmodelByIdAasRepository: vi.fn(),
+        putSubmodelByIdAasRepository: vi.fn(),
+        deleteSubmodelByIdAasRepository: vi.fn(),
+        patchSubmodelAasRepository: vi.fn(),
+        getSubmodelByIdMetadataAasRepository: vi.fn(),
+        patchSubmodelByIdMetadataAasRepository: vi.fn(),
+        getSubmodelByIdValueOnlyAasRepository: vi.fn(),
+        patchSubmodelByIdValueOnlyAasRepository: vi.fn(),
+        getSubmodelByIdReferenceAasRepository: vi.fn(),
+        getSubmodelByIdPathAasRepository: vi.fn(),
+        getAllSubmodelElementsAasRepository: vi.fn(),
+        postSubmodelElementAasRepository: vi.fn(),
+        getAllSubmodelElementsMetadataAasRepository: vi.fn(),
+        getAllSubmodelElementsValueOnlyAasRepository: vi.fn(),
+        getAllSubmodelElementsReferenceAasRepository: vi.fn(),
+        getAllSubmodelElementsPathAasRepository: vi.fn(),
+        getSubmodelElementByPathAasRepository: vi.fn(),
+        postSubmodelElementByPathAasRepository: vi.fn(),
+        deleteSubmodelElementByPathAasRepository: vi.fn(),
+        putSubmodelElementByPathAasRepository: vi.fn(),
+        patchSubmodelElementValueByPathAasRepository: vi.fn(),
+        getSubmodelElementByPathMetadataAasRepository: vi.fn(),
+        patchSubmodelElementValueByPathMetadata: vi.fn(),
+        getSubmodelElementByPathValueOnlyAasRepository: vi.fn(),
+        patchSubmodelElementValueByPathValueOnly: vi.fn(),
+        getSubmodelElementByPathReferenceAasRepository: vi.fn(),
+        getSubmodelElementByPathPathAasRepository: vi.fn(),
+        getFileByPathAasRepository: vi.fn(),
+        putFileByPathAasRepository: vi.fn(),
+        deleteFileByPathAasRepository: vi.fn(),
+        invokeOperationAasRepository: vi.fn(),
+        invokeOperationValueOnlyAasRepository: vi.fn(),
+        invokeOperationAsyncAasRepository: vi.fn(),
+        invokeOperationAsyncValueOnlyAasRepository: vi.fn(),
+        getOperationAsyncStatusAasRepository: vi.fn(),
+        getOperationAsyncResultAasRepository: vi.fn(),
+        getOperationAsyncResultValueOnlyAasRepository: vi.fn(),
     };
 
     // Mock constructor
-    const MockAasRepository = jest.fn(() => mockApiInstance);
+    const MockAasRepository = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (
-            jest.requireMock('../../generated').AasRepositoryService
-                .AssetAdministrationShellRepositoryAPIApi as jest.Mock
-        ).mockImplementation(MockAasRepository);
+        (AasRepositoryService.AssetAdministrationShellRepositoryAPIApi as unknown as Mock).mockImplementation(
+            MockAasRepository
+        );
         // Setup mocks for conversion functions
-        (convertApiReferenceToCoreReference as jest.Mock).mockImplementation((ref) => {
+        (convertApiReferenceToCoreReference as Mock).mockImplementation((ref) => {
             if (ref === API_REFERENCE1) return CORE_REFERENCE1;
             if (ref === API_REFERENCE2) return CORE_REFERENCE2;
             if (ref === API_SUBMODELELEMENT_REFERENCE1) return CORE_SUBMODELELEMENT_REFERENCE1;
             if (ref === API_SUBMODELELEMENT_REFERENCE2) return CORE_SUBMODELELEMENT_REFERENCE2;
             return null;
         });
-        (convertCoreReferenceToApiReference as jest.Mock).mockImplementation((ref) => {
+        (convertCoreReferenceToApiReference as Mock).mockImplementation((ref) => {
             if (ref === CORE_REFERENCE1) return API_REFERENCE1;
             if (ref === CORE_REFERENCE2) return API_REFERENCE2;
             if (ref === CORE_SUBMODELELEMENT_REFERENCE1) return API_SUBMODELELEMENT_REFERENCE1;
             if (ref === CORE_SUBMODELELEMENT_REFERENCE2) return API_SUBMODELELEMENT_REFERENCE2;
             return null;
         });
-        (convertApiSubmodelToCoreSubmodel as jest.Mock).mockImplementation((submodel) => {
+        (convertApiSubmodelToCoreSubmodel as Mock).mockImplementation((submodel) => {
             if (submodel.id === API_SUBMODEL1.id) return CORE_SUBMODEL1;
             if (submodel.id === API_SUBMODEL2.id) return CORE_SUBMODEL2;
             return null;
         });
-        (convertCoreSubmodelToApiSubmodel as jest.Mock).mockImplementation((submodel) => {
+        (convertCoreSubmodelToApiSubmodel as Mock).mockImplementation((submodel) => {
             if (submodel.id === CORE_SUBMODEL1.id) return API_SUBMODEL1;
             if (submodel.id === CORE_SUBMODEL2.id) return API_SUBMODEL2;
             return null;
         });
-        (convertApiSubmodelElementToCoreSubmodelElement as jest.Mock).mockImplementation((submodelElement) => {
+        (convertApiSubmodelElementToCoreSubmodelElement as Mock).mockImplementation((submodelElement) => {
             if (submodelElement === API_SUBMODELELEMENT1) return CORE_SUBMODELELEMENT1;
             if (submodelElement === API_SUBMODELELEMENT2) return CORE_SUBMODELELEMENT2;
             if (submodelElement === API_SUBMODELELEMENT_PROPERTY) return CORE_SUBMODELELEMENT_PROPERTY;
             return null;
         });
-        (convertCoreSubmodelElementToApiSubmodelElement as jest.Mock).mockImplementation((submodelElement) => {
+        (convertCoreSubmodelElementToApiSubmodelElement as Mock).mockImplementation((submodelElement) => {
             if (submodelElement === CORE_SUBMODELELEMENT1) return API_SUBMODELELEMENT1;
             if (submodelElement === CORE_SUBMODELELEMENT2) return API_SUBMODELELEMENT2;
             if (submodelElement === CORE_SUBMODELELEMENT_PROPERTY) return API_SUBMODELELEMENT_PROPERTY;
@@ -324,7 +326,7 @@ describe('AasRepositoryClient', () => {
         });
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -343,11 +345,11 @@ describe('AasRepositoryClient', () => {
 
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should get a Submodel by ID', async () => {
@@ -395,7 +397,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelByIdAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -484,7 +486,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.putSubmodelByIdAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -540,7 +542,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.deleteSubmodelByIdAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -600,7 +602,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.patchSubmodelAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -659,7 +661,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelByIdMetadataAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -718,7 +720,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.patchSubmodelByIdMetadataAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -783,7 +785,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelByIdValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -844,7 +846,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.patchSubmodelByIdValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -906,7 +908,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelByIdReferenceAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -966,7 +968,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getSubmodelByIdPathAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1041,7 +1043,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getAllSubmodelElementsAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1103,7 +1105,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.postSubmodelElementAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1177,7 +1179,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getAllSubmodelElementsMetadataAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1252,7 +1254,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getAllSubmodelElementsValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1327,7 +1329,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getAllSubmodelElementsReferenceAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1404,7 +1406,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getAllSubmodelElementsPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1472,7 +1474,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelElementByPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1539,7 +1541,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.postSubmodelElementByPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1600,7 +1602,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.deleteSubmodelElementByPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1696,7 +1698,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.putSubmodelElementByPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1762,7 +1764,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.patchSubmodelElementValueByPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1828,7 +1830,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelElementByPathMetadataAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1891,7 +1893,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.patchSubmodelElementValueByPathMetadata.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -1960,7 +1962,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelElementByPathValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2025,7 +2027,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.patchSubmodelElementValueByPathValueOnly.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2095,7 +2097,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelElementByPathReferenceAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2162,7 +2164,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getSubmodelElementByPathPathAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2225,7 +2227,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getFileByPathAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2287,7 +2289,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.putFileByPathAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2347,7 +2349,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.deleteFileByPathAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2410,7 +2412,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.invokeOperationAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2476,7 +2478,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.invokeOperationValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2537,7 +2539,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.invokeOperationAsyncAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2600,7 +2602,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.invokeOperationAsyncValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2665,7 +2667,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getOperationAsyncStatusAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2730,7 +2732,7 @@ describe('AasRepositoryClient', () => {
             ],
         };
         mockApiInstance.getOperationAsyncResultAasRepository.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 
@@ -2797,7 +2799,7 @@ describe('AasRepositoryClient', () => {
         mockApiInstance.getOperationAsyncResultValueOnlyAasRepository.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRepositoryClient();
 

@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 // Import necessary types
 //import { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
@@ -17,10 +18,10 @@ import {
 } from '../../models/Descriptors';
 
 // Mock the dependencies
-jest.mock('../../generated');
-jest.mock('../../lib/convertAasDescriptorTypes');
-jest.mock('../../lib/base64Url');
-jest.mock('../../lib/errorHandler');
+vi.mock('../../generated');
+vi.mock('../../lib/convertAasDescriptorTypes');
+vi.mock('../../lib/base64Url');
+vi.mock('../../lib/errorHandler');
 // Define mock constants
 //const ID_SHORT = 'shellDescriptorIdShort';
 const LIMIT = 10;
@@ -118,57 +119,57 @@ describe('AasRegistryClient', () => {
 
     // Create mock for AssetAdministrationShellRegistryAPIApi
     const mockApiInstance = {
-        getAllAssetAdministrationShellDescriptors: jest.fn(),
-        postAssetAdministrationShellDescriptor: jest.fn(),
-        deleteAssetAdministrationShellDescriptorById: jest.fn(),
-        getAssetAdministrationShellDescriptorById: jest.fn(),
-        putAssetAdministrationShellDescriptorById: jest.fn(),
-        getAllSubmodelDescriptorsThroughSuperpath: jest.fn(),
-        postSubmodelDescriptorThroughSuperpath: jest.fn(),
-        getSubmodelDescriptorByIdThroughSuperpath: jest.fn(),
-        deleteSubmodelDescriptorByIdThroughSuperpath: jest.fn(),
-        putSubmodelDescriptorByIdThroughSuperpath: jest.fn(),
-        getSelfDescription: jest.fn(),
+        getAllAssetAdministrationShellDescriptors: vi.fn(),
+        postAssetAdministrationShellDescriptor: vi.fn(),
+        deleteAssetAdministrationShellDescriptorById: vi.fn(),
+        getAssetAdministrationShellDescriptorById: vi.fn(),
+        putAssetAdministrationShellDescriptorById: vi.fn(),
+        getAllSubmodelDescriptorsThroughSuperpath: vi.fn(),
+        postSubmodelDescriptorThroughSuperpath: vi.fn(),
+        getSubmodelDescriptorByIdThroughSuperpath: vi.fn(),
+        deleteSubmodelDescriptorByIdThroughSuperpath: vi.fn(),
+        putSubmodelDescriptorByIdThroughSuperpath: vi.fn(),
+        getSelfDescription: vi.fn(),
     };
 
     // Mock constructor
-    const MockAasRegistry = jest.fn(() => mockApiInstance);
+    const MockAasRegistry = vi.fn(function () {
+        return mockApiInstance;
+    });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Setup mock for base64Encode
-        (base64Encode as jest.Mock).mockImplementation((input) => `encoded_${input}`);
+        (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (
-            jest.requireMock('../../generated').AasRegistryService.AssetAdministrationShellRegistryAPIApi as jest.Mock
-        ).mockImplementation(MockAasRegistry);
-        (jest.requireMock('../../generated').AasRegistryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+        (AasRegistryService.AssetAdministrationShellRegistryAPIApi as unknown as Mock).mockImplementation(
             MockAasRegistry
         );
+        (AasRegistryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockAasRegistry);
         // Setup mocks for conversion functions
-        (convertApiAasDescriptorToCoreAasDescriptor as jest.Mock).mockImplementation((aasDescriptor) => {
+        (convertApiAasDescriptorToCoreAasDescriptor as Mock).mockImplementation((aasDescriptor) => {
             if (aasDescriptor.id === API_AAS_DESCRIPTOR1.id) return CORE_AAS_DESCRIPTOR1;
             if (aasDescriptor.id === API_AAS_DESCRIPTOR2.id) return CORE_AAS_DESCRIPTOR2;
             return null;
         });
-        (convertCoreAasDescriptorToApiAasDescriptor as jest.Mock).mockImplementation((aasDescriptor) => {
+        (convertCoreAasDescriptorToApiAasDescriptor as Mock).mockImplementation((aasDescriptor) => {
             if (aasDescriptor.id === CORE_AAS_DESCRIPTOR1.id) return API_AAS_DESCRIPTOR1;
             if (aasDescriptor.id === CORE_AAS_DESCRIPTOR2.id) return API_AAS_DESCRIPTOR2;
             return null;
         });
-        (convertApiSubmodelDescriptorToCoreSubmodelDescriptor as jest.Mock).mockImplementation((submodelDescriptor) => {
+        (convertApiSubmodelDescriptorToCoreSubmodelDescriptor as Mock).mockImplementation((submodelDescriptor) => {
             if (submodelDescriptor.id === API_SUBMODEL_DESCRIPTOR1.id) return CORE_SUBMODEL_DESCRIPTOR1;
             if (submodelDescriptor.id === API_SUBMODEL_DESCRIPTOR2.id) return CORE_SUBMODEL_DESCRIPTOR2;
             return null;
         });
-        (convertCoreSubmodelDescriptorToApiSubmodelDescriptor as jest.Mock).mockImplementation((submodelDescriptor) => {
+        (convertCoreSubmodelDescriptorToApiSubmodelDescriptor as Mock).mockImplementation((submodelDescriptor) => {
             if (submodelDescriptor.id === CORE_SUBMODEL_DESCRIPTOR1.id) return API_SUBMODEL_DESCRIPTOR1;
             if (submodelDescriptor.id === CORE_SUBMODEL_DESCRIPTOR2.id) return API_SUBMODEL_DESCRIPTOR2;
             return null;
         });
 
         // Mock the error handler to return a standardized Result
-        (handleApiError as jest.Mock).mockImplementation(async (err) => {
+        (handleApiError as Mock).mockImplementation(async (err) => {
             // If the error already has messages, return it as is
             if (err?.messages) return err;
 
@@ -187,11 +188,11 @@ describe('AasRegistryClient', () => {
 
     // Mock console.error to prevent logging during tests
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterAll(() => {
-        (console.error as jest.Mock).mockRestore();
+        (console.error as Mock).mockRestore();
     });
 
     it('should return Asset Administration Shell Descriptors on successful response', async () => {
@@ -247,7 +248,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.getAllAssetAdministrationShellDescriptors.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -303,7 +304,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.postAssetAdministrationShellDescriptor.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -356,7 +357,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.deleteAssetAdministrationShellDescriptorById.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -413,7 +414,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.getAssetAdministrationShellDescriptorById.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -496,7 +497,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.putAssetAdministrationShellDescriptorById.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -566,7 +567,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.getAllSubmodelDescriptorsThroughSuperpath.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -626,7 +627,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.postSubmodelDescriptorThroughSuperpath.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -687,7 +688,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.getSubmodelDescriptorByIdThroughSuperpath.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -744,7 +745,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpath.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -834,7 +835,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath.mockRejectedValue(
             new Error('Required parameter missing')
         );
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 
@@ -886,7 +887,7 @@ describe('AasRegistryClient', () => {
             ],
         };
         mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
-        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+        (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
 

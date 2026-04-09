@@ -3,7 +3,7 @@ import { getKeyTypeAbbreviation } from '../../utils/KeyTypesUtil';
 
 describe('KeyTypesUtil', () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('getKeyTypeAbbreviation', () => {

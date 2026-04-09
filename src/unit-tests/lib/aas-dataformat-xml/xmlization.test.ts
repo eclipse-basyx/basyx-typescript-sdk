@@ -24,6 +24,7 @@ import {
 } from '@aas-core-works/aas-core3.1-typescript/types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { deserializeXml, serializeXml } from '../../../lib/aas-dataformat-xml';
 import { BaSyxEnvironment } from '../../../models/BaSyxEnvironment';
 import {
@@ -44,6 +45,8 @@ import {
     createTestSubmodelWithOperation,
     createTestSubmodelWithQualifier,
 } from './fixtures/submodels';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const TEST_AAS: AssetAdministrationShell = createTestAas();
 
