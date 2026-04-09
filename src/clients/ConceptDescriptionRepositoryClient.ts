@@ -220,7 +220,9 @@ export class ConceptDescriptionRepositoryClient {
         const { configuration, aasIds, submodelIds, includeConceptDescriptions } = options;
 
         try {
-            const apiInstance = new ConceptDescriptionRepositoryService.SerializationAPIApi(applyDefaults(configuration));
+            const apiInstance = new ConceptDescriptionRepositoryService.SerializationAPIApi(
+                applyDefaults(configuration)
+            );
 
             const result = await apiInstance.generateSerializationByIds({
                 aasIds: aasIds,
@@ -245,7 +247,9 @@ export class ConceptDescriptionRepositoryClient {
      */
     async getSelfDescription(options: {
         configuration: Configuration;
-    }): Promise<ApiResult<ConceptDescriptionRepositoryService.ServiceDescription, ConceptDescriptionRepositoryService.Result>> {
+    }): Promise<
+        ApiResult<ConceptDescriptionRepositoryService.ServiceDescription, ConceptDescriptionRepositoryService.Result>
+    > {
         const { configuration } = options;
 
         try {
