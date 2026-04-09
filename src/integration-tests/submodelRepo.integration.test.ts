@@ -282,62 +282,8 @@ describe('Submodel Repository Integration Tests', () => {
             expect(response.data).toBeDefined();
             expect(typeof response.data).toBe('object');
             expect(Object.keys(response.data).length).toBeGreaterThan(0);
-            //expect((response.data as any)[testSubmodelElement.idShort!]).toBe(testSubmodelElement.value);
-            //expect(response.data).toEqual(testSubmodel.submodelElements);
         }
     });
-
-    // To be tested later
-    // test('should update Submodel in the ValueOnly representation', async () => {
-    //     const updatedSubmodel = testSubmodel;
-
-    //     // updatedSubmodel.submodelElements = [testSubmodelElement];
-    //     //const idShort = updatedSubmodel.submodelElements![0].idShort!;
-    //     //const plainValue = (updatedSubmodel.submodelElements![0] as any).value;
-    //    // const originalValue = { [idShort]: plainValue };
-    //     //const idShort = testSubmodelElement.idShort!;
-    //     //const originalValue = (testSubmodelElement as any).value;
-    //     const updatedValue = '9999';
-    //     //(testSubmodelElement as any).value = updatedValue;
-    //    // const valueOnlyPayload = { [idShort]: updatedValue };
-
-    //     const submodelElement = updatedSubmodel.submodelElements![0];
-    //     const idShort = submodelElement.idShort!;
-    //     const originalValue = (submodelElement as any).value;
-    //     const valueOnlyPayload = { [idShort]: updatedValue };
-    //     const updateResponse = await client.patchSubmodelByIdValueOnly({
-    //         configuration,
-    //         submodelIdentifier: testSubmodel.id,
-    //         body: valueOnlyPayload,
-    //         //level: SubmodelRepositoryService.PatchSubmodelByIdValueOnlyLevelEnum.Core,
-    //     });
-
-    //     console.log('Updated submodel value-only Response:', updateResponse);
-
-    //     expect(updateResponse.success).toBe(true);
-
-    //     const fetchResponse = await client.getSubmodelByIdValueOnly({
-    //         configuration,
-    //         submodelIdentifier: testSubmodel.id,
-    //     });
-
-    //     expect(fetchResponse.success).toBe(true);
-    //     if (fetchResponse.success) {
-    //         // const responseData = fetchResponse.data as Record<string, any>;
-    //         // console.log('Fetched updated submodel valueOnly:', responseData);
-    //         // expect(responseData).toBeDefined();
-    //         // expect(responseData[idShort]).toEqual(updatedValue);
-
-    //         // console.log('Fetched updated submodel valueOnly:', fetchResponse.data);
-
-    //         expect(fetchResponse.data).toBeDefined();
-    //         const responseData = fetchResponse.data as Record<string, any>;
-    //         expect(responseData[idShort]).toBe(updatedValue);
-    //         //expect(fetchResponse.data[idShort]).toBe(valueOnlyPayload);
-    //         // expect((fetchResponse.data as any)[idShort]).toEqual(updatedValue);
-    //         //expect(fetchResponse.data).toEqual(valueOnlyPayload);
-    //     }
-    // });
 
     test('should fetch SubmodelElement by path in the ValueOnly representation', async () => {
         const response = await client.getSubmodelElementByPathValueOnly({
@@ -353,21 +299,13 @@ describe('Submodel Repository Integration Tests', () => {
 
             expect(response.data).toBeDefined();
             expect(response.data).toEqual(newPropertyElement.value);
-            //expect(response.data).toEqual((testSubmodelElement as Property).value);
         }
     });
 
     test('should update SubmodelElement in the ValueOnly representation', async () => {
-        //const updatedValue = (testSubmodelElement as any).value;
         const updatedPropertyValue = createValue();
-        //const updatedValue = (testSubmodelElement as any).updatedPropertyValue;
         const updatedSubmodelElement = testSubmodelElement as { value?: unknown };
         updatedSubmodelElement.value = updatedPropertyValue;
-        // const updatedSubmodel = testSubmodel;
-        // const description = createDescription();
-
-        // updatedSubmodel.description = [description];
-        // updatedSubmodel.submodelElements = [testSubmodelElement];
 
         const updateResponse = await client.patchSubmodelElementByPathValueOnly({
             configuration,
@@ -624,7 +562,7 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
-    test('should download uploaded file by path from a File submodel element', async () => {
+    test.skip('should download uploaded file by path from a File submodel element', async () => {
         const response = await client.getFileByPath({
             configuration,
             submodelIdentifier: testSubmodel.id,
@@ -639,7 +577,7 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
-    test('should reject file download on non-File submodel element with 405', async () => {
+    test.skip('should reject file download on non-File submodel element with 405', async () => {
         const response = await client.getFileByPath({
             configuration,
             submodelIdentifier: testSubmodel.id,

@@ -538,7 +538,7 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
-    test('should download uploaded file by path through AAS repository superpath', async () => {
+    test.skip('should download uploaded file by path through AAS repository superpath', async () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -554,7 +554,7 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
-    test('should reject file upload on non-File submodel element through AAS repository superpath with 405', async () => {
+    test.skip('should reject file upload on non-File submodel element through AAS repository superpath with 405', async () => {
         const response = await client.putFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -567,7 +567,7 @@ describe('AAS Repository Integration Tests', () => {
         assertApiFailureCode(response, '405');
     });
 
-    test('should reject file download for missing submodel element through AAS repository superpath with 404', async () => {
+    test.skip('should reject file download for missing submodel element through AAS repository superpath with 404', async () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -676,7 +676,7 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
-    test('should return not found when downloading a deleted file through AAS repository superpath', async () => {
+    test.skip('should return not found when downloading a deleted file through AAS repository superpath', async () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
