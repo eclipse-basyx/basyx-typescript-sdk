@@ -1,6 +1,6 @@
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { AasDiscoveryService } from '../../generated';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../../lib/convertAasDiscoveryTypes';
 

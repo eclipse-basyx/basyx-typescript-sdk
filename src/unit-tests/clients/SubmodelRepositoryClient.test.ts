@@ -7,7 +7,7 @@ import {
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { SubmodelRepositoryClient } from '../../clients/SubmodelRepositoryClient';
 import { SubmodelRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';
@@ -232,7 +232,9 @@ describe('SubmodelRepositoryClient', () => {
         // Setup mock for base64Encode
         (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (SubmodelRepositoryService.SubmodelRepositoryAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
+        (SubmodelRepositoryService.SubmodelRepositoryAPIApi as unknown as Mock).mockImplementation(
+            MockSubmodelRepository
+        );
         (SubmodelRepositoryService.SerializationAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
         (SubmodelRepositoryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
         // Setup mocks for conversion functions

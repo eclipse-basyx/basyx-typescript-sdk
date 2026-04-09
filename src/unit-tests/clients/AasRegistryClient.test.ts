@@ -1,4 +1,4 @@
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 // Import necessary types
 //import { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryClient } from '../../clients/AasRegistryClient';
@@ -142,7 +142,9 @@ describe('AasRegistryClient', () => {
         // Setup mock for base64Encode
         (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
-        (AasRegistryService.AssetAdministrationShellRegistryAPIApi as unknown as Mock).mockImplementation(MockAasRegistry);
+        (AasRegistryService.AssetAdministrationShellRegistryAPIApi as unknown as Mock).mockImplementation(
+            MockAasRegistry
+        );
         (AasRegistryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockAasRegistry);
         // Setup mocks for conversion functions
         (convertApiAasDescriptorToCoreAasDescriptor as Mock).mockImplementation((aasDescriptor) => {

@@ -1,6 +1,6 @@
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { ConceptDescriptionRepositoryService } from '../../generated';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../../lib/convertConceptDescriptionTypes';
 

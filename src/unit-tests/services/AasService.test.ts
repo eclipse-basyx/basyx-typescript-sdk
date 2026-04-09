@@ -827,20 +827,17 @@ describe('AasService Unit Tests', () => {
             const discoveredAasIds = [testAasId];
 
             // Get the mocked instances for the service with discovery
-            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
-                .instances;
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock.instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
             ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
-                .instances;
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock.instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
             ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
-                .instances;
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock.instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
             ] as Mocked<AasRegistryClient>;
@@ -890,8 +887,7 @@ describe('AasService Unit Tests', () => {
 
             const assetIds = [{ name: 'serialNumber', value: 'nonexistent' }];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
-                .instances;
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock.instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
             ] as Mocked<AasDiscoveryClient>;
@@ -923,8 +919,7 @@ describe('AasService Unit Tests', () => {
 
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
-                .instances;
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock.instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
             ] as Mocked<AasDiscoveryClient>;
@@ -965,20 +960,17 @@ describe('AasService Unit Tests', () => {
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
             const discoveredAasIds = ['aas-1', 'aas-2'];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
-                .instances;
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock.instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
             ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
-                .instances;
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock.instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
             ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
-                .instances;
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock.instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
             ] as Mocked<AasRegistryClient>;
@@ -1029,20 +1021,17 @@ describe('AasService Unit Tests', () => {
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
             const discoveredAasIds = ['aas-1'];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
-                .instances;
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock.instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
             ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
-                .instances;
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock.instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
             ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
-                .instances;
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock.instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
             ] as Mocked<AasRegistryClient>;
@@ -1086,20 +1075,17 @@ describe('AasService Unit Tests', () => {
             const assetIds = [{ name: 'serialNumber', value: '12345' }];
             const discoveredAasIds = [testAasId];
 
-            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock
-                .instances;
+            const allDiscoveryInstances = (AasDiscoveryClient as MockedClass<typeof AasDiscoveryClient>).mock.instances;
             const mockDiscoveryClient = allDiscoveryInstances[
                 allDiscoveryInstances.length - 1
             ] as Mocked<AasDiscoveryClient>;
 
-            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
-                .instances;
+            const allRepoInstances = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock.instances;
             const mockRepoClientForDiscovery = allRepoInstances[
                 allRepoInstances.length - 1
             ] as Mocked<AasRepositoryClient>;
 
-            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
-                .instances;
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock.instances;
             const mockRegistryClientForDiscovery = allRegistryInstances[
                 allRegistryInstances.length - 1
             ] as Mocked<AasRegistryClient>;
@@ -1138,8 +1124,7 @@ describe('AasService Unit Tests', () => {
 
         beforeEach(() => {
             // Get the mocked SubmodelService instance
-            const allSubmodelServiceInstances = (SubmodelService as MockedClass<typeof SubmodelService>).mock
-                .instances;
+            const allSubmodelServiceInstances = (SubmodelService as MockedClass<typeof SubmodelService>).mock.instances;
             mockSubmodelService = allSubmodelServiceInstances[0] as Mocked<SubmodelService>;
         });
 
@@ -1284,8 +1269,7 @@ describe('AasService Unit Tests', () => {
                 new Key(KeyTypes.AssetAdministrationShell, testAasId),
             ]);
 
-            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
-                .instances;
+            const allRegistryInstances = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock.instances;
             const mockRegistryClientForTest = allRegistryInstances[
                 allRegistryInstances.length - 1
             ] as Mocked<AasRegistryClient>;

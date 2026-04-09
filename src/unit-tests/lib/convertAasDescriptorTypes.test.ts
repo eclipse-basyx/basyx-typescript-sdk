@@ -1,4 +1,4 @@
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 //import { AssetKind as CoreAssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryService } from '../../generated';
 import {

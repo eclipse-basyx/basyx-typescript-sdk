@@ -9,7 +9,7 @@ import {
     Reference as CoreReference,
     ReferenceTypes,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { AasRepositoryClient } from '../../clients/AasRepositoryClient';
 import { AasRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

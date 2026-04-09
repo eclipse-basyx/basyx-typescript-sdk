@@ -4,7 +4,7 @@ import {
     AssetInformation as CoreAssetInformation,
     AssetKind,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { AasxFileClient } from '../../clients/AasxFileClient';
 import { AasxFileService } from '../../generated';
 import { Configuration } from '../../generated/runtime';

@@ -3,7 +3,7 @@ import {
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { SubmodelRepositoryService } from '../../generated';
 import {
     convertApiSubmodelElementToCoreSubmodelElement,

@@ -332,8 +332,8 @@ describe('SubmodelService Unit Tests', () => {
             const serviceWithoutRepo = new SubmodelService({ submodelRegistryConfig });
 
             // Get the mock instance for the new service
-            const newMockRegistryClient = (SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>)
-                .mock.instances[1] as Mocked<SubmodelRegistryClient>;
+            const newMockRegistryClient = (SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>).mock
+                .instances[1] as Mocked<SubmodelRegistryClient>;
 
             newMockRegistryClient.getSubmodelDescriptorById = vi.fn().mockResolvedValue({
                 success: false,
@@ -495,9 +495,8 @@ describe('SubmodelService Unit Tests', () => {
 
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
-            const newMockRepositoryClient = (
-                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
-            ).mock.instances[1] as Mocked<SubmodelRepositoryClient>;
+            const newMockRepositoryClient = (SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>)
+                .mock.instances[1] as Mocked<SubmodelRepositoryClient>;
 
             newMockRepositoryClient.postSubmodel = vi.fn().mockResolvedValue({
                 success: true,
@@ -585,9 +584,8 @@ describe('SubmodelService Unit Tests', () => {
 
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
-            const newMockRepositoryClient = (
-                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
-            ).mock.instances[1] as Mocked<SubmodelRepositoryClient>;
+            const newMockRepositoryClient = (SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>)
+                .mock.instances[1] as Mocked<SubmodelRepositoryClient>;
 
             newMockRepositoryClient.putSubmodelById = vi.fn().mockResolvedValue({
                 success: true,
@@ -659,9 +657,8 @@ describe('SubmodelService Unit Tests', () => {
 
         it('should work without registry when only repository is configured', async () => {
             const serviceWithoutRegistry = new SubmodelService({ submodelRepositoryConfig });
-            const newMockRepositoryClient = (
-                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
-            ).mock.instances[1] as Mocked<SubmodelRepositoryClient>;
+            const newMockRepositoryClient = (SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>)
+                .mock.instances[1] as Mocked<SubmodelRepositoryClient>;
 
             newMockRepositoryClient.deleteSubmodelById = vi.fn().mockResolvedValue({
                 success: true,

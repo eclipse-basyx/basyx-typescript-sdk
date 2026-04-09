@@ -8,7 +8,7 @@ import {
     Reference as CoreReference,
     ReferenceTypes as CoreReferenceTypes,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { AasRepositoryService } from '../../generated';
 // import {
 //     AssetAdministrationShell as ApiAssetAdministrationShell,

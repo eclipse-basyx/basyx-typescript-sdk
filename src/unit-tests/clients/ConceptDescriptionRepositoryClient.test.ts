@@ -1,5 +1,5 @@
 import { ConceptDescription as CoreConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { ConceptDescriptionRepositoryClient } from '../../clients/ConceptDescriptionRepositoryClient';
 import { ConceptDescriptionRepositoryService } from '../../generated';
 import { Configuration } from '../../generated/runtime';
@@ -87,7 +87,9 @@ describe('ConceptDescriptionRepositoryClient', () => {
         (ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi as unknown as Mock).mockImplementation(
             MockCDRepository
         );
-        (ConceptDescriptionRepositoryService.SerializationAPIApi as unknown as Mock).mockImplementation(MockCDRepository);
+        (ConceptDescriptionRepositoryService.SerializationAPIApi as unknown as Mock).mockImplementation(
+            MockCDRepository
+        );
         (ConceptDescriptionRepositoryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockCDRepository);
         // Setup mocks for conversion functions
         (convertApiCDToCoreCD as Mock).mockImplementation((conceptDescription) => {

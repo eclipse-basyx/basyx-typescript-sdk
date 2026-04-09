@@ -1,4 +1,4 @@
-import {type Mock, vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 // Import necessary types
 import { SubmodelRegistryClient } from '../../clients/SubmodelRegistryClient';
 import { SubmodelRegistryService } from '../../generated';
