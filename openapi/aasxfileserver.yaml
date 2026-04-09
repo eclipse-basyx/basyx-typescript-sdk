@@ -1,110 +1,112 @@
 openapi: 3.0.3
 info:
-  title: DotAAS Part 2 | HTTP/REST | AASX File Server API
-  description: The AASX file server API as part of Details of the Asset Administration Shell Part 2
-  termsOfService: https://github.com/admin-shell-io/aas-specs
+  title: DotAAS Part 2 | HTTP/REST | AASX File Server Service Specification
+  description: >-
+    The File Server Service Specification as part of the [Specification of the Asset Administration Shell: Part 2](https://industrialdigitaltwin.org/en/content-hub/aasspecifications).
+
+    Copyright: Industrial Digital Twin Association (IDTA) 2025
   contact:
-    name: "Constantin Ziesche, Andreas Orzelski, Florian Krebs, Bastian Rössl, Manuel Sauer, Jens Vialkowitsch, Michael Hoffmeister, Torben Miny, Sebastian Bader, Marko Ristin, Nico Braunisch"
-  version: V1.0RC03
+    name: Industrial Digital Twin Association (IDTA)
+    email: info@idtwin.org
+  license:
+    name: CC BY 4.0
+    url: https://creativecommons.org/licenses/by/4.0/
+  version: V3.1.1_SSP-001
+  x-profile-identifier: https://admin-shell.io/aas/API/3/1/AasxFileServerServiceSpecification/SSP-001
+  termsOfService: https://github.com/admin-shell-io/aas-specs-metamodel
 servers:
-- url: "{protocol}://{host_name}:{port}/api/{version_prefix}"
-  variables:
-    protocol:
-      description: Allows access through http and https (recommended)
-      default: https
-      enum:
-      - http
-      - https
-    host_name:
-      description: Hostname of server hosting the api
-      default: admin-shell.io
-    port:
-      description: "80 is default for http, 443 for https"
-      default: "443"
-      enum:
-      - "80"
-      - "443"
-    version_prefix:
-      default: v1
-      enum:
-      - v1
+- url: 'https://admin-shell.io/api/v3'
+- url: 'https://example.com/'
 paths:
   /packages:
     get:
       tags:
-      - AASX File Server API
+        - AASX File Server API
       summary: Returns a list of available AASX packages at the server
       operationId: GetAllAASXPackageIds
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAllAASXPackageIds/3/1
       parameters:
-      - name: aasId
-        in: query
-        description: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
-        required: false
-        style: form
-        explode: true
-        schema:
-          type: string
-          format: byte
+        - name: aasId
+          in: query
+          description: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+        - $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/parameters/Limit'
+        - $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/parameters/Cursor'
       responses:
-        "200":
+        '200':
           description: Requested package list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/PackageDescription"
+                $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/schemas/GetPackageDescriptionsResult'
+        '400':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/bad-request'
+        '401':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/unauthorized'
+        '403':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/forbidden'
+        '500':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/internal-server-error'
         default:
-          description: Default error handling for unmentioned status codes
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
-      x-semanticIds:
-      - https://admin-shell.io/aas/API/GetAllAASXPackageIds/1/0/RC03
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/default'
     post:
       tags:
-      - AASX File Server API
+        - AASX File Server API
       summary: Stores the AASX package at the server
       operationId: PostAASXPackage
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PostAASXPackage/3/1
       requestBody:
         description: AASX package
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/packages_body"
+              type: object
+              properties:
+                aasIds:
+                  type: array
+                  items:
+                    type: string
+                file:
+                  type: string
+                  format: binary
+                fileName:
+                  type: string
             encoding:
               file:
                 contentType: application/asset-administration-shell-package
         required: true
       responses:
-        "201":
+        '201':
           description: AASX package stored successfully
+          headers:
+            Location:
+              description: URL of the newly created resource
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PackageDescription"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
+                $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/schemas/PackageDescription'
+        '400':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/bad-request'
+        '401':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/unauthorized'
+        '403':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/forbidden'
+        '409':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/conflict'
+        '500':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/internal-server-error'
         default:
-          description: Default error handling for unmentioned status codes
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
-      x-semanticIds:
-      - https://admin-shell.io/aas/API/PostAASXPackage/1/0/RC03
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/default'
   /packages/{packageId}:
-    get:
-      tags:
-      - AASX File Server API
-      summary: Returns a specific AASX package from the server
-      operationId: GetAASXByPackageId
-      parameters:
+    parameters:
       - name: packageId
         in: path
         description: The package Id (UTF8-BASE64-URL-encoded)
@@ -113,172 +115,133 @@ paths:
         explode: true
         schema:
           type: string
-          format: byte
+    get:
+      tags:
+        - AASX File Server API
+      summary: Returns a specific AASX package from the server
+      operationId: GetAASXByPackageId
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAASXByPackageId/3/1
       responses:
-        "200":
+        '200':
           description: Requested AASX package
           headers:
             X-FileName:
-              description: Filename of the package
               schema:
                 type: string
+              description: Filename of the package
           content:
             application/asset-administration-shell-package:
               schema:
                 type: string
                 format: binary
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
+        '400':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/bad-request'
+        '401':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/unauthorized'
+        '403':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/forbidden'
+        '404':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/not-found'
+        '500':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/internal-server-error'
         default:
-          description: Default error handling for unmentioned status codes
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
-      x-semanticIds:
-      - https://admin-shell.io/aas/API/GetAASXByPackageId/1/0/RC03
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/default'
     put:
       tags:
-      - AASX File Server API
-      summary: Updates the AASX package at the server
+        - AASX File Server API
+      summary: Creates or updates the AASX package at the server
       operationId: PutAASXByPackageId
-      parameters:
-      - name: packageId
-        in: path
-        description: The Package Id (UTF8-BASE64-URL-encoded)
-        required: true
-        style: simple
-        explode: true
-        schema:
-          type: string
-          format: byte
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PutAASXByPackageId/3/1
       requestBody:
         description: AASX package
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/packages_packageId_body"
+              type: object
+              properties:
+                aasIds:
+                  type: array
+                  items:
+                    type: string
+                file:
+                  type: string
+                  format: binary
+                fileName:
+                  type: string
             encoding:
               file:
                 contentType: application/asset-administration-shell-package
         required: true
       responses:
-        "204":
+        '201':
+          description: AASX package stored successfully
+          headers:
+            Location:
+              description: URL of the newly created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/schemas/PackageDescription'
+        '204':
           description: AASX package updated successfully
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
+        '400':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/bad-request'
+        '401':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/unauthorized'
+        '403':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/forbidden'
+        '500':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/internal-server-error'
         default:
-          description: Default error handling for unmentioned status codes
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
-      x-semanticIds:
-      - https://admin-shell.io/aas/API/PutAASXByPackageId/1/0/RC03
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/default'
     delete:
       tags:
-      - AASX File Server API
+        - AASX File Server API
       summary: Deletes a specific AASX package from the server
       operationId: DeleteAASXByPackageId
-      parameters:
-      - name: packageId
-        in: path
-        description: The Package Id (UTF8-BASE64-URL-encoded)
-        required: true
-        style: simple
-        explode: true
-        schema:
-          type: string
-          format: byte
-      responses:
-        "204":
-          description: Deleted successfully
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
-        default:
-          description: Default error handling for unmentioned status codes
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Result"
       x-semanticIds:
-      - https://admin-shell.io/aas/API/DeleteAASXByPackageId/1/0/RC03
-components:
-  schemas:
-    PackageDescription:
-      type: object
-      properties:
-        aasIds:
-          type: array
-          items:
-            type: string
-        packageId:
-          type: string
-    Result:
-      type: object
-      properties:
-        messages:
-          type: array
-          items:
-            $ref: "#/components/schemas/Message"
-        success:
-          type: boolean
-    Message:
-      type: object
-      properties:
-        code:
-          type: string
-        messageType:
-          type: string
-          enum:
-          - Undefined
-          - Info
-          - Warning
-          - Error
-          - Exception
-        text:
-          type: string
-        timestamp:
-          type: string
-    packages_body:
-      type: object
-      properties:
-        aasIds:
-          type: array
-          items:
-            type: string
-        file:
-          type: string
-          format: binary
-        fileName:
-          type: string
-    packages_packageId_body:
-      type: object
-      properties:
-        aasIds:
-          type: array
-          items:
-            type: string
-        file:
-          type: string
-          format: binary
-        fileName:
-          type: string
+        - https://admin-shell.io/aas/API/DeleteAASXByPackageId/3/1
+      responses:
+        '204':
+          description: Deleted successfully
+        '400':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/bad-request'
+        '401':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/unauthorized'
+        '403':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/forbidden'
+        '404':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/not-found'
+        '500':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/internal-server-error'
+        default:
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/default'
+  /description:
+    get:
+      tags:
+        - Description API
+      summary: Returns the self-describing information of a network resource (ServiceDescription)
+      operationId: GetSelfDescription
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetSelfDescription/3/1
+      responses:
+        '200':
+          description: Requested Description
+          content:
+            application/json:
+              schema:
+                $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/schemas/ServiceDescription'
+        '400':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/bad-request'
+        '403':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/forbidden'
+        '404':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/not-found'
+        '500':
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/internal-server-error'
+        default:
+          $ref: 'https://api.swaggerhub.com/domains/Plattform_i40/Part2-API-Schemas/V3.1.1#/components/responses/default'

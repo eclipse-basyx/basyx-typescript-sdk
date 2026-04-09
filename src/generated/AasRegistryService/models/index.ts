@@ -845,33 +845,33 @@ export interface ProtocolInformation {
     subprotocolBodyEncoding?: string;
     /**
      * 
-     * @type {Array<ProtocolInformationSecurityAttributes>}
+     * @type {Array<ProtocolInformationSecurityAttributesInner>}
      * @memberof ProtocolInformation
      */
-    securityAttributes?: Array<ProtocolInformationSecurityAttributes>;
+    securityAttributes?: Array<ProtocolInformationSecurityAttributesInner>;
 }
 /**
  * 
  * @export
- * @interface ProtocolInformationSecurityAttributes
+ * @interface ProtocolInformationSecurityAttributesInner
  */
-export interface ProtocolInformationSecurityAttributes {
+export interface ProtocolInformationSecurityAttributesInner {
     /**
      * 
      * @type {string}
-     * @memberof ProtocolInformationSecurityAttributes
+     * @memberof ProtocolInformationSecurityAttributesInner
      */
-    type: ProtocolInformationSecurityAttributesTypeEnum;
+    type: ProtocolInformationSecurityAttributesInnerTypeEnum;
     /**
      * 
      * @type {string}
-     * @memberof ProtocolInformationSecurityAttributes
+     * @memberof ProtocolInformationSecurityAttributesInner
      */
     key: string;
     /**
      * 
      * @type {string}
-     * @memberof ProtocolInformationSecurityAttributes
+     * @memberof ProtocolInformationSecurityAttributesInner
      */
     value: string;
 }
@@ -880,12 +880,12 @@ export interface ProtocolInformationSecurityAttributes {
 /**
  * @export
  */
-export const ProtocolInformationSecurityAttributesTypeEnum = {
+export const ProtocolInformationSecurityAttributesInnerTypeEnum = {
     None: 'NONE',
     RfcTlsa: 'RFC_TLSA',
     W3CDid: 'W3C_DID'
 } as const;
-export type ProtocolInformationSecurityAttributesTypeEnum = typeof ProtocolInformationSecurityAttributesTypeEnum[keyof typeof ProtocolInformationSecurityAttributesTypeEnum];
+export type ProtocolInformationSecurityAttributesInnerTypeEnum = typeof ProtocolInformationSecurityAttributesInnerTypeEnum[keyof typeof ProtocolInformationSecurityAttributesInnerTypeEnum];
 
 /**
  * 

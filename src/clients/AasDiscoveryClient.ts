@@ -161,4 +161,78 @@ export class AasDiscoveryClient {
             return { success: false, error: customError };
         }
     }
+
+    /**
+     * Returns a list of Asset Administration Shell IDs linked to specific asset identifiers or the global asset ID
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - assetLink?: A list of specific Asset identifiers
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async searchAllAssetAdministrationShellIdsByAssetLink(options: {
+        configuration: Configuration;
+        assetLink?: AssetId[];
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            {
+                pagedResult: AasDiscoveryService.PagedResultPagingMetadata | undefined;
+                result: string[];
+            },
+            AasDiscoveryService.Result
+        >
+    > {
+        const { configuration, assetLink, limit, cursor } = options;
+
+        try {
+            const apiInstance = new AasDiscoveryService.AssetAdministrationShellBasicDiscoveryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const result = await apiInstance.searchAllAssetAdministrationShellIdsByAssetLink({
+                assetLink: assetLink?.map((id) => ({ name: id.name, value: id.value })),
+                limit: limit,
+                cursor: cursor,
+            });
+
+            const shellIds = result.result ?? [];
+
+            return {
+                success: true,
+                data: { pagedResult: result.pagingMetadata, result: shellIds },
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getSelfDescription(options: {
+        configuration: Configuration;
+    }): Promise<ApiResult<AasDiscoveryService.ServiceDescription, AasDiscoveryService.Result>> {
+        const { configuration } = options;
+
+        try {
+            const apiInstance = new AasDiscoveryService.DescriptionAPIApi(applyDefaults(configuration));
+            const result = await apiInstance.getSelfDescription();
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
 }

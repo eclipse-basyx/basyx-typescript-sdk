@@ -199,4 +199,67 @@ export class ConceptDescriptionRepositoryClient {
             return { success: false, error: customError };
         }
     }
+
+    /**
+     * Returns an appropriate serialization based on the specified format
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIds?: The Asset Administration Shell IDs
+     *  - submodelIds?: The Submodel IDs
+     *  - includeConceptDescriptions?: Include concept descriptions in the environment
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async generateSerializationByIds(options: {
+        configuration: Configuration;
+        aasIds?: string[];
+        submodelIds?: string[];
+        includeConceptDescriptions?: boolean;
+    }): Promise<ApiResult<Blob, ConceptDescriptionRepositoryService.Result>> {
+        const { configuration, aasIds, submodelIds, includeConceptDescriptions } = options;
+
+        try {
+            const apiInstance = new ConceptDescriptionRepositoryService.SerializationAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const result = await apiInstance.generateSerializationByIds({
+                aasIds: aasIds,
+                submodelIds: submodelIds,
+                includeConceptDescriptions: includeConceptDescriptions,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getSelfDescription(options: {
+        configuration: Configuration;
+    }): Promise<
+        ApiResult<ConceptDescriptionRepositoryService.ServiceDescription, ConceptDescriptionRepositoryService.Result>
+    > {
+        const { configuration } = options;
+
+        try {
+            const apiInstance = new ConceptDescriptionRepositoryService.DescriptionAPIApi(applyDefaults(configuration));
+            const result = await apiInstance.getSelfDescription();
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
 }

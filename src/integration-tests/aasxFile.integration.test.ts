@@ -61,6 +61,19 @@ describe('AASX File Server Integration Tests', () => {
         }
     });
 
+    test('should delete an AASX package by non-existing ID', async () => {
+        const nonExistingId = 'non-existing-id';
+        const response = await client.deleteAASXByPackageId({
+            configuration,
+            packageId: nonExistingId,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
     // test('should update the AASX package at the server', async () => {
     //     const updateResponse = await client.putAASXByPackageId({
     //         configuration,

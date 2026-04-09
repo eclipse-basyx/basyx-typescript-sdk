@@ -82,6 +82,60 @@ export class AasRepositoryClient {
     }
 
     /**
+     * Returns References to all Asset Administration Shells
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - assetIds?: A list of specific Asset identifiers
+     *  - idShort?: The Asset Administration Shell’s IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getAllAssetAdministrationShellsReference(options: {
+        configuration: Configuration;
+        assetIds?: AssetId[];
+        idShort?: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            {
+                pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
+                result: Reference[];
+            },
+            AasRepositoryService.Result
+        >
+    > {
+        const { configuration, assetIds, idShort, limit, cursor } = options;
+
+        try {
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
+            const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
+
+            const result = await apiInstance.getAllAssetAdministrationShellsReference({
+                assetIds: encodedAssetIds,
+                idShort: idShort,
+                limit: limit,
+                cursor: cursor,
+            });
+
+            const shellReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
+
+            return {
+                success: true,
+                data: { pagedResult: result.pagingMetadata, result: shellReferences },
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
      * Creates a new Asset Administration Shell
      *
      * @param options Object containing:
@@ -2153,6 +2207,65 @@ export class AasRepositoryClient {
                 idShortPath: idShortPath,
                 handleId: encodedHandleId,
             });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns an appropriate serialization based on the specified format
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIds?: The Asset Administration Shell IDs
+     *  - submodelIds?: The Submodel IDs
+     *  - includeConceptDescriptions?: Include concept descriptions in the environment
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async generateSerializationByIds(options: {
+        configuration: Configuration;
+        aasIds?: string[];
+        submodelIds?: string[];
+        includeConceptDescriptions?: boolean;
+    }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
+        const { configuration, aasIds, submodelIds, includeConceptDescriptions } = options;
+
+        try {
+            const apiInstance = new AasRepositoryService.SerializationAPIApi(applyDefaults(configuration));
+
+            const result = await apiInstance.generateSerializationByIds({
+                aasIds: aasIds,
+                submodelIds: submodelIds,
+                includeConceptDescriptions: includeConceptDescriptions,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getSelfDescription(options: {
+        configuration: Configuration;
+    }): Promise<ApiResult<AasRepositoryService.ServiceDescription, AasRepositoryService.Result>> {
+        const { configuration } = options;
+
+        try {
+            const apiInstance = new AasRepositoryService.DescriptionAPIApi(applyDefaults(configuration));
+            const result = await apiInstance.getSelfDescription();
 
             return { success: true, data: result };
         } catch (err) {

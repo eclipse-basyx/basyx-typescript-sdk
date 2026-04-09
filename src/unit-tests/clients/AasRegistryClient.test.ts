@@ -104,6 +104,9 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8084',
     fetchApi: globalThis.fetch,
 });
+const SERVICE_DESCRIPTION: AasRegistryService.ServiceDescription = {
+    profiles: ['aas-registry-service-profile'],
+};
 
 describe('AasRegistryClient', () => {
     // Helper function to create expected configuration matcher
@@ -125,6 +128,7 @@ describe('AasRegistryClient', () => {
         getSubmodelDescriptorByIdThroughSuperpath: jest.fn(),
         deleteSubmodelDescriptorByIdThroughSuperpath: jest.fn(),
         putSubmodelDescriptorByIdThroughSuperpath: jest.fn(),
+        getSelfDescription: jest.fn(),
     };
 
     // Mock constructor
@@ -138,6 +142,9 @@ describe('AasRegistryClient', () => {
         (
             jest.requireMock('../../generated').AasRegistryService.AssetAdministrationShellRegistryAPIApi as jest.Mock
         ).mockImplementation(MockAasRegistry);
+        (jest.requireMock('../../generated').AasRegistryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+            MockAasRegistry
+        );
         // Setup mocks for conversion functions
         (convertApiAasDescriptorToCoreAasDescriptor as jest.Mock).mockImplementation((aasDescriptor) => {
             if (aasDescriptor.id === API_AAS_DESCRIPTOR1.id) return CORE_AAS_DESCRIPTOR1;
@@ -837,6 +844,55 @@ describe('AasRegistryClient', () => {
             aasIdentifier: CORE_AAS_DESCRIPTOR1.id,
             submodelIdentifier: CORE_SUBMODEL_DESCRIPTOR1.id,
             submodelDescriptor: CORE_SUBMODEL_DESCRIPTOR1,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return service description', async () => {
+        // Arrange
+        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+
+        const client = new AasRegistryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERVICE_DESCRIPTION);
+        }
+    });
+
+    it('should handle errors when getting service description', async () => {
+        // Arrange
+        const errorResult: AasRegistryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRegistryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
         });
 
         // Assert

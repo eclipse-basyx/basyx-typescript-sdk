@@ -15,7 +15,6 @@
     "skipLibCheck": true,
     "lib": ["esnext", "dom"],
     "esModuleInterop": true,
-    "baseUrl": ".",
     "rootDir": "./src",
   },
   "include": ["src/**/*.ts"],

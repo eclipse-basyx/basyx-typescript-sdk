@@ -79,6 +79,9 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8085',
     fetchApi: globalThis.fetch,
 });
+const SERVICE_DESCRIPTION: SubmodelRegistryService.ServiceDescription = {
+    profiles: ['submodel-registry-service-profile'],
+};
 
 describe('SubmodelRegistryClient', () => {
     // Helper function to create expected configuration matcher
@@ -95,6 +98,7 @@ describe('SubmodelRegistryClient', () => {
         deleteSubmodelDescriptorById: jest.fn(),
         getSubmodelDescriptorById: jest.fn(),
         putSubmodelDescriptorById: jest.fn(),
+        getSelfDescription: jest.fn(),
     };
 
     // Mock constructor
@@ -108,6 +112,9 @@ describe('SubmodelRegistryClient', () => {
         (
             jest.requireMock('../../generated').SubmodelRegistryService.SubmodelRegistryAPIApi as jest.Mock
         ).mockImplementation(MockSubmodelRegistry);
+        (jest.requireMock('../../generated').SubmodelRegistryService.DescriptionAPIApi as jest.Mock).mockImplementation(
+            MockSubmodelRegistry
+        );
         // Setup mocks for conversion functions
         (convertApiSubmodelDescriptorToCoreSubmodelDescriptor as jest.Mock).mockImplementation((submodelDescriptor) => {
             if (submodelDescriptor.id === API_SUBMODEL_DESCRIPTOR1.id) return CORE_SUBMODEL_DESCRIPTOR1;
@@ -445,6 +452,55 @@ describe('SubmodelRegistryClient', () => {
             configuration: TEST_CONFIGURATION,
             submodelIdentifier: CORE_SUBMODEL_DESCRIPTOR1.id,
             submodelDescriptor: CORE_SUBMODEL_DESCRIPTOR1,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return service description', async () => {
+        // Arrange
+        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+
+        const client = new SubmodelRegistryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(MockSubmodelRegistry).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERVICE_DESCRIPTION);
+        }
+    });
+
+    it('should handle errors when getting service description', async () => {
+        // Arrange
+        const errorResult: SubmodelRegistryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new SubmodelRegistryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
         });
 
         // Assert

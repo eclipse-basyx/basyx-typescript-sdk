@@ -182,4 +182,28 @@ export class SubmodelRegistryClient {
             return { success: false, error: customError };
         }
     }
+
+    /**
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getSelfDescription(options: {
+        configuration: Configuration;
+    }): Promise<ApiResult<SubmodelRegistryService.ServiceDescription, SubmodelRegistryService.Result>> {
+        const { configuration } = options;
+
+        try {
+            const apiInstance = new SubmodelRegistryService.DescriptionAPIApi(applyDefaults(configuration));
+            const result = await apiInstance.getSelfDescription();
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
 }

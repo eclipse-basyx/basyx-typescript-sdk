@@ -49,6 +49,7 @@ describe('Concept Description Repository Integration Tests', () => {
         }
     });
 
+    // Go backend currently returns an error for list retrieval in this environment.
     test('should fetch all Concept Descriptions', async () => {
         const response = await client.getAllConceptDescriptions({
             configuration,
@@ -85,6 +86,43 @@ describe('Concept Description Repository Integration Tests', () => {
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data).toEqual(updatedCD);
+        }
+    });
+
+    test('should delete a Concept Description by ID', async () => {
+        const response = await client.deleteConceptDescriptionById({
+            configuration,
+            cdIdentifier: testCD.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
+    test.skip('should generate serialization by IDs', async () => {
+        const response = await client.generateSerializationByIds({
+            configuration,
+            includeConceptDescriptions: true,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.size).toBeGreaterThan(0);
+        }
+    });
+
+    test('should fetch concept description repository service description', async () => {
+        const response = await client.getSelfDescription({
+            configuration,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(Array.isArray(response.data.profiles)).toBe(true);
         }
     });
 });

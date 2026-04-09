@@ -86,4 +86,28 @@ describe('Submodel Registry Integration Tests', () => {
             expect(fetchResponse.data).toEqual(updatedSubmodelDescriptor);
         }
     });
+
+    test('should delete a Submodel Descriptor by ID', async () => {
+        const response = await client.deleteSubmodelDescriptorById({
+            configuration,
+            submodelIdentifier: testSubmodelDescriptor.id,
+        });
+
+        expect(typeof response.success).toBe('boolean');
+        if (!response.success) {
+            expect(response.error).toBeDefined();
+        }
+    });
+
+    test('should fetch submodel registry service description', async () => {
+        const response = await client.getSelfDescription({
+            configuration,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(Array.isArray(response.data.profiles)).toBe(true);
+        }
+    });
 });

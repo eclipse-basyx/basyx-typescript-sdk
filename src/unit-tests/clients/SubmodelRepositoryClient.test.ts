@@ -154,6 +154,11 @@ const OPERATION_RESULT_VALUEONLY: SubmodelRepositoryService.OperationResultValue
         status: 'ok',
     },
 };
+const HANDLE_ID = 'handle-123';
+const FILE_BLOB = new Blob(['file content'], { type: 'application/octet-stream' });
+const SERVICE_DESCRIPTION: SubmodelRepositoryService.ServiceDescription = {
+    profiles: ['submodel-repository-service-profile'],
+};
 const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8082',
     fetchApi: globalThis.fetch,
@@ -170,25 +175,50 @@ describe('SubmodelRepositoryClient', () => {
     // Create mock for SubmodelRepositoryAPIApi
     const mockApiInstance = {
         getAllSubmodels: jest.fn(),
+        getAllSubmodelsMetadata: jest.fn(),
+        getAllSubmodelsValueOnly: jest.fn(),
+        getAllSubmodelsReference: jest.fn(),
+        getAllSubmodelsPath: jest.fn(),
         postSubmodel: jest.fn(),
         deleteSubmodelById: jest.fn(),
         getSubmodelById: jest.fn(),
+        getSubmodelByIdReference: jest.fn(),
+        getSubmodelByIdPath: jest.fn(),
         putSubmodelById: jest.fn(),
+        patchSubmodelById: jest.fn(),
+        patchSubmodelByIdMetadata: jest.fn(),
         getAllSubmodelElements: jest.fn(),
+        getAllSubmodelElementsMetadataSubmodelRepo: jest.fn(),
+        getAllSubmodelElementsValueOnlySubmodelRepo: jest.fn(),
+        getAllSubmodelElementsReferenceSubmodelRepo: jest.fn(),
+        getAllSubmodelElementsPathSubmodelRepo: jest.fn(),
         postSubmodelElementSubmodelRepo: jest.fn(),
         getSubmodelElementByPathSubmodelRepo: jest.fn(),
+        getSubmodelElementByPathMetadataSubmodelRepo: jest.fn(),
+        getSubmodelElementByPathReferenceSubmodelRepo: jest.fn(),
+        getSubmodelElementByPathPathSubmodelRepo: jest.fn(),
         postSubmodelElementByPathSubmodelRepo: jest.fn(),
         deleteSubmodelElementByPathSubmodelRepo: jest.fn(),
         putSubmodelElementByPathSubmodelRepo: jest.fn(),
+        patchSubmodelElementByPathSubmodelRepo: jest.fn(),
+        patchSubmodelElementByPathMetadataSubmodelRepo: jest.fn(),
         getSubmodelByIdMetadata: jest.fn(),
         getSubmodelByIdValueOnly: jest.fn(),
         patchSubmodelByIdValueOnly: jest.fn(),
         getSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
         patchSubmodelElementByPathValueOnlySubmodelRepo: jest.fn(),
+        getFileByPathSubmodelRepo: jest.fn(),
+        putFileByPathSubmodelRepo: jest.fn(),
+        deleteFileByPathSubmodelRepo: jest.fn(),
         invokeOperationSubmodelRepo: jest.fn(),
         invokeOperationValueOnly: jest.fn(),
         invokeOperationAsync: jest.fn(),
         invokeOperationAsyncValueOnly: jest.fn(),
+        getOperationAsyncStatus: jest.fn(),
+        getOperationAsyncResult: jest.fn(),
+        getOperationAsyncResultValueOnly: jest.fn(),
+        generateSerializationByIds: jest.fn(),
+        getSelfDescription: jest.fn(),
     };
 
     // Mock constructor
@@ -201,6 +231,12 @@ describe('SubmodelRepositoryClient', () => {
         // Setup mock for constructor
         (
             jest.requireMock('../../generated').SubmodelRepositoryService.SubmodelRepositoryAPIApi as jest.Mock
+        ).mockImplementation(MockSubmodelRepository);
+        (
+            jest.requireMock('../../generated').SubmodelRepositoryService.SerializationAPIApi as jest.Mock
+        ).mockImplementation(MockSubmodelRepository);
+        (
+            jest.requireMock('../../generated').SubmodelRepositoryService.DescriptionAPIApi as jest.Mock
         ).mockImplementation(MockSubmodelRepository);
         // Setup mocks for conversion functions
         (convertApiSubmodelToCoreSubmodel as jest.Mock).mockImplementation((submodel) => {
@@ -1519,6 +1555,542 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return Submodels metadata', async () => {
+        const metadataResult: SubmodelRepositoryService.GetSubmodelsMetadataResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: [API_SUBMODEL_METADATA],
+        };
+        mockApiInstance.getAllSubmodelsMetadata.mockResolvedValue(metadataResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelsMetadata({
+            configuration: TEST_CONFIGURATION,
+            semanticId: SEMANTIC_ID,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+
+        expect(mockApiInstance.getAllSubmodelsMetadata).toHaveBeenCalledWith({
+            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodels value-only representation', async () => {
+        const valueResult: SubmodelRepositoryService.GetSubmodelsValueResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: [API_SUBMODEL_VALUE],
+        };
+        mockApiInstance.getAllSubmodelsValueOnly.mockResolvedValue(valueResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelsValueOnly({
+            configuration: TEST_CONFIGURATION,
+            semanticId: SEMANTIC_ID,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelsValueOnlyLevelEnum.Deep,
+            extent: SubmodelRepositoryService.GetAllSubmodelsValueOnlyExtentEnum.WithBlobValue,
+        });
+
+        expect(mockApiInstance.getAllSubmodelsValueOnly).toHaveBeenCalledWith({
+            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelsValueOnlyLevelEnum.Deep,
+            extent: SubmodelRepositoryService.GetAllSubmodelsValueOnlyExtentEnum.WithBlobValue,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel references', async () => {
+        const referencesResult: SubmodelRepositoryService.GetReferencesResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: [],
+        };
+        mockApiInstance.getAllSubmodelsReference.mockResolvedValue(referencesResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelsReference({
+            configuration: TEST_CONFIGURATION,
+            semanticId: SEMANTIC_ID,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelsReferenceLevelEnum.Core,
+        });
+
+        expect(mockApiInstance.getAllSubmodelsReference).toHaveBeenCalledWith({
+            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelsReferenceLevelEnum.Core,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel paths', async () => {
+        const pathResult: SubmodelRepositoryService.GetPathItemsResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: ['a', 'b'],
+        };
+        mockApiInstance.getAllSubmodelsPath.mockResolvedValue(pathResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelsPath({
+            configuration: TEST_CONFIGURATION,
+            semanticId: SEMANTIC_ID,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelsPathLevelEnum.Deep,
+        });
+
+        expect(mockApiInstance.getAllSubmodelsPath).toHaveBeenCalledWith({
+            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelsPathLevelEnum.Deep,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should patch a Submodel by ID', async () => {
+        mockApiInstance.patchSubmodelById.mockResolvedValue(undefined);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.patchSubmodelById({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            submodel: CORE_SUBMODEL1,
+            level: SubmodelRepositoryService.PatchSubmodelByIdLevelEnum.Core,
+        });
+
+        expect(mockApiInstance.patchSubmodelById).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            submodel: API_SUBMODEL1,
+            level: SubmodelRepositoryService.PatchSubmodelByIdLevelEnum.Core,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel reference by ID', async () => {
+        const reference: SubmodelRepositoryService.Reference = {
+            type: 'ExternalReference',
+            keys: [{ type: 'GlobalReference', value: 'https://example.com/ids/sm/123' }],
+        };
+        mockApiInstance.getSubmodelByIdReference.mockResolvedValue(reference);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getSubmodelByIdReference({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+        });
+
+        expect(mockApiInstance.getSubmodelByIdReference).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel path by ID', async () => {
+        mockApiInstance.getSubmodelByIdPath.mockResolvedValue(['a', 'b']);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getSubmodelByIdPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            level: SubmodelRepositoryService.GetSubmodelByIdPathLevelEnum.Deep,
+        });
+
+        expect(mockApiInstance.getSubmodelByIdPath).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            level: SubmodelRepositoryService.GetSubmodelByIdPathLevelEnum.Deep,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel elements metadata', async () => {
+        const metadataResult: SubmodelRepositoryService.GetSubmodelElementsMetadataResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: [],
+        };
+        mockApiInstance.getAllSubmodelElementsMetadataSubmodelRepo.mockResolvedValue(metadataResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelElementsMetadata({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+
+        expect(mockApiInstance.getAllSubmodelElementsMetadataSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel elements value-only representation', async () => {
+        const valueResult: SubmodelRepositoryService.GetSubmodelElementsValueResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: [API_SUBMODELELEMENT_VALUE],
+        };
+        mockApiInstance.getAllSubmodelElementsValueOnlySubmodelRepo.mockResolvedValue(valueResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelElementsValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoLevelEnum.Deep,
+            extent: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoExtentEnum.WithBlobValue,
+        });
+
+        expect(mockApiInstance.getAllSubmodelElementsValueOnlySubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoLevelEnum.Deep,
+            extent: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoExtentEnum.WithBlobValue,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel elements references', async () => {
+        const referencesResult: SubmodelRepositoryService.GetReferencesResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: [],
+        };
+        mockApiInstance.getAllSubmodelElementsReferenceSubmodelRepo.mockResolvedValue(referencesResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelElementsReference({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelElementsReferenceSubmodelRepoLevelEnum.Core,
+        });
+
+        expect(mockApiInstance.getAllSubmodelElementsReferenceSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelElementsReferenceSubmodelRepoLevelEnum.Core,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel elements paths', async () => {
+        const pathResult: SubmodelRepositoryService.GetPathItemsResult = {
+            pagingMetadata: { cursor: CURSOR },
+            result: ['x', 'y'],
+        };
+        mockApiInstance.getAllSubmodelElementsPathSubmodelRepo.mockResolvedValue(pathResult);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getAllSubmodelElementsPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelElementsPathSubmodelRepoLevelEnum.Deep,
+        });
+
+        expect(mockApiInstance.getAllSubmodelElementsPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            limit: LIMIT,
+            cursor: CURSOR,
+            level: SubmodelRepositoryService.GetAllSubmodelElementsPathSubmodelRepoLevelEnum.Deep,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel element metadata by path', async () => {
+        const metadata: SubmodelRepositoryService.SubmodelElementMetadata = {
+            idShort: ID_SHORT_PATH,
+            modelType: ModelType.Property,
+        };
+        mockApiInstance.getSubmodelElementByPathMetadataSubmodelRepo.mockResolvedValue(metadata);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getSubmodelElementByPathMetadata({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+        });
+
+        expect(mockApiInstance.getSubmodelElementByPathMetadataSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel element reference by path', async () => {
+        const reference: SubmodelRepositoryService.Reference = {
+            type: 'ExternalReference',
+            keys: [{ type: 'GlobalReference', value: 'https://example.com/ids/sme/123' }],
+        };
+        mockApiInstance.getSubmodelElementByPathReferenceSubmodelRepo.mockResolvedValue(reference);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getSubmodelElementByPathReference({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+        });
+
+        expect(mockApiInstance.getSubmodelElementByPathReferenceSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return Submodel element path by path', async () => {
+        mockApiInstance.getSubmodelElementByPathPathSubmodelRepo.mockResolvedValue(['a', 'b']);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getSubmodelElementByPathPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            level: SubmodelRepositoryService.GetSubmodelElementByPathPathSubmodelRepoLevelEnum.Deep,
+        });
+
+        expect(mockApiInstance.getSubmodelElementByPathPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            level: SubmodelRepositoryService.GetSubmodelElementByPathPathSubmodelRepoLevelEnum.Deep,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should patch Submodel metadata by ID', async () => {
+        mockApiInstance.patchSubmodelByIdMetadata.mockResolvedValue(undefined);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.patchSubmodelByIdMetadata({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            submodelMetadata: API_SUBMODEL_METADATA,
+            level: SubmodelRepositoryService.PatchSubmodelByIdMetadataLevelEnum.Core,
+        });
+
+        expect(mockApiInstance.patchSubmodelByIdMetadata).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            submodelMetadata: API_SUBMODEL_METADATA,
+            level: SubmodelRepositoryService.PatchSubmodelByIdMetadataLevelEnum.Core,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should patch Submodel element by path', async () => {
+        mockApiInstance.patchSubmodelElementByPathSubmodelRepo.mockResolvedValue(undefined);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.patchSubmodelElementByPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            submodelElement: CORE_SUBMODELELEMENT_PROPERTY,
+            level: SubmodelRepositoryService.PatchSubmodelElementByPathSubmodelRepoLevelEnum.Core,
+        });
+
+        expect(mockApiInstance.patchSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            submodelElement: API_SUBMODELELEMENT_PROPERTY,
+            level: SubmodelRepositoryService.PatchSubmodelElementByPathSubmodelRepoLevelEnum.Core,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should patch Submodel element metadata by path', async () => {
+        const metadata: SubmodelRepositoryService.SubmodelElementMetadata = {
+            idShort: ID_SHORT_PATH,
+            modelType: ModelType.Property,
+        };
+        mockApiInstance.patchSubmodelElementByPathMetadataSubmodelRepo.mockResolvedValue(undefined);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.patchSubmodelElementByPathMetadata({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            submodelElementMetadata: metadata,
+        });
+
+        expect(mockApiInstance.patchSubmodelElementByPathMetadataSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            submodelElementMetadata: metadata,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should get file by path', async () => {
+        mockApiInstance.getFileByPathSubmodelRepo.mockResolvedValue(FILE_BLOB);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getFileByPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+        });
+
+        expect(mockApiInstance.getFileByPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should put file by path', async () => {
+        mockApiInstance.putFileByPathSubmodelRepo.mockResolvedValue(undefined);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.putFileByPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            fileName: 'test.bin',
+            file: FILE_BLOB,
+        });
+
+        expect(mockApiInstance.putFileByPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            fileName: 'test.bin',
+            file: FILE_BLOB,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should delete file by path', async () => {
+        mockApiInstance.deleteFileByPathSubmodelRepo.mockResolvedValue(undefined);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.deleteFileByPath({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+        });
+
+        expect(mockApiInstance.deleteFileByPathSubmodelRepo).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should get asynchronous operation status', async () => {
+        const opStatus: SubmodelRepositoryService.BaseOperationResult = {
+            success: true,
+        };
+        mockApiInstance.getOperationAsyncStatus.mockResolvedValue(opStatus);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getOperationAsyncStatus({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            handleId: HANDLE_ID,
+        });
+
+        expect(mockApiInstance.getOperationAsyncStatus).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            handleId: HANDLE_ID,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should get asynchronous operation result', async () => {
+        mockApiInstance.getOperationAsyncResult.mockResolvedValue(OPERATION_RESULT);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getOperationAsyncResult({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            handleId: HANDLE_ID,
+        });
+
+        expect(mockApiInstance.getOperationAsyncResult).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            handleId: HANDLE_ID,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should get asynchronous operation result in value-only representation', async () => {
+        mockApiInstance.getOperationAsyncResultValueOnly.mockResolvedValue(OPERATION_RESULT_VALUEONLY);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getOperationAsyncResultValueOnly({
+            configuration: TEST_CONFIGURATION,
+            submodelIdentifier: CORE_SUBMODEL1.id,
+            idShortPath: ID_SHORT_PATH,
+            handleId: HANDLE_ID,
+        });
+
+        expect(mockApiInstance.getOperationAsyncResultValueOnly).toHaveBeenCalledWith({
+            submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
+            idShortPath: ID_SHORT_PATH,
+            handleId: HANDLE_ID,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should generate serialization by IDs', async () => {
+        mockApiInstance.generateSerializationByIds.mockResolvedValue(FILE_BLOB);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.generateSerializationByIds({
+            configuration: TEST_CONFIGURATION,
+            aasIds: ['aas-1'],
+            submodelIds: ['sm-1'],
+            includeConceptDescriptions: true,
+        });
+
+        expect(mockApiInstance.generateSerializationByIds).toHaveBeenCalledWith({
+            aasIds: ['aas-1'],
+            submodelIds: ['sm-1'],
+            includeConceptDescriptions: true,
+        });
+        expect(response.success).toBe(true);
+    });
+
+    it('should return service description', async () => {
+        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+        const client = new SubmodelRepositoryClient();
+
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERVICE_DESCRIPTION);
         }
     });
 });

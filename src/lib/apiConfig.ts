@@ -1,7 +1,4 @@
-//import { Configuration } from '../generated';
-import { Configuration } from '../generated/runtime';
-
-export function applyDefaults(configuration: Configuration): Configuration {
+export function applyDefaults(configuration: any): any {
     // Extract configuration properties
     const options = {
         basePath: configuration.basePath || undefined,
@@ -17,7 +14,8 @@ export function applyDefaults(configuration: Configuration): Configuration {
     };
 
     // Create a new configuration instance with defaults applied
-    return new Configuration(options);
+    const ConfigurationCtor = configuration.constructor as new (configuration: Record<string, unknown>) => unknown;
+    return new ConfigurationCtor(options);
 }
 
 function getDefaultFetchApi(): typeof fetch {

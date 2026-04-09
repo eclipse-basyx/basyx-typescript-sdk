@@ -1,83 +1,163 @@
 services:
   # AAS Repository
   aas-repository:
-    image: eclipsebasyx/aas-repository:2.0.0-milestone-05
+    image: eclipsebasyx/aasrepository-go:SNAPSHOT
     container_name: aas-repository
     ports:
       - '8081:8081'
     environment:
       # Service Configuration
-      SERVER_PORT: 8081
-      BASYX_BACKEND: "InMemory"
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8081
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
 
   # Submodel Repository
   submodel-repository:
-    image: eclipsebasyx/submodel-repository:2.0.0-milestone-05
+    image: eclipsebasyx/submodelrepository-go:SNAPSHOT
     container_name: submodel-repository
     ports:
       - '8082:8081'
     environment:
       # Service Configuration
-      SERVER_PORT: 8081
-      BASYX_BACKEND: "InMemory"
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8081
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
 
   # Concept Description Repository
   cd-repository:
-    image: eclipsebasyx/conceptdescription-repository:2.0.0-milestone-05
+    image: eclipsebasyx/conceptdescriptionrepository-go:SNAPSHOT
     container_name: cd-repository
     ports:
       - '8083:8081'
     environment:
       # Service Configuration
-      SERVER_PORT: 8081
-      BASYX_BACKEND: "InMemory"
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8081
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
   
   # AAS Registry
   aas-registry:
-    image: eclipsebasyx/aas-registry-log-mem:2.0.0-milestone-05
+    image: eclipsebasyx/aasregistry-go:SNAPSHOT
     container_name: aas-registry
     ports:
       - '8084:8080'
     environment:
       # Service Configuration
-      SERVER_PORT: 8080
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8080
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
 
   # Submodel Registry
   sm-registry:
-    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-milestone-05
+    image: eclipsebasyx/submodelregistry-go:SNAPSHOT
     container_name: sm-registry
     ports:
       - '8085:8080'
     environment:
       # Service Configuration
-      SERVER_PORT: 8080
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8080
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
 
   # AAS Discovery
   aas-discovery:
-    image: eclipsebasyx/aas-discovery:2.0.0-milestone-05
+    image: eclipsebasyx/aasdiscovery-go:SNAPSHOT
     container_name: aas-discovery
     ports:
       - '8086:8081'
     environment:
       # Service Configuration
-      SERVER_PORT: 8081
-      BASYX_BACKEND: "InMemory"
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8081
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
 
   # AASX File Server
   aasx-file-server:
-    image: eclipsebasyx/aasxfileserver:2.0.0-milestone-05
+    image: eclipsebasyx/aasxfileserver:2.0.0-milestone-08
     container_name: aasx-file-server
     ports:
       - '8087:8081'
@@ -87,3 +167,36 @@ services:
       BASYX_BACKEND: "InMemory"
       BASYX_CORS_ALLOWED_ORIGINS: "*"
       BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+
+  # PostgreSQL database
+  db:
+    container_name: postgres_db
+    image: postgres:18
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: basyxTestDB
+    command: ["postgres", "-c", "listen_addresses=*"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d basyxTestDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database Schema Initialization
+  db-schema-init:
+    image: postgres:18
+    container_name: db-schema-init
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: basyxTestDB
+    command: ["sh", "/init/init-schema.sh"]
+    volumes:
+      - ./basyxschema.sql:/schema/basyxschema.sql:ro
+      - ./init-schema.sh:/init/init-schema.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy

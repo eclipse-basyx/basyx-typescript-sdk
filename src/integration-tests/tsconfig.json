@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "noEmit": true,
+    "composite": false
+  },
+  "include": ["./**/*.ts"],
+  "exclude": [
+    "../../node_modules",
+    "../../dist",
+    "../../bundle",
+    "../../coverage",
+    "../../docs"
+  ]
+}
