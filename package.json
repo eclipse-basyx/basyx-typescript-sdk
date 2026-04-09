@@ -15,6 +15,7 @@
   "repository": "https://github.com/eclipse-basyx/basyx-typescript-sdk.git",
   "author": "Aaron Zielstorff <aaron.zielstorff@iese.fraunhofer.de>",
   "license": "MIT",
+  "packageManager": "pnpm@10.17.1",
   "files": [
     "bundle",
     "dist",
