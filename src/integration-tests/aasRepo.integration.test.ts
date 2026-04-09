@@ -61,6 +61,18 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    test('should fetch references to all Asset Administration Shells', async () => {
+        const response = await client.getAllAssetAdministrationShellsReference({
+            configuration,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.result.length).toBeGreaterThan(0);
+        }
+    });
+
     test('should update an Asset Administration Shell', async () => {
         const updatedShell = testShell;
         const description = createDescription();
@@ -126,7 +138,8 @@ describe('AAS Repository Integration Tests', () => {
 
     test('should add a thumbnail to an Asset Administration Shell', async () => {
         const fileName = 'test_thumbnail.png';
-        const file = new Blob(['base64_encoded_image_data'], { type: 'image/png' });
+        const payload = 'base64_encoded_image_data';
+        const file = new Blob([payload], { type: 'image/png' });
 
         const updateResponse = await client.putThumbnail({
             configuration,
@@ -147,7 +160,34 @@ describe('AAS Repository Integration Tests', () => {
         expect(fetchResponse.success).toBe(true);
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
-            expect(fetchResponse.data).toEqual(file);
+            expect(fetchResponse.data.size).toBe(file.size);
+            await expect(fetchResponse.data.text()).resolves.toEqual(payload);
+        }
+    });
+
+    // Go backend currently does not provide a successful response for GET /serialization here.
+    test.skip('should generate serialization by IDs', async () => {
+        const response = await client.generateSerializationByIds({
+            configuration,
+            includeConceptDescriptions: true,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(response.data.size).toBeGreaterThan(0);
+        }
+    });
+
+    test('should fetch AAS repository service description', async () => {
+        const response = await client.getSelfDescription({
+            configuration,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(Array.isArray(response.data.profiles)).toBe(true);
         }
     });
 });

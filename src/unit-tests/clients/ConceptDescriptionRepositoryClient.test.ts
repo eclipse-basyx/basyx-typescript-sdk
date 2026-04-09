@@ -49,6 +49,10 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8083',
     fetchApi: globalThis.fetch,
 });
+const SERIALIZATION_BLOB = new Blob(['serialized-environment'], { type: 'application/json' });
+const SERVICE_DESCRIPTION: ConceptDescriptionRepositoryService.ServiceDescription = {
+    profiles: ['concept-description-repository-service-profile'],
+};
 
 describe('ConceptDescriptionRepositoryClient', () => {
     // Helper function to create expected configuration matcher
@@ -65,6 +69,8 @@ describe('ConceptDescriptionRepositoryClient', () => {
         deleteConceptDescriptionById: jest.fn(),
         getConceptDescriptionById: jest.fn(),
         putConceptDescriptionById: jest.fn(),
+        generateSerializationByIds: jest.fn(),
+        getSelfDescription: jest.fn(),
     };
 
     // Mock constructor
@@ -78,6 +84,12 @@ describe('ConceptDescriptionRepositoryClient', () => {
         (
             jest.requireMock('../../generated').ConceptDescriptionRepositoryService
                 .ConceptDescriptionRepositoryAPIApi as jest.Mock
+        ).mockImplementation(MockCDRepository);
+        (
+            jest.requireMock('../../generated').ConceptDescriptionRepositoryService.SerializationAPIApi as jest.Mock
+        ).mockImplementation(MockCDRepository);
+        (
+            jest.requireMock('../../generated').ConceptDescriptionRepositoryService.DescriptionAPIApi as jest.Mock
         ).mockImplementation(MockCDRepository);
         // Setup mocks for conversion functions
         (convertApiCDToCoreCD as jest.Mock).mockImplementation((conceptDescription) => {
@@ -422,6 +434,111 @@ describe('ConceptDescriptionRepositoryClient', () => {
             configuration: TEST_CONFIGURATION,
             cdIdentifier: CORE_CD1.id,
             conceptDescription: CORE_CD1,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should generate serialization by IDs', async () => {
+        // Arrange
+        mockApiInstance.generateSerializationByIds.mockResolvedValue(SERIALIZATION_BLOB);
+
+        const client = new ConceptDescriptionRepositoryClient();
+
+        // Act
+        const response = await client.generateSerializationByIds({
+            configuration: TEST_CONFIGURATION,
+            aasIds: ['aas-1'],
+            submodelIds: ['sm-1'],
+            includeConceptDescriptions: true,
+        });
+
+        // Assert
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.generateSerializationByIds).toHaveBeenCalledWith({
+            aasIds: ['aas-1'],
+            submodelIds: ['sm-1'],
+            includeConceptDescriptions: true,
+        });
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERIALIZATION_BLOB);
+        }
+    });
+
+    it('should handle errors when generating serialization', async () => {
+        // Arrange
+        const errorResult: ConceptDescriptionRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.generateSerializationByIds.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new ConceptDescriptionRepositoryClient();
+
+        // Act
+        const response = await client.generateSerializationByIds({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return service description', async () => {
+        // Arrange
+        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+
+        const client = new ConceptDescriptionRepositoryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERVICE_DESCRIPTION);
+        }
+    });
+
+    it('should handle errors when getting service description', async () => {
+        // Arrange
+        const errorResult: ConceptDescriptionRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new ConceptDescriptionRepositoryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
         });
 
         // Assert

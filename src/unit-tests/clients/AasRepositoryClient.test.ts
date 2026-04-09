@@ -91,6 +91,10 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
 });
+const SERIALIZATION_BLOB = new Blob(['serialized-environment'], { type: 'application/json' });
+const SERVICE_DESCRIPTION: AasRepositoryService.ServiceDescription = {
+    profiles: ['aas-repository-service-profile'],
+};
 
 describe('AasRepositoryClient', () => {
     // Helper function to create expected configuration matcher
@@ -103,6 +107,7 @@ describe('AasRepositoryClient', () => {
     // Create mock for AssetAdministrationShellRepositoryAPIApi
     const mockApiInstance = {
         getAllAssetAdministrationShells: jest.fn(),
+        getAllAssetAdministrationShellsReference: jest.fn(),
         postAssetAdministrationShell: jest.fn(),
         deleteAssetAdministrationShellById: jest.fn(),
         getAssetAdministrationShellById: jest.fn(),
@@ -115,6 +120,8 @@ describe('AasRepositoryClient', () => {
         getAllSubmodelReferencesAasRepository: jest.fn(),
         postSubmodelReferenceAasRepository: jest.fn(),
         deleteSubmodelReferenceAasRepository: jest.fn(),
+        generateSerializationByIds: jest.fn(),
+        getSelfDescription: jest.fn(),
     };
 
     // Mock constructor
@@ -128,6 +135,12 @@ describe('AasRepositoryClient', () => {
         (
             jest.requireMock('../../generated').AasRepositoryService
                 .AssetAdministrationShellRepositoryAPIApi as jest.Mock
+        ).mockImplementation(MockAasRepository);
+        (
+            jest.requireMock('../../generated').AasRepositoryService.SerializationAPIApi as jest.Mock
+        ).mockImplementation(MockAasRepository);
+        (
+            jest.requireMock('../../generated').AasRepositoryService.DescriptionAPIApi as jest.Mock
         ).mockImplementation(MockAasRepository);
         // Setup mocks for conversion functions
         (convertApiAasToCoreAas as jest.Mock).mockImplementation((aas) => {
@@ -237,6 +250,74 @@ describe('AasRepositoryClient', () => {
 
         // Act
         const response = await client.getAllAssetAdministrationShells({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return references to Asset Administration Shells on successful response', async () => {
+        // Arrange
+        const pagedResult: AasRepositoryService.PagedResultPagingMetadata = {
+            cursor: CURSOR,
+        };
+        mockApiInstance.getAllAssetAdministrationShellsReference.mockResolvedValue({
+            pagingMetadata: pagedResult,
+            result: [API_REFERENCE1, API_REFERENCE2],
+        });
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.getAllAssetAdministrationShellsReference({
+            configuration: TEST_CONFIGURATION,
+            assetIds: ASSET_IDS,
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+
+        // Assert
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.getAllAssetAdministrationShellsReference).toHaveBeenCalledWith({
+            assetIds: ASSET_IDS.map((id) => base64Encode(JSON.stringify(id))),
+            idShort: ID_SHORT,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+        expect(convertApiReferenceToCoreReference).toHaveBeenCalledTimes(2);
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data.pagedResult).toBe(pagedResult);
+            expect(response.data.result).toEqual([CORE_REFERENCE1, CORE_REFERENCE2]);
+        }
+    });
+
+    it('should handle errors when fetching Asset Administration Shell references', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getAllAssetAdministrationShellsReference.mockRejectedValue(
+            new Error('Required parameter missing')
+        );
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.getAllAssetAdministrationShellsReference({
             configuration: TEST_CONFIGURATION,
         });
 
@@ -936,6 +1017,111 @@ describe('AasRepositoryClient', () => {
             configuration: TEST_CONFIGURATION,
             aasIdentifier: CORE_AAS1.id,
             submodelIdentifier: submodelId,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should generate serialization by IDs', async () => {
+        // Arrange
+        mockApiInstance.generateSerializationByIds.mockResolvedValue(SERIALIZATION_BLOB);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.generateSerializationByIds({
+            configuration: TEST_CONFIGURATION,
+            aasIds: ['aas-1'],
+            submodelIds: ['sm-1'],
+            includeConceptDescriptions: true,
+        });
+
+        // Assert
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.generateSerializationByIds).toHaveBeenCalledWith({
+            aasIds: ['aas-1'],
+            submodelIds: ['sm-1'],
+            includeConceptDescriptions: true,
+        });
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERIALIZATION_BLOB);
+        }
+    });
+
+    it('should handle errors when generating serialization', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.generateSerializationByIds.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.generateSerializationByIds({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return service description', async () => {
+        // Arrange
+        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERVICE_DESCRIPTION);
+        }
+    });
+
+    it('should handle errors when getting service description', async () => {
+        // Arrange
+        const errorResult: AasRepositoryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasRepositoryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
         });
 
         // Assert

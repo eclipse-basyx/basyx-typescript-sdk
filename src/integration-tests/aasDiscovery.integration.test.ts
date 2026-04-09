@@ -58,6 +58,7 @@ describe('AAS Discovery Integration Tests', () => {
     test('should fetch a list of Asset Administration Shell IDs', async () => {
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration,
+            assetIds: [testSpecificAssetId1, testSpecificAssetId2],
         });
 
         expect(response.success).toBe(true);
@@ -65,6 +66,30 @@ describe('AAS Discovery Integration Tests', () => {
             expect(response.data).toBeDefined();
             expect(response.data.result.length).toBeGreaterThan(0);
             expect(response.data.result).toContainEqual(testShell.id);
+        }
+    });
+
+    test('should fetch a list of Asset Administration Shell IDs via search endpoint', async () => {
+        const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
+            configuration,
+            assetLink: [testSpecificAssetId1, testSpecificAssetId2],
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data.result).toContainEqual(testShell.id);
+        }
+    });
+
+    test('should fetch discovery service description', async () => {
+        const response = await client.getSelfDescription({
+            configuration,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(Array.isArray(response.data.profiles)).toBe(true);
         }
     });
 });

@@ -56,6 +56,9 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8086',
     fetchApi: globalThis.fetch,
 });
+const SERVICE_DESCRIPTION: AasDiscoveryService.ServiceDescription = {
+    profiles: ['discovery-service-profile'],
+};
 
 describe('AasDiscoveryClient', () => {
     // Helper function to create expected configuration matcher
@@ -68,9 +71,11 @@ describe('AasDiscoveryClient', () => {
     // Create mock for AssetAdministrationShellBasicDiscoveryAPIApi
     const mockApiInstance = {
         getAllAssetAdministrationShellIdsByAssetLink: jest.fn(),
+        searchAllAssetAdministrationShellIdsByAssetLink: jest.fn(),
         postAllAssetLinksById: jest.fn(),
         deleteAllAssetLinksById: jest.fn(),
         getAllAssetLinksById: jest.fn(),
+        getSelfDescription: jest.fn(),
     };
 
     // Mock constructor
@@ -84,6 +89,9 @@ describe('AasDiscoveryClient', () => {
         (
             jest.requireMock('../../generated').AasDiscoveryService
                 .AssetAdministrationShellBasicDiscoveryAPIApi as jest.Mock
+        ).mockImplementation(MockAasDiscovery);
+        (
+            jest.requireMock('../../generated').AasDiscoveryService.DescriptionAPIApi as jest.Mock
         ).mockImplementation(MockAasDiscovery);
         // Setup mocks for conversion functions
         (convertApiAssetIdToCoreAssetId as jest.Mock).mockImplementation((assetId) => {
@@ -347,6 +355,120 @@ describe('AasDiscoveryClient', () => {
         const response = await client.getAllAssetLinksById({
             configuration: TEST_CONFIGURATION,
             aasIdentifier: CORE_AAS.id,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return list of Asset Administration Shell IDs using search endpoint', async () => {
+        // Arrange
+        const pagedResult: AasDiscoveryService.PagedResultPagingMetadata = {
+            cursor: CURSOR,
+        };
+        mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink.mockResolvedValue({
+            pagingMetadata: pagedResult,
+            result: SHELL_IDS,
+        });
+
+        const client = new AasDiscoveryClient();
+
+        // Act
+        const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
+            configuration: TEST_CONFIGURATION,
+            assetLink: ASSET_IDS,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+
+        // Assert
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink).toHaveBeenCalledWith({
+            assetLink: ASSET_IDS,
+            limit: LIMIT,
+            cursor: CURSOR,
+        });
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data.pagedResult).toBe(pagedResult);
+            expect(response.data.result).toEqual(SHELL_IDS);
+        }
+    });
+
+    it('should handle errors when searching Asset Administration Shell IDs', async () => {
+        // Arrange
+        const errorResult: AasDiscoveryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(
+            new Error('Required parameter missing')
+        );
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasDiscoveryClient();
+
+        // Act
+        const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.error).toEqual(errorResult);
+        }
+    });
+
+    it('should return service description', async () => {
+        // Arrange
+        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+
+        const client = new AasDiscoveryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
+        });
+
+        // Assert
+        expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toEqual(SERVICE_DESCRIPTION);
+        }
+    });
+
+    it('should handle errors when getting service description', async () => {
+        // Arrange
+        const errorResult: AasDiscoveryService.Result = {
+            messages: [
+                {
+                    code: '400',
+                    messageType: 'Exception',
+                    text: 'Required parameter missing',
+                    timestamp: '1744752054.63186',
+                },
+            ],
+        };
+        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        (handleApiError as jest.Mock).mockResolvedValue(errorResult);
+
+        const client = new AasDiscoveryClient();
+
+        // Act
+        const response = await client.getSelfDescription({
+            configuration: TEST_CONFIGURATION,
         });
 
         // Assert

@@ -86,4 +86,16 @@ describe('Submodel Registry Integration Tests', () => {
             expect(fetchResponse.data).toEqual(updatedSubmodelDescriptor);
         }
     });
+
+    test('should fetch submodel registry service description', async () => {
+        const response = await client.getSelfDescription({
+            configuration,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.data).toBeDefined();
+            expect(Array.isArray(response.data.profiles)).toBe(true);
+        }
+    });
 });

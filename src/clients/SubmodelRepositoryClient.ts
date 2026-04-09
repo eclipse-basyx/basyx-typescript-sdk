@@ -73,6 +73,134 @@ export class SubmodelRepositoryClient {
     }
 
     /**
+     * Returns all Submodels in metadata representation
+     */
+    async getAllSubmodelsMetadata(options: {
+        configuration: Configuration;
+        semanticId?: string;
+        idShort?: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetSubmodelsMetadataResult, SubmodelRepositoryService.Result>> {
+        const { configuration, semanticId, idShort, limit, cursor } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+
+            const result = await apiInstance.getAllSubmodelsMetadata({
+                semanticId: encodedSemanticId,
+                idShort: idShort,
+                limit: limit,
+                cursor: cursor,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns all Submodels in value-only representation
+     */
+    async getAllSubmodelsValueOnly(options: {
+        configuration: Configuration;
+        semanticId?: string;
+        idShort?: string;
+        limit?: number;
+        cursor?: string;
+        level?: SubmodelRepositoryService.GetAllSubmodelsValueOnlyLevelEnum;
+        extent?: SubmodelRepositoryService.GetAllSubmodelsValueOnlyExtentEnum;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetSubmodelsValueResult, SubmodelRepositoryService.Result>> {
+        const { configuration, semanticId, idShort, limit, cursor, level, extent } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+
+            const result = await apiInstance.getAllSubmodelsValueOnly({
+                semanticId: encodedSemanticId,
+                idShort: idShort,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+                extent: extent,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns references to all Submodels
+     */
+    async getAllSubmodelsReference(options: {
+        configuration: Configuration;
+        semanticId?: string;
+        idShort?: string;
+        limit?: number;
+        cursor?: string;
+        level?: SubmodelRepositoryService.GetAllSubmodelsReferenceLevelEnum;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetReferencesResult, SubmodelRepositoryService.Result>> {
+        const { configuration, semanticId, idShort, limit, cursor, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+
+            const result = await apiInstance.getAllSubmodelsReference({
+                semanticId: encodedSemanticId,
+                idShort: idShort,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns paths of all Submodels
+     */
+    async getAllSubmodelsPath(options: {
+        configuration: Configuration;
+        semanticId?: string;
+        idShort?: string;
+        limit?: number;
+        cursor?: string;
+        level?: SubmodelRepositoryService.GetAllSubmodelsPathLevelEnum;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetPathItemsResult, SubmodelRepositoryService.Result>> {
+        const { configuration, semanticId, idShort, limit, cursor, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+
+            const result = await apiInstance.getAllSubmodelsPath({
+                semanticId: encodedSemanticId,
+                idShort: idShort,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
      * Creates a new Submodel
      *
      * @param options Object containing:
@@ -170,6 +298,58 @@ export class SubmodelRepositoryClient {
     }
 
     /**
+     * Returns a specific Submodel in reference representation
+     */
+    async getSubmodelByIdReference(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.Reference, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getSubmodelByIdReference({
+                submodelIdentifier: encodedSubmodelIdentifier,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns a specific Submodel in path representation
+     */
+    async getSubmodelByIdPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        level?: SubmodelRepositoryService.GetSubmodelByIdPathLevelEnum;
+    }): Promise<ApiResult<string[], SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getSubmodelByIdPath({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                level: level,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
      * Updates an existing Submodel
      *
      * @param options Object containing:
@@ -197,6 +377,35 @@ export class SubmodelRepositoryClient {
             });
 
             return { success: true, data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Updates an existing Submodel partially
+     */
+    async patchSubmodelById(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        submodel: Submodel;
+        level?: SubmodelRepositoryService.PatchSubmodelByIdLevelEnum;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, submodel, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.patchSubmodelById({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                submodel: convertCoreSubmodelToApiSubmodel(submodel),
+                level: level,
+            });
+
+            return { success: true, data: result };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -253,6 +462,132 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodelElements },
             };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns all submodel elements in metadata representation
+     */
+    async getAllSubmodelElementsMetadata(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<SubmodelRepositoryService.GetSubmodelElementsMetadataResult, SubmodelRepositoryService.Result>
+    > {
+        const { configuration, submodelIdentifier, limit, cursor } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getAllSubmodelElementsMetadataSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                limit: limit,
+                cursor: cursor,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns all submodel elements in value-only representation
+     */
+    async getAllSubmodelElementsValueOnly(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        limit?: number;
+        cursor?: string;
+        level?: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoLevelEnum;
+        extent?: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoExtentEnum;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetSubmodelElementsValueResult, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, limit, cursor, level, extent } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getAllSubmodelElementsValueOnlySubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+                extent: extent,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns references to all submodel elements
+     */
+    async getAllSubmodelElementsReference(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        limit?: number;
+        cursor?: string;
+        level?: SubmodelRepositoryService.GetAllSubmodelElementsReferenceSubmodelRepoLevelEnum;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetReferencesResult, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, limit, cursor, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getAllSubmodelElementsReferenceSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns paths of all submodel elements
+     */
+    async getAllSubmodelElementsPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        limit?: number;
+        cursor?: string;
+        level?: SubmodelRepositoryService.GetAllSubmodelElementsPathSubmodelRepoLevelEnum;
+    }): Promise<ApiResult<SubmodelRepositoryService.GetPathItemsResult, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, limit, cursor, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getAllSubmodelElementsPathSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                limit: limit,
+                cursor: cursor,
+                level: level,
+            });
+
+            return { success: true, data: result };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -326,6 +661,89 @@ export class SubmodelRepositoryClient {
             });
 
             return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns metadata attributes of a specific submodel element
+     */
+    async getSubmodelElementByPathMetadata(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.SubmodelElementMetadata, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getSubmodelElementByPathMetadataSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns a specific submodel element in reference representation
+     */
+    async getSubmodelElementByPathReference(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.Reference, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getSubmodelElementByPathReferenceSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns a specific submodel element in path representation
+     */
+    async getSubmodelElementByPathPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        level?: SubmodelRepositoryService.GetSubmodelElementByPathPathSubmodelRepoLevelEnum;
+    }): Promise<ApiResult<string[], SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getSubmodelElementByPathPathSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                level: level,
+            });
+
+            return { success: true, data: result };
         } catch (err) {
             const customError = await handleApiError(err);
             return { success: false, error: customError };
@@ -444,6 +862,37 @@ export class SubmodelRepositoryClient {
     }
 
     /**
+     * Updates values of an existing submodel element at a specified path
+     */
+    async patchSubmodelElementByPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        submodelElement: ISubmodelElement;
+        level?: SubmodelRepositoryService.PatchSubmodelElementByPathSubmodelRepoLevelEnum;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, submodelElement, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.patchSubmodelElementByPathSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
+                level: level,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
      * Returns the metadata attributes of a specific Submodel
      *
      * @param options Object containing:
@@ -465,6 +914,35 @@ export class SubmodelRepositoryClient {
 
             const result = await apiInstance.getSubmodelByIdMetadata({
                 submodelIdentifier: encodedSubmodelIdentifier,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Updates metadata attributes of an existing Submodel
+     */
+    async patchSubmodelByIdMetadata(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        submodelMetadata: SubmodelRepositoryService.SubmodelMetadata;
+        level?: SubmodelRepositoryService.PatchSubmodelByIdMetadataLevelEnum;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, submodelMetadata, level } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.patchSubmodelByIdMetadata({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                submodelMetadata: submodelMetadata,
+                level: level,
             });
 
             return { success: true, data: result };
@@ -628,6 +1106,120 @@ export class SubmodelRepositoryClient {
     }
 
     /**
+     * Updates metadata attributes of an existing SubmodelElement
+     */
+    async patchSubmodelElementByPathMetadata(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        submodelElementMetadata: SubmodelRepositoryService.SubmodelElementMetadata;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, submodelElementMetadata } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.patchSubmodelElementByPathMetadataSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                submodelElementMetadata: submodelElementMetadata,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns file content for a submodel element at a specified path
+     */
+    async getFileByPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+    }): Promise<ApiResult<Blob, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getFileByPathSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Updates file content for a submodel element at a specified path
+     */
+    async putFileByPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        fileName?: string;
+        file?: Blob;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, fileName, file } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.putFileByPathSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                fileName: fileName,
+                file: file,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Deletes file content of an existing submodel element at a specified path
+     */
+    async deleteFileByPath(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.deleteFileByPathSubmodelRepo({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
      * Synchronously invokes an Operation at a specified path
      *
      * @param options Object containing:
@@ -778,6 +1370,140 @@ export class SubmodelRepositoryClient {
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns status of an asynchronously invoked operation
+     */
+    async getOperationAsyncStatus(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        handleId: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.BaseOperationResult, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, handleId } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getOperationAsyncStatus({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                handleId: handleId,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns result of an asynchronously invoked operation
+     */
+    async getOperationAsyncResult(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        handleId: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.OperationResult, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, handleId } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getOperationAsyncResult({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                handleId: handleId,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns result of an asynchronously invoked operation in value-only representation
+     */
+    async getOperationAsyncResultValueOnly(options: {
+        configuration: Configuration;
+        submodelIdentifier: string;
+        idShortPath: string;
+        handleId: string;
+    }): Promise<ApiResult<SubmodelRepositoryService.OperationResultValueOnly, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, handleId } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+
+            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+
+            const result = await apiInstance.getOperationAsyncResultValueOnly({
+                submodelIdentifier: encodedSubmodelIdentifier,
+                idShortPath: idShortPath,
+                handleId: handleId,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns an appropriate serialization based on the specified format
+     */
+    async generateSerializationByIds(options: {
+        configuration: Configuration;
+        aasIds?: string[];
+        submodelIds?: string[];
+        includeConceptDescriptions?: boolean;
+    }): Promise<ApiResult<Blob, SubmodelRepositoryService.Result>> {
+        const { configuration, aasIds, submodelIds, includeConceptDescriptions } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.SerializationAPIApi(applyDefaults(configuration));
+
+            const result = await apiInstance.generateSerializationByIds({
+                aasIds: aasIds,
+                submodelIds: submodelIds,
+                includeConceptDescriptions: includeConceptDescriptions,
+            });
+
+            return { success: true, data: result };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return { success: false, error: customError };
+        }
+    }
+
+    /**
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     */
+    async getSelfDescription(options: {
+        configuration: Configuration;
+    }): Promise<ApiResult<SubmodelRepositoryService.ServiceDescription, SubmodelRepositoryService.Result>> {
+        const { configuration } = options;
+
+        try {
+            const apiInstance = new SubmodelRepositoryService.DescriptionAPIApi(applyDefaults(configuration));
+
+            const result = await apiInstance.getSelfDescription();
 
             return { success: true, data: result };
         } catch (err) {
