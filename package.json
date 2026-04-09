@@ -31,6 +31,7 @@
     "format:check": "prettier --check .",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:unit": "vitest run --project unit-tests",
     "test:integration": "vitest run --project integration-tests",
