@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      xml-sax-ts:
-        specifier: ^0.4.0
-        version: 0.4.1
+      xmlsax-typescript:
+        specifier: ^1.0.0-rc.1
+        version: 1.0.0-rc.1
     devDependencies:
       '@aas-core-works/aas-core3.1-typescript':
         specifier: ^1.0.0
@@ -1582,8 +1582,9 @@ packages:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
     engines: {node: '>=10'}
 
-  xml-sax-ts@0.4.1:
-    resolution: {integrity: sha512-4sCl2NNC9JVbzY8n6D8EPSHVMd1ReLoflNfdp4LNRn4cY0lxzLM56+iMaQmIqMICgZBKuoW5Dx96mhlMPLfuRg==}
+  xmlsax-typescript@1.0.0-rc.1:
+    resolution: {integrity: sha512-BBGgdaguLxMEwCYlOVORDJobGjD7PW7JH3XOQUiXwxxWTuz/26F0RzLkoCdHTks5LnXpC48O0swjBK0Fs3LBvg==}
+    engines: {node: '>=20'}
 
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
@@ -3055,7 +3056,7 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
 
-  xml-sax-ts@0.4.1: {}
+  xmlsax-typescript@1.0.0-rc.1: {}
 
   y18n@5.0.8: {}
 

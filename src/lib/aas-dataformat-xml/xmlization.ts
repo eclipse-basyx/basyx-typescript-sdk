@@ -45,7 +45,7 @@ import {
     ValueList,
     ValueReferencePair,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import { buildObject, buildXmlNode, parseXmlString, serializeXml as serializeXmlNode, XmlNode } from 'xml-sax-ts';
+import { buildObject, buildXmlNode, parseXmlString, serializeXml as serializeXmlNode, XmlNode } from 'xmlsax-typescript';
 import { BaSyxEnvironment } from '../../models/BaSyxEnvironment';
 
 export function serializeXml(data: BaSyxEnvironment, namespacePrefix: string = 'aas'): string {
