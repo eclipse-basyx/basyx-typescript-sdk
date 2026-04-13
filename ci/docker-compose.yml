@@ -3,6 +3,7 @@ services:
   aas-repository:
     image: eclipsebasyx/aasrepository-go:SNAPSHOT
     container_name: aas-repository
+    command: ["/app/aasrepositoryservice"]
     ports:
       - '8081:8081'
     environment:
@@ -29,6 +30,7 @@ services:
   submodel-repository:
     image: eclipsebasyx/submodelrepository-go:SNAPSHOT
     container_name: submodel-repository
+    command: ["/app/submodelrepositoryservice"]
     ports:
       - '8082:8081'
     environment:
@@ -55,6 +57,7 @@ services:
   cd-repository:
     image: eclipsebasyx/conceptdescriptionrepository-go:SNAPSHOT
     container_name: cd-repository
+    command: ["/app/conceptdescriptionrepositoryservice"]
     ports:
       - '8083:8081'
     environment:
@@ -81,6 +84,7 @@ services:
   aas-registry:
     image: eclipsebasyx/aasregistry-go:SNAPSHOT
     container_name: aas-registry
+    command: ["/app/aasregistryservice"]
     ports:
       - '8084:8080'
     environment:
@@ -107,6 +111,7 @@ services:
   sm-registry:
     image: eclipsebasyx/submodelregistry-go:SNAPSHOT
     container_name: sm-registry
+    command: ["/app/submodelregistryservice"]
     ports:
       - '8085:8080'
     environment:
@@ -133,6 +138,7 @@ services:
   aas-discovery:
     image: eclipsebasyx/aasdiscovery-go:SNAPSHOT
     container_name: aas-discovery
+    command: ["/app/discoveryservice"]
     ports:
       - '8086:8081'
     environment:
