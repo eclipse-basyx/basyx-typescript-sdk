@@ -5,8 +5,12 @@ on:
     types: [published]
 
 permissions:
-  contents: read
-  id-token: write   # required for OIDC trusted publishing
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.event.release.id }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -15,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
@@ -26,8 +32,35 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
-      - name: Update npm (OIDC/provenance support)
+      - name: Update npm (provenance support)
         run: npm i -g npm@latest
+
+      - name: Resolve release version
+        shell: bash
+        run: |
+          TAG_NAME='${{ github.event.release.tag_name }}'
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag must be v-prefixed semver (for example v1.2.3 or v1.2.3-rc.1), got: $TAG_NAME" >&2
+            exit 1
+          fi
+          echo "APP_VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Sync package versions
+        shell: bash
+        run: |
+          PRE_SYNC_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$PRE_SYNC_VERSION" != "$APP_VERSION" ]]; then
+            echo "package.json version ($PRE_SYNC_VERSION) differs from release version ($APP_VERSION); syncing package files in CI."
+          fi
+
+          npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
+          pnpm install --lockfile-only --ignore-scripts
+
+          POST_SYNC_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$POST_SYNC_VERSION" != "$APP_VERSION" ]]; then
+            echo "Failed to sync package.json version to release version ($APP_VERSION); got: $POST_SYNC_VERSION" >&2
+            exit 1
+          fi
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -41,5 +74,60 @@ jobs:
       - name: Verify consumer compatibility
         run: pnpm verify:compat
 
+      - name: Resolve npm dist-tag
+        shell: bash
+        run: |
+          if [[ "$APP_VERSION" == *-* ]]; then
+            PRERELEASE=${APP_VERSION#*-}
+            TAG=${PRERELEASE%%.*}
+            echo "NPM_TAG=$TAG" >> "$GITHUB_ENV"
+          else
+            echo "NPM_TAG=latest" >> "$GITHUB_ENV"
+          fi
+
       - name: Publish to npm (OIDC)
-        run: npm publish
+        run: npm publish --provenance --tag "$NPM_TAG"
+
+      - name: Commit synced package files
+        id: sync_package_files
+        if: github.event.release.target_commitish == 'main' && github.repository == 'eclipse-basyx/basyx-typescript-sdk'
+        continue-on-error: true
+        shell: bash
+        run: |
+          package_snapshot="$(mktemp)"
+          lockfile_snapshot="$(mktemp)"
+          sync_worktree="$(mktemp -d)"
+
+          cp package.json "$package_snapshot"
+          cp pnpm-lock.yaml "$lockfile_snapshot"
+
+          cleanup() {
+            git worktree remove --force "$sync_worktree" >/dev/null 2>&1 || true
+            rm -f "$package_snapshot" "$lockfile_snapshot"
+            rm -rf "$sync_worktree"
+          }
+          trap cleanup EXIT
+
+          git fetch origin main
+          git worktree add -B main "$sync_worktree" origin/main
+
+          cd "$sync_worktree"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          cp "$package_snapshot" package.json
+          cp "$lockfile_snapshot" pnpm-lock.yaml
+
+          git add package.json pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo "No package file changes to commit against origin/main."
+            exit 0
+          fi
+
+          git commit -m "chore(release): sync package versions to ${{ github.event.release.tag_name }} [skip ci]"
+          git push origin main
+
+      - name: Warn if package sync push failed
+        if: steps.sync_package_files.outcome == 'failure'
+        run: |
+          echo "::warning::npm publish succeeded, but pushing synced package files to main failed. Please sync package.json and pnpm-lock.yaml manually."
