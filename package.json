@@ -36,6 +36,8 @@
     "test:watch": "vitest",
     "test:unit": "vitest run --project unit-tests",
     "test:integration": "vitest run --project integration-tests",
+    "validate:openapi-coverage": "node scripts/validate-openapi-coverage.mjs",
+    "validate:openapi-coverage:aasdiscovery": "node scripts/validate-openapi-coverage.mjs --service aasDiscovery",
     "docs": "typedoc --options typedoc.json",
     "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true",
     "gen-submodelrepo": "openapi-generator-cli generate -i openapi/smrepository.yaml -g typescript-fetch -o src/generated/SubmodelRepositoryService --additional-properties=withoutRuntimeChecks=true",
@@ -52,10 +54,10 @@
     "@aas-core-works/aas-core3.1-typescript": "^1.0.0",
     "@eslint/js": "^10.0.1",
     "@openapitools/openapi-generator-cli": "^2.18.4",
-    "@vitest/coverage-v8": "^4.1.5",
     "@types/node": "^25.0.0",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-simple-import-sort": "^13.0.0",
@@ -67,7 +69,8 @@
     "typedoc": "^0.28.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "yaml": "^2.8.3"
   },
   "dependencies": {
     "xmlsax-typescript": "^1.0.0-rc.1"

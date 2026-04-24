@@ -1,6 +1,8 @@
 /**
  * A union for "no-throw" style responses:
- * Success => { success: true; data: T }
- * Failure => { success: false; error: E }
+ * Success => { success: true; data: T; statusCode?: number }
+ * Failure => { success: false; error: E; statusCode?: number }
  */
-export type ApiResult<T, E> = { success: true; data: T } | { success: false; error: E };
+export type ApiResult<T, E> =
+	| { success: true; data: T; statusCode?: number }
+	| { success: false; error: E; statusCode?: number };

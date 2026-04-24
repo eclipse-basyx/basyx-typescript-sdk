@@ -2,13 +2,31 @@ import type { SpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/typ
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasDiscoveryService } from '../generated';
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError, ResponseError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../lib/convertAasDiscoveryTypes';
 import { handleApiError } from '../lib/errorHandler';
 
 export class AasDiscoveryClient {
+    private static extractStatusCode(err: unknown, parsedError?: AasDiscoveryService.Result): number | undefined {
+        if (err instanceof ResponseError) {
+            return err.response.status;
+        }
+
+        if (err instanceof RequiredError) {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
+
     /**
      * Returns a list of Asset Administration Shell IDs linked to specific asset identifiers or the global asset ID
      *
@@ -42,21 +60,27 @@ export class AasDiscoveryClient {
             );
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
-            const result = await apiInstance.getAllAssetAdministrationShellIdsByAssetLink({
+            const response = await apiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw({
                 assetIds: encodedAssetIds,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             const shellIds = result.result ?? [];
 
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: shellIds },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasDiscoveryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -84,15 +108,24 @@ export class AasDiscoveryClient {
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await apiInstance.postAllAssetLinksById({
+            const response = await apiInstance.postAllAssetLinksByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
                 specificAssetId: specificAssetId.map(convertCoreAssetIdToApiAssetId),
             });
+            const result = await response.value();
 
-            return { success: true, data: result.map(convertApiAssetIdToCoreAssetId) };
+            return {
+                success: true,
+                data: result.map(convertApiAssetIdToCoreAssetId),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasDiscoveryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -118,14 +151,19 @@ export class AasDiscoveryClient {
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await apiInstance.deleteAllAssetLinksById({
+            const response = await apiInstance.deleteAllAssetLinksByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasDiscoveryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -151,14 +189,23 @@ export class AasDiscoveryClient {
 
             const encodedAasIdentifier = base64Encode(aasIdentifier);
 
-            const result = await apiInstance.getAllAssetLinksById({
+            const response = await apiInstance.getAllAssetLinksByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result.map(convertApiAssetIdToCoreAssetId) };
+            return {
+                success: true,
+                data: result.map(convertApiAssetIdToCoreAssetId),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasDiscoveryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -194,21 +241,27 @@ export class AasDiscoveryClient {
                 applyDefaults(configuration)
             );
 
-            const result = await apiInstance.searchAllAssetAdministrationShellIdsByAssetLink({
+            const response = await apiInstance.searchAllAssetAdministrationShellIdsByAssetLinkRaw({
                 assetLink: assetLink?.map((id) => ({ name: id.name, value: id.value })),
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             const shellIds = result.result ?? [];
 
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: shellIds },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasDiscoveryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -227,12 +280,17 @@ export class AasDiscoveryClient {
 
         try {
             const apiInstance = new AasDiscoveryService.DescriptionAPIApi(applyDefaults(configuration));
-            const result = await apiInstance.getSelfDescription();
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasDiscoveryClient.extractStatusCode(err, customError),
+            };
         }
     }
 }

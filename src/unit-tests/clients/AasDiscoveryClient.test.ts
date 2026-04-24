@@ -62,6 +62,11 @@ const SERVICE_DESCRIPTION: AasDiscoveryService.ServiceDescription = {
 };
 
 describe('AasDiscoveryClient', () => {
+    const createRawResponse = <T>(status: number, payload: T) => ({
+        raw: { status },
+        value: vi.fn().mockResolvedValue(payload),
+    });
+
     // Helper function to create expected configuration matcher
     const expectConfigurationCall = () =>
         expect.objectContaining({
@@ -71,12 +76,12 @@ describe('AasDiscoveryClient', () => {
 
     // Create mock for AssetAdministrationShellBasicDiscoveryAPIApi
     const mockApiInstance = {
-        getAllAssetAdministrationShellIdsByAssetLink: vi.fn(),
-        searchAllAssetAdministrationShellIdsByAssetLink: vi.fn(),
-        postAllAssetLinksById: vi.fn(),
-        deleteAllAssetLinksById: vi.fn(),
-        getAllAssetLinksById: vi.fn(),
-        getSelfDescription: vi.fn(),
+        getAllAssetAdministrationShellIdsByAssetLinkRaw: vi.fn(),
+        searchAllAssetAdministrationShellIdsByAssetLinkRaw: vi.fn(),
+        postAllAssetLinksByIdRaw: vi.fn(),
+        deleteAllAssetLinksByIdRaw: vi.fn(),
+        getAllAssetLinksByIdRaw: vi.fn(),
+        getSelfDescriptionRaw: vi.fn(),
     };
 
     // Mock constructor
@@ -137,10 +142,12 @@ describe('AasDiscoveryClient', () => {
         const pagedResult: AasDiscoveryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink.mockResolvedValue({
-            pagingMetadata: pagedResult,
-            result: SHELL_IDS,
-        });
+        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw.mockResolvedValue(
+            createRawResponse(200, {
+                pagingMetadata: pagedResult,
+                result: SHELL_IDS,
+            })
+        );
 
         const client = new AasDiscoveryClient();
 
@@ -154,7 +161,7 @@ describe('AasDiscoveryClient', () => {
 
         // Assert
         expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw).toHaveBeenCalledWith({
             assetIds: ASSET_IDS.map((id) => base64Encode(JSON.stringify(id))),
             limit: LIMIT,
             cursor: CURSOR,
@@ -164,6 +171,7 @@ describe('AasDiscoveryClient', () => {
         if (response.success) {
             expect(response.data.pagedResult).toBe(pagedResult);
             expect(response.data.result).toEqual(SHELL_IDS);
+            expect(response.statusCode).toBe(200);
         }
     });
 
@@ -179,7 +187,7 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(
+        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -196,12 +204,13 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should create specific asset identifiers linked to an Asset Administration Shell', async () => {
         // Arrange
-        mockApiInstance.postAllAssetLinksById.mockResolvedValue(API_SPECIFIC_ASSET_IDS);
+        mockApiInstance.postAllAssetLinksByIdRaw.mockResolvedValue(createRawResponse(201, API_SPECIFIC_ASSET_IDS));
 
         const client = new AasDiscoveryClient();
 
@@ -215,7 +224,7 @@ describe('AasDiscoveryClient', () => {
         // Assert
         expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
-        expect(mockApiInstance.postAllAssetLinksById).toHaveBeenCalledWith({
+        expect(mockApiInstance.postAllAssetLinksByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
             specificAssetId: API_SPECIFIC_ASSET_IDS,
         });
@@ -224,6 +233,7 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(CORE_SPECIFIC_ASSET_IDS);
+            expect(response.statusCode).toBe(201);
         }
     });
 
@@ -239,7 +249,7 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postAllAssetLinksById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.postAllAssetLinksByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
@@ -255,12 +265,13 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should delete specified specific asset identifiers linked to an Asset Administration Shell', async () => {
         // Arrange
-        mockApiInstance.deleteAllAssetLinksById.mockResolvedValue(undefined);
+        mockApiInstance.deleteAllAssetLinksByIdRaw.mockResolvedValue(createRawResponse(204, undefined));
 
         const client = new AasDiscoveryClient();
 
@@ -273,10 +284,13 @@ describe('AasDiscoveryClient', () => {
         // Assert
         expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
-        expect(mockApiInstance.deleteAllAssetLinksById).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteAllAssetLinksByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
         });
         expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
     });
 
     it('should handle errors when deleting specified specific asset identifiers', async () => {
@@ -291,7 +305,7 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.deleteAllAssetLinksById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.deleteAllAssetLinksByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
@@ -306,12 +320,13 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should get a list of specific asset identifiers based on an Asset Administration Shell ID', async () => {
         // Arrange
-        mockApiInstance.getAllAssetLinksById.mockResolvedValue(API_SPECIFIC_ASSET_IDS);
+        mockApiInstance.getAllAssetLinksByIdRaw.mockResolvedValue(createRawResponse(200, API_SPECIFIC_ASSET_IDS));
 
         const client = new AasDiscoveryClient();
 
@@ -324,13 +339,14 @@ describe('AasDiscoveryClient', () => {
         // Assert
         expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
-        expect(mockApiInstance.getAllAssetLinksById).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllAssetLinksByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS.id}`,
         });
         expect(convertApiAssetIdToCoreAssetId).toHaveBeenCalledTimes(2);
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(CORE_SPECIFIC_ASSET_IDS);
+            expect(response.statusCode).toBe(200);
         }
     });
 
@@ -346,7 +362,7 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllAssetLinksById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getAllAssetLinksByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
@@ -361,6 +377,7 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
@@ -369,10 +386,12 @@ describe('AasDiscoveryClient', () => {
         const pagedResult: AasDiscoveryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink.mockResolvedValue({
-            pagingMetadata: pagedResult,
-            result: SHELL_IDS,
-        });
+        mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLinkRaw.mockResolvedValue(
+            createRawResponse(200, {
+                pagingMetadata: pagedResult,
+                result: SHELL_IDS,
+            })
+        );
 
         const client = new AasDiscoveryClient();
 
@@ -386,7 +405,7 @@ describe('AasDiscoveryClient', () => {
 
         // Assert
         expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink).toHaveBeenCalledWith({
+        expect(mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLinkRaw).toHaveBeenCalledWith({
             assetLink: ASSET_IDS,
             limit: LIMIT,
             cursor: CURSOR,
@@ -395,6 +414,7 @@ describe('AasDiscoveryClient', () => {
         if (response.success) {
             expect(response.data.pagedResult).toBe(pagedResult);
             expect(response.data.result).toEqual(SHELL_IDS);
+            expect(response.statusCode).toBe(200);
         }
     });
 
@@ -410,7 +430,7 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLink.mockRejectedValue(
+        mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLinkRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -426,12 +446,13 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should return service description', async () => {
         // Arrange
-        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+        mockApiInstance.getSelfDescriptionRaw.mockResolvedValue(createRawResponse(200, SERVICE_DESCRIPTION));
 
         const client = new AasDiscoveryClient();
 
@@ -442,10 +463,11 @@ describe('AasDiscoveryClient', () => {
 
         // Assert
         expect(MockAasDiscovery).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(mockApiInstance.getSelfDescriptionRaw).toHaveBeenCalledWith();
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(SERVICE_DESCRIPTION);
+            expect(response.statusCode).toBe(200);
         }
     });
 
@@ -461,7 +483,7 @@ describe('AasDiscoveryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getSelfDescriptionRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasDiscoveryClient();
@@ -475,6 +497,7 @@ describe('AasDiscoveryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 });
