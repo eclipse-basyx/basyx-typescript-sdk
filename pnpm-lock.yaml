@@ -49,7 +49,7 @@ importers:
         specifier: ^3.8.3
         version: 3.8.3
       rolldown:
-        specifier: ^1.0.0-rc.16
+        specifier: ^1.0.0-rc.17
         version: 1.0.0-rc.17
       ts-node:
         specifier: ^10.9.2
