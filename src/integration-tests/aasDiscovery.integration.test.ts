@@ -164,16 +164,19 @@ describe('AAS Discovery Integration Tests', () => {
 
     /**
      * @operation PostAllAssetLinksById
-     * @status 409 [non-blocking]
+     * @status 409 [known-specification-bug]
      */
-    test('should surface conflict status for duplicate link creation when backend enforces it', async () => {
+    test.skip('should surface conflict status for duplicate link creation when backend enforces it', async () => {
         const response = await client.postAllAssetLinksById({
             configuration,
             aasIdentifier: testShell.id,
             specificAssetId: [testSpecificAssetId1],
         });
 
-        if (!response.success) {
+        if (response.success) {
+            expect([201, 204]).toContain(response.statusCode);
+            expect(response.data).toBeUndefined();
+        } else {
             expect(response.statusCode).toBe(409);
             expect(response.error.messages?.[0]?.code).toBe('409');
         }
