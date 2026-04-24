@@ -107,7 +107,8 @@ function parseStatusTags(suffix) {
 
 function parseIntegrationMetadata(testSource) {
     const metadata = [];
-    const testBlockRegex = /\/\*\*([\s\S]*?)\*\/\s*(?:test|it)(\.skip)?\(\s*(['"`])(.+?)\3\s*,\s*async\s*\(\)\s*=>\s*\{/g;
+    const testBlockRegex =
+        /\/\*\*([\s\S]*?)\*\/\s*(?:test|it)(\.skip)?\(\s*(['"`])(.+?)\3\s*,\s*async\s*\(\)\s*=>\s*\{/g;
 
     let match;
     while ((match = testBlockRegex.exec(testSource)) !== null) {
@@ -142,7 +143,9 @@ function parseIntegrationMetadata(testSource) {
         const assertions = new Map();
         for (const { status } of statuses) {
             const hasStatusCodeAssert = new RegExp(`statusCode\\)\\.toBe\\(${status}\\)`).test(body);
-            const hasMessageCodeAssert = new RegExp(`messages\\?\\.\\[0\\]\\?\\.code\\)\\.toBe\\((['"])${status}\\1\\)`).test(body);
+            const hasMessageCodeAssert = new RegExp(
+                `messages\\?\\.\\[0\\]\\?\\.code\\)\\.toBe\\((['"])${status}\\1\\)`
+            ).test(body);
             assertions.set(status, hasStatusCodeAssert || hasMessageCodeAssert);
         }
 
@@ -223,10 +226,14 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
         const waivedRequiredStatuses = operation.requiredStatuses.filter(
             (status) => !assertedStatuses.has(status) && waivedStatuses.has(status)
         );
-        const missingNonBlockingStatuses = operation.nonBlockingStatuses.filter((status) => !assertedStatuses.has(status));
+        const missingNonBlockingStatuses = operation.nonBlockingStatuses.filter(
+            (status) => !assertedStatuses.has(status)
+        );
 
         if (!implemented) {
-            criticalFindings.push(`Missing client method for ${operation.operationId} (expected ${expectedMethodName})`);
+            criticalFindings.push(
+                `Missing client method for ${operation.operationId} (expected ${expectedMethodName})`
+            );
         }
 
         if (missingRequiredStatuses.length > 0) {
@@ -240,9 +247,7 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
                 const reasons = [...(waivedStatusReasons.get(status) ?? [])].sort();
                 return reasons.length > 0 ? `${status} [${reasons.join(', ')}]` : `${status}`;
             });
-            warnings.push(
-                `${operation.operationId} has waived required statuses: ${waivedWithReason.join(', ')}`
-            );
+            warnings.push(`${operation.operationId} has waived required statuses: ${waivedWithReason.join(', ')}`);
         }
 
         if (coverage?.missingAssertions?.length) {
@@ -260,7 +265,9 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
         }
 
         if (missingNonBlockingStatuses.length > 0) {
-            warnings.push(`${operation.operationId} missing non-blocking status coverage: ${missingNonBlockingStatuses.join(', ')}`);
+            warnings.push(
+                `${operation.operationId} missing non-blocking status coverage: ${missingNonBlockingStatuses.join(', ')}`
+            );
         }
 
         matrix.push({
