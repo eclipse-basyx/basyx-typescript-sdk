@@ -94,17 +94,38 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          package_snapshot="$(mktemp)"
+          lockfile_snapshot="$(mktemp)"
+          sync_worktree="$(mktemp -d)"
+
+          cp package.json "$package_snapshot"
+          cp pnpm-lock.yaml "$lockfile_snapshot"
+
+          cleanup() {
+            git worktree remove --force "$sync_worktree" >/dev/null 2>&1 || true
+            rm -f "$package_snapshot" "$lockfile_snapshot"
+            rm -rf "$sync_worktree"
+          }
+          trap cleanup EXIT
+
+          git fetch origin main
+          git worktree add -B main "$sync_worktree" origin/main
+
+          cd "$sync_worktree"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          cp "$package_snapshot" package.json
+          cp "$lockfile_snapshot" pnpm-lock.yaml
+
           git add package.json pnpm-lock.yaml
           if git diff --cached --quiet; then
-            echo "No package file changes to commit."
+            echo "No package file changes to commit against origin/main."
             exit 0
           fi
 
           git commit -m "chore(release): sync package versions to ${{ github.event.release.tag_name }} [skip ci]"
-          git push origin "HEAD:main"
+          git push origin main
 
       - name: Warn if package sync push failed
         if: steps.sync_package_files.outcome == 'failure'
