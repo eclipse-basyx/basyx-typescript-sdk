@@ -48,12 +48,17 @@ jobs:
       - name: Sync package versions
         shell: bash
         run: |
+          PRE_SYNC_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$PRE_SYNC_VERSION" != "$APP_VERSION" ]]; then
+            echo "package.json version ($PRE_SYNC_VERSION) differs from release version ($APP_VERSION); syncing package files in CI."
+          fi
+
           npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
           pnpm install --lockfile-only --ignore-scripts
 
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          if [[ "$PACKAGE_VERSION" != "$APP_VERSION" ]]; then
-            echo "package.json version ($PACKAGE_VERSION) does not match release version ($APP_VERSION)" >&2
+          POST_SYNC_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$POST_SYNC_VERSION" != "$APP_VERSION" ]]; then
+            echo "Failed to sync package.json version to release version ($APP_VERSION); got: $POST_SYNC_VERSION" >&2
             exit 1
           fi
 
@@ -84,7 +89,9 @@ jobs:
         run: npm publish --provenance --tag "$NPM_TAG"
 
       - name: Commit synced package files
+        id: sync_package_files
         if: github.event.release.target_commitish == 'main' && github.repository == 'eclipse-basyx/basyx-typescript-sdk'
+        continue-on-error: true
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -98,3 +105,8 @@ jobs:
 
           git commit -m "chore(release): sync package versions to ${{ github.event.release.tag_name }} [skip ci]"
           git push origin "HEAD:main"
+
+      - name: Warn if package sync push failed
+        if: steps.sync_package_files.outcome == 'failure'
+        run: |
+          echo "::warning::npm publish succeeded, but pushing synced package files to main failed. Please sync package.json and pnpm-lock.yaml manually."
