@@ -3,6 +3,17 @@ name: Lint SDK
 on:
   pull_request:
     branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'openapi/**'
+      - 'eslint.config.mts'
+      - 'tsconfig*.json'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/lint-sdk.yml'
 
 permissions:
   contents: read
