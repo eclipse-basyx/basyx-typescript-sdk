@@ -2,7 +2,7 @@ import type { SpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/typ
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasDiscoveryService } from '../generated';
-import { Configuration, RequiredError, ResponseError } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { convertApiAssetIdToCoreAssetId, convertCoreAssetIdToApiAssetId } from '../lib/convertAasDiscoveryTypes';
