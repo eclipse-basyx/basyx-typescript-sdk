@@ -302,7 +302,9 @@ describe('SubmodelRegistryClient', () => {
     });
 
     it('should get a Submodel Descriptor by ID', async () => {
-        mockApiInstance.getSubmodelDescriptorByIdRaw.mockResolvedValue(createRawResponse(200, API_SUBMODEL_DESCRIPTOR1));
+        mockApiInstance.getSubmodelDescriptorByIdRaw.mockResolvedValue(
+            createRawResponse(200, API_SUBMODEL_DESCRIPTOR1)
+        );
 
         const client = new SubmodelRegistryClient();
         const response = await client.getSubmodelDescriptorById({
@@ -375,7 +377,9 @@ describe('SubmodelRegistryClient', () => {
     });
 
     it('should create a new Submodel Descriptor during update', async () => {
-        mockApiInstance.putSubmodelDescriptorByIdRaw.mockResolvedValue(createRawResponse(201, API_SUBMODEL_DESCRIPTOR1));
+        mockApiInstance.putSubmodelDescriptorByIdRaw.mockResolvedValue(
+            createRawResponse(201, API_SUBMODEL_DESCRIPTOR1)
+        );
 
         const client = new SubmodelRegistryClient();
         const response = await client.putSubmodelDescriptorById({
