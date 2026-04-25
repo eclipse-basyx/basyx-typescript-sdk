@@ -1,6 +1,6 @@
 import type { ApiResult } from '../models/api';
 import { SubmodelRegistryService } from '../generated';
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError, ResponseError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -11,6 +11,24 @@ import { handleApiError } from '../lib/errorHandler';
 import { SubmodelDescriptor } from '../models/Descriptors';
 
 export class SubmodelRegistryClient {
+    private static extractStatusCode(err: unknown, parsedError?: SubmodelRegistryService.Result): number | undefined {
+        if (err instanceof ResponseError) {
+            return err.response.status;
+        }
+
+        if (err instanceof RequiredError) {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
+
     /**
      * Returns all Submodel Descriptors
      *
@@ -39,19 +57,25 @@ export class SubmodelRegistryClient {
         try {
             const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
 
-            const result = await apiInstance.getAllSubmodelDescriptors({
+            const response = await apiInstance.getAllSubmodelDescriptorsRaw({
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
 
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -73,14 +97,23 @@ export class SubmodelRegistryClient {
         try {
             const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
 
-            const result = await apiInstance.postSubmodelDescriptor({
+            const response = await apiInstance.postSubmodelDescriptorRaw({
                 submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -104,14 +137,19 @@ export class SubmodelRegistryClient {
 
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const result = await apiInstance.deleteSubmodelDescriptorById({
+            const response = await apiInstance.deleteSubmodelDescriptorByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -135,14 +173,23 @@ export class SubmodelRegistryClient {
 
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const result = await apiInstance.getSubmodelDescriptorById({
+            const response = await apiInstance.getSubmodelDescriptorByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -168,18 +215,33 @@ export class SubmodelRegistryClient {
 
             const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
 
-            const result = await apiInstance.putSubmodelDescriptorById({
+            const response = await apiInstance.putSubmodelDescriptorByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
             });
 
+            if (response.raw.status === 204) {
+                return {
+                    success: true,
+                    data: undefined,
+                    statusCode: response.raw.status,
+                };
+            }
+
+            const result = await response.value();
+
             return {
                 success: true,
                 data: result ? convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) : undefined,
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -198,12 +260,17 @@ export class SubmodelRegistryClient {
 
         try {
             const apiInstance = new SubmodelRegistryService.DescriptionAPIApi(applyDefaults(configuration));
-            const result = await apiInstance.getSelfDescription();
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 }

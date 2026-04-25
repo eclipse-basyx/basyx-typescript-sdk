@@ -13,6 +13,11 @@ const SERVICE_CONFIG = {
         clientFile: 'src/clients/AasDiscoveryClient.ts',
         integrationTestFile: 'src/integration-tests/aasDiscovery.integration.test.ts',
     },
+    submodelRegistry: {
+        openapiFile: 'openapi/smregistry.yaml',
+        clientFile: 'src/clients/SubmodelRegistryClient.ts',
+        integrationTestFile: 'src/integration-tests/submodelRegistry.integration.test.ts',
+    },
 };
 
 function parseArgs(argv) {
