@@ -260,8 +260,8 @@ describe('Concept Description Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
-            expect(response.statusCode).toBe(201);
-            expect(response.data).toEqual(updatedConceptDescription);
+            expect(response.statusCode).toBe(204);
+            expect(response.data).toBeUndefined();
         }
     });
 
