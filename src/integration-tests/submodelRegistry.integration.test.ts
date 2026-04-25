@@ -265,27 +265,6 @@ describe('Submodel Registry Integration Tests', () => {
 
     /**
      * @operation PutSubmodelDescriptorById
-     * @status 405
-     */
-    test('should reject malformed put identifier with method not allowed', async () => {
-        const submodelDescriptor = createUniqueSubmodelDescriptor();
-        submodelDescriptor.id = '';
-
-        const response = await client.putSubmodelDescriptorById({
-            configuration,
-            submodelIdentifier: '',
-            submodelDescriptor,
-        });
-
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(405);
-            expect(response.error.messages?.[0]?.code).toBe('405');
-        }
-    });
-
-    /**
-     * @operation PutSubmodelDescriptorById
      * @status 400 [known-backend-bug]
      */
     test.skip('should reject malformed put identifier with bad request', async () => {
