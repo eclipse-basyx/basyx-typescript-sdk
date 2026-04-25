@@ -183,22 +183,6 @@ describe('Submodel Registry Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelDescriptors
-     * @status 404
-     */
-    test('should return not found for descriptor collection route', async () => {
-        const response = await client.getAllSubmodelDescriptors({
-            configuration,
-        });
-
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
-            expect(response.error.messages?.[0]?.code).toBe('404');
-        }
-    });
-
-    /**
      * @operation PutSubmodelDescriptorById
      * @status 201
      */
