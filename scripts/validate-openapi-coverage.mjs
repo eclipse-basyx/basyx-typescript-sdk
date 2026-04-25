@@ -28,6 +28,11 @@ const SERVICE_CONFIG = {
         clientFile: 'src/clients/ConceptDescriptionRepositoryClient.ts',
         integrationTestFile: 'src/integration-tests/conceptDescriptionRepo.integration.test.ts',
     },
+    aasxFileServer: {
+        openapiFile: 'openapi/aasxfileserver.yaml',
+        clientFile: 'src/clients/AasxFileClient.ts',
+        integrationTestFile: 'src/integration-tests/aasxFile.integration.test.ts',
+    },
 };
 
 function parseArgs(argv) {

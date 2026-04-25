@@ -1,46 +1,115 @@
 import type { ApiResult } from '../models/api';
 import { AasxFileService } from '../generated';
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError, ResponseError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { handleApiError } from '../lib/errorHandler';
 
 export class AasxFileClient {
+    private static requireIdentifier(value: string | null | undefined, field: string): string {
+        if (value === null || value === undefined || value.trim() === '') {
+            throw new RequiredError(field, `Required parameter "${field}" was null, undefined, or empty.`);
+        }
+
+        return value;
+    }
+
+    private static extractStatusCode(err: unknown, parsedError?: AasxFileService.Result): number | undefined {
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
+        }
+
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
+
     /**
      * Returns a list of available AASX packages at the server
      *
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasId?: The Asset Administration Shell’s unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllAASXPackageIds(options: { configuration: Configuration; aasId?: string }): Promise<
+    async getAllAASXPackageIds(options: {
+        configuration: Configuration;
+        aasId?: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
         ApiResult<
             {
+                pagedResult: unknown | undefined;
                 result: AasxFileService.PackageDescription[];
             },
             AasxFileService.Result
         >
     > {
-        const { configuration, aasId } = options;
+        const { configuration, aasId, limit, cursor } = options;
+        const config = applyDefaults(configuration);
 
         try {
-            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
+            const queryParameters = new URLSearchParams();
+            if (aasId) {
+                queryParameters.set('aasId', base64Encode(aasId));
+            }
+            if (limit !== undefined) {
+                queryParameters.set('limit', String(limit));
+            }
+            if (cursor !== undefined) {
+                queryParameters.set('cursor', cursor);
+            }
 
-            //const encodedAasIdentifier = aasId ? base64Encode(aasId) : undefined;
+            const queryString = queryParameters.toString();
+            const response = await (config.fetchApi ?? fetch)(
+                `${config.basePath}/packages${queryString ? `?${queryString}` : ''}`,
+                {
+                    method: 'GET',
+                    headers: config.headers,
+                }
+            );
 
-            const result = await apiInstance.getAllAASXPackageIds({
-                aasId: aasId,
-            });
+            if (response.status < 200 || response.status >= 300) {
+                throw new ResponseError(response, 'Response returned an error code');
+            }
+
+            const payload = (await response.json()) as
+                | AasxFileService.PackageDescription[]
+                | {
+                      result?: AasxFileService.PackageDescription[];
+                      pagingMetadata?: unknown;
+                      paging_metadata?: unknown;
+                  };
+            const result = Array.isArray(payload) ? payload : (payload.result ?? []);
+            const pagedResult = Array.isArray(payload)
+                ? undefined
+                : (payload.pagingMetadata ?? payload.paging_metadata);
 
             return {
                 success: true,
-                data: { result },
+                data: { pagedResult, result },
+                statusCode: response.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasxFileClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -66,19 +135,26 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            //const encodedAasIdentifiers = aasIds?.map((id) => base64Encode(id));
-            //const encodedFileName = base64Encode(fileName);
+            const encodedAasIdentifiers = aasIds?.map((id) =>
+                base64Encode(AasxFileClient.requireIdentifier(id, 'aasIds'))
+            );
+            const encodedFileName = base64Encode(AasxFileClient.requireIdentifier(fileName, 'fileName'));
 
-            const result = await apiInstance.postAASXPackage({
-                aasIds: aasIds,
+            const response = await apiInstance.postAASXPackageRaw({
+                aasIds: encodedAasIdentifiers,
                 file: file,
-                fileName: fileName,
+                fileName: encodedFileName,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasxFileClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -100,16 +176,21 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedPackageId = base64Encode(packageId);
+            const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
 
-            const result = await apiInstance.getAASXByPackageId({
+            const response = await apiInstance.getAASXByPackageIdRaw({
                 packageId: encodedPackageId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasxFileClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -137,20 +218,27 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            //const encodedAasIdentifiers = aasIds?.map((id) => base64Encode(id));
-            const encodedPackageId = base64Encode(packageId);
-            //const encodedFileName = base64Encode(fileName);
-            const result = await apiInstance.putAASXByPackageId({
+            const encodedAasIdentifiers = aasIds?.map((id) =>
+                base64Encode(AasxFileClient.requireIdentifier(id, 'aasIds'))
+            );
+            const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
+            const encodedFileName = base64Encode(AasxFileClient.requireIdentifier(fileName, 'fileName'));
+            const response = await apiInstance.putAASXByPackageIdRaw({
                 packageId: encodedPackageId,
-                aasIds: aasIds,
+                aasIds: encodedAasIdentifiers,
                 file: file,
-                fileName: fileName,
+                fileName: encodedFileName,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasxFileClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -172,16 +260,55 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedPackageId = base64Encode(packageId);
+            const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
 
-            const result = await apiInstance.deleteAASXByPackageId({
+            const response = await apiInstance.deleteAASXByPackageIdRaw({
                 packageId: encodedPackageId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasxFileClient.extractStatusCode(err, customError),
+            };
+        }
+    }
+
+    /**
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * The generated AASX file-server client currently omits the Description API, so this wrapper
+     * performs the request directly while preserving the SDK's ApiResult shape.
+     */
+    async getSelfDescription(options: {
+        configuration: Configuration;
+    }): Promise<ApiResult<{ profiles?: string[] }, AasxFileService.Result>> {
+        const { configuration } = options;
+        const config = applyDefaults(configuration);
+
+        try {
+            const response = await (config.fetchApi ?? fetch)(`${config.basePath}/description`, {
+                method: 'GET',
+                headers: config.headers,
+            });
+
+            if (response.status < 200 || response.status >= 300) {
+                throw new ResponseError(response, 'Response returned an error code');
+            }
+
+            const result = (await response.json()) as { profiles?: string[] };
+            return { success: true, data: result, statusCode: response.status };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasxFileClient.extractStatusCode(err, customError),
+            };
         }
     }
 }
