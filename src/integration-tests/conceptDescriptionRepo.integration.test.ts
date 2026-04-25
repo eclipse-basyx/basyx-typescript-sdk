@@ -206,7 +206,7 @@ describe('Concept Description Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
-            expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(conceptDescription);
         }
     });
@@ -260,7 +260,7 @@ describe('Concept Description Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
-            expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(updatedConceptDescription);
         }
     });
