@@ -1,6 +1,6 @@
 import type { ApiResult } from '../models/api';
 import { SubmodelRegistryService } from '../generated';
-import { Configuration, RequiredError, ResponseError } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -11,12 +11,21 @@ import { handleApiError } from '../lib/errorHandler';
 import { SubmodelDescriptor } from '../models/Descriptors';
 
 export class SubmodelRegistryClient {
-    private static extractStatusCode(err: unknown, parsedError?: SubmodelRegistryService.Result): number | undefined {
-        if (err instanceof ResponseError) {
-            return err.response.status;
+    private static requireIdentifier(value: string | null | undefined, field: string): string {
+        if (value === null || value === undefined || value.trim() === '') {
+            throw new RequiredError(field, `Required parameter "${field}" was null, undefined, or empty.`);
         }
 
-        if (err instanceof RequiredError) {
+        return value;
+    }
+
+    private static extractStatusCode(err: unknown, parsedError?: SubmodelRegistryService.Result): number | undefined {
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
+        }
+
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
             return 400;
         }
 
@@ -135,7 +144,9 @@ export class SubmodelRegistryClient {
         try {
             const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.deleteSubmodelDescriptorByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
@@ -171,7 +182,9 @@ export class SubmodelRegistryClient {
         try {
             const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelDescriptorByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
@@ -213,7 +226,9 @@ export class SubmodelRegistryClient {
         try {
             const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.putSubmodelDescriptorByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,

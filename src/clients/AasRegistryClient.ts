@@ -1,7 +1,7 @@
 //import type { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import { AasRegistryService } from '../generated';
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -14,6 +14,33 @@ import { handleApiError } from '../lib/errorHandler';
 import { AssetAdministrationShellDescriptor, SubmodelDescriptor } from '../models/Descriptors';
 
 export class AasRegistryClient {
+    private static requireIdentifier(value: string | null | undefined, field: string): string {
+        if (value === null || value === undefined || value.trim() === '') {
+            throw new RequiredError(field, `Required parameter "${field}" was null, undefined, or empty.`);
+        }
+
+        return value;
+    }
+
+    private static extractStatusCode(err: unknown, parsedError?: AasRegistryService.Result): number | undefined {
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
+        }
+
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
+
     /**
      * Returns all Asset Administration Shell Descriptors
      *
@@ -49,21 +76,27 @@ export class AasRegistryClient {
             );
             const encodedAssetType = assetType ? base64Encode(assetType) : undefined;
 
-            const result = await apiInstance.getAllAssetAdministrationShellDescriptors({
+            const response = await apiInstance.getAllAssetAdministrationShellDescriptorsRaw({
                 limit: limit,
                 cursor: cursor,
                 assetKind: assetKind,
                 assetType: encodedAssetType,
             });
+            const result = await response.value();
             const aasDescriptors = (result.result ?? []).map(convertApiAasDescriptorToCoreAasDescriptor);
 
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: aasDescriptors },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -87,16 +120,25 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const result = await apiInstance.postAssetAdministrationShellDescriptor({
+            const response = await apiInstance.postAssetAdministrationShellDescriptorRaw({
                 assetAdministrationShellDescriptor: convertCoreAasDescriptorToApiAasDescriptor(
                     assetAdministrationShellDescriptor
                 ),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiAasDescriptorToCoreAasDescriptor(result) };
+            return {
+                success: true,
+                data: convertApiAasDescriptorToCoreAasDescriptor(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -120,16 +162,23 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.deleteAssetAdministrationShellDescriptorById({
+            const response = await apiInstance.deleteAssetAdministrationShellDescriptorByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -153,16 +202,27 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.getAssetAdministrationShellDescriptorById({
+            const response = await apiInstance.getAssetAdministrationShellDescriptorByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiAasDescriptorToCoreAasDescriptor(result) };
+            return {
+                success: true,
+                data: convertApiAasDescriptorToCoreAasDescriptor(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -188,19 +248,35 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.putAssetAdministrationShellDescriptorById({
+            const response = await apiInstance.putAssetAdministrationShellDescriptorByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
                 assetAdministrationShellDescriptor: convertCoreAasDescriptorToApiAasDescriptor(
                     assetAdministrationShellDescriptor
                 ),
             });
 
-            return { success: true, data: result ? convertApiAasDescriptorToCoreAasDescriptor(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: result ? convertApiAasDescriptorToCoreAasDescriptor(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -235,22 +311,30 @@ export class AasRegistryClient {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
                 applyDefaults(configuration)
             );
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelDescriptorsThroughSuperpath({
+            const response = await apiInstance.getAllSubmodelDescriptorsThroughSuperpathRaw({
                 aasIdentifier: encodedAasIdentifier,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
 
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -276,17 +360,28 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.postSubmodelDescriptorThroughSuperpath({
+            const response = await apiInstance.postSubmodelDescriptorThroughSuperpathRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -312,18 +407,31 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelDescriptorByIdThroughSuperpath({
+            const response = await apiInstance.getSubmodelDescriptorByIdThroughSuperpathRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -349,18 +457,27 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteSubmodelDescriptorByIdThroughSuperpath({
+            const response = await apiInstance.deleteSubmodelDescriptorByIdThroughSuperpathRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -388,22 +505,37 @@ export class AasRegistryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putSubmodelDescriptorByIdThroughSuperpath({
+            const response = await apiInstance.putSubmodelDescriptorByIdThroughSuperpathRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodelDescriptor: convertCoreSubmodelDescriptorToApiSubmodelDescriptor(submodelDescriptor),
             });
 
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
             return {
                 success: true,
                 data: result ? convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) : undefined,
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -422,12 +554,17 @@ export class AasRegistryClient {
 
         try {
             const apiInstance = new AasRegistryService.DescriptionAPIApi(applyDefaults(configuration));
-            const result = await apiInstance.getSelfDescription();
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRegistryClient.extractStatusCode(err, customError),
+            };
         }
     }
 }

@@ -106,6 +106,24 @@ describe('AAS Discovery Integration Tests', () => {
     });
 
     /**
+     * @operation GetAllAssetAdministrationShellIdsByAssetLink
+     * @status 400
+     */
+    test('should reject invalid AAS discovery lookup cursor with bad request', async () => {
+        const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
+            configuration,
+            assetIds: [testSpecificAssetId1, testSpecificAssetId2],
+            cursor: `does-not-exist-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
      * @operation SearchAllAssetAdministrationShellIdsByAssetLink
      * @status 200
      */
@@ -130,6 +148,24 @@ describe('AAS Discovery Integration Tests', () => {
         const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
             configuration,
             assetLink: [{ name: 'globalAssetId' } as any],
+        });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation SearchAllAssetAdministrationShellIdsByAssetLink
+     * @status 400
+     */
+    test('should reject invalid AAS discovery search cursor with bad request', async () => {
+        const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
+            configuration,
+            assetLink: [testSpecificAssetId1, testSpecificAssetId2],
+            cursor: `does-not-exist-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         });
 
         expect(response.success).toBe(false);
