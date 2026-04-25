@@ -40,6 +40,7 @@
     "validate:openapi-coverage:aasdiscovery": "node scripts/validate-openapi-coverage.mjs --service aasDiscovery",
     "validate:openapi-coverage:aasregistry": "node scripts/validate-openapi-coverage.mjs --service aasRegistry",
     "validate:openapi-coverage:smregistry": "node scripts/validate-openapi-coverage.mjs --service submodelRegistry",
+    "validate:openapi-coverage:cdrepo": "node scripts/validate-openapi-coverage.mjs --service conceptDescriptionRepository",
     "docs": "typedoc --options typedoc.json",
     "gen-aasrepo": "openapi-generator-cli generate -i openapi/aasrepository.yaml -g typescript-fetch -o src/generated/AasRepositoryService --additional-properties=withoutRuntimeChecks=true",
     "gen-submodelrepo": "openapi-generator-cli generate -i openapi/smrepository.yaml -g typescript-fetch -o src/generated/SubmodelRepositoryService --additional-properties=withoutRuntimeChecks=true",

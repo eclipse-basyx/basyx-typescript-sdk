@@ -23,6 +23,11 @@ const SERVICE_CONFIG = {
         clientFile: 'src/clients/SubmodelRegistryClient.ts',
         integrationTestFile: 'src/integration-tests/submodelRegistry.integration.test.ts',
     },
+    conceptDescriptionRepository: {
+        openapiFile: 'openapi/cdrepository.yaml',
+        clientFile: 'src/clients/ConceptDescriptionRepositoryClient.ts',
+        integrationTestFile: 'src/integration-tests/conceptDescriptionRepo.integration.test.ts',
+    },
 };
 
 function parseArgs(argv) {
