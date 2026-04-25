@@ -13,6 +13,11 @@ const SERVICE_CONFIG = {
         clientFile: 'src/clients/AasDiscoveryClient.ts',
         integrationTestFile: 'src/integration-tests/aasDiscovery.integration.test.ts',
     },
+    aasRegistry: {
+        openapiFile: 'openapi/aasregistry.yaml',
+        clientFile: 'src/clients/AasRegistryClient.ts',
+        integrationTestFile: 'src/integration-tests/aasRegistry.integration.test.ts',
+    },
     submodelRegistry: {
         openapiFile: 'openapi/smregistry.yaml',
         clientFile: 'src/clients/SubmodelRegistryClient.ts',
@@ -36,6 +41,13 @@ function parseArgs(argv) {
 
 function lcFirst(value) {
     return value.charAt(0).toLowerCase() + value.slice(1);
+}
+
+function operationIdToMethodName(operationId) {
+    const normalized = operationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
+        nextChar ? nextChar.toUpperCase() : ''
+    );
+    return lcFirst(normalized);
 }
 
 function parseOpenApiOperations(openapiSource) {
@@ -127,7 +139,7 @@ function parseIntegrationMetadata(testSource) {
         }
 
         const body = testSource.slice(openBraceIndex + 1, closeBraceIndex);
-        const operationMatch = jsdoc.match(/@operation\s+([A-Za-z0-9_]+)/);
+        const operationMatch = jsdoc.match(/@operation\s+([A-Za-z0-9_-]+)/);
         if (!operationMatch) {
             continue;
         }
@@ -218,7 +230,7 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
     const warnings = [];
 
     for (const operation of operations) {
-        const expectedMethodName = lcFirst(operation.operationId);
+        const expectedMethodName = operationIdToMethodName(operation.operationId);
         const implemented = clientMethods.has(expectedMethodName);
         const coverage = operationCoverage.get(operation.operationId);
         const assertedStatuses = coverage?.assertedStatuses ?? new Set();

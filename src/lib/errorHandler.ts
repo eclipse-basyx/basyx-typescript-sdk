@@ -9,6 +9,22 @@ import {
     SubmodelRepositoryService,
 } from '../generated';
 import { FetchError, RequiredError, ResponseError } from '../generated/runtime';
+
+function getResponseStatus(err: unknown): number | undefined {
+    const response = (err as { response?: { status?: unknown } })?.response;
+    return typeof response?.status === 'number' ? response.status : undefined;
+}
+
+function isResponseErrorLike(err: unknown): err is { message?: string; response: Response } {
+    return (
+        getResponseStatus(err) !== undefined &&
+        typeof (err as { response?: { json?: unknown } }).response?.json === 'function'
+    );
+}
+
+function isRequiredErrorLike(err: unknown): err is { message?: string; field?: string } {
+    return err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError';
+}
 /**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.
@@ -52,14 +68,14 @@ export async function handleApiError(
         };
 
         // Handle different error types
-        if (err instanceof RequiredError) {
+        if (isRequiredErrorLike(err)) {
             message = {
                 code: '400',
                 messageType: 'Exception',
                 text: err.message || `Required parameter missing: ${err.field}`,
                 timestamp: timestamp,
             };
-        } else if (err instanceof ResponseError) {
+        } else if (err instanceof ResponseError || isResponseErrorLike(err)) {
             // Try to parse response body for messages
             const responseBody = err.response;
 

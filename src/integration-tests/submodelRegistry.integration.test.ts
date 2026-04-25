@@ -109,6 +109,23 @@ describe('Submodel Registry Integration Tests', () => {
 
     /**
      * @operation GetSubmodelDescriptorById
+     * @status 400
+     */
+    test('should reject missing Submodel Descriptor identifier with bad request', async () => {
+        const response = await client.getSubmodelDescriptorById({
+            configuration,
+            submodelIdentifier: undefined as unknown as string,
+        });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation GetSubmodelDescriptorById
      * @status 404
      */
     test('should fetch a Submodel Descriptor by non-existing ID', async () => {
@@ -183,6 +200,23 @@ describe('Submodel Registry Integration Tests', () => {
     });
 
     /**
+     * @operation GetAllSubmodelDescriptors
+     * @status 400
+     */
+    test('should return bad request for unavailable Submodel Descriptor ID used as cursor', async () => {
+        const response = await client.getAllSubmodelDescriptors({
+            configuration,
+            cursor: `does-not-exist-${uniqueSuffix()}`,
+        });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
      * @operation PutSubmodelDescriptorById
      * @status 201
      */
@@ -244,36 +278,15 @@ describe('Submodel Registry Integration Tests', () => {
 
     /**
      * @operation PutSubmodelDescriptorById
-     * @status 405
+     * @status 400
      */
-    test('should return method not allowed for malformed put identifier (backend mismatch)', async () => {
+    test('should reject missing put Submodel Descriptor identifier with bad request', async () => {
         const submodelDescriptor = createUniqueSubmodelDescriptor();
         submodelDescriptor.id = '';
 
         const response = await client.putSubmodelDescriptorById({
             configuration,
-            submodelIdentifier: '',
-            submodelDescriptor,
-        });
-
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(405);
-            expect(response.error.messages?.[0]?.code).toBe('405');
-        }
-    });
-
-    /**
-     * @operation PutSubmodelDescriptorById
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('should reject malformed put identifier with bad request', async () => {
-        const submodelDescriptor = createUniqueSubmodelDescriptor();
-        submodelDescriptor.id = '';
-
-        const response = await client.putSubmodelDescriptorById({
-            configuration,
-            submodelIdentifier: '',
+            submodelIdentifier: undefined as unknown as string,
             submodelDescriptor,
         });
 
@@ -329,29 +342,12 @@ describe('Submodel Registry Integration Tests', () => {
 
     /**
      * @operation DeleteSubmodelDescriptorById
-     * @status 405
+     * @status 400
      */
-    test('should reject malformed delete identifier with method not allowed', async () => {
+    test('should reject missing delete Submodel Descriptor identifier with bad request', async () => {
         const response = await client.deleteSubmodelDescriptorById({
             configuration,
-            submodelIdentifier: '',
-        });
-
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(405);
-            expect(response.error.messages?.[0]?.code).toBe('405');
-        }
-    });
-
-    /**
-     * @operation DeleteSubmodelDescriptorById
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('should reject malformed delete identifier with bad request', async () => {
-        const response = await client.deleteSubmodelDescriptorById({
-            configuration,
-            submodelIdentifier: '',
+            submodelIdentifier: undefined as unknown as string,
         });
 
         expect(response.success).toBe(false);

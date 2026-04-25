@@ -10,11 +10,12 @@ import { handleApiError } from '../lib/errorHandler';
 
 export class AasDiscoveryClient {
     private static extractStatusCode(err: unknown, parsedError?: AasDiscoveryService.Result): number | undefined {
-        if (err instanceof ResponseError) {
-            return err.response.status;
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
         }
 
-        if (err instanceof RequiredError) {
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
             return 400;
         }
 

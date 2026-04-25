@@ -108,6 +108,10 @@ const TEST_CONFIGURATION = new Configuration({
 const SERVICE_DESCRIPTION: AasRegistryService.ServiceDescription = {
     profiles: ['aas-registry-service-profile'],
 };
+const apiResponse = <T>(value: T, status = 200) => ({
+    raw: { status },
+    value: vi.fn().mockResolvedValue(value),
+});
 
 describe('AasRegistryClient', () => {
     // Helper function to create expected configuration matcher
@@ -119,17 +123,17 @@ describe('AasRegistryClient', () => {
 
     // Create mock for AssetAdministrationShellRegistryAPIApi
     const mockApiInstance = {
-        getAllAssetAdministrationShellDescriptors: vi.fn(),
-        postAssetAdministrationShellDescriptor: vi.fn(),
-        deleteAssetAdministrationShellDescriptorById: vi.fn(),
-        getAssetAdministrationShellDescriptorById: vi.fn(),
-        putAssetAdministrationShellDescriptorById: vi.fn(),
-        getAllSubmodelDescriptorsThroughSuperpath: vi.fn(),
-        postSubmodelDescriptorThroughSuperpath: vi.fn(),
-        getSubmodelDescriptorByIdThroughSuperpath: vi.fn(),
-        deleteSubmodelDescriptorByIdThroughSuperpath: vi.fn(),
-        putSubmodelDescriptorByIdThroughSuperpath: vi.fn(),
-        getSelfDescription: vi.fn(),
+        getAllAssetAdministrationShellDescriptorsRaw: vi.fn(),
+        postAssetAdministrationShellDescriptorRaw: vi.fn(),
+        deleteAssetAdministrationShellDescriptorByIdRaw: vi.fn(),
+        getAssetAdministrationShellDescriptorByIdRaw: vi.fn(),
+        putAssetAdministrationShellDescriptorByIdRaw: vi.fn(),
+        getAllSubmodelDescriptorsThroughSuperpathRaw: vi.fn(),
+        postSubmodelDescriptorThroughSuperpathRaw: vi.fn(),
+        getSubmodelDescriptorByIdThroughSuperpathRaw: vi.fn(),
+        deleteSubmodelDescriptorByIdThroughSuperpathRaw: vi.fn(),
+        putSubmodelDescriptorByIdThroughSuperpathRaw: vi.fn(),
+        getSelfDescriptionRaw: vi.fn(),
     };
 
     // Mock constructor
@@ -200,10 +204,15 @@ describe('AasRegistryClient', () => {
         const pagedResult: AasRegistryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.getAllAssetAdministrationShellDescriptors.mockResolvedValue({
-            pagingMetadata: pagedResult,
-            result: [API_AAS_DESCRIPTOR1, API_AAS_DESCRIPTOR2],
-        });
+        mockApiInstance.getAllAssetAdministrationShellDescriptorsRaw.mockResolvedValue(
+            apiResponse(
+                {
+                    pagingMetadata: pagedResult,
+                    result: [API_AAS_DESCRIPTOR1, API_AAS_DESCRIPTOR2],
+                },
+                200
+            )
+        );
 
         const client = new AasRegistryClient();
 
@@ -218,7 +227,7 @@ describe('AasRegistryClient', () => {
 
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getAllAssetAdministrationShellDescriptors).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllAssetAdministrationShellDescriptorsRaw).toHaveBeenCalledWith({
             limit: LIMIT,
             cursor: CURSOR,
             assetKind: ASSET_KIND,
@@ -245,7 +254,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllAssetAdministrationShellDescriptors.mockRejectedValue(
+        mockApiInstance.getAllAssetAdministrationShellDescriptorsRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -266,7 +275,9 @@ describe('AasRegistryClient', () => {
 
     it('should create a new Asset Administration Shell Descriptor', async () => {
         // Arrange
-        mockApiInstance.postAssetAdministrationShellDescriptor.mockResolvedValue(API_AAS_DESCRIPTOR1);
+        mockApiInstance.postAssetAdministrationShellDescriptorRaw.mockResolvedValue(
+            apiResponse(API_AAS_DESCRIPTOR1, 201)
+        );
 
         const client = new AasRegistryClient();
 
@@ -278,7 +289,7 @@ describe('AasRegistryClient', () => {
 
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.postAssetAdministrationShellDescriptor).toHaveBeenCalledWith({
+        expect(mockApiInstance.postAssetAdministrationShellDescriptorRaw).toHaveBeenCalledWith({
             assetAdministrationShellDescriptor: API_AAS_DESCRIPTOR1,
         });
         expect(convertCoreAasDescriptorToApiAasDescriptor).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1);
@@ -301,7 +312,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postAssetAdministrationShellDescriptor.mockRejectedValue(
+        mockApiInstance.postAssetAdministrationShellDescriptorRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -323,7 +334,7 @@ describe('AasRegistryClient', () => {
 
     it('should delete an Asset Administration Shell Descriptor', async () => {
         // Arrange
-        mockApiInstance.deleteAssetAdministrationShellDescriptorById.mockResolvedValue(undefined);
+        mockApiInstance.deleteAssetAdministrationShellDescriptorByIdRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new AasRegistryClient();
 
@@ -336,7 +347,7 @@ describe('AasRegistryClient', () => {
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
-        expect(mockApiInstance.deleteAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteAssetAdministrationShellDescriptorByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
         });
         expect(response.success).toBe(true);
@@ -354,7 +365,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.deleteAssetAdministrationShellDescriptorById.mockRejectedValue(
+        mockApiInstance.deleteAssetAdministrationShellDescriptorByIdRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -376,7 +387,9 @@ describe('AasRegistryClient', () => {
 
     it('should get an Asset Administration Shell Descriptor by ID', async () => {
         // Arrange
-        mockApiInstance.getAssetAdministrationShellDescriptorById.mockResolvedValue(API_AAS_DESCRIPTOR1);
+        mockApiInstance.getAssetAdministrationShellDescriptorByIdRaw.mockResolvedValue(
+            apiResponse(API_AAS_DESCRIPTOR1, 200)
+        );
 
         const client = new AasRegistryClient();
 
@@ -389,7 +402,7 @@ describe('AasRegistryClient', () => {
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
-        expect(mockApiInstance.getAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAssetAdministrationShellDescriptorByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
         });
         expect(convertApiAasDescriptorToCoreAasDescriptor).toHaveBeenCalledWith(API_AAS_DESCRIPTOR1);
@@ -411,7 +424,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAssetAdministrationShellDescriptorById.mockRejectedValue(
+        mockApiInstance.getAssetAdministrationShellDescriptorByIdRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -433,7 +446,7 @@ describe('AasRegistryClient', () => {
 
     it('should update an Asset Administration Shell Descriptor', async () => {
         // Arrange
-        mockApiInstance.putAssetAdministrationShellDescriptorById.mockResolvedValue(undefined);
+        mockApiInstance.putAssetAdministrationShellDescriptorByIdRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new AasRegistryClient();
 
@@ -447,7 +460,7 @@ describe('AasRegistryClient', () => {
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
-        expect(mockApiInstance.putAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
+        expect(mockApiInstance.putAssetAdministrationShellDescriptorByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             assetAdministrationShellDescriptor: API_AAS_DESCRIPTOR1,
         });
@@ -457,7 +470,9 @@ describe('AasRegistryClient', () => {
 
     it('should create a new Asset Administration Shell Descriptor', async () => {
         // Arrange
-        mockApiInstance.putAssetAdministrationShellDescriptorById.mockResolvedValue(API_AAS_DESCRIPTOR1);
+        mockApiInstance.putAssetAdministrationShellDescriptorByIdRaw.mockResolvedValue(
+            apiResponse(API_AAS_DESCRIPTOR1, 201)
+        );
 
         const client = new AasRegistryClient();
 
@@ -471,7 +486,7 @@ describe('AasRegistryClient', () => {
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
-        expect(mockApiInstance.putAssetAdministrationShellDescriptorById).toHaveBeenCalledWith({
+        expect(mockApiInstance.putAssetAdministrationShellDescriptorByIdRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             assetAdministrationShellDescriptor: API_AAS_DESCRIPTOR1,
         });
@@ -494,7 +509,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.putAssetAdministrationShellDescriptorById.mockRejectedValue(
+        mockApiInstance.putAssetAdministrationShellDescriptorByIdRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -520,10 +535,15 @@ describe('AasRegistryClient', () => {
         const pagedResult: AasRegistryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.getAllSubmodelDescriptorsThroughSuperpath.mockResolvedValue({
-            pagingMetadata: pagedResult,
-            result: [API_SUBMODEL_DESCRIPTOR1, API_SUBMODEL_DESCRIPTOR2],
-        });
+        mockApiInstance.getAllSubmodelDescriptorsThroughSuperpathRaw.mockResolvedValue(
+            apiResponse(
+                {
+                    pagingMetadata: pagedResult,
+                    result: [API_SUBMODEL_DESCRIPTOR1, API_SUBMODEL_DESCRIPTOR2],
+                },
+                200
+            )
+        );
 
         const client = new AasRegistryClient();
 
@@ -538,7 +558,7 @@ describe('AasRegistryClient', () => {
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
-        expect(mockApiInstance.getAllSubmodelDescriptorsThroughSuperpath).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllSubmodelDescriptorsThroughSuperpathRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             limit: LIMIT,
             cursor: CURSOR,
@@ -564,7 +584,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllSubmodelDescriptorsThroughSuperpath.mockRejectedValue(
+        mockApiInstance.getAllSubmodelDescriptorsThroughSuperpathRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -586,7 +606,9 @@ describe('AasRegistryClient', () => {
 
     it('should create a new Submodel Descriptor', async () => {
         // Arrange
-        mockApiInstance.postSubmodelDescriptorThroughSuperpath.mockResolvedValue(API_SUBMODEL_DESCRIPTOR1);
+        mockApiInstance.postSubmodelDescriptorThroughSuperpathRaw.mockResolvedValue(
+            apiResponse(API_SUBMODEL_DESCRIPTOR1, 201)
+        );
 
         const client = new AasRegistryClient();
 
@@ -600,7 +622,7 @@ describe('AasRegistryClient', () => {
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
-        expect(mockApiInstance.postSubmodelDescriptorThroughSuperpath).toHaveBeenCalledWith({
+        expect(mockApiInstance.postSubmodelDescriptorThroughSuperpathRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             submodelDescriptor: API_SUBMODEL_DESCRIPTOR1,
         });
@@ -624,7 +646,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postSubmodelDescriptorThroughSuperpath.mockRejectedValue(
+        mockApiInstance.postSubmodelDescriptorThroughSuperpathRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -647,7 +669,9 @@ describe('AasRegistryClient', () => {
 
     it('should get a Submodel Descriptor by ID', async () => {
         // Arrange
-        mockApiInstance.getSubmodelDescriptorByIdThroughSuperpath.mockResolvedValue(API_SUBMODEL_DESCRIPTOR1);
+        mockApiInstance.getSubmodelDescriptorByIdThroughSuperpathRaw.mockResolvedValue(
+            apiResponse(API_SUBMODEL_DESCRIPTOR1, 200)
+        );
 
         const client = new AasRegistryClient();
 
@@ -662,7 +686,7 @@ describe('AasRegistryClient', () => {
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
-        expect(mockApiInstance.getSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
+        expect(mockApiInstance.getSubmodelDescriptorByIdThroughSuperpathRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
         });
@@ -685,7 +709,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getSubmodelDescriptorByIdThroughSuperpath.mockRejectedValue(
+        mockApiInstance.getSubmodelDescriptorByIdThroughSuperpathRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -708,7 +732,7 @@ describe('AasRegistryClient', () => {
 
     it('should delete a Submodel Descriptor', async () => {
         // Arrange
-        mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpath.mockResolvedValue(undefined);
+        mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpathRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new AasRegistryClient();
 
@@ -723,7 +747,7 @@ describe('AasRegistryClient', () => {
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
-        expect(mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpathRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
         });
@@ -742,7 +766,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpath.mockRejectedValue(
+        mockApiInstance.deleteSubmodelDescriptorByIdThroughSuperpathRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -765,7 +789,7 @@ describe('AasRegistryClient', () => {
 
     it('should update a Submodel Descriptor', async () => {
         // Arrange
-        mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath.mockResolvedValue(undefined);
+        mockApiInstance.putSubmodelDescriptorByIdThroughSuperpathRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new AasRegistryClient();
 
@@ -781,7 +805,7 @@ describe('AasRegistryClient', () => {
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
-        expect(mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
+        expect(mockApiInstance.putSubmodelDescriptorByIdThroughSuperpathRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
             submodelDescriptor: API_SUBMODEL_DESCRIPTOR1,
@@ -792,7 +816,9 @@ describe('AasRegistryClient', () => {
 
     it('should create a new Submodel Descriptor during update', async () => {
         // Arrange
-        mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath.mockResolvedValue(API_SUBMODEL_DESCRIPTOR1);
+        mockApiInstance.putSubmodelDescriptorByIdThroughSuperpathRaw.mockResolvedValue(
+            apiResponse(API_SUBMODEL_DESCRIPTOR1, 201)
+        );
 
         const client = new AasRegistryClient();
 
@@ -808,7 +834,7 @@ describe('AasRegistryClient', () => {
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS_DESCRIPTOR1.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL_DESCRIPTOR1.id);
-        expect(mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath).toHaveBeenCalledWith({
+        expect(mockApiInstance.putSubmodelDescriptorByIdThroughSuperpathRaw).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS_DESCRIPTOR1.id}`,
             submodelIdentifier: `encoded_${CORE_SUBMODEL_DESCRIPTOR1.id}`,
             submodelDescriptor: API_SUBMODEL_DESCRIPTOR1,
@@ -832,7 +858,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.putSubmodelDescriptorByIdThroughSuperpath.mockRejectedValue(
+        mockApiInstance.putSubmodelDescriptorByIdThroughSuperpathRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -856,7 +882,7 @@ describe('AasRegistryClient', () => {
 
     it('should return service description', async () => {
         // Arrange
-        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+        mockApiInstance.getSelfDescriptionRaw.mockResolvedValue(apiResponse(SERVICE_DESCRIPTION, 200));
 
         const client = new AasRegistryClient();
 
@@ -867,7 +893,7 @@ describe('AasRegistryClient', () => {
 
         // Assert
         expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(mockApiInstance.getSelfDescriptionRaw).toHaveBeenCalledWith();
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(SERVICE_DESCRIPTION);
@@ -886,7 +912,7 @@ describe('AasRegistryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getSelfDescriptionRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasRegistryClient();
