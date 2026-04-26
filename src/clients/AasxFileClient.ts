@@ -52,7 +52,7 @@ export class AasxFileClient {
     }): Promise<
         ApiResult<
             {
-                pagedResult: unknown | undefined;
+                pagedResult: AasxFileService.PagedResultPagingMetadata | undefined;
                 result: AasxFileService.PackageDescription[];
             },
             AasxFileService.Result

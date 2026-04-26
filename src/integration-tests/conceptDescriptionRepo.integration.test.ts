@@ -45,9 +45,9 @@ describe('Concept Description Repository Integration Tests', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
         });
-        const statusCode = rawResponse.status;
+        const response = { statusCode: rawResponse.status };
 
-        expect(statusCode).toBe(400);
+        expect(response.statusCode).toBe(400);
     });
 
     /**
