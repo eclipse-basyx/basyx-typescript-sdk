@@ -165,8 +165,8 @@ describe('ConceptDescriptionRepositoryClient', () => {
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllConceptDescriptionsRaw).toHaveBeenCalledWith({
             idShort: ID_SHORT,
-            isCaseOf: `encoded_${JSON.stringify(IS_CASE_OF)}`,
-            dataSpecificationRef: `encoded_${JSON.stringify(DATA_SPECIFICATION_REF)}`,
+            isCaseOf: `encoded_${IS_CASE_OF}`,
+            dataSpecificationRef: `encoded_${DATA_SPECIFICATION_REF}`,
             limit: LIMIT,
             cursor: CURSOR,
         });

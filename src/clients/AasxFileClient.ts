@@ -1,6 +1,6 @@
 import type { ApiResult } from '../models/api';
 import { AasxFileService } from '../generated';
-import { Configuration, RequiredError, ResponseError } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { handleApiError } from '../lib/errorHandler';
@@ -59,49 +59,23 @@ export class AasxFileClient {
         >
     > {
         const { configuration, aasId, limit, cursor } = options;
-        const config = applyDefaults(configuration);
-
         try {
-            const queryParameters = new URLSearchParams();
-            if (aasId) {
-                queryParameters.set('aasId', base64Encode(aasId));
-            }
-            if (limit !== undefined) {
-                queryParameters.set('limit', String(limit));
-            }
-            if (cursor !== undefined) {
-                queryParameters.set('cursor', cursor);
-            }
+            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
+            const encodedAasIdentifier = aasId ? base64Encode(aasId) : undefined;
 
-            const queryString = queryParameters.toString();
-            const response = await (config.fetchApi ?? fetch)(
-                `${config.basePath}/packages${queryString ? `?${queryString}` : ''}`,
-                {
-                    method: 'GET',
-                    headers: config.headers,
-                }
-            );
-
-            if (response.status < 200 || response.status >= 300) {
-                throw new ResponseError(response, 'Response returned an error code');
-            }
-
-            const payload = (await response.json()) as
-                | AasxFileService.PackageDescription[]
-                | {
-                      result?: AasxFileService.PackageDescription[];
-                      pagingMetadata?: unknown;
-                      paging_metadata?: unknown;
-                  };
-            const result = Array.isArray(payload) ? payload : (payload.result ?? []);
-            const pagedResult = Array.isArray(payload)
-                ? undefined
-                : (payload.pagingMetadata ?? payload.paging_metadata);
+            const response = await apiInstance.getAllAASXPackageIdsRaw({
+                aasId: encodedAasIdentifier,
+                limit: limit,
+                cursor: cursor,
+            });
+            const payload = await response.value();
+            const result = payload.result ?? [];
+            const pagedResult = payload.pagingMetadata ?? payload.paging_metadata;
 
             return {
                 success: true,
                 data: { pagedResult, result },
-                statusCode: response.status,
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -135,15 +109,10 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifiers = aasIds?.map((id) =>
-                base64Encode(AasxFileClient.requireIdentifier(id, 'aasIds'))
-            );
-            const encodedFileName = base64Encode(AasxFileClient.requireIdentifier(fileName, 'fileName'));
-
             const response = await apiInstance.postAASXPackageRaw({
-                aasIds: encodedAasIdentifiers,
+                aasIds: aasIds,
                 file: file,
-                fileName: encodedFileName,
+                fileName: fileName,
             });
             const result = await response.value();
 
@@ -218,16 +187,12 @@ export class AasxFileClient {
         try {
             const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifiers = aasIds?.map((id) =>
-                base64Encode(AasxFileClient.requireIdentifier(id, 'aasIds'))
-            );
             const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
-            const encodedFileName = base64Encode(AasxFileClient.requireIdentifier(fileName, 'fileName'));
             const response = await apiInstance.putAASXByPackageIdRaw({
                 packageId: encodedPackageId,
-                aasIds: encodedAasIdentifiers,
+                aasIds: aasIds,
                 file: file,
-                fileName: encodedFileName,
+                fileName: fileName,
             });
             const result = await response.value();
 
@@ -281,27 +246,18 @@ export class AasxFileClient {
     /**
      * Returns the self-describing information of a network resource (ServiceDescription)
      *
-     * The generated AASX file-server client currently omits the Description API, so this wrapper
-     * performs the request directly while preserving the SDK's ApiResult shape.
      */
     async getSelfDescription(options: {
         configuration: Configuration;
-    }): Promise<ApiResult<{ profiles?: string[] }, AasxFileService.Result>> {
+    }): Promise<ApiResult<AasxFileService.ServiceDescription, AasxFileService.Result>> {
         const { configuration } = options;
-        const config = applyDefaults(configuration);
 
         try {
-            const response = await (config.fetchApi ?? fetch)(`${config.basePath}/description`, {
-                method: 'GET',
-                headers: config.headers,
-            });
+            const apiInstance = new AasxFileService.DescriptionAPIApi(applyDefaults(configuration));
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            if (response.status < 200 || response.status >= 300) {
-                throw new ResponseError(response, 'Response returned an error code');
-            }
-
-            const result = (await response.json()) as { profiles?: string[] };
-            return { success: true, data: result, statusCode: response.status };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
             return {

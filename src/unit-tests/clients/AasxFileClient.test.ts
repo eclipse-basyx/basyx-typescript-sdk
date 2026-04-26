@@ -58,10 +58,16 @@ describe('AasxFileClient', () => {
         putAASXByPackageIdRaw: vi.fn(),
         deleteAASXByPackageIdRaw: vi.fn(),
     };
+    const mockDescriptionApiInstance = {
+        getSelfDescriptionRaw: vi.fn(),
+    };
 
     // Mock constructor
     const MockAasxFile = vi.fn(function () {
         return mockApiInstance;
+    });
+    const MockDescriptionApi = vi.fn(function () {
+        return mockDescriptionApiInstance;
     });
 
     beforeEach(() => {
@@ -70,6 +76,7 @@ describe('AasxFileClient', () => {
         (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
         (AasxFileService.AASXFileServerAPIApi as unknown as Mock).mockImplementation(MockAasxFile);
+        (AasxFileService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockDescriptionApi);
 
         // Mock the error handler to return a standardized Result
         (handleApiError as Mock).mockImplementation(async (err) => {
@@ -100,38 +107,39 @@ describe('AasxFileClient', () => {
 
     it('should return a list of available AASX packages on successful response', async () => {
         // Arrange
-        const fetchApi = vi.fn().mockResolvedValue(
-            new Response(JSON.stringify({ result: [API_PACKAGEDESCRIPTION1, API_PACKAGEDESCRIPTION2] }), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            })
+        mockApiInstance.getAllAASXPackageIdsRaw.mockResolvedValue(
+            apiResponse(
+                {
+                    result: [API_PACKAGEDESCRIPTION1, API_PACKAGEDESCRIPTION2],
+                    pagingMetadata: { cursor: 'next-cursor' },
+                },
+                200
+            )
         );
 
         const client = new AasxFileClient();
 
         // Act
         const response = await client.getAllAASXPackageIds({
-            configuration: new Configuration({
-                basePath: 'http://localhost:8087',
-                fetchApi,
-            }),
+            configuration: TEST_CONFIGURATION,
             aasId: CORE_AAS1.id,
             limit: 10,
             cursor: 'cursor-1',
         });
 
         // Assert
+        expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
-        expect(fetchApi).toHaveBeenCalledWith(
-            'http://localhost:8087/packages?aasId=encoded_https%3A%2F%2Fexample.com%2Fids%2Faas%2F7600_5912_3951_6917&limit=10&cursor=cursor-1',
-            expect.objectContaining({
-                method: 'GET',
-            })
-        );
+        expect(mockApiInstance.getAllAASXPackageIdsRaw).toHaveBeenCalledWith({
+            aasId: `encoded_${CORE_AAS1.id}`,
+            limit: 10,
+            cursor: 'cursor-1',
+        });
         expect(response.success).toBe(true);
 
         if (response.success) {
             expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({ cursor: 'next-cursor' });
             expect(response.data.result).toEqual([API_PACKAGEDESCRIPTION1, API_PACKAGEDESCRIPTION2]);
         }
     });
@@ -148,17 +156,14 @@ describe('AasxFileClient', () => {
                 },
             ],
         };
-        const fetchApi = vi.fn().mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getAllAASXPackageIdsRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new AasxFileClient();
 
         // Act
         const response = await client.getAllAASXPackageIds({
-            configuration: new Configuration({
-                basePath: 'http://localhost:8087',
-                fetchApi,
-            }),
+            configuration: TEST_CONFIGURATION,
         });
 
         // Assert
@@ -184,12 +189,11 @@ describe('AasxFileClient', () => {
 
         // Assert
         expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
-        expect(base64Encode).toHaveBeenCalledWith(fileName);
+        expect(base64Encode).not.toHaveBeenCalled();
         expect(mockApiInstance.postAASXPackageRaw).toHaveBeenCalledWith({
-            aasIds: [`encoded_${CORE_AAS1.id}`],
+            aasIds: [CORE_AAS1.id],
             file: MOCK_BLOB,
-            fileName: `encoded_${fileName}`,
+            fileName: fileName,
         });
         expect(response.success).toBe(true);
         if (response.success) {
@@ -356,14 +360,13 @@ describe('AasxFileClient', () => {
 
         // Assert
         expect(MockAasxFile).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS1.id);
-        expect(base64Encode).toHaveBeenCalledWith(fileName);
         expect(base64Encode).toHaveBeenCalledWith(PACKAGE_ID);
+        expect(base64Encode).toHaveBeenCalledTimes(1);
         expect(mockApiInstance.putAASXByPackageIdRaw).toHaveBeenCalledWith({
             packageId: `encoded_${PACKAGE_ID}`,
-            aasIds: [`encoded_${CORE_AAS1.id}`],
+            aasIds: [CORE_AAS1.id],
             file: MOCK_BLOB,
-            fileName: `encoded_${fileName}`,
+            fileName: fileName,
         });
         expect(response.success).toBe(true);
         if (response.success) {
@@ -404,31 +407,19 @@ describe('AasxFileClient', () => {
         }
     });
 
-    it('should fetch the AASX file server self description directly', async () => {
+    it('should fetch the AASX file server self description', async () => {
         const serviceDescription = {
             profiles: ['https://admin-shell.io/aas/API/3/0/AasxFileServerServiceSpecification/SSP-002'],
         };
-        const fetchApi = vi.fn().mockResolvedValue(
-            new Response(JSON.stringify(serviceDescription), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            })
-        );
+        mockDescriptionApiInstance.getSelfDescriptionRaw.mockResolvedValue(apiResponse(serviceDescription, 200));
         const client = new AasxFileClient();
 
         const response = await client.getSelfDescription({
-            configuration: new Configuration({
-                basePath: 'http://localhost:8087',
-                fetchApi,
-            }),
+            configuration: TEST_CONFIGURATION,
         });
 
-        expect(fetchApi).toHaveBeenCalledWith(
-            'http://localhost:8087/description',
-            expect.objectContaining({
-                method: 'GET',
-            })
-        );
+        expect(MockDescriptionApi).toHaveBeenCalledWith(expectConfigurationCall());
+        expect(mockDescriptionApiInstance.getSelfDescriptionRaw).toHaveBeenCalledWith();
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
