@@ -54,6 +54,10 @@ const SERIALIZATION_BLOB = new Blob(['serialized-environment'], { type: 'applica
 const SERVICE_DESCRIPTION: ConceptDescriptionRepositoryService.ServiceDescription = {
     profiles: ['concept-description-repository-service-profile'],
 };
+const apiResponse = <T>(value: T, status = 200) => ({
+    raw: { status },
+    value: vi.fn().mockResolvedValue(value),
+});
 
 describe('ConceptDescriptionRepositoryClient', () => {
     // Helper function to create expected configuration matcher
@@ -65,13 +69,13 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     // Create mock for ConceptDescriptionRepositoryAPIApi
     const mockApiInstance = {
-        getAllConceptDescriptions: vi.fn(),
-        postConceptDescription: vi.fn(),
-        deleteConceptDescriptionById: vi.fn(),
-        getConceptDescriptionById: vi.fn(),
-        putConceptDescriptionById: vi.fn(),
-        generateSerializationByIds: vi.fn(),
-        getSelfDescription: vi.fn(),
+        getAllConceptDescriptionsRaw: vi.fn(),
+        postConceptDescriptionRaw: vi.fn(),
+        deleteConceptDescriptionByIdRaw: vi.fn(),
+        getConceptDescriptionByIdRaw: vi.fn(),
+        putConceptDescriptionByIdRaw: vi.fn(),
+        generateSerializationByIdsRaw: vi.fn(),
+        getSelfDescriptionRaw: vi.fn(),
     };
 
     // Mock constructor
@@ -135,10 +139,15 @@ describe('ConceptDescriptionRepositoryClient', () => {
         const pagedResult: ConceptDescriptionRepositoryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.getAllConceptDescriptions.mockResolvedValue({
-            pagingMetadata: pagedResult,
-            result: [API_CD1, API_CD2],
-        });
+        mockApiInstance.getAllConceptDescriptionsRaw.mockResolvedValue(
+            apiResponse(
+                {
+                    pagingMetadata: pagedResult,
+                    result: [API_CD1, API_CD2],
+                },
+                200
+            )
+        );
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -154,10 +163,10 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getAllConceptDescriptions).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllConceptDescriptionsRaw).toHaveBeenCalledWith({
             idShort: ID_SHORT,
-            isCaseOf: `encoded_${JSON.stringify(IS_CASE_OF)}`,
-            dataSpecificationRef: `encoded_${JSON.stringify(DATA_SPECIFICATION_REF)}`,
+            isCaseOf: `encoded_${IS_CASE_OF}`,
+            dataSpecificationRef: `encoded_${DATA_SPECIFICATION_REF}`,
             limit: LIMIT,
             cursor: CURSOR,
         });
@@ -182,7 +191,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllConceptDescriptions.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getAllConceptDescriptionsRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
@@ -201,7 +210,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should create a new Concept Description', async () => {
         // Arrange
-        mockApiInstance.postConceptDescription.mockResolvedValue(API_CD1);
+        mockApiInstance.postConceptDescriptionRaw.mockResolvedValue(apiResponse(API_CD1, 201));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -213,7 +222,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.postConceptDescription).toHaveBeenCalledWith({
+        expect(mockApiInstance.postConceptDescriptionRaw).toHaveBeenCalledWith({
             conceptDescription: API_CD1,
         });
         expect(convertCoreCDToApiCD).toHaveBeenCalledWith(CORE_CD1);
@@ -236,7 +245,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postConceptDescription.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.postConceptDescriptionRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
@@ -256,7 +265,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should delete a ConceptDescription', async () => {
         // Arrange
-        mockApiInstance.deleteConceptDescriptionById.mockResolvedValue(undefined);
+        mockApiInstance.deleteConceptDescriptionByIdRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -269,7 +278,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
-        expect(mockApiInstance.deleteConceptDescriptionById).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteConceptDescriptionByIdRaw).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
         });
         expect(response.success).toBe(true);
@@ -287,7 +296,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.deleteConceptDescriptionById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.deleteConceptDescriptionByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
@@ -307,7 +316,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should get a Concept Description by ID', async () => {
         // Arrange
-        mockApiInstance.getConceptDescriptionById.mockResolvedValue(API_CD1);
+        mockApiInstance.getConceptDescriptionByIdRaw.mockResolvedValue(apiResponse(API_CD1, 200));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -320,7 +329,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
-        expect(mockApiInstance.getConceptDescriptionById).toHaveBeenCalledWith({
+        expect(mockApiInstance.getConceptDescriptionByIdRaw).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
         });
         expect(convertApiCDToCoreCD).toHaveBeenCalledWith(API_CD1);
@@ -342,7 +351,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getConceptDescriptionById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getConceptDescriptionByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
@@ -362,7 +371,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should update a Concept Description', async () => {
         // Arrange
-        mockApiInstance.putConceptDescriptionById.mockResolvedValue(undefined);
+        mockApiInstance.putConceptDescriptionByIdRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -376,7 +385,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
-        expect(mockApiInstance.putConceptDescriptionById).toHaveBeenCalledWith({
+        expect(mockApiInstance.putConceptDescriptionByIdRaw).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
             conceptDescription: API_CD1,
         });
@@ -386,7 +395,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should create a new Concept Description during update', async () => {
         // Arrange
-        mockApiInstance.putConceptDescriptionById.mockResolvedValue(API_CD1);
+        mockApiInstance.putConceptDescriptionByIdRaw.mockResolvedValue(apiResponse(API_CD1, 201));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -400,7 +409,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_CD1.id);
-        expect(mockApiInstance.putConceptDescriptionById).toHaveBeenCalledWith({
+        expect(mockApiInstance.putConceptDescriptionByIdRaw).toHaveBeenCalledWith({
             cdIdentifier: `encoded_${CORE_CD1.id}`,
             conceptDescription: API_CD1,
         });
@@ -424,7 +433,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.putConceptDescriptionById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.putConceptDescriptionByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
@@ -445,7 +454,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should generate serialization by IDs', async () => {
         // Arrange
-        mockApiInstance.generateSerializationByIds.mockResolvedValue(SERIALIZATION_BLOB);
+        mockApiInstance.generateSerializationByIdsRaw.mockResolvedValue(apiResponse(SERIALIZATION_BLOB, 200));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -459,7 +468,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.generateSerializationByIds).toHaveBeenCalledWith({
+        expect(mockApiInstance.generateSerializationByIdsRaw).toHaveBeenCalledWith({
             aasIds: ['aas-1'],
             submodelIds: ['sm-1'],
             includeConceptDescriptions: true,
@@ -482,7 +491,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.generateSerializationByIds.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.generateSerializationByIdsRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();
@@ -501,7 +510,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
     it('should return service description', async () => {
         // Arrange
-        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+        mockApiInstance.getSelfDescriptionRaw.mockResolvedValue(apiResponse(SERVICE_DESCRIPTION, 200));
 
         const client = new ConceptDescriptionRepositoryClient();
 
@@ -512,7 +521,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
 
         // Assert
         expect(MockCDRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(mockApiInstance.getSelfDescriptionRaw).toHaveBeenCalledWith();
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.data).toEqual(SERVICE_DESCRIPTION);
@@ -531,7 +540,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getSelfDescription.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getSelfDescriptionRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new ConceptDescriptionRepositoryClient();

@@ -15,6 +15,7 @@
 
 import * as runtime from '../../runtime';
 import type {
+  GetPackageDescriptionsResult,
   PackageDescription,
   Result,
 } from '../models/index';
@@ -29,6 +30,8 @@ export interface GetAASXByPackageIdRequest {
 
 export interface GetAllAASXPackageIdsRequest {
     aasId?: string;
+    limit?: number;
+    cursor?: string;
 }
 
 export interface PostAASXPackageRequest {
@@ -117,11 +120,19 @@ export class AASXFileServerAPIApi extends runtime.BaseAPI {
     /**
      * Returns a list of available AASX packages at the server
      */
-    async getAllAASXPackageIdsRaw(requestParameters: GetAllAASXPackageIdsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PackageDescription>>> {
+    async getAllAASXPackageIdsRaw(requestParameters: GetAllAASXPackageIdsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetPackageDescriptionsResult>> {
         const queryParameters: any = {};
 
         if (requestParameters['aasId'] != null) {
             queryParameters['aasId'] = requestParameters['aasId'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -139,7 +150,7 @@ export class AASXFileServerAPIApi extends runtime.BaseAPI {
     /**
      * Returns a list of available AASX packages at the server
      */
-    async getAllAASXPackageIds(requestParameters: GetAllAASXPackageIdsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PackageDescription>> {
+    async getAllAASXPackageIds(requestParameters: GetAllAASXPackageIdsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetPackageDescriptionsResult> {
         const response = await this.getAllAASXPackageIdsRaw(requestParameters, initOverrides);
         return await response.value();
     }

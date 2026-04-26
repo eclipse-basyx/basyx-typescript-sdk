@@ -48,6 +48,31 @@ export type MessageMessageTypeEnum = typeof MessageMessageTypeEnum[keyof typeof 
 /**
  * 
  * @export
+ * @interface GetPackageDescriptionsResult
+ */
+export interface GetPackageDescriptionsResult {
+    /**
+     * 
+     * @type {PagedResultPagingMetadata}
+     * @memberof GetPackageDescriptionsResult
+     */
+    pagingMetadata?: PagedResultPagingMetadata;
+    /**
+     * 
+     * @type {PagedResultPagingMetadata}
+     * @memberof GetPackageDescriptionsResult
+     */
+    paging_metadata?: PagedResultPagingMetadata;
+    /**
+     * 
+     * @type {Array<PackageDescription>}
+     * @memberof GetPackageDescriptionsResult
+     */
+    result?: Array<PackageDescription>;
+}
+/**
+ * 
+ * @export
  * @interface PackageDescription
  */
 export interface PackageDescription {
@@ -67,6 +92,19 @@ export interface PackageDescription {
 /**
  * 
  * @export
+ * @interface PagedResultPagingMetadata
+ */
+export interface PagedResultPagingMetadata {
+    /**
+     * 
+     * @type {string}
+     * @memberof PagedResultPagingMetadata
+     */
+    cursor?: string;
+}
+/**
+ * 
+ * @export
  * @interface Result
  */
 export interface Result {
@@ -82,4 +120,17 @@ export interface Result {
      * @memberof Result
      */
     success?: boolean;
+}
+/**
+ * The Description object enables servers to present their capabilities to the clients, in particular which profiles they implement. At least one defined profile is required. Additional, proprietary attributes might be included. Nevertheless, the server must not expect that a regular client understands them.
+ * @export
+ * @interface ServiceDescription
+ */
+export interface ServiceDescription {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ServiceDescription
+     */
+    profiles?: Array<string>;
 }

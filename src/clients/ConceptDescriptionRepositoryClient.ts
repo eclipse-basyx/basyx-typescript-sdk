@@ -1,13 +1,43 @@
 import type { ConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import { ConceptDescriptionRepositoryService } from '../generated'; // Updated import
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../lib/convertConceptDescriptionTypes';
 import { handleApiError } from '../lib/errorHandler';
 
 export class ConceptDescriptionRepositoryClient {
+    private static requireIdentifier(value: string | null | undefined, field: string): string {
+        if (value === null || value === undefined || value.trim() === '') {
+            throw new RequiredError(field, `Required parameter "${field}" was null, undefined, or empty.`);
+        }
+
+        return value;
+    }
+
+    private static extractStatusCode(
+        err: unknown,
+        parsedError?: ConceptDescriptionRepositoryService.Result
+    ): number | undefined {
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
+        }
+
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
+
     /**
      * Returns a specific Concept Description
      *
@@ -28,16 +58,23 @@ export class ConceptDescriptionRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedCdIdentifier = base64Encode(cdIdentifier);
+            const encodedCdIdentifier = base64Encode(
+                ConceptDescriptionRepositoryClient.requireIdentifier(cdIdentifier, 'cdIdentifier')
+            );
 
-            const result = await apiInstance.getConceptDescriptionById({
+            const response = await apiInstance.getConceptDescriptionByIdRaw({
                 cdIdentifier: encodedCdIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiCDToCoreCD(result) };
+            return { success: true, data: convertApiCDToCoreCD(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -61,16 +98,23 @@ export class ConceptDescriptionRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedCdIdentifier = base64Encode(cdIdentifier);
+            const encodedCdIdentifier = base64Encode(
+                ConceptDescriptionRepositoryClient.requireIdentifier(cdIdentifier, 'cdIdentifier')
+            );
 
-            const result = await apiInstance.deleteConceptDescriptionById({
+            const response = await apiInstance.deleteConceptDescriptionByIdRaw({
                 cdIdentifier: encodedCdIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -96,17 +140,33 @@ export class ConceptDescriptionRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedCdIdentifier = base64Encode(cdIdentifier);
+            const encodedCdIdentifier = base64Encode(
+                ConceptDescriptionRepositoryClient.requireIdentifier(cdIdentifier, 'cdIdentifier')
+            );
 
-            const result = await apiInstance.putConceptDescriptionById({
+            const response = await apiInstance.putConceptDescriptionByIdRaw({
                 cdIdentifier: encodedCdIdentifier,
                 conceptDescription: convertCoreCDToApiCD(conceptDescription),
             });
 
-            return { success: true, data: result ? convertApiCDToCoreCD(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: result ? convertApiCDToCoreCD(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -145,27 +205,31 @@ export class ConceptDescriptionRepositoryClient {
             const apiInstance = new ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi(
                 applyDefaults(configuration)
             );
-            const encodedIsCaseOf = isCaseOf ? base64Encode(JSON.stringify(isCaseOf)) : undefined;
-            const encodedDataSpecificationRef = dataSpecificationRef
-                ? base64Encode(JSON.stringify(dataSpecificationRef))
-                : undefined;
+            const encodedIsCaseOf = isCaseOf ? base64Encode(isCaseOf) : undefined;
+            const encodedDataSpecificationRef = dataSpecificationRef ? base64Encode(dataSpecificationRef) : undefined;
 
-            const result = await apiInstance.getAllConceptDescriptions({
+            const response = await apiInstance.getAllConceptDescriptionsRaw({
                 idShort: idShort,
                 isCaseOf: encodedIsCaseOf,
                 dataSpecificationRef: encodedDataSpecificationRef,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             const conceptDescriptions = (result.result ?? []).map(convertApiCDToCoreCD);
             return {
                 success: true,
                 data: { pagedResult: result.pagingMetadata, result: conceptDescriptions },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -189,14 +253,19 @@ export class ConceptDescriptionRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const result = await apiInstance.postConceptDescription({
+            const response = await apiInstance.postConceptDescriptionRaw({
                 conceptDescription: convertCoreCDToApiCD(conceptDescription),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiCDToCoreCD(result) };
+            return { success: true, data: convertApiCDToCoreCD(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -224,16 +293,21 @@ export class ConceptDescriptionRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const result = await apiInstance.generateSerializationByIds({
+            const response = await apiInstance.generateSerializationByIdsRaw({
                 aasIds: aasIds,
                 submodelIds: submodelIds,
                 includeConceptDescriptions: includeConceptDescriptions,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -254,12 +328,17 @@ export class ConceptDescriptionRepositoryClient {
 
         try {
             const apiInstance = new ConceptDescriptionRepositoryService.DescriptionAPIApi(applyDefaults(configuration));
-            const result = await apiInstance.getSelfDescription();
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 }
