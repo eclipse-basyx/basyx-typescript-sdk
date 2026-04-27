@@ -84,10 +84,14 @@ export class AasRegistryClient {
             });
             const result = await response.value();
             const aasDescriptors = (result.result ?? []).map(convertApiAasDescriptorToCoreAasDescriptor);
+            const pagedResult =
+                result.pagingMetadata ??
+                (result as typeof result & { paging_metadata?: AasRegistryService.PagedResultPagingMetadata })
+                    .paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: aasDescriptors },
+                data: { pagedResult, result: aasDescriptors },
                 statusCode: response.raw.status,
             };
         } catch (err) {
@@ -322,10 +326,14 @@ export class AasRegistryClient {
             });
             const result = await response.value();
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
+            const pagedResult =
+                result.pagingMetadata ??
+                (result as typeof result & { paging_metadata?: AasRegistryService.PagedResultPagingMetadata })
+                    .paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
+                data: { pagedResult, result: submodelDescriptors },
                 statusCode: response.raw.status,
             };
         } catch (err) {

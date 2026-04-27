@@ -218,9 +218,16 @@ export class ConceptDescriptionRepositoryClient {
             const result = await response.value();
 
             const conceptDescriptions = (result.result ?? []).map(convertApiCDToCoreCD);
+            const pagedResult =
+                result.pagingMetadata ??
+                (
+                    result as typeof result & {
+                        paging_metadata?: ConceptDescriptionRepositoryService.PagedResultPagingMetadata;
+                    }
+                ).paging_metadata;
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: conceptDescriptions },
+                data: { pagedResult, result: conceptDescriptions },
                 statusCode: response.raw.status,
             };
         } catch (err) {

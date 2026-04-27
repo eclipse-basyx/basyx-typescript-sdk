@@ -1,5 +1,6 @@
 import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptionRepositoryClient';
 import { Configuration } from '../generated';
+import { base64Encode } from '../lib/base64Url';
 import { createDescription, createTestCD } from './fixtures/conceptDescriptionFixtures';
 
 describe('Concept Description Repository Integration Tests', () => {
@@ -9,6 +10,8 @@ describe('Concept Description Repository Integration Tests', () => {
     });
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const unavailableCursor = (): string =>
+        base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
     const createUniqueConceptDescription = () => {
         const conceptDescription = createTestCD();
@@ -172,6 +175,24 @@ describe('Concept Description Repository Integration Tests', () => {
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation GetAllConceptDescriptions
+     * @status 200
+     */
+    test('should return an empty Concept Description page for an unavailable cursor', async () => {
+        const response = await client.getAllConceptDescriptions({
+            configuration,
+            cursor: unavailableCursor(),
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
         }
     });
 

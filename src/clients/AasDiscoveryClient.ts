@@ -69,10 +69,14 @@ export class AasDiscoveryClient {
             const result = await response.value();
 
             const shellIds = result.result ?? [];
+            const pagedResult =
+                result.pagingMetadata ??
+                (result as typeof result & { paging_metadata?: AasDiscoveryService.PagedResultPagingMetadata })
+                    .paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: shellIds },
+                data: { pagedResult, result: shellIds },
                 statusCode: response.raw.status,
             };
         } catch (err) {
@@ -250,10 +254,14 @@ export class AasDiscoveryClient {
             const result = await response.value();
 
             const shellIds = result.result ?? [];
+            const pagedResult =
+                result.pagingMetadata ??
+                (result as typeof result & { paging_metadata?: AasDiscoveryService.PagedResultPagingMetadata })
+                    .paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: shellIds },
+                data: { pagedResult, result: shellIds },
                 statusCode: response.raw.status,
             };
         } catch (err) {

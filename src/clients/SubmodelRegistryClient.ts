@@ -72,10 +72,14 @@ export class SubmodelRegistryClient {
             });
             const result = await response.value();
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
+            const pagedResult =
+                result.pagingMetadata ??
+                (result as typeof result & { paging_metadata?: SubmodelRegistryService.PagedResultPagingMetadata })
+                    .paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelDescriptors },
+                data: { pagedResult, result: submodelDescriptors },
                 statusCode: response.raw.status,
             };
         } catch (err) {
