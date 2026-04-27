@@ -1,5 +1,6 @@
 import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { Configuration } from '../generated';
+import { base64Encode } from '../lib/base64Url';
 import { createDisplayName, createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
 
 describe('Submodel Registry Integration Tests', () => {
@@ -9,6 +10,8 @@ describe('Submodel Registry Integration Tests', () => {
     });
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const unavailableCursor = (): string =>
+        base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
     const createUniqueSubmodelDescriptor = () => {
         const descriptor = createTestSubmodelDescriptor();
@@ -201,18 +204,35 @@ describe('Submodel Registry Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodelDescriptors
-     * @status 400
+     * @status 200
      */
-    test('should return bad request for unavailable Submodel Descriptor ID used as cursor', async () => {
+    test('should return an empty Submodel Descriptor page for an unavailable cursor', async () => {
         const response = await client.getAllSubmodelDescriptors({
             configuration,
-            cursor: `does-not-exist-${uniqueSuffix()}`,
+            cursor: unavailableCursor(),
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelDescriptors
+     * @status 404 [known-specification-bug]
+     */
+    test.skip('should return not found for an unavailable collection resource when the backend exposes an addressable collection resource', async () => {
+        const response = await client.getAllSubmodelDescriptors({
+            configuration,
         });
 
         expect(response.success).toBe(false);
         if (!response.success) {
-            expect(response.statusCode).toBe(400);
-            expect(response.error.messages?.[0]?.code).toBe('400');
+            expect(response.statusCode).toBe(404);
+            expect(response.error.messages?.[0]?.code).toBe('404');
         }
     });
 

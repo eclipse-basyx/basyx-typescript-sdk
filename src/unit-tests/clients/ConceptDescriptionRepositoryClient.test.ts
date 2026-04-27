@@ -142,7 +142,7 @@ describe('ConceptDescriptionRepositoryClient', () => {
         mockApiInstance.getAllConceptDescriptionsRaw.mockResolvedValue(
             apiResponse(
                 {
-                    pagingMetadata: pagedResult,
+                    paging_metadata: pagedResult,
                     result: [API_CD1, API_CD2],
                 },
                 200

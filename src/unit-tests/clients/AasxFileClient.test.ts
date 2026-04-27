@@ -111,7 +111,7 @@ describe('AasxFileClient', () => {
             apiResponse(
                 {
                     result: [API_PACKAGEDESCRIPTION1, API_PACKAGEDESCRIPTION2],
-                    pagingMetadata: { cursor: 'next-cursor' },
+                    paging_metadata: { cursor: 'next-cursor' },
                 },
                 200
             )

@@ -22,7 +22,7 @@ export class SubmodelRepositoryClient {
      *  - semanticId?: The value of the semantic id reference
      *  - idShort?: The Asset Administration Shell's IdShort
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
      *
@@ -64,7 +64,7 @@ export class SubmodelRepositoryClient {
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodels },
+                data: { pagedResult: result.paging_metadata, result: submodels },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -419,7 +419,7 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
      *
@@ -460,7 +460,7 @@ export class SubmodelRepositoryClient {
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelElements },
+                data: { pagedResult: result.paging_metadata, result: submodelElements },
             };
         } catch (err) {
             const customError = await handleApiError(err);

@@ -293,7 +293,7 @@ describe('SubmodelRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodels.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_SUBMODEL1, API_SUBMODEL2],
         });
 
@@ -912,7 +912,7 @@ describe('SubmodelRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelElements.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_SUBMODELELEMENT1, API_SUBMODELELEMENT2],
         });
 
@@ -1559,7 +1559,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodels metadata', async () => {
         const metadataResult: SubmodelRepositoryService.GetSubmodelsMetadataResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: [API_SUBMODEL_METADATA],
         };
         mockApiInstance.getAllSubmodelsMetadata.mockResolvedValue(metadataResult);
@@ -1584,7 +1584,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodels value-only representation', async () => {
         const valueResult: SubmodelRepositoryService.GetSubmodelsValueResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: [API_SUBMODEL_VALUE],
         };
         mockApiInstance.getAllSubmodelsValueOnly.mockResolvedValue(valueResult);
@@ -1613,7 +1613,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodel references', async () => {
         const referencesResult: SubmodelRepositoryService.GetReferencesResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: [],
         };
         mockApiInstance.getAllSubmodelsReference.mockResolvedValue(referencesResult);
@@ -1640,7 +1640,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodel paths', async () => {
         const pathResult: SubmodelRepositoryService.GetPathItemsResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: ['a', 'b'],
         };
         mockApiInstance.getAllSubmodelsPath.mockResolvedValue(pathResult);
@@ -1722,7 +1722,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodel elements metadata', async () => {
         const metadataResult: SubmodelRepositoryService.GetSubmodelElementsMetadataResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: [],
         };
         mockApiInstance.getAllSubmodelElementsMetadataSubmodelRepo.mockResolvedValue(metadataResult);
@@ -1745,7 +1745,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodel elements value-only representation', async () => {
         const valueResult: SubmodelRepositoryService.GetSubmodelElementsValueResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: [API_SUBMODELELEMENT_VALUE],
         };
         mockApiInstance.getAllSubmodelElementsValueOnlySubmodelRepo.mockResolvedValue(valueResult);
@@ -1772,7 +1772,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodel elements references', async () => {
         const referencesResult: SubmodelRepositoryService.GetReferencesResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: [],
         };
         mockApiInstance.getAllSubmodelElementsReferenceSubmodelRepo.mockResolvedValue(referencesResult);
@@ -1797,7 +1797,7 @@ describe('SubmodelRepositoryClient', () => {
 
     it('should return Submodel elements paths', async () => {
         const pathResult: SubmodelRepositoryService.GetPathItemsResult = {
-            pagingMetadata: { cursor: CURSOR },
+            paging_metadata: { cursor: CURSOR },
             result: ['x', 'y'],
         };
         mockApiInstance.getAllSubmodelElementsPathSubmodelRepo.mockResolvedValue(pathResult);

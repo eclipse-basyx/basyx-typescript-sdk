@@ -1,6 +1,7 @@
 import { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasRegistryClient } from '../clients/AasRegistryClient';
 import { Configuration } from '../generated';
+import { base64Encode } from '../lib/base64Url';
 import {
     createDescription,
     createDisplayName,
@@ -15,6 +16,8 @@ describe('AAS Registry Integration Tests', () => {
     });
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const unavailableCursor = (): string =>
+        base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
     const createUniqueShellDescriptor = () => {
         const descriptor = createTestShellDescriptor();
@@ -216,18 +219,19 @@ describe('AAS Registry Integration Tests', () => {
 
     /**
      * @operation GetAllAssetAdministrationShellDescriptors
-     * @status 400
+     * @status 200
      */
-    test('should reject invalid AAS descriptor cursor with bad request', async () => {
+    test('should return an empty AAS descriptor page for an unavailable cursor', async () => {
         const response = await client.getAllAssetAdministrationShellDescriptors({
             configuration,
-            cursor: `does-not-exist-${uniqueSuffix()}`,
+            cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(400);
-            expect(response.error.messages?.[0]?.code).toBe('400');
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
         }
     });
 
@@ -590,9 +594,9 @@ describe('AAS Registry Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodelDescriptorsThroughSuperpath
-     * @status 400
+     * @status 200
      */
-    test('should reject invalid submodel descriptor cursor through superpath with bad request', async () => {
+    test('should return an empty submodel descriptor page through superpath for an unavailable cursor', async () => {
         const shellDescriptor = createUniqueShellDescriptor();
         const createShellResponse = await client.postAssetAdministrationShellDescriptor({
             configuration,
@@ -603,13 +607,14 @@ describe('AAS Registry Integration Tests', () => {
         const response = await client.getAllSubmodelDescriptorsThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
-            cursor: `does-not-exist-${uniqueSuffix()}`,
+            cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(400);
-            expect(response.error.messages?.[0]?.code).toBe('400');
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
         }
     });
 

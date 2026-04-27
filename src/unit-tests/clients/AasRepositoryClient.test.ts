@@ -197,7 +197,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllAssetAdministrationShells.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_AAS1, API_AAS2],
         });
 
@@ -264,7 +264,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllAssetAdministrationShellsReference.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_REFERENCE1, API_REFERENCE2],
         });
 
@@ -848,7 +848,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelReferencesAasRepository.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_REFERENCE1, API_REFERENCE2],
         });
 

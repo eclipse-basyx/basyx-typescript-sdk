@@ -1840,7 +1840,7 @@ export interface GetAssetAdministrationShellsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetAssetAdministrationShellsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<AssetAdministrationShell>}
@@ -1859,7 +1859,7 @@ export interface GetPathItemsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetPathItemsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<string>}
@@ -1878,7 +1878,7 @@ export interface GetReferencesResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetReferencesResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<Reference>}
@@ -1897,7 +1897,7 @@ export interface GetSubmodelElementsMetadataResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelElementsMetadataResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<SubmodelElementMetadata>}
@@ -1916,7 +1916,7 @@ export interface GetSubmodelElementsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelElementsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<SubmodelElement>}
@@ -1935,7 +1935,7 @@ export interface GetSubmodelElementsValueResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelElementsValueResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * Since patternProperties and propertyNames are not supported by OpenApi yet, the ValueOnly serialization for this elements works with the key-attribute as the JSON-property name and the value-attribute as the corresponding value.
      * @type {object}
@@ -2874,7 +2874,7 @@ export interface PagedResult {
      * @type {PagedResultPagingMetadata}
      * @memberof PagedResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
 }
 /**
  * 

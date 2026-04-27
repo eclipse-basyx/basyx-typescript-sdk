@@ -35,7 +35,7 @@ export class AasDiscoveryClient {
      *  - configuration: The http request options
      *  - assetIds?: A list of specific Asset identifiers
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -69,10 +69,11 @@ export class AasDiscoveryClient {
             const result = await response.value();
 
             const shellIds = result.result ?? [];
+            const pagedResult = result.paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: shellIds },
+                data: { pagedResult, result: shellIds },
                 statusCode: response.raw.status,
             };
         } catch (err) {
@@ -217,7 +218,7 @@ export class AasDiscoveryClient {
      *  - configuration: The http request options
      *  - assetLink?: A list of specific Asset identifiers
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -250,10 +251,11 @@ export class AasDiscoveryClient {
             const result = await response.value();
 
             const shellIds = result.result ?? [];
+            const pagedResult = result.paging_metadata;
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: shellIds },
+                data: { pagedResult, result: shellIds },
                 statusCode: response.raw.status,
             };
         } catch (err) {

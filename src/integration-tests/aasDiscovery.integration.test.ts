@@ -1,6 +1,7 @@
 import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
+import { base64Encode } from '../lib/base64Url';
 import {
     createTestShell,
     createTestSpecificAssetId1,
@@ -15,6 +16,9 @@ describe('AAS Discovery Integration Tests', () => {
     const configuration = new Configuration({
         basePath: 'http://localhost:8086',
     });
+    const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const unavailableCursor = (): string =>
+        base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
     /**
      * @operation PostAllAssetLinksById
@@ -109,17 +113,36 @@ describe('AAS Discovery Integration Tests', () => {
      * @operation GetAllAssetAdministrationShellIdsByAssetLink
      * @status 400
      */
-    test('should reject invalid AAS discovery lookup cursor with bad request', async () => {
+    test('should reject invalid AAS discovery lookup limit with bad request', async () => {
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration,
             assetIds: [testSpecificAssetId1, testSpecificAssetId2],
-            cursor: `does-not-exist-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            limit: -1,
         });
 
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation GetAllAssetAdministrationShellIdsByAssetLink
+     * @status 200
+     */
+    test('should return an empty AAS discovery lookup page for an unavailable cursor', async () => {
+        const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
+            configuration,
+            assetIds: [testSpecificAssetId1, testSpecificAssetId2],
+            cursor: unavailableCursor(),
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
         }
     });
 
@@ -159,19 +182,20 @@ describe('AAS Discovery Integration Tests', () => {
 
     /**
      * @operation SearchAllAssetAdministrationShellIdsByAssetLink
-     * @status 400
+     * @status 200
      */
-    test('should reject invalid AAS discovery search cursor with bad request', async () => {
+    test('should return an empty AAS discovery search page for an unavailable cursor', async () => {
         const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
             configuration,
             assetLink: [testSpecificAssetId1, testSpecificAssetId2],
-            cursor: `does-not-exist-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            expect(response.statusCode).toBe(400);
-            expect(response.error.messages?.[0]?.code).toBe('400');
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
         }
     });
 

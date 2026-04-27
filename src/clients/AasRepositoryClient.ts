@@ -36,7 +36,7 @@ export class AasRepositoryClient {
      *  - assetIds?: A list of specific Asset identifiers
      *  - idShort?: The Asset Administration Shell’s IdShort
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -73,7 +73,7 @@ export class AasRepositoryClient {
             const shells = (result.result ?? []).map(convertApiAasToCoreAas);
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: shells },
+                data: { pagedResult: result.paging_metadata, result: shells },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -89,7 +89,7 @@ export class AasRepositoryClient {
      *  - assetIds?: A list of specific Asset identifiers
      *  - idShort?: The Asset Administration Shell’s IdShort
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -127,7 +127,7 @@ export class AasRepositoryClient {
 
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: shellReferences },
+                data: { pagedResult: result.paging_metadata, result: shellReferences },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -451,7 +451,7 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -485,7 +485,7 @@ export class AasRepositoryClient {
             return {
                 success: true,
                 data: {
-                    pagedResult: result.pagingMetadata,
+                    pagedResult: result.paging_metadata,
                     result: submodelReferences,
                 },
             };
@@ -978,7 +978,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
      *
@@ -1023,7 +1023,7 @@ export class AasRepositoryClient {
             const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelElements },
+                data: { pagedResult: result.paging_metadata, result: submodelElements },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1079,7 +1079,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1119,7 +1119,7 @@ export class AasRepositoryClient {
             const submodelElementsMetadata = result.result ?? [];
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelElementsMetadata },
+                data: { pagedResult: result.paging_metadata, result: submodelElementsMetadata },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1135,7 +1135,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
@@ -1178,7 +1178,7 @@ export class AasRepositoryClient {
             const submodelElementValues = result.result ?? [];
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelElementValues },
+                data: { pagedResult: result.paging_metadata, result: submodelElementValues },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1194,7 +1194,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
@@ -1236,7 +1236,7 @@ export class AasRepositoryClient {
             const submodelElementReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelElementReferences },
+                data: { pagedResult: result.paging_metadata, result: submodelElementReferences },
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1252,7 +1252,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
      *
@@ -1298,7 +1298,7 @@ export class AasRepositoryClient {
             const submodelElements = result.result ?? [];
             return {
                 success: true,
-                data: { pagedResult: result.pagingMetadata, result: submodelElements },
+                data: { pagedResult: result.paging_metadata, result: submodelElements },
             };
         } catch (err) {
             const customError = await handleApiError(err);

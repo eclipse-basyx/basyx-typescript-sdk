@@ -207,7 +207,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.getAllAssetAdministrationShellDescriptorsRaw.mockResolvedValue(
             apiResponse(
                 {
-                    pagingMetadata: pagedResult,
+                    paging_metadata: pagedResult,
                     result: [API_AAS_DESCRIPTOR1, API_AAS_DESCRIPTOR2],
                 },
                 200
@@ -538,7 +538,7 @@ describe('AasRegistryClient', () => {
         mockApiInstance.getAllSubmodelDescriptorsThroughSuperpathRaw.mockResolvedValue(
             apiResponse(
                 {
-                    pagingMetadata: pagedResult,
+                    paging_metadata: pagedResult,
                     result: [API_SUBMODEL_DESCRIPTOR1, API_SUBMODEL_DESCRIPTOR2],
                 },
                 200

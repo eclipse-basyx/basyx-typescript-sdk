@@ -992,7 +992,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelElementsAasRepository.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_SUBMODELELEMENT1, API_SUBMODELELEMENT2],
         });
 
@@ -1130,7 +1130,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelElementsMetadataAasRepository.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_SUBMODELELEMENT_METADATA1, API_SUBMODELELEMENT_METADATA2],
         });
 
@@ -1203,7 +1203,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelElementsValueOnlyAasRepository.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: API_SUBMODELELEMENT_VALUES,
         });
 
@@ -1278,7 +1278,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelElementsReferenceAasRepository.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_SUBMODELELEMENT_REFERENCE1, API_SUBMODELELEMENT_REFERENCE2],
         });
 
@@ -1353,7 +1353,7 @@ describe('AasRepositoryClient', () => {
             cursor: CURSOR,
         };
         mockApiInstance.getAllSubmodelElementsPathAasRepository.mockResolvedValue({
-            pagingMetadata: pagedResult,
+            paging_metadata: pagedResult,
             result: [API_SUBMODELELEMENT_STR1, API_SUBMODELELEMENT_STR2],
         });
 

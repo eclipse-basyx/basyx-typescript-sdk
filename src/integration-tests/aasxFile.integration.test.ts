@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { AasxFileClient } from '../clients/AasxFileClient';
 import { Configuration } from '../generated';
 import { AasxFileService } from '../generated';
+import { base64Encode } from '../lib/base64Url';
 import { createTestShell } from './fixtures/aasxFileFixtures';
 
 type StoredPackageDescription = AasxFileService.PackageDescription & { packageId: string };
@@ -15,6 +16,8 @@ describe('AASX File Server Integration Tests', () => {
 
     const createdPackageIds: string[] = [];
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const unavailableCursor = (): string =>
+        base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
     const createPackageFile = (): Blob =>
         new Blob([fs.readFileSync('test-data/sample.aasx')], {
             type: 'application/asset-administration-shell-package',
@@ -75,18 +78,36 @@ describe('AASX File Server Integration Tests', () => {
      * @operation GetAllAASXPackageIds
      * @status 400 [known-backend-bug]
      *
-     * The current AASX file server backend does not reject invalid cursor values yet.
+     * The current AASX file server backend returns 500 instead of 400 for invalid paging parameters.
      */
-    test.skip('should reject invalid AASX package cursor with bad request when backend validation exists', async () => {
+    test.skip('should reject invalid AASX package paging parameters with bad request when backend validation is fixed', async () => {
         const response = await client.getAllAASXPackageIds({
             configuration,
-            cursor: `invalid-cursor-${uniqueSuffix()}`,
+            limit: -1,
         });
 
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation GetAllAASXPackageIds
+     * @status 200
+     */
+    test('should return an empty AASX package page for an unavailable cursor', async () => {
+        const response = await client.getAllAASXPackageIds({
+            configuration,
+            cursor: unavailableCursor(),
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.pagedResult).toEqual({});
+            expect(response.data.result).toEqual([]);
         }
     });
 

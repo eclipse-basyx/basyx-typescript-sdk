@@ -49,7 +49,7 @@ export interface InlineResponse200 {
      * @type {PagedResultPagingMetadata}
      * @memberof InlineResponse200
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<string>}
@@ -173,7 +173,7 @@ export interface PagedResult {
      * @type {PagedResultPagingMetadata}
      * @memberof PagedResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
 }
 /**
  * 

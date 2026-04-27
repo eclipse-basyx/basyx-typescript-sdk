@@ -144,7 +144,7 @@ describe('AasDiscoveryClient', () => {
         };
         mockApiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw.mockResolvedValue(
             createRawResponse(200, {
-                pagingMetadata: pagedResult,
+                paging_metadata: pagedResult,
                 result: SHELL_IDS,
             })
         );
@@ -388,7 +388,7 @@ describe('AasDiscoveryClient', () => {
         };
         mockApiInstance.searchAllAssetAdministrationShellIdsByAssetLinkRaw.mockResolvedValue(
             createRawResponse(200, {
-                pagingMetadata: pagedResult,
+                paging_metadata: pagedResult,
                 result: SHELL_IDS,
             })
         );

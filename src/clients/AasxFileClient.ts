@@ -40,7 +40,7 @@ export class AasxFileClient {
      *  - configuration: The http request options
      *  - aasId?: The Asset Administration Shell’s unique id
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -70,7 +70,7 @@ export class AasxFileClient {
             });
             const payload = await response.value();
             const result = payload.result ?? [];
-            const pagedResult = payload.pagingMetadata ?? payload.paging_metadata;
+            const pagedResult = payload.paging_metadata;
 
             return {
                 success: true,

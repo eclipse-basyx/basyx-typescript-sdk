@@ -152,7 +152,7 @@ describe('SubmodelRegistryClient', () => {
         };
         mockApiInstance.getAllSubmodelDescriptorsRaw.mockResolvedValue(
             createRawResponse(200, {
-                pagingMetadata: pagedResult,
+                paging_metadata: pagedResult,
                 result: [API_SUBMODEL_DESCRIPTOR1, API_SUBMODEL_DESCRIPTOR2],
             })
         );
