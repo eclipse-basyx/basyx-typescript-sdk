@@ -1197,7 +1197,7 @@ export interface GetConceptDescriptionsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetConceptDescriptionsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<ConceptDescription>}
@@ -1858,7 +1858,7 @@ export interface PagedResult {
      * @type {PagedResultPagingMetadata}
      * @memberof PagedResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
 }
 /**
  * 

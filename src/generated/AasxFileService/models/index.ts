@@ -56,12 +56,6 @@ export interface GetPackageDescriptionsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetPackageDescriptionsResult
      */
-    pagingMetadata?: PagedResultPagingMetadata;
-    /**
-     * 
-     * @type {PagedResultPagingMetadata}
-     * @memberof GetPackageDescriptionsResult
-     */
     paging_metadata?: PagedResultPagingMetadata;
     /**
      * 

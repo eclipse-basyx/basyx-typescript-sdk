@@ -179,7 +179,7 @@ export class ConceptDescriptionRepositoryClient {
      *  - isCaseOf?: IsCaseOf reference (UTF8-BASE64-URL-encoded)
      *  - dataSpecificationRef?: DataSpecification reference (UTF8-BASE64-URL-encoded)
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -218,13 +218,7 @@ export class ConceptDescriptionRepositoryClient {
             const result = await response.value();
 
             const conceptDescriptions = (result.result ?? []).map(convertApiCDToCoreCD);
-            const pagedResult =
-                result.pagingMetadata ??
-                (
-                    result as typeof result & {
-                        paging_metadata?: ConceptDescriptionRepositoryService.PagedResultPagingMetadata;
-                    }
-                ).paging_metadata;
+            const pagedResult = result.paging_metadata;
             return {
                 success: true,
                 data: { pagedResult, result: conceptDescriptions },

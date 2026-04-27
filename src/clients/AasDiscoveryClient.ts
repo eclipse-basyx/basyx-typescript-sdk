@@ -35,7 +35,7 @@ export class AasDiscoveryClient {
      *  - configuration: The http request options
      *  - assetIds?: A list of specific Asset identifiers
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -69,10 +69,7 @@ export class AasDiscoveryClient {
             const result = await response.value();
 
             const shellIds = result.result ?? [];
-            const pagedResult =
-                result.pagingMetadata ??
-                (result as typeof result & { paging_metadata?: AasDiscoveryService.PagedResultPagingMetadata })
-                    .paging_metadata;
+            const pagedResult = result.paging_metadata;
 
             return {
                 success: true,
@@ -221,7 +218,7 @@ export class AasDiscoveryClient {
      *  - configuration: The http request options
      *  - assetLink?: A list of specific Asset identifiers
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -254,10 +251,7 @@ export class AasDiscoveryClient {
             const result = await response.value();
 
             const shellIds = result.result ?? [];
-            const pagedResult =
-                result.pagingMetadata ??
-                (result as typeof result & { paging_metadata?: AasDiscoveryService.PagedResultPagingMetadata })
-                    .paging_metadata;
+            const pagedResult = result.paging_metadata;
 
             return {
                 success: true,

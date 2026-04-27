@@ -458,7 +458,7 @@ export interface GetAssetAdministrationShellDescriptorsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetAssetAdministrationShellDescriptorsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<AssetAdministrationShellDescriptor>}
@@ -477,7 +477,7 @@ export interface GetSubmodelDescriptorsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelDescriptorsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<SubmodelDescriptor>}
@@ -786,7 +786,7 @@ export interface PagedResult {
      * @type {PagedResultPagingMetadata}
      * @memberof PagedResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
 }
 /**
  * 

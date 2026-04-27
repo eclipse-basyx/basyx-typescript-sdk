@@ -1840,7 +1840,7 @@ export interface GetPathItemsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetPathItemsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<string>}
@@ -1859,7 +1859,7 @@ export interface GetReferencesResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetReferencesResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<Reference>}
@@ -1878,7 +1878,7 @@ export interface GetSubmodelElementsMetadataResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelElementsMetadataResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<SubmodelElementMetadata>}
@@ -1897,7 +1897,7 @@ export interface GetSubmodelElementsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelElementsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<SubmodelElement>}
@@ -1916,7 +1916,7 @@ export interface GetSubmodelElementsValueResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelElementsValueResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * Since patternProperties and propertyNames are not supported by OpenApi yet, the ValueOnly serialization for this elements works with the key-attribute as the JSON-property name and the value-attribute as the corresponding value.
      * @type {object}
@@ -1935,7 +1935,7 @@ export interface GetSubmodelsMetadataResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelsMetadataResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<SubmodelMetadata>}
@@ -1954,7 +1954,7 @@ export interface GetSubmodelsResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelsResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * 
      * @type {Array<Submodel>}
@@ -1973,7 +1973,7 @@ export interface GetSubmodelsValueResult {
      * @type {PagedResultPagingMetadata}
      * @memberof GetSubmodelsValueResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
     /**
      * The ValueOnly serialization (patternProperties and propertyNames will probably be supported with OpenApi 3.1). For the full description of the generic JSON validation schema see the ValueOnly-Serialization as defined in the 'Specification of the Asset Administration Shell - Part 2'.
      * @type {object}
@@ -2912,7 +2912,7 @@ export interface PagedResult {
      * @type {PagedResultPagingMetadata}
      * @memberof PagedResult
      */
-    pagingMetadata: PagedResultPagingMetadata;
+    paging_metadata: PagedResultPagingMetadata;
 }
 /**
  * 

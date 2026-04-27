@@ -47,7 +47,7 @@ export class AasRegistryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - assetKind?: The Asset's kind (Instance or Type)
      *  - assetType?: The Asset's type (UTF8-BASE64-URL-encoded)
      *
@@ -84,10 +84,7 @@ export class AasRegistryClient {
             });
             const result = await response.value();
             const aasDescriptors = (result.result ?? []).map(convertApiAasDescriptorToCoreAasDescriptor);
-            const pagedResult =
-                result.pagingMetadata ??
-                (result as typeof result & { paging_metadata?: AasRegistryService.PagedResultPagingMetadata })
-                    .paging_metadata;
+            const pagedResult = result.paging_metadata;
 
             return {
                 success: true,
@@ -291,7 +288,7 @@ export class AasRegistryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - limit?: The maximum number of elements in the response array
-     *  - cursor?: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -326,10 +323,7 @@ export class AasRegistryClient {
             });
             const result = await response.value();
             const submodelDescriptors = (result.result ?? []).map(convertApiSubmodelDescriptorToCoreSubmodelDescriptor);
-            const pagedResult =
-                result.pagingMetadata ??
-                (result as typeof result & { paging_metadata?: AasRegistryService.PagedResultPagingMetadata })
-                    .paging_metadata;
+            const pagedResult = result.paging_metadata;
 
             return {
                 success: true,
