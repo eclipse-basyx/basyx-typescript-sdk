@@ -63,9 +63,7 @@ function operationIdToMethodName(operationId, httpMethod) {
         return 'postInvokeOperationSubmodelRepo';
     }
 
-    const normalizedOperationId = operationId
-        .replace(/_SubmodelRepo$/i, '')
-        .replace(/SubmodelRepo$/i, '');
+    const normalizedOperationId = operationId.replace(/_SubmodelRepo$/i, '').replace(/SubmodelRepo$/i, '');
 
     const normalized = normalizedOperationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
         nextChar ? nextChar.toUpperCase() : ''
@@ -192,9 +190,9 @@ function parseIntegrationMetadata(testSource) {
             const hasMessageCodeAssert = new RegExp(
                 `messages\\?\\.\\[0\\]\\?\\.code\\)\\.toBe\\((['"])${status}\\1\\)`
             ).test(body);
-            const hasFailureHelperAssert = new RegExp(
-                `assertApiFailureCode\\([^)]*,\\s*(['"])${status}\\1\\)`
-            ).test(body);
+            const hasFailureHelperAssert = new RegExp(`assertApiFailureCode\\([^)]*,\\s*(['"])${status}\\1\\)`).test(
+                body
+            );
             assertions.set(status, hasStatusCodeAssert || hasMessageCodeAssert || hasFailureHelperAssert);
         }
 
