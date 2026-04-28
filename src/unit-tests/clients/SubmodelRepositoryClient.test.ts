@@ -164,6 +164,10 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8082',
     fetchApi: globalThis.fetch,
 });
+const apiResponse = <T>(value: T, status = 200) => ({
+    raw: { status },
+    value: vi.fn().mockResolvedValue(value),
+});
 
 describe('SubmodelRepositoryClient', () => {
     // Helper function to create expected configuration matcher
@@ -175,32 +179,32 @@ describe('SubmodelRepositoryClient', () => {
 
     // Create mock for SubmodelRepositoryAPIApi
     const mockApiInstance = {
-        getAllSubmodels: vi.fn(),
+        getAllSubmodelsRaw: vi.fn(),
         getAllSubmodelsMetadata: vi.fn(),
         getAllSubmodelsValueOnly: vi.fn(),
         getAllSubmodelsReference: vi.fn(),
         getAllSubmodelsPath: vi.fn(),
-        postSubmodel: vi.fn(),
-        deleteSubmodelById: vi.fn(),
-        getSubmodelById: vi.fn(),
+        postSubmodelRaw: vi.fn(),
+        deleteSubmodelByIdRaw: vi.fn(),
+        getSubmodelByIdRaw: vi.fn(),
         getSubmodelByIdReference: vi.fn(),
         getSubmodelByIdPath: vi.fn(),
-        putSubmodelById: vi.fn(),
+        putSubmodelByIdRaw: vi.fn(),
         patchSubmodelById: vi.fn(),
         patchSubmodelByIdMetadata: vi.fn(),
-        getAllSubmodelElements: vi.fn(),
+        getAllSubmodelElementsRaw: vi.fn(),
         getAllSubmodelElementsMetadataSubmodelRepo: vi.fn(),
         getAllSubmodelElementsValueOnlySubmodelRepo: vi.fn(),
         getAllSubmodelElementsReferenceSubmodelRepo: vi.fn(),
         getAllSubmodelElementsPathSubmodelRepo: vi.fn(),
-        postSubmodelElementSubmodelRepo: vi.fn(),
-        getSubmodelElementByPathSubmodelRepo: vi.fn(),
+        postSubmodelElementSubmodelRepoRaw: vi.fn(),
+        getSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
         getSubmodelElementByPathMetadataSubmodelRepo: vi.fn(),
         getSubmodelElementByPathReferenceSubmodelRepo: vi.fn(),
         getSubmodelElementByPathPathSubmodelRepo: vi.fn(),
-        postSubmodelElementByPathSubmodelRepo: vi.fn(),
-        deleteSubmodelElementByPathSubmodelRepo: vi.fn(),
-        putSubmodelElementByPathSubmodelRepo: vi.fn(),
+        postSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
+        deleteSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
+        putSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
         patchSubmodelElementByPathSubmodelRepo: vi.fn(),
         patchSubmodelElementByPathMetadataSubmodelRepo: vi.fn(),
         getSubmodelByIdMetadata: vi.fn(),
@@ -219,7 +223,7 @@ describe('SubmodelRepositoryClient', () => {
         getOperationAsyncResult: vi.fn(),
         getOperationAsyncResultValueOnly: vi.fn(),
         generateSerializationByIds: vi.fn(),
-        getSelfDescription: vi.fn(),
+        getSelfDescriptionRaw: vi.fn(),
     };
 
     // Mock constructor
@@ -292,10 +296,15 @@ describe('SubmodelRepositoryClient', () => {
         const pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.getAllSubmodels.mockResolvedValue({
-            paging_metadata: pagedResult,
-            result: [API_SUBMODEL1, API_SUBMODEL2],
-        });
+        mockApiInstance.getAllSubmodelsRaw.mockResolvedValue(
+            apiResponse(
+                {
+                    paging_metadata: pagedResult,
+                    result: [API_SUBMODEL1, API_SUBMODEL2],
+                },
+                200
+            )
+        );
 
         const client = new SubmodelRepositoryClient();
 
@@ -312,7 +321,7 @@ describe('SubmodelRepositoryClient', () => {
 
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.getAllSubmodels).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllSubmodelsRaw).toHaveBeenCalledWith({
             semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
             idShort: ID_SHORT,
             limit: LIMIT,
@@ -324,6 +333,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(true);
 
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toBe(pagedResult);
             expect(response.data.result).toEqual([CORE_SUBMODEL1, CORE_SUBMODEL2]);
         }
@@ -341,7 +351,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllSubmodels.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getAllSubmodelsRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -355,12 +365,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should create a new Submodel', async () => {
         // Arrange
-        mockApiInstance.postSubmodel.mockResolvedValue(API_SUBMODEL1);
+        mockApiInstance.postSubmodelRaw.mockResolvedValue(apiResponse(API_SUBMODEL1, 201));
 
         const client = new SubmodelRepositoryClient();
 
@@ -372,13 +383,14 @@ describe('SubmodelRepositoryClient', () => {
 
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(mockApiInstance.postSubmodel).toHaveBeenCalledWith({
+        expect(mockApiInstance.postSubmodelRaw).toHaveBeenCalledWith({
             submodel: API_SUBMODEL1,
         });
         expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
         expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(CORE_SUBMODEL1);
         }
     });
@@ -395,7 +407,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postSubmodel.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.postSubmodelRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -410,12 +422,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should delete a submodel', async () => {
         // Arrange
-        mockApiInstance.deleteSubmodelById.mockResolvedValue(undefined);
+        mockApiInstance.deleteSubmodelByIdRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new SubmodelRepositoryClient();
 
@@ -428,10 +441,13 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.deleteSubmodelById).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteSubmodelByIdRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
         });
         expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
     });
 
     it('should handle errors when deleting a submodel', async () => {
@@ -446,7 +462,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.deleteSubmodelById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.deleteSubmodelByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -461,12 +477,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should get a Submodel by ID', async () => {
         // Arrange
-        mockApiInstance.getSubmodelById.mockResolvedValue(API_SUBMODEL1);
+        mockApiInstance.getSubmodelByIdRaw.mockResolvedValue(apiResponse(API_SUBMODEL1, 200));
 
         const client = new SubmodelRepositoryClient();
 
@@ -481,7 +498,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.getSubmodelById).toHaveBeenCalledWith({
+        expect(mockApiInstance.getSubmodelByIdRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             level: LEVEL_SUBMODEL,
             extent: EXTENT_SUBMODEL,
@@ -489,6 +506,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(CORE_SUBMODEL1);
         }
     });
@@ -505,7 +523,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getSubmodelById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getSubmodelByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -520,12 +538,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should update a Submodel', async () => {
         // Arrange
-        mockApiInstance.putSubmodelById.mockResolvedValue(undefined);
+        mockApiInstance.putSubmodelByIdRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new SubmodelRepositoryClient();
 
@@ -539,17 +558,20 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.putSubmodelById).toHaveBeenCalledWith({
+        expect(mockApiInstance.putSubmodelByIdRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             submodel: API_SUBMODEL1,
         });
         expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
         expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
     });
 
     it('should create a new Submodel during update', async () => {
         // Arrange
-        mockApiInstance.putSubmodelById.mockResolvedValue(API_SUBMODEL1);
+        mockApiInstance.putSubmodelByIdRaw.mockResolvedValue(apiResponse(API_SUBMODEL1, 201));
 
         const client = new SubmodelRepositoryClient();
 
@@ -563,7 +585,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.putSubmodelById).toHaveBeenCalledWith({
+        expect(mockApiInstance.putSubmodelByIdRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             submodel: API_SUBMODEL1,
         });
@@ -571,6 +593,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(CORE_SUBMODEL1); // After conversion
         }
     });
@@ -587,7 +610,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.putSubmodelById.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.putSubmodelByIdRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -603,6 +626,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
@@ -911,10 +935,15 @@ describe('SubmodelRepositoryClient', () => {
         const pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata = {
             cursor: CURSOR,
         };
-        mockApiInstance.getAllSubmodelElements.mockResolvedValue({
-            paging_metadata: pagedResult,
-            result: [API_SUBMODELELEMENT1, API_SUBMODELELEMENT2],
-        });
+        mockApiInstance.getAllSubmodelElementsRaw.mockResolvedValue(
+            apiResponse(
+                {
+                    paging_metadata: pagedResult,
+                    result: [API_SUBMODELELEMENT1, API_SUBMODELELEMENT2],
+                },
+                200
+            )
+        );
 
         const client = new SubmodelRepositoryClient();
 
@@ -931,7 +960,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.getAllSubmodelElements).toHaveBeenCalledWith({
+        expect(mockApiInstance.getAllSubmodelElementsRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             limit: LIMIT,
             cursor: CURSOR,
@@ -942,6 +971,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(true);
 
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toBe(pagedResult);
             expect(response.data.result).toEqual([CORE_SUBMODELELEMENT1, CORE_SUBMODELELEMENT2]);
         }
@@ -959,7 +989,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getAllSubmodelElements.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getAllSubmodelElementsRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -974,12 +1004,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should create a new SubmodelElement', async () => {
         // Arrange
-        mockApiInstance.postSubmodelElementSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT1);
+        mockApiInstance.postSubmodelElementSubmodelRepoRaw.mockResolvedValue(apiResponse(API_SUBMODELELEMENT1, 201));
 
         const client = new SubmodelRepositoryClient();
 
@@ -993,7 +1024,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.postSubmodelElementSubmodelRepo).toHaveBeenCalledWith({
+        expect(mockApiInstance.postSubmodelElementSubmodelRepoRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             submodelElement: API_SUBMODELELEMENT1,
         });
@@ -1001,6 +1032,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT1);
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(CORE_SUBMODELELEMENT1);
         }
     });
@@ -1017,7 +1049,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postSubmodelElementSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.postSubmodelElementSubmodelRepoRaw.mockRejectedValue(new Error('Required parameter missing'));
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -1033,12 +1065,15 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should return a submodel element from the Submodel at a specified path on successful response', async () => {
         // Arrange
-        mockApiInstance.getSubmodelElementByPathSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT_PROPERTY);
+        mockApiInstance.getSubmodelElementByPathSubmodelRepoRaw.mockResolvedValue(
+            apiResponse(API_SUBMODELELEMENT_PROPERTY, 200)
+        );
 
         const client = new SubmodelRepositoryClient();
 
@@ -1054,7 +1089,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.getSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+        expect(mockApiInstance.getSubmodelElementByPathSubmodelRepoRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             level: LEVEL_SUBMODELELEMENT_BY_PATH,
@@ -1064,6 +1099,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(true);
 
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(CORE_SUBMODELELEMENT_PROPERTY);
         }
     });
@@ -1080,7 +1116,9 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.getSubmodelElementByPathSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.getSubmodelElementByPathSubmodelRepoRaw.mockRejectedValue(
+            new Error('Required parameter missing')
+        );
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -1096,12 +1134,15 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should create a new SubmodelElement at a specified path within submodel elements hierarchy', async () => {
         // Arrange
-        mockApiInstance.postSubmodelElementByPathSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT_PROPERTY);
+        mockApiInstance.postSubmodelElementByPathSubmodelRepoRaw.mockResolvedValue(
+            apiResponse(API_SUBMODELELEMENT_PROPERTY, 201)
+        );
 
         const client = new SubmodelRepositoryClient();
 
@@ -1116,7 +1157,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.postSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+        expect(mockApiInstance.postSubmodelElementByPathSubmodelRepoRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             submodelElement: API_SUBMODELELEMENT_PROPERTY,
@@ -1125,6 +1166,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT_PROPERTY);
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(CORE_SUBMODELELEMENT_PROPERTY);
         }
     });
@@ -1141,7 +1183,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.postSubmodelElementByPathSubmodelRepo.mockRejectedValue(
+        mockApiInstance.postSubmodelElementByPathSubmodelRepoRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -1160,12 +1202,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should delete a submodel element at a specified path within the submodel elements hierarchy', async () => {
         // Arrange
-        mockApiInstance.deleteSubmodelElementByPathSubmodelRepo.mockResolvedValue(undefined);
+        mockApiInstance.deleteSubmodelElementByPathSubmodelRepoRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new SubmodelRepositoryClient();
 
@@ -1179,11 +1222,14 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.deleteSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+        expect(mockApiInstance.deleteSubmodelElementByPathSubmodelRepoRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
         });
         expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
     });
 
     it('should handle errors when deleting a submodel element at a specified path', async () => {
@@ -1198,7 +1244,7 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.deleteSubmodelElementByPathSubmodelRepo.mockRejectedValue(
+        mockApiInstance.deleteSubmodelElementByPathSubmodelRepoRaw.mockRejectedValue(
             new Error('Required parameter missing')
         );
         (handleApiError as Mock).mockResolvedValue(errorResult);
@@ -1216,12 +1262,13 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
     it('should update a Submodel element at a specified path', async () => {
         // Arrange
-        mockApiInstance.putSubmodelElementByPathSubmodelRepo.mockResolvedValue(undefined);
+        mockApiInstance.putSubmodelElementByPathSubmodelRepoRaw.mockResolvedValue(apiResponse(undefined, 204));
 
         const client = new SubmodelRepositoryClient();
 
@@ -1237,7 +1284,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.putSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+        expect(mockApiInstance.putSubmodelElementByPathSubmodelRepoRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             submodelElement: API_SUBMODELELEMENT_PROPERTY,
@@ -1245,11 +1292,16 @@ describe('SubmodelRepositoryClient', () => {
         });
         expect(convertCoreSubmodelElementToApiSubmodelElement).toHaveBeenCalledWith(CORE_SUBMODELELEMENT_PROPERTY);
         expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
     });
 
     it('should create a new Submodel element at a specified path during update', async () => {
         // Arrange
-        mockApiInstance.putSubmodelElementByPathSubmodelRepo.mockResolvedValue(API_SUBMODELELEMENT_PROPERTY);
+        mockApiInstance.putSubmodelElementByPathSubmodelRepoRaw.mockResolvedValue(
+            apiResponse(API_SUBMODELELEMENT_PROPERTY, 201)
+        );
 
         const client = new SubmodelRepositoryClient();
 
@@ -1265,7 +1317,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
-        expect(mockApiInstance.putSubmodelElementByPathSubmodelRepo).toHaveBeenCalledWith({
+        expect(mockApiInstance.putSubmodelElementByPathSubmodelRepoRaw).toHaveBeenCalledWith({
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             submodelElement: API_SUBMODELELEMENT_PROPERTY,
@@ -1275,6 +1327,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(convertApiSubmodelElementToCoreSubmodelElement).toHaveBeenCalledWith(API_SUBMODELELEMENT_PROPERTY);
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(CORE_SUBMODELELEMENT_PROPERTY); // After conversion
         }
     });
@@ -1291,7 +1344,9 @@ describe('SubmodelRepositoryClient', () => {
                 },
             ],
         };
-        mockApiInstance.putSubmodelElementByPathSubmodelRepo.mockRejectedValue(new Error('Required parameter missing'));
+        mockApiInstance.putSubmodelElementByPathSubmodelRepoRaw.mockRejectedValue(
+            new Error('Required parameter missing')
+        );
         (handleApiError as Mock).mockResolvedValue(errorResult);
 
         const client = new SubmodelRepositoryClient();
@@ -1308,6 +1363,7 @@ describe('SubmodelRepositoryClient', () => {
         expect(response.success).toBe(false);
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
+            expect(response.statusCode).toBe(400);
         }
     });
 
@@ -2079,16 +2135,17 @@ describe('SubmodelRepositoryClient', () => {
     });
 
     it('should return service description', async () => {
-        mockApiInstance.getSelfDescription.mockResolvedValue(SERVICE_DESCRIPTION);
+        mockApiInstance.getSelfDescriptionRaw.mockResolvedValue(apiResponse(SERVICE_DESCRIPTION, 200));
         const client = new SubmodelRepositoryClient();
 
         const response = await client.getSelfDescription({
             configuration: TEST_CONFIGURATION,
         });
 
-        expect(mockApiInstance.getSelfDescription).toHaveBeenCalledWith();
+        expect(mockApiInstance.getSelfDescriptionRaw).toHaveBeenCalledWith();
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(SERVICE_DESCRIPTION);
         }
     });

@@ -23,6 +23,11 @@ const SERVICE_CONFIG = {
         clientFile: 'src/clients/SubmodelRegistryClient.ts',
         integrationTestFile: 'src/integration-tests/submodelRegistry.integration.test.ts',
     },
+    submodelRepository: {
+        openapiFile: 'openapi/smrepository.yaml',
+        clientFile: 'src/clients/SubmodelRepositoryClient.ts',
+        integrationTestFile: 'src/integration-tests/submodelRepo.integration.test.ts',
+    },
     conceptDescriptionRepository: {
         openapiFile: 'openapi/cdrepository.yaml',
         clientFile: 'src/clients/ConceptDescriptionRepositoryClient.ts',
@@ -53,11 +58,23 @@ function lcFirst(value) {
     return value.charAt(0).toLowerCase() + value.slice(1);
 }
 
-function operationIdToMethodName(operationId) {
-    const normalized = operationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
+function operationIdToMethodName(operationId, httpMethod) {
+    if (operationId === 'InvokeOperation_SubmodelRepo') {
+        return 'postInvokeOperationSubmodelRepo';
+    }
+
+    const normalizedOperationId = operationId.replace(/_SubmodelRepo$/i, '').replace(/SubmodelRepo$/i, '');
+
+    const normalized = normalizedOperationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
         nextChar ? nextChar.toUpperCase() : ''
     );
-    return lcFirst(normalized);
+    const baseName = lcFirst(normalized);
+
+    if (httpMethod === 'post' && !/^post[A-Z]/.test(baseName)) {
+        return `post${baseName.charAt(0).toUpperCase()}${baseName.slice(1)}`;
+    }
+
+    return baseName;
 }
 
 function parseOpenApiOperations(openapiSource) {
@@ -173,7 +190,10 @@ function parseIntegrationMetadata(testSource) {
             const hasMessageCodeAssert = new RegExp(
                 `messages\\?\\.\\[0\\]\\?\\.code\\)\\.toBe\\((['"])${status}\\1\\)`
             ).test(body);
-            assertions.set(status, hasStatusCodeAssert || hasMessageCodeAssert);
+            const hasFailureHelperAssert = new RegExp(`assertApiFailureCode\\([^)]*,\\s*(['"])${status}\\1\\)`).test(
+                body
+            );
+            assertions.set(status, hasStatusCodeAssert || hasMessageCodeAssert || hasFailureHelperAssert);
         }
 
         metadata.push({
@@ -240,7 +260,7 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
     const warnings = [];
 
     for (const operation of operations) {
-        const expectedMethodName = operationIdToMethodName(operation.operationId);
+        const expectedMethodName = operationIdToMethodName(operation.operationId, operation.method);
         const implemented = clientMethods.has(expectedMethodName);
         const coverage = operationCoverage.get(operation.operationId);
         const assertedStatuses = coverage?.assertedStatuses ?? new Set();
