@@ -58,9 +58,21 @@ function lcFirst(value) {
     return value.charAt(0).toLowerCase() + value.slice(1);
 }
 
-function operationIdToMethodName(operationId, httpMethod) {
+function operationIdToMethodName(operationId) {
     if (operationId === 'InvokeOperation_SubmodelRepo') {
         return 'postInvokeOperationSubmodelRepo';
+    }
+
+    if (operationId === 'InvokeOperation-ValueOnly') {
+        return 'postInvokeOperationValueOnly';
+    }
+
+    if (operationId === 'InvokeOperationAsync') {
+        return 'postInvokeOperationAsync';
+    }
+
+    if (operationId === 'InvokeOperationAsync-ValueOnly') {
+        return 'postInvokeOperationAsyncValueOnly';
     }
 
     const normalizedOperationId = operationId.replace(/_SubmodelRepo$/i, '').replace(/SubmodelRepo$/i, '');
@@ -68,13 +80,7 @@ function operationIdToMethodName(operationId, httpMethod) {
     const normalized = normalizedOperationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
         nextChar ? nextChar.toUpperCase() : ''
     );
-    const baseName = lcFirst(normalized);
-
-    if (httpMethod === 'post' && !/^post[A-Z]/.test(baseName)) {
-        return `post${baseName.charAt(0).toUpperCase()}${baseName.slice(1)}`;
-    }
-
-    return baseName;
+    return lcFirst(normalized);
 }
 
 function parseOpenApiOperations(openapiSource) {
@@ -260,7 +266,7 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
     const warnings = [];
 
     for (const operation of operations) {
-        const expectedMethodName = operationIdToMethodName(operation.operationId, operation.method);
+        const expectedMethodName = operationIdToMethodName(operation.operationId);
         const implemented = clientMethods.has(expectedMethodName);
         const coverage = operationCoverage.get(operation.operationId);
         const assertedStatuses = coverage?.assertedStatuses ?? new Set();
