@@ -158,7 +158,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     // Go backend returns a non-conforming payload/error for this endpoint in the current environment.
     /**
-     * @operation PostSubmodelElement_SubmodelRepo
+     * @operation PostSubmodelElement
      * @status 201
      */
     test('should create a new SubmodelElement', async () => {
@@ -225,6 +225,10 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetAllSubmodelElements
+     * @status 200
+     */
     test('should fetch all SubmodelElements', async () => {
         const response = await client.getAllSubmodelElements({
             configuration,
@@ -273,7 +277,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath_SubmodelRepo
+     * @operation GetSubmodelElementByPath
      * @status 200
      */
     test('should fetch SubmodelElement by the path', async () => {
@@ -295,7 +299,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath_SubmodelRepo
+     * @operation GetSubmodelElementByPath
      * @status 404
      */
     test('should return not found when fetching SubmodelElement by missing path', async () => {
@@ -312,7 +316,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath_SubmodelRepo
+     * @operation GetSubmodelElementByPath
      * @status 400
      */
     test('should reject missing Submodel identifier when fetching SubmodelElement by path', async () => {
@@ -327,9 +331,9 @@ describe('Submodel Repository Integration Tests', () => {
             expect(response.statusCode).toBe(400);
         }
     });
-    // Go backend currently returns an error for create-by-path in this environment.
+
     /**
-     * @operation PostSubmodelElementByPath_SubmodelRepo
+     * @operation PostSubmodelElementByPath
      * @status 201
      */
     test('should create a new SubmodelElement at a specified path within submodel elements hierarchy', async () => {
@@ -356,7 +360,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PostSubmodelElementByPath_SubmodelRepo
+     * @operation PostSubmodelElementByPath
      * @status 404
      */
     test('should return not found when creating SubmodelElement for missing path parent', async () => {
@@ -377,7 +381,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PostSubmodelElementByPath_SubmodelRepo
+     * @operation PostSubmodelElementByPath
      * @status 400
      */
     test('should reject missing Submodel identifier when creating SubmodelElement by path', async () => {
@@ -396,7 +400,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PutSubmodelElementByPath_SubmodelRepo
+     * @operation PutSubmodelElementByPath
      * @status 204
      */
     test('should update the submodel element at the specified path ', async () => {
@@ -411,8 +415,6 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: testSubmodelElement.idShort!,
             submodelElement: updatedSubmodelElement,
         });
-
-        console.log('Updated submodel element Response:', updateResponse);
 
         expect(updateResponse.success).toBe(true);
         if (updateResponse.success) {
@@ -433,7 +435,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PutSubmodelElementByPath_SubmodelRepo
+     * @operation PutSubmodelElementByPath
      * @status 404
      */
     test('should return not found when updating missing SubmodelElement by path', async () => {
@@ -451,7 +453,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PutSubmodelElementByPath_SubmodelRepo
+     * @operation PutSubmodelElementByPath
      * @status 400
      */
     test('should reject missing Submodel identifier when updating SubmodelElement by path', async () => {
@@ -489,7 +491,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Metadata
-    * @status 400 [known-behavior-mismatch]
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier when fetching metadata by ID', async () => {
         const response = await client.getSubmodelByIdMetadata({
@@ -525,7 +527,6 @@ describe('Submodel Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
-            console.log(' submodel valueOnly Response:', JSON.stringify(response.data, null, 2));
             expect(response.data).toBeDefined();
             expect(typeof response.data).toBe('object');
             expect(Object.keys(response.data).length).toBeGreaterThan(0);
@@ -534,7 +535,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-ValueOnly
-    * @status 400 [known-behavior-mismatch]
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for ValueOnly Submodel retrieval', async () => {
         const response = await client.getSubmodelByIdValueOnly({
@@ -559,7 +560,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-ValueOnly_SubmodelRepo
+     * @operation GetSubmodelElementByPath-ValueOnly
      * @status 200
      */
     test('should fetch SubmodelElement by path in the ValueOnly representation', async () => {
@@ -580,8 +581,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-ValueOnly_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetSubmodelElementByPath-ValueOnly
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for ValueOnly SubmodelElement retrieval', async () => {
         const response = await client.getSubmodelElementByPathValueOnly({
@@ -594,7 +595,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-ValueOnly_SubmodelRepo
+     * @operation GetSubmodelElementByPath-ValueOnly
      * @status 404
      */
     test('should return not found for ValueOnly SubmodelElement retrieval with missing path', async () => {
@@ -608,7 +609,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PatchSubmodelElementByPath-ValueOnly_SubmodelRepo
+     * @operation PatchSubmodelElementByPath-ValueOnly
      * @status 204
      */
     test('should update SubmodelElement in the ValueOnly representation', async () => {
@@ -642,7 +643,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PatchSubmodelElementByPath-ValueOnly_SubmodelRepo
+     * @operation PatchSubmodelElementByPath-ValueOnly
      * @status 404
      */
     test('should return not found when patching ValueOnly SubmodelElement for missing path', async () => {
@@ -657,8 +658,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PatchSubmodelElementByPath-ValueOnly_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation PatchSubmodelElementByPath-ValueOnly
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier when patching ValueOnly SubmodelElement', async () => {
         const response = await client.patchSubmodelElementByPathValueOnly({
@@ -732,7 +733,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodels-Path
-    * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
     test.skip('should fetch paths of all Submodels', async () => {
         const response = await client.getAllSubmodelsPath({
@@ -765,7 +766,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Reference
-    * @status 400 [known-behavior-mismatch]
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier in reference retrieval', async () => {
         const response = await client.getSubmodelByIdReference({
@@ -808,7 +809,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Path
-    * @status 400 [known-behavior-mismatch]
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier in path retrieval', async () => {
         const response = await client.getSubmodelByIdPath({
@@ -833,7 +834,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Metadata_SubmodelRepo
+     * @operation GetAllSubmodelElements-Metadata
      * @status 200
      */
     test('should fetch all SubmodelElements in metadata representation', async () => {
@@ -849,8 +850,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Metadata_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetAllSubmodelElements-Metadata
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement metadata listing', async () => {
         const response = await client.getAllSubmodelElementsMetadata({
@@ -862,7 +863,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Metadata_SubmodelRepo
+     * @operation GetAllSubmodelElements-Metadata
      * @status 404
      */
     test('should return not found for SubmodelElement metadata listing on missing Submodel', async () => {
@@ -875,7 +876,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-ValueOnly_SubmodelRepo
+     * @operation GetAllSubmodelElements-ValueOnly
      * @status 200
      */
     test('should fetch all SubmodelElements in value-only representation', async () => {
@@ -891,8 +892,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-ValueOnly_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetAllSubmodelElements-ValueOnly
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement value-only listing', async () => {
         const response = await client.getAllSubmodelElementsValueOnly({
@@ -904,7 +905,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-ValueOnly_SubmodelRepo
+     * @operation GetAllSubmodelElements-ValueOnly
      * @status 404
      */
     test('should return not found for SubmodelElement value-only listing on missing Submodel', async () => {
@@ -917,7 +918,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Reference_SubmodelRepo
+     * @operation GetAllSubmodelElements-Reference
      * @status 200
      */
     test('should fetch references to all SubmodelElements', async () => {
@@ -934,8 +935,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Reference_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetAllSubmodelElements-Reference
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement reference listing', async () => {
         const response = await client.getAllSubmodelElementsReference({
@@ -947,7 +948,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Reference_SubmodelRepo
+     * @operation GetAllSubmodelElements-Reference
      * @status 404
      */
     test('should return not found for SubmodelElement reference listing on missing Submodel', async () => {
@@ -960,7 +961,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Path_SubmodelRepo
+     * @operation GetAllSubmodelElements-Path
      * @status 200
      */
     test('should fetch paths of all SubmodelElements', async () => {
@@ -977,8 +978,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Path_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetAllSubmodelElements-Path
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement path listing', async () => {
         const response = await client.getAllSubmodelElementsPath({
@@ -990,7 +991,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetAllSubmodelElements-Path_SubmodelRepo
+     * @operation GetAllSubmodelElements-Path
      * @status 404
      */
     test('should return not found for SubmodelElement path listing on missing Submodel', async () => {
@@ -1003,7 +1004,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Metadata_SubmodelRepo
+     * @operation GetSubmodelElementByPath-Metadata
      * @status 200
      */
     test('should fetch SubmodelElement metadata by path', async () => {
@@ -1021,8 +1022,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Metadata_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetSubmodelElementByPath-Metadata
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement metadata by path', async () => {
         const response = await client.getSubmodelElementByPathMetadata({
@@ -1035,7 +1036,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Metadata_SubmodelRepo
+     * @operation GetSubmodelElementByPath-Metadata
      * @status 404
      */
     test('should return not found for SubmodelElement metadata by missing path', async () => {
@@ -1049,7 +1050,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Reference_SubmodelRepo
+     * @operation GetSubmodelElementByPath-Reference
      * @status 200
      */
     test('should fetch SubmodelElement reference by path', async () => {
@@ -1067,8 +1068,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Reference_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetSubmodelElementByPath-Reference
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement reference by path', async () => {
         const response = await client.getSubmodelElementByPathReference({
@@ -1081,7 +1082,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Reference_SubmodelRepo
+     * @operation GetSubmodelElementByPath-Reference
      * @status 404
      */
     test('should return not found for SubmodelElement reference by missing path', async () => {
@@ -1095,7 +1096,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Path_SubmodelRepo
+     * @operation GetSubmodelElementByPath-Path
      * @status 200
      */
     test('should fetch SubmodelElement path by path', async () => {
@@ -1113,8 +1114,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Path_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation GetSubmodelElementByPath-Path
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier for SubmodelElement path by path', async () => {
         const response = await client.getSubmodelElementByPathPath({
@@ -1127,7 +1128,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetSubmodelElementByPath-Path_SubmodelRepo
+     * @operation GetSubmodelElementByPath-Path
      * @status 404
      */
     test('should return not found for SubmodelElement path by missing path', async () => {
@@ -1142,7 +1143,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GenerateSerializationByIds
-    * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
     test.skip('should generate serialization by IDs', async () => {
         const response = await client.generateSerializationByIds({
@@ -1159,7 +1160,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GenerateSerializationByIds
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject serialization request with invalid output format', async () => {
         const response = await client.generateSerializationByIds({
@@ -1221,6 +1222,10 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation PatchSubmodelById-Metadata
+     * @status 204
+     */
     test('should patch Submodel metadata by ID', async () => {
         const response = await client.patchSubmodelByIdMetadata({
             configuration,
@@ -1233,7 +1238,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-Metadata
-    * @status 204 [known-backend-bug]
+     * @status 204 [known-backend-bug]
      */
     test.skip('should patch Submodel metadata by ID with success status', async () => {
         const response = await client.patchSubmodelByIdMetadata({
@@ -1250,7 +1255,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-Metadata
-    * @status 400 [known-behavior-mismatch]
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier when patching Submodel metadata', async () => {
         const response = await client.patchSubmodelByIdMetadata({
@@ -1264,7 +1269,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-Metadata
-    * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
     test.skip('should return not found when patching metadata on missing Submodel', async () => {
         const response = await client.patchSubmodelByIdMetadata({
@@ -1276,6 +1281,10 @@ describe('Submodel Repository Integration Tests', () => {
         assertApiFailureCode(response, '404');
     });
 
+    /**
+     * @operation PatchSubmodelElementByPath-Metadata
+     * @status 204
+     */
     test('should patch SubmodelElement metadata by path', async () => {
         const response = await client.patchSubmodelElementByPathMetadata({
             configuration,
@@ -1288,8 +1297,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PatchSubmodelElementByPath-Metadata_SubmodelRepo
-    * @status 204 [known-backend-bug]
+     * @operation PatchSubmodelElementByPath-Metadata
+     * @status 204 [known-backend-bug]
      */
     test.skip('should patch SubmodelElement metadata by path with success status', async () => {
         const response = await client.patchSubmodelElementByPathMetadata({
@@ -1306,8 +1315,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PatchSubmodelElementByPath-Metadata_SubmodelRepo
-    * @status 400 [known-behavior-mismatch]
+     * @operation PatchSubmodelElementByPath-Metadata
+     * @status 400 [known-behavior-mismatch]
      */
     test.skip('should reject missing Submodel identifier when patching SubmodelElement metadata by path', async () => {
         const response = await client.patchSubmodelElementByPathMetadata({
@@ -1321,8 +1330,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PatchSubmodelElementByPath-Metadata_SubmodelRepo
-    * @status 404 [known-backend-bug]
+     * @operation PatchSubmodelElementByPath-Metadata
+     * @status 404 [known-backend-bug]
      */
     test.skip('should return not found when patching SubmodelElement metadata by missing path', async () => {
         const response = await client.patchSubmodelElementByPathMetadata({
@@ -1336,8 +1345,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PutFileByPath_SubmodelRepo
-    * @status 204 [known-backend-bug]
+     * @operation PutFileByPath
+     * @status 204 [known-backend-bug]
      */
     test.skip('should upload file by path to a File submodel element', async () => {
         const response = await client.putFileByPath({
@@ -1358,8 +1367,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation GetFileByPath_SubmodelRepo
-    * @status 200 [known-backend-bug]
+     * @operation GetFileByPath
+     * @status 200 [known-backend-bug]
      */
     test.skip('should download uploaded file by path from a File submodel element', async () => {
         const response = await client.getFileByPath({
@@ -1376,6 +1385,10 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetFileByPath
+     * @status 405 [known-backend-bug]
+     */
     test.skip('should reject file download on non-File submodel element with 405', async () => {
         const response = await client.getFileByPath({
             configuration,
@@ -1386,6 +1399,10 @@ describe('Submodel Repository Integration Tests', () => {
         assertApiFailureCode(response, '405');
     });
 
+    /**
+     * @operation PutFileByPath
+     * @status 404 [known-backend-bug]
+     */
     test('should reject file upload by path for missing submodel element with 404', async () => {
         const response = await client.putFileByPath({
             configuration,
@@ -1399,8 +1416,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation PutFileByPath_SubmodelRepo
-    * @status 400 [known-backend-bug]
+     * @operation PutFileByPath
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier when uploading file by path', async () => {
         const response = await client.putFileByPath({
@@ -1432,7 +1449,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperation-ValueOnly
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier on invoke operation value-only', async () => {
         const response = await client.postInvokeOperationValueOnly({
@@ -1448,7 +1465,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperation-ValueOnly
-    * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
     test.skip('should return not found on invoke operation value-only for missing Submodel', async () => {
         const response = await client.postInvokeOperationValueOnly({
@@ -1479,7 +1496,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperationAsync
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier on invoke operation async', async () => {
         const response = await client.postInvokeOperationAsync({
@@ -1494,7 +1511,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperationAsync
-    * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
     test.skip('should return not found on invoke operation async for missing Submodel', async () => {
         const response = await client.postInvokeOperationAsync({
@@ -1525,7 +1542,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperationAsync-ValueOnly
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier on invoke operation async value-only', async () => {
         const response = await client.postInvokeOperationAsyncValueOnly({
@@ -1541,7 +1558,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperationAsync-ValueOnly
-    * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
     test.skip('should return not found on invoke operation async value-only for missing Submodel', async () => {
         const response = await client.postInvokeOperationAsyncValueOnly({
@@ -1572,7 +1589,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetOperationAsyncStatus
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier when getting async operation status', async () => {
         const response = await client.getOperationAsyncStatus({
@@ -1617,7 +1634,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetOperationAsyncResult
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier when getting async operation result', async () => {
         const response = await client.getOperationAsyncResult({
@@ -1662,7 +1679,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetOperationAsyncResult-ValueOnly
-    * @status 400 [known-backend-bug]
+     * @status 400 [known-backend-bug]
      */
     test.skip('should reject missing Submodel identifier when getting async operation value-only result', async () => {
         const response = await client.getOperationAsyncResultValueOnly({
@@ -1677,7 +1694,7 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation GetOperationAsyncResult-ValueOnly
-    * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
     test.skip('should return not found when getting async operation value-only result for missing Submodel', async () => {
         const response = await client.getOperationAsyncResultValueOnly({
@@ -1691,8 +1708,8 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation DeleteFileByPath_SubmodelRepo
-    * @status 200 [known-backend-bug]
+     * @operation DeleteFileByPath
+     * @status 200 [known-backend-bug]
      */
     test.skip('should delete file by path from a File submodel element', async () => {
         const response = await client.deleteFileByPath({
@@ -1710,6 +1727,10 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetFileByPath
+     * @status 404 [known-backend-bug]
+     */
     test.skip('should return not found when downloading a deleted file by path', async () => {
         const response = await client.getFileByPath({
             configuration,
@@ -1721,7 +1742,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation DeleteSubmodelElementByPath_SubmodelRepo
+     * @operation DeleteSubmodelElementByPath
      * @status 204
      */
     test('should delete SubmodelElement by path', async () => {
@@ -1735,7 +1756,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation DeleteSubmodelElementByPath_SubmodelRepo
+     * @operation DeleteSubmodelElementByPath
      * @status 400
      */
     test('should reject missing Submodel identifier when deleting SubmodelElement by path', async () => {
@@ -1749,7 +1770,7 @@ describe('Submodel Repository Integration Tests', () => {
     });
 
     /**
-     * @operation DeleteSubmodelElementByPath_SubmodelRepo
+     * @operation DeleteSubmodelElementByPath
      * @status 404
      */
     test('should return not found when deleting missing SubmodelElement by path', async () => {
@@ -1787,24 +1808,4 @@ describe('Submodel Repository Integration Tests', () => {
 
         assertApiFailureCode(response, '404');
     });
-
-    // To be tested later
-    // test('should invoke an Operation at a specified path', async () => {
-    //     const response = await client.postInvokeOperationSubmodelRepo({
-    //         configuration,
-    //         submodelIdentifier: testSubmodel.id,
-    //         idShortPath: testOperationSubmodelElement.idShort!,
-    //         operationRequest: OPERATION_REQUEST,
-    //     });
-
-    //     // Log the error details if the request failed
-    //     if (!response.success && response.error) {
-    //         console.error('API Error:', JSON.stringify(response.error, null, 2));
-    //     }
-    //     expect(response.success).toBe(true);
-    //     if (response.success) {
-    //         expect(response.data).toBeDefined();
-    //         expect(response.data).toEqual(OPERATION_RESULT);
-    //     }
-    // });
 });
