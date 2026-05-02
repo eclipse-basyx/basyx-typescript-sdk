@@ -106,17 +106,17 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns all Submodels in metadata representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - semanticId?: The value of the semantic id reference
-      *  - idShort?: The Asset Administration Shell's IdShort
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns all Submodels in metadata representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelsMetadata(options: {
         configuration: Configuration;
         semanticId?: string;
@@ -150,19 +150,19 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns all Submodels in value-only representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - semanticId?: The value of the semantic id reference
-      *  - idShort?: The Asset Administration Shell's IdShort
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *  - level?: Determines the structural depth of the respective resource content
-      *  - extent?: Determines to which extent the resource is being serialized
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns all Submodels in value-only representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *  - extent?: Determines to which extent the resource is being serialized
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelsValueOnly(options: {
         configuration: Configuration;
         semanticId?: string;
@@ -200,18 +200,18 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns references to all Submodels
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - semanticId?: The value of the semantic id reference
-      *  - idShort?: The Asset Administration Shell's IdShort
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns references to all Submodels
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelsReference(options: {
         configuration: Configuration;
         semanticId?: string;
@@ -247,18 +247,18 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns paths of all Submodels
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - semanticId?: The value of the semantic id reference
-      *  - idShort?: The Asset Administration Shell's IdShort
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns paths of all Submodels
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelsPath(options: {
         configuration: Configuration;
         semanticId?: string;
@@ -418,14 +418,14 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns a specific Submodel in reference representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns a specific Submodel in reference representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getSubmodelByIdReference(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -456,15 +456,15 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns a specific Submodel in path representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns a specific Submodel in path representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getSubmodelByIdPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -547,16 +547,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates an existing Submodel partially
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - submodel: Submodel object
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates an existing Submodel partially
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - submodel: Submodel object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelById(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -655,16 +655,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns all submodel elements in metadata representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns all submodel elements in metadata representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelElementsMetadata(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -701,18 +701,18 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns all submodel elements in value-only representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *  - level?: Determines the structural depth of the respective resource content
-      *  - extent?: Determines to which extent the resource is being serialized
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns all submodel elements in value-only representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *  - extent?: Determines to which extent the resource is being serialized
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelElementsValueOnly(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -751,17 +751,17 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns references to all submodel elements
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns references to all submodel elements
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelElementsReference(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -798,17 +798,17 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns paths of all submodel elements
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - limit?: The maximum number of elements in the response array
-      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns paths of all submodel elements
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getAllSubmodelElementsPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -940,15 +940,15 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns metadata attributes of a specific submodel element
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns metadata attributes of a specific submodel element
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getSubmodelElementByPathMetadata(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -981,15 +981,15 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns a specific submodel element in reference representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns a specific submodel element in reference representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getSubmodelElementByPathReference(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1022,16 +1022,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns a specific submodel element in path representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns a specific submodel element in path representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getSubmodelElementByPathPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1211,17 +1211,17 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates values of an existing submodel element at a specified path
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - submodelElement: SubmodelElement object
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates values of an existing submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - submodelElement: SubmodelElement object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelElementByPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1296,16 +1296,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates metadata attributes of an existing Submodel
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - submodelMetadata: SubmodelMetadata object
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates metadata attributes of an existing Submodel
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - submodelMetadata: SubmodelMetadata object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelByIdMetadata(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1384,16 +1384,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates the values of an existing Submodel
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - body: Value-only payload object
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates the values of an existing Submodel
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - body: Value-only payload object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelByIdValueOnly(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1475,17 +1475,17 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates the value of an existing SubmodelElement
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - submodelElementValue: SubmodelElementValue object
-      *  - level?: Determines the structural depth of the respective resource content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates the value of an existing SubmodelElement
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - submodelElementValue: SubmodelElementValue object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelElementByPathValueOnly(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1522,16 +1522,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates metadata attributes of an existing SubmodelElement
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - submodelElementMetadata: SubmodelElementMetadata object
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates metadata attributes of an existing SubmodelElement
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - submodelElementMetadata: SubmodelElementMetadata object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelElementByPathMetadata(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1566,15 +1566,15 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns file content for a submodel element at a specified path
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns file content for a submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getFileByPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1607,17 +1607,17 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Updates file content for a submodel element at a specified path
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - fileName?: Name of the uploaded file
-      *  - file?: File content
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Updates file content for a submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - fileName?: Name of the uploaded file
+     *  - file?: File content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async putFileByPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1654,15 +1654,15 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Deletes file content of an existing submodel element at a specified path
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Deletes file content of an existing submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async deleteFileByPath(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1886,16 +1886,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns status of an asynchronously invoked operation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - handleId: Identifier of the asynchronous invocation handle
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns status of an asynchronously invoked operation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - handleId: Identifier of the asynchronous invocation handle
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getOperationAsyncStatus(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1930,16 +1930,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns result of an asynchronously invoked operation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - handleId: Identifier of the asynchronous invocation handle
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns result of an asynchronously invoked operation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - handleId: Identifier of the asynchronous invocation handle
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getOperationAsyncResult(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1974,16 +1974,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns result of an asynchronously invoked operation in value-only representation
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - submodelIdentifier: The Submodel's unique id
-      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-      *  - handleId: Identifier of the asynchronous invocation handle
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns result of an asynchronously invoked operation in value-only representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - handleId: Identifier of the asynchronous invocation handle
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getOperationAsyncResultValueOnly(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -2018,16 +2018,16 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns an appropriate serialization based on the specified format
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *  - aasIds?: Asset Administration Shell IDs
-      *  - submodelIds?: Submodel IDs
-      *  - includeConceptDescriptions?: Whether to include referenced ConceptDescriptions in the serialization result
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns an appropriate serialization based on the specified format
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIds?: Asset Administration Shell IDs
+     *  - submodelIds?: Submodel IDs
+     *  - includeConceptDescriptions?: Whether to include referenced ConceptDescriptions in the serialization result
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async generateSerializationByIds(options: {
         configuration: Configuration;
         aasIds?: string[];
@@ -2058,13 +2058,13 @@ export class SubmodelRepositoryClient {
     }
 
     /**
-      * Returns the self-describing information of a network resource (ServiceDescription)
-      *
-      * @param options Object containing:
-      *  - configuration: The http request options
-      *
-      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-      */
+     * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async getSelfDescription(options: {
         configuration: Configuration;
     }): Promise<ApiResult<SubmodelRepositoryService.ServiceDescription, SubmodelRepositoryService.Result>> {

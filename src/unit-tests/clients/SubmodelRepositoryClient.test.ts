@@ -303,8 +303,14 @@ describe('SubmodelRepositoryClient', () => {
         bridgeRaw('getSubmodelByIdValueOnlyRaw', 'getSubmodelByIdValueOnly');
         bridgeRaw('patchSubmodelByIdValueOnlyRaw', 'patchSubmodelByIdValueOnly');
         bridgeRaw('getSubmodelElementByPathValueOnlySubmodelRepoRaw', 'getSubmodelElementByPathValueOnlySubmodelRepo');
-        bridgeRaw('patchSubmodelElementByPathValueOnlySubmodelRepoRaw', 'patchSubmodelElementByPathValueOnlySubmodelRepo');
-        bridgeRaw('patchSubmodelElementByPathMetadataSubmodelRepoRaw', 'patchSubmodelElementByPathMetadataSubmodelRepo');
+        bridgeRaw(
+            'patchSubmodelElementByPathValueOnlySubmodelRepoRaw',
+            'patchSubmodelElementByPathValueOnlySubmodelRepo'
+        );
+        bridgeRaw(
+            'patchSubmodelElementByPathMetadataSubmodelRepoRaw',
+            'patchSubmodelElementByPathMetadataSubmodelRepo'
+        );
         bridgeRaw('getFileByPathSubmodelRepoRaw', 'getFileByPathSubmodelRepo');
         bridgeRaw('putFileByPathSubmodelRepoRaw', 'putFileByPathSubmodelRepo');
         bridgeRaw('deleteFileByPathSubmodelRepoRaw', 'deleteFileByPathSubmodelRepo');

@@ -203,7 +203,10 @@ function parseIntegrationMetadata(testSource) {
             const hasFailureHelperAssert = new RegExp(`assertApiFailureCode\\([^)]*,\\s*(['"])${status}\\1\\)`).test(
                 body
             );
-            assertions.set(status, hasStatusCodeAssert || hasRawStatusAssert || hasMessageCodeAssert || hasFailureHelperAssert);
+            assertions.set(
+                status,
+                hasStatusCodeAssert || hasRawStatusAssert || hasMessageCodeAssert || hasFailureHelperAssert
+            );
         }
 
         metadata.push({
