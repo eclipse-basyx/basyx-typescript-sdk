@@ -63,6 +63,37 @@ describe('Submodel Repository Integration Tests', () => {
         return `https://example.com/ids/sm/missing-${uniqueSuffix()}`;
     }
 
+    async function ensureTestSubmodelExists(): Promise<void> {
+        const response = await client.postSubmodel({
+            configuration,
+            submodel: testSubmodel,
+        });
+
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+            return;
+        }
+
+        assertApiFailureCode(response, '409');
+        expect(response.statusCode).toBe(409);
+    }
+
+    async function ensureParentCollectionExists(): Promise<void> {
+        const response = await client.postSubmodelElement({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            submodelElement: testSubmodelElementCollection,
+        });
+
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+            return;
+        }
+
+        assertApiFailureCode(response, '409');
+        expect(response.statusCode).toBe(409);
+    }
+
     /**
      * @operation PostSubmodel
      * @status 201
@@ -101,15 +132,31 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation PostSubmodel
-     * @status 409 [known-backend-bug]
+     * @status 409
      */
-    test.skip('should return conflict when creating a duplicate Submodel', async () => {
+    test('should return conflict when creating a duplicate Submodel', async () => {
+        const duplicateSubmodel = createTestSubmodel();
+        duplicateSubmodel.id = `${duplicateSubmodel.id}-duplicate-${uniqueSuffix()}`;
+
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: duplicateSubmodel,
+        });
+
+        expect(createResponse.success).toBe(true);
+        if (createResponse.success) {
+            expect(createResponse.statusCode).toBe(201);
+        }
+
         const response = await client.postSubmodel({
             configuration,
-            submodel: testSubmodel,
+            submodel: duplicateSubmodel,
         });
 
         assertApiFailureCode(response, '409');
+        if (!response.success) {
+            expect(response.statusCode).toBe(409);
+        }
     });
 
     /**
@@ -225,16 +272,35 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation PostSubmodelElement_SubmodelRepo
-     * @status 409 [known-backend-bug]
+     * @status 409
      */
-    test.skip('should return conflict when creating duplicate SubmodelElement', async () => {
+    test('should return conflict when creating duplicate SubmodelElement', async () => {
+        await ensureTestSubmodelExists();
+
+        const duplicateSubmodelElement = createNewSubmodelElement();
+        duplicateSubmodelElement.idShort = `dup-${uniqueSuffix()}`;
+
+        const createResponse = await client.postSubmodelElement({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            submodelElement: duplicateSubmodelElement,
+        });
+
+        expect(createResponse.success).toBe(true);
+        if (createResponse.success) {
+            expect(createResponse.statusCode).toBe(201);
+        }
+
         const response = await client.postSubmodelElement({
             configuration,
             submodelIdentifier: testSubmodel.id,
-            submodelElement: testSubmodelElement,
+            submodelElement: duplicateSubmodelElement,
         });
 
         assertApiFailureCode(response, '409');
+        if (!response.success) {
+            expect(response.statusCode).toBe(409);
+        }
     });
 
     /**
@@ -579,11 +645,26 @@ describe('Submodel Repository Integration Tests', () => {
 
     /**
      * @operation PostSubmodelElementByPath_SubmodelRepo
-     * @status 409 [known-backend-bug]
+     * @status 409
      */
-    test.skip('should return conflict when creating duplicate SubmodelElement by path', async () => {
+    test('should return conflict when creating duplicate SubmodelElement by path', async () => {
+        await ensureTestSubmodelExists();
+        await ensureParentCollectionExists();
+
         const nestedSubmodelElement = createNewSubmodelElement();
         nestedSubmodelElement.idShort = `conflict-${uniqueSuffix()}`;
+
+        const createResponse = await client.postSubmodelElementByPath({
+            configuration,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: testSubmodelElementCollection.idShort!,
+            submodelElement: nestedSubmodelElement,
+        });
+
+        expect(createResponse.success).toBe(true);
+        if (createResponse.success) {
+            expect(createResponse.statusCode).toBe(201);
+        }
 
         const response = await client.postSubmodelElementByPath({
             configuration,
@@ -593,6 +674,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '409');
+        if (!response.success) {
+            expect(response.statusCode).toBe(409);
+        }
     });
 
     /**
