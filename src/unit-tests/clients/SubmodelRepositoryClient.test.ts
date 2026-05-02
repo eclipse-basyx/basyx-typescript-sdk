@@ -180,6 +180,10 @@ describe('SubmodelRepositoryClient', () => {
     // Create mock for SubmodelRepositoryAPIApi
     const mockApiInstance = {
         getAllSubmodelsRaw: vi.fn(),
+        getAllSubmodelsMetadataRaw: vi.fn(),
+        getAllSubmodelsValueOnlyRaw: vi.fn(),
+        getAllSubmodelsReferenceRaw: vi.fn(),
+        getAllSubmodelsPathRaw: vi.fn(),
         getAllSubmodelsMetadata: vi.fn(),
         getAllSubmodelsValueOnly: vi.fn(),
         getAllSubmodelsReference: vi.fn(),
@@ -187,41 +191,70 @@ describe('SubmodelRepositoryClient', () => {
         postSubmodelRaw: vi.fn(),
         deleteSubmodelByIdRaw: vi.fn(),
         getSubmodelByIdRaw: vi.fn(),
+        getSubmodelByIdReferenceRaw: vi.fn(),
+        getSubmodelByIdPathRaw: vi.fn(),
         getSubmodelByIdReference: vi.fn(),
         getSubmodelByIdPath: vi.fn(),
         putSubmodelByIdRaw: vi.fn(),
+        patchSubmodelByIdRaw: vi.fn(),
         patchSubmodelById: vi.fn(),
+        patchSubmodelByIdMetadataRaw: vi.fn(),
         patchSubmodelByIdMetadata: vi.fn(),
         getAllSubmodelElementsRaw: vi.fn(),
+        getAllSubmodelElementsMetadataSubmodelRepoRaw: vi.fn(),
+        getAllSubmodelElementsValueOnlySubmodelRepoRaw: vi.fn(),
+        getAllSubmodelElementsReferenceSubmodelRepoRaw: vi.fn(),
+        getAllSubmodelElementsPathSubmodelRepoRaw: vi.fn(),
         getAllSubmodelElementsMetadataSubmodelRepo: vi.fn(),
         getAllSubmodelElementsValueOnlySubmodelRepo: vi.fn(),
         getAllSubmodelElementsReferenceSubmodelRepo: vi.fn(),
         getAllSubmodelElementsPathSubmodelRepo: vi.fn(),
         postSubmodelElementSubmodelRepoRaw: vi.fn(),
         getSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
+        getSubmodelElementByPathMetadataSubmodelRepoRaw: vi.fn(),
+        getSubmodelElementByPathReferenceSubmodelRepoRaw: vi.fn(),
+        getSubmodelElementByPathPathSubmodelRepoRaw: vi.fn(),
         getSubmodelElementByPathMetadataSubmodelRepo: vi.fn(),
         getSubmodelElementByPathReferenceSubmodelRepo: vi.fn(),
         getSubmodelElementByPathPathSubmodelRepo: vi.fn(),
         postSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
         deleteSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
         putSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
+        patchSubmodelElementByPathSubmodelRepoRaw: vi.fn(),
         patchSubmodelElementByPathSubmodelRepo: vi.fn(),
+        patchSubmodelElementByPathMetadataSubmodelRepoRaw: vi.fn(),
         patchSubmodelElementByPathMetadataSubmodelRepo: vi.fn(),
+        getSubmodelByIdMetadataRaw: vi.fn(),
         getSubmodelByIdMetadata: vi.fn(),
+        getSubmodelByIdValueOnlyRaw: vi.fn(),
+        patchSubmodelByIdValueOnlyRaw: vi.fn(),
         getSubmodelByIdValueOnly: vi.fn(),
         patchSubmodelByIdValueOnly: vi.fn(),
+        getSubmodelElementByPathValueOnlySubmodelRepoRaw: vi.fn(),
+        patchSubmodelElementByPathValueOnlySubmodelRepoRaw: vi.fn(),
         getSubmodelElementByPathValueOnlySubmodelRepo: vi.fn(),
         patchSubmodelElementByPathValueOnlySubmodelRepo: vi.fn(),
+        getFileByPathSubmodelRepoRaw: vi.fn(),
+        putFileByPathSubmodelRepoRaw: vi.fn(),
+        deleteFileByPathSubmodelRepoRaw: vi.fn(),
         getFileByPathSubmodelRepo: vi.fn(),
         putFileByPathSubmodelRepo: vi.fn(),
         deleteFileByPathSubmodelRepo: vi.fn(),
+        invokeOperationSubmodelRepoRaw: vi.fn(),
+        invokeOperationValueOnlyRaw: vi.fn(),
+        invokeOperationAsyncRaw: vi.fn(),
+        invokeOperationAsyncValueOnlyRaw: vi.fn(),
         invokeOperationSubmodelRepo: vi.fn(),
         invokeOperationValueOnly: vi.fn(),
         invokeOperationAsync: vi.fn(),
         invokeOperationAsyncValueOnly: vi.fn(),
+        getOperationAsyncStatusRaw: vi.fn(),
+        getOperationAsyncResultRaw: vi.fn(),
+        getOperationAsyncResultValueOnlyRaw: vi.fn(),
         getOperationAsyncStatus: vi.fn(),
         getOperationAsyncResult: vi.fn(),
         getOperationAsyncResultValueOnly: vi.fn(),
+        generateSerializationByIdsRaw: vi.fn(),
         generateSerializationByIds: vi.fn(),
         getSelfDescriptionRaw: vi.fn(),
     };
@@ -241,6 +274,48 @@ describe('SubmodelRepositoryClient', () => {
         );
         (SubmodelRepositoryService.SerializationAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
         (SubmodelRepositoryService.DescriptionAPIApi as unknown as Mock).mockImplementation(MockSubmodelRepository);
+
+        // Bridge Raw methods to legacy mock method names so existing tests can be migrated incrementally.
+        const bridgeRaw = (rawMethod: keyof typeof mockApiInstance, legacyMethod: keyof typeof mockApiInstance) => {
+            (mockApiInstance[rawMethod] as Mock).mockImplementation(async (...args: unknown[]) => {
+                const value = await (mockApiInstance[legacyMethod] as Mock)(...args);
+                return apiResponse(value, 200);
+            });
+        };
+
+        bridgeRaw('getAllSubmodelsMetadataRaw', 'getAllSubmodelsMetadata');
+        bridgeRaw('getAllSubmodelsValueOnlyRaw', 'getAllSubmodelsValueOnly');
+        bridgeRaw('getAllSubmodelsReferenceRaw', 'getAllSubmodelsReference');
+        bridgeRaw('getAllSubmodelsPathRaw', 'getAllSubmodelsPath');
+        bridgeRaw('getSubmodelByIdReferenceRaw', 'getSubmodelByIdReference');
+        bridgeRaw('getSubmodelByIdPathRaw', 'getSubmodelByIdPath');
+        bridgeRaw('patchSubmodelByIdRaw', 'patchSubmodelById');
+        bridgeRaw('getAllSubmodelElementsMetadataSubmodelRepoRaw', 'getAllSubmodelElementsMetadataSubmodelRepo');
+        bridgeRaw('getAllSubmodelElementsValueOnlySubmodelRepoRaw', 'getAllSubmodelElementsValueOnlySubmodelRepo');
+        bridgeRaw('getAllSubmodelElementsReferenceSubmodelRepoRaw', 'getAllSubmodelElementsReferenceSubmodelRepo');
+        bridgeRaw('getAllSubmodelElementsPathSubmodelRepoRaw', 'getAllSubmodelElementsPathSubmodelRepo');
+        bridgeRaw('getSubmodelElementByPathMetadataSubmodelRepoRaw', 'getSubmodelElementByPathMetadataSubmodelRepo');
+        bridgeRaw('getSubmodelElementByPathReferenceSubmodelRepoRaw', 'getSubmodelElementByPathReferenceSubmodelRepo');
+        bridgeRaw('getSubmodelElementByPathPathSubmodelRepoRaw', 'getSubmodelElementByPathPathSubmodelRepo');
+        bridgeRaw('patchSubmodelElementByPathSubmodelRepoRaw', 'patchSubmodelElementByPathSubmodelRepo');
+        bridgeRaw('getSubmodelByIdMetadataRaw', 'getSubmodelByIdMetadata');
+        bridgeRaw('patchSubmodelByIdMetadataRaw', 'patchSubmodelByIdMetadata');
+        bridgeRaw('getSubmodelByIdValueOnlyRaw', 'getSubmodelByIdValueOnly');
+        bridgeRaw('patchSubmodelByIdValueOnlyRaw', 'patchSubmodelByIdValueOnly');
+        bridgeRaw('getSubmodelElementByPathValueOnlySubmodelRepoRaw', 'getSubmodelElementByPathValueOnlySubmodelRepo');
+        bridgeRaw('patchSubmodelElementByPathValueOnlySubmodelRepoRaw', 'patchSubmodelElementByPathValueOnlySubmodelRepo');
+        bridgeRaw('patchSubmodelElementByPathMetadataSubmodelRepoRaw', 'patchSubmodelElementByPathMetadataSubmodelRepo');
+        bridgeRaw('getFileByPathSubmodelRepoRaw', 'getFileByPathSubmodelRepo');
+        bridgeRaw('putFileByPathSubmodelRepoRaw', 'putFileByPathSubmodelRepo');
+        bridgeRaw('deleteFileByPathSubmodelRepoRaw', 'deleteFileByPathSubmodelRepo');
+        bridgeRaw('invokeOperationSubmodelRepoRaw', 'invokeOperationSubmodelRepo');
+        bridgeRaw('invokeOperationValueOnlyRaw', 'invokeOperationValueOnly');
+        bridgeRaw('invokeOperationAsyncRaw', 'invokeOperationAsync');
+        bridgeRaw('invokeOperationAsyncValueOnlyRaw', 'invokeOperationAsyncValueOnly');
+        bridgeRaw('getOperationAsyncStatusRaw', 'getOperationAsyncStatus');
+        bridgeRaw('getOperationAsyncResultRaw', 'getOperationAsyncResult');
+        bridgeRaw('getOperationAsyncResultValueOnlyRaw', 'getOperationAsyncResultValueOnly');
+        bridgeRaw('generateSerializationByIdsRaw', 'generateSerializationByIds');
         // Setup mocks for conversion functions
         (convertApiSubmodelToCoreSubmodel as Mock).mockImplementation((submodel) => {
             if (submodel.id === API_SUBMODEL1.id) return CORE_SUBMODEL1;
@@ -322,7 +397,7 @@ describe('SubmodelRepositoryClient', () => {
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
         expect(mockApiInstance.getAllSubmodelsRaw).toHaveBeenCalledWith({
-            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            semanticId: `encoded_${SEMANTIC_ID}`,
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
@@ -1630,7 +1705,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         expect(mockApiInstance.getAllSubmodelsMetadata).toHaveBeenCalledWith({
-            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            semanticId: `encoded_${SEMANTIC_ID}`,
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
@@ -1657,7 +1732,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         expect(mockApiInstance.getAllSubmodelsValueOnly).toHaveBeenCalledWith({
-            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            semanticId: `encoded_${SEMANTIC_ID}`,
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
@@ -1685,7 +1760,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         expect(mockApiInstance.getAllSubmodelsReference).toHaveBeenCalledWith({
-            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            semanticId: `encoded_${SEMANTIC_ID}`,
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
@@ -1712,7 +1787,7 @@ describe('SubmodelRepositoryClient', () => {
         });
 
         expect(mockApiInstance.getAllSubmodelsPath).toHaveBeenCalledWith({
-            semanticId: `encoded_${JSON.stringify(SEMANTIC_ID)}`,
+            semanticId: `encoded_${SEMANTIC_ID}`,
             idShort: ID_SHORT,
             limit: LIMIT,
             cursor: CURSOR,
