@@ -600,6 +600,10 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     // Go backend currently does not provide a successful response for GET /serialization here.
+    /**
+     * @operation GenerateSerializationByIds
+     * @status 200 [known-backend-bug]
+     */
     test.skip('should generate serialization by IDs', async () => {
         const response = await client.generateSerializationByIds({
             configuration,
@@ -611,6 +615,16 @@ describe('AAS Repository Integration Tests', () => {
             expect(response.data).toBeDefined();
             expect(response.data.size).toBeGreaterThan(0);
         }
+    });
+
+    /**
+     * @operation GenerateSerializationByIds
+     * @status 400 [known-backend-bug]
+     */
+    test.skip('should reject invalid serialization query with bad request', async () => {
+        const rawResponse = await fetch(`${configuration.basePath}/serialization?includeConceptDescriptions=notabool`);
+
+        expect(rawResponse.status).toBe(400);
     });
 
     /**
@@ -735,7 +749,28 @@ describe('AAS Repository Integration Tests', () => {
      * @operation PostSubmodelReference_AasRepository
      * @status 409 [known-backend-bug]
      */
-    test.skip('should return conflict when posting a duplicate Submodel reference', async () => {});
+    test.skip('should return conflict when posting a duplicate Submodel reference', async () => {
+        const duplicateRef = submodelReference;
+
+        const createResponse = await client.postSubmodelReference({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelReference: duplicateRef,
+        });
+
+        expect(createResponse.success).toBe(true);
+
+        const duplicateResponse = await client.postSubmodelReference({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelReference: duplicateRef,
+        });
+
+        assertApiFailureCode(duplicateResponse, '409');
+        if (!duplicateResponse.success) {
+            expect(duplicateResponse.statusCode).toBe(409);
+        }
+    });
 
     /**
      * @operation DeleteSubmodelReference_AasRepository
@@ -1292,6 +1327,40 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodelElements_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return all SubmodelElements with success status', async () => {
+        const response = await client.getAllSubmodelElementsAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElements for a missing Submodel', async () => {
+        const response = await client.getAllSubmodelElementsAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: randomMissingSubmodelIdentifier(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get all SubmodelElements', async () => {
@@ -1316,6 +1385,78 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation PostSubmodelElement_AasRepository
+     * @status 201 [known-backend-bug]
+     */
+    test.skip('should create SubmodelElement through AAS repository superpath with created status', async () => {
+        const createdElement = createTestSubmodelElement();
+        createdElement.idShort = `createdElement-${uniqueSuffix()}`;
+
+        const response = await client.postSubmodelElementAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            submodelElement: createdElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+        }
+    });
+
+    /**
+     * @operation PostSubmodelElement_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when posting SubmodelElement for a missing Submodel', async () => {
+        const createdElement = createTestSubmodelElement();
+        createdElement.idShort = `missingSubmodelElement-${uniqueSuffix()}`;
+
+        const response = await client.postSubmodelElementAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: randomMissingSubmodelIdentifier(),
+            submodelElement: createdElement,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation PostSubmodelElement_AasRepository
+     * @status 409 [known-backend-bug]
+     */
+    test.skip('should return conflict when posting duplicate SubmodelElement', async () => {
+        const duplicateElement = createTestSubmodelElement();
+        duplicateElement.idShort = `duplicateElement-${uniqueSuffix()}`;
+
+        const createResponse = await client.postSubmodelElementAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            submodelElement: duplicateElement,
+        });
+
+        expect(createResponse.success).toBe(true);
+
+        const duplicateResponse = await client.postSubmodelElementAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            submodelElement: duplicateElement,
+        });
+
+        assertApiFailureCode(duplicateResponse, '409');
+        if (!duplicateResponse.success) {
+            expect(duplicateResponse.statusCode).toBe(409);
+        }
     });
 
     /**
@@ -1348,6 +1489,40 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodelElements-Metadata_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElements metadata with success status', async () => {
+        const response = await client.getAllSubmodelElementsMetadataAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Metadata_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElements metadata for a missing Submodel', async () => {
+        const response = await client.getAllSubmodelElementsMetadataAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: randomMissingSubmodelIdentifier(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Metadata_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get all SubmodelElements metadata', async () => {
@@ -1371,6 +1546,40 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElements value-only with success status', async () => {
+        const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElements value-only for a missing Submodel', async () => {
+        const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: randomMissingSubmodelIdentifier(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1402,6 +1611,40 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodelElements-Reference_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElements references with success status', async () => {
+        const response = await client.getAllSubmodelElementsReferenceAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Reference_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElements references for a missing Submodel', async () => {
+        const response = await client.getAllSubmodelElementsReferenceAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: randomMissingSubmodelIdentifier(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Reference_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get all SubmodelElements reference', async () => {
@@ -1425,6 +1668,40 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Path_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElements paths with success status', async () => {
+        const response = await client.getAllSubmodelElementsPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Path_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElements paths for a missing Submodel', async () => {
+        const response = await client.getAllSubmodelElementsPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: randomMissingSubmodelIdentifier(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1457,6 +1734,42 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelElementByPath_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElement by path with success status', async () => {
+        const response = await client.getSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElement by missing path', async () => {
+        const response = await client.getSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get SubmodelElement by path', async () => {
@@ -1483,6 +1796,81 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation PostSubmodelElementByPath_AasRepository
+     * @status 201 [known-backend-bug]
+     */
+    test.skip('should create SubmodelElement by path with created status', async () => {
+        const createdElement = createTestSubmodelElement();
+        createdElement.idShort = `post-by-path-${uniqueSuffix()}`;
+
+        const response = await client.postSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: createdElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+        }
+    });
+
+    /**
+     * @operation PostSubmodelElementByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when posting SubmodelElement by path for missing parent path', async () => {
+        const createdElement = createTestSubmodelElement();
+        createdElement.idShort = `post-by-missing-path-${uniqueSuffix()}`;
+
+        const response = await client.postSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingParent-${uniqueSuffix()}`,
+            submodelElement: createdElement,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation PostSubmodelElementByPath_AasRepository
+     * @status 409 [known-backend-bug]
+     */
+    test.skip('should return conflict when posting duplicate SubmodelElement by path', async () => {
+        const duplicateElement = createTestSubmodelElement();
+        duplicateElement.idShort = `post-by-path-duplicate-${uniqueSuffix()}`;
+
+        const createResponse = await client.postSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: duplicateElement,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const duplicateResponse = await client.postSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: duplicateElement,
+        });
+
+        assertApiFailureCode(duplicateResponse, '409');
+        if (!duplicateResponse.success) {
+            expect(duplicateResponse.statusCode).toBe(409);
+        }
     });
 
     /**
@@ -1518,6 +1906,69 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutSubmodelElementByPath_AasRepository
+     * @status 201 [known-backend-bug]
+     */
+    test.skip('should create SubmodelElement by path with created status via put', async () => {
+        const putElement = createTestSubmodelElement();
+        putElement.idShort = `put-by-path-${uniqueSuffix()}`;
+
+        const response = await client.putSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `newParent-${uniqueSuffix()}`,
+            submodelElement: putElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+        }
+    });
+
+    /**
+     * @operation PutSubmodelElementByPath_AasRepository
+     * @status 204 [known-backend-bug]
+     */
+    test.skip('should update SubmodelElement by path with no content status via put', async () => {
+        const response = await client.putSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: testSubmodelElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
+    });
+
+    /**
+     * @operation PutSubmodelElementByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when putting SubmodelElement by path for missing parent path', async () => {
+        const putElement = createTestSubmodelElement();
+        putElement.idShort = `put-missing-path-${uniqueSuffix()}`;
+
+        const response = await client.putSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingParent-${uniqueSuffix()}`,
+            submodelElement: putElement,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation PutSubmodelElementByPath_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in put SubmodelElement by path', async () => {
@@ -1545,6 +1996,44 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath_AasRepository
+     * @status 204 [known-backend-bug]
+     */
+    test.skip('should patch SubmodelElement by path with no content status', async () => {
+        const response = await client.patchSubmodelElementValueByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: testSubmodelElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when patching SubmodelElement by missing path', async () => {
+        const response = await client.patchSubmodelElementValueByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+            submodelElement: testSubmodelElement,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1579,6 +2068,42 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelElementByPath-Metadata_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElement metadata by path with success status', async () => {
+        const response = await client.getSubmodelElementByPathMetadataAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Metadata_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElement metadata by missing path', async () => {
+        const response = await client.getSubmodelElementByPathMetadataAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Metadata_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get SubmodelElement metadata by path', async () => {
@@ -1605,6 +2130,44 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath-Metadata
+     * @status 204 [known-backend-bug]
+     */
+    test.skip('should patch SubmodelElement metadata by path with no content status', async () => {
+        const response = await client.patchSubmodelElementValueByPathMetadata({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElementMetadata: submodelElementMetadataPatch,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath-Metadata
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when patching SubmodelElement metadata by missing path', async () => {
+        const response = await client.patchSubmodelElementValueByPathMetadata({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+            submodelElementMetadata: submodelElementMetadataPatch,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1639,6 +2202,42 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElement value-only by path with success status', async () => {
+        const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElement value-only by missing path', async () => {
+        const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get SubmodelElement value-only by path', async () => {
@@ -1665,6 +2264,44 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath-ValueOnly
+     * @status 204 [known-backend-bug]
+     */
+    test.skip('should patch SubmodelElement value-only by path with no content status', async () => {
+        const response = await client.patchSubmodelElementValueByPathValueOnly({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElementValue: 'coverage-value',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath-ValueOnly
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when patching SubmodelElement value-only by missing path', async () => {
+        const response = await client.patchSubmodelElementValueByPathValueOnly({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+            submodelElementValue: 'coverage-value',
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1699,6 +2336,42 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelElementByPath-Reference_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElement reference by path with success status', async () => {
+        const response = await client.getSubmodelElementByPathReferenceAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Reference_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElement reference by missing path', async () => {
+        const response = await client.getSubmodelElementByPathReferenceAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Reference_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get SubmodelElement reference by path', async () => {
@@ -1724,6 +2397,42 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Path_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return SubmodelElement path by path with success status', async () => {
+        const response = await client.getSubmodelElementByPathPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Path_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when getting SubmodelElement path by missing path', async () => {
+        const response = await client.getSubmodelElementByPathPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1755,11 +2464,17 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(response.success).toBe(true);
-        if (!response.success) {
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        } else {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
     });
 
+    /**
+     * @operation GetFileByPath_AasRepository
+     * @status 200 [known-backend-bug]
+     */
     test.skip('should download uploaded file by path through AAS repository superpath', async () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
@@ -1809,6 +2524,26 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutFileByPath_AasRepository
+     * @status 204 [known-backend-bug]
+     */
+    test.skip('should return no content when uploading file by path', async () => {
+        const response = await client.putFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file-204.txt',
+            file: attachmentBlob,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
+    });
+
+    /**
+     * @operation PutFileByPath_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in put file by path', async () => {
@@ -1827,6 +2562,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetFileByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
     test.skip('should reject file download for missing submodel element through AAS repository superpath with 404', async () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
@@ -1836,6 +2575,26 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+    });
+
+    /**
+     * @operation PutFileByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when uploading file for missing submodel element', async () => {
+        const response = await client.putFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingAttachmentPath-${uniqueSuffix()}`,
+            fileName: 'coverage-missing-file.txt',
+            file: attachmentBlob,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     test('should invoke operation through AAS repository superpath', async () => {
@@ -1848,6 +2607,44 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation InvokeOperation_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return operation invocation result with success status', async () => {
+        const response = await client.invokeOperationAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            operationRequest: createTestOperationRequest(),
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation InvokeOperation_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when invoking missing operation by path', async () => {
+        const response = await client.invokeOperationAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingOperation-${uniqueSuffix()}`,
+            operationRequest: createTestOperationRequest(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1883,6 +2680,44 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperation-ValueOnly_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return operation value-only invocation result with success status', async () => {
+        const response = await client.invokeOperationValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            operationRequestValueOnly,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation InvokeOperation-ValueOnly_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when invoking missing operation value-only by path', async () => {
+        const response = await client.invokeOperationValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingOperation-${uniqueSuffix()}`,
+            operationRequestValueOnly,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation InvokeOperation-ValueOnly_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in invoke operation value-only', async () => {
@@ -1910,6 +2745,25 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation InvokeOperationAsync_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when invoking missing async operation by path', async () => {
+        const response = await client.invokeOperationAsyncAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingOperation-${uniqueSuffix()}`,
+            operationRequest: createTestOperationRequest(),
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1945,6 +2799,25 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation InvokeOperationAsync-ValueOnly_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when invoking missing async operation value-only by path', async () => {
+        const response = await client.invokeOperationAsyncValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingOperation-${uniqueSuffix()}`,
+            operationRequestValueOnly,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation InvokeOperationAsync-ValueOnly_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in invoke operation async value-only', async () => {
@@ -1972,6 +2845,44 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation GetOperationAsyncStatus_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return operation status for a valid async handle', async () => {
+        const response = await client.getOperationAsyncStatusAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            handleId: 'coverage-handle-id',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetOperationAsyncStatus_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found for missing async status handle', async () => {
+        const response = await client.getOperationAsyncStatusAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            handleId: `missing-handle-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2007,6 +2918,44 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetOperationAsyncResult_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return async operation result for a valid handle', async () => {
+        const response = await client.getOperationAsyncResultAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            handleId: 'coverage-handle-id',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetOperationAsyncResult_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found for missing async result handle', async () => {
+        const response = await client.getOperationAsyncResultAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            handleId: `missing-handle-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetOperationAsyncResult_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get async operation result', async () => {
@@ -2038,6 +2987,44 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetOperationAsyncResult-ValueOnly_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should return async operation value-only result for a valid handle', async () => {
+        const response = await client.getOperationAsyncResultValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            handleId: 'coverage-handle-id',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
+     * @operation GetOperationAsyncResult-ValueOnly_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found for missing async value-only result handle', async () => {
+        const response = await client.getOperationAsyncResultValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            handleId: `missing-handle-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
+    });
+
+    /**
+     * @operation GetOperationAsyncResult-ValueOnly_AasRepository
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in get async operation value-only result', async () => {
@@ -2055,6 +3042,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation DeleteFileByPath_AasRepository
+     * @status 200
+     */
     test('should delete file by path through AAS repository superpath for a File submodel element', async () => {
         const response = await client.deleteFileByPathAasRepository({
             configuration,
@@ -2064,8 +3055,28 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         expect(response.success).toBe(true);
-        if (!response.success) {
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        } else {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
+        }
+    });
+
+    /**
+     * @operation DeleteFileByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when deleting missing file by path', async () => {
+        const response = await client.deleteFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missingAttachmentPath-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
         }
     });
 
@@ -2107,6 +3118,42 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+    });
+
+    /**
+     * @operation DeleteSubmodelElementByPath_AasRepository
+     * @status 204 [known-backend-bug]
+     */
+    test.skip('should delete SubmodelElement by path with no content status', async () => {
+        const response = await client.deleteSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(204);
+        }
+    });
+
+    /**
+     * @operation DeleteSubmodelElementByPath_AasRepository
+     * @status 404 [known-backend-bug]
+     */
+    test.skip('should return not found when deleting missing SubmodelElement by path', async () => {
+        const response = await client.deleteSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+        });
+
+        assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2244,6 +3291,22 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     /**
+     * @operation DeleteThumbnail_AasRepository
+     * @status 200 [known-backend-bug]
+     */
+    test.skip('should delete thumbnail through AAS repository superpath with success status', async () => {
+        const response = await client.deleteThumbnail({
+            configuration,
+            aasIdentifier: testShell.id,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
+    });
+
+    /**
      * @operation DeleteAssetAdministrationShellById
      * @status 404
      */
@@ -2275,970 +3338,3 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 });
-
-// BEGIN AUTO-GENERATED OPENAPI WAIVER MATRIX
-// This matrix is generated from OpenAPI coverage output to keep every required status explicit.
-// Tests are intentionally skipped with waivers until strict status assertions are fully implemented.
-describe('AAS Repository OpenAPI Waiver Matrix', () => {
-    /**
-     * @operation GetAllAssetAdministrationShells
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllAssetAdministrationShells should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllAssetAdministrationShells
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllAssetAdministrationShells should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostAssetAdministrationShell
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PostAssetAdministrationShell should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostAssetAdministrationShell
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PostAssetAdministrationShell should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostAssetAdministrationShell
-     * @status 409 [known-backend-bug]
-     */
-    test.skip('waiver: PostAssetAdministrationShell should cover 409 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllAssetAdministrationShells-Reference
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllAssetAdministrationShells-Reference should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllAssetAdministrationShells-Reference
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllAssetAdministrationShells-Reference should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetAdministrationShellById
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetAdministrationShellById should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetAdministrationShellById
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetAdministrationShellById should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetAdministrationShellById
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetAdministrationShellById should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutAssetAdministrationShellById
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PutAssetAdministrationShellById should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutAssetAdministrationShellById
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PutAssetAdministrationShellById should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutAssetAdministrationShellById
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PutAssetAdministrationShellById should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteAssetAdministrationShellById
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteAssetAdministrationShellById should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteAssetAdministrationShellById
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteAssetAdministrationShellById should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetAdministrationShellById-Reference_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetAdministrationShellById-Reference_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetAdministrationShellById-Reference_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetAdministrationShellById-Reference_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetAdministrationShellById-Reference_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetAdministrationShellById-Reference_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetInformation_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetInformation_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetInformation_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetInformation_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAssetInformation_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAssetInformation_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutAssetInformation_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PutAssetInformation_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutAssetInformation_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PutAssetInformation_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutAssetInformation_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PutAssetInformation_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetThumbnail_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetThumbnail_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetThumbnail_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetThumbnail_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetThumbnail_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetThumbnail_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutThumbnail_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PutThumbnail_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutThumbnail_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PutThumbnail_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutThumbnail_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PutThumbnail_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteThumbnail_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteThumbnail_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteThumbnail_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteThumbnail_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteThumbnail_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteThumbnail_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteThumbnail_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteThumbnail_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelReferences_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelReferences_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelReferences_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelReferences_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelReferences_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelReferences_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelReference_AasRepository
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelReference_AasRepository should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelReference_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelReference_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelReference_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelReference_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelReference_AasRepository
-     * @status 409 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelReference_AasRepository should cover 409 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelReference_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelReference_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelReference_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelReference_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelReference_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelReference_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelById_AasRepository
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelById_AasRepository should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelById_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelById_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelById_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelById_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelById_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelById_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodel_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodel_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodel_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodel_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodel_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodel_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelById_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelById_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelById_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelById_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelById_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelById_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Metadata_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Metadata_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Metadata_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Metadata_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Metadata_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelById-Metadata_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelById-Metadata_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelById-Metadata_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelById-Metadata_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelById-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelById-Metadata_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-ValueOnly_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelById-ValueOnly_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelById-ValueOnly_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelById-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelById-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelById-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelById-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Reference_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Reference_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Reference_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Reference_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Reference_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Reference_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Path_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Path_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Path_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Path_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelById-Path_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelById-Path_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElement_AasRepository
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElement_AasRepository should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElement_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElement_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElement_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElement_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElement_AasRepository
-     * @status 409 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElement_AasRepository should cover 409 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Metadata_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Metadata_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Metadata_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Metadata_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Metadata_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-ValueOnly_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Reference_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Reference_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Reference_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Reference_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Reference_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Reference_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Path_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Path_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Path_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Path_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetAllSubmodelElements-Path_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetAllSubmodelElements-Path_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElementByPath_AasRepository
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElementByPath_AasRepository should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElementByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElementByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElementByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PostSubmodelElementByPath_AasRepository
-     * @status 409 [known-backend-bug]
-     */
-    test.skip('waiver: PostSubmodelElementByPath_AasRepository should cover 409 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelElementByPath_AasRepository
-     * @status 201 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelElementByPath_AasRepository should cover 201 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelElementByPath_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelElementByPath_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelElementByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelElementByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PutSubmodelElementByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelElementByPath_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelElementByPath_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelElementByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelElementByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteSubmodelElementByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Metadata_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Metadata_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Metadata_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Metadata_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Metadata_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-Metadata
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath-Metadata should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-Metadata
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath-Metadata should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-Metadata
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath-Metadata should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-ValueOnly_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-ValueOnly
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath-ValueOnly should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-ValueOnly
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath-ValueOnly should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-ValueOnly
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PatchSubmodelElementValueByPath-ValueOnly should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Reference_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Reference_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Reference_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Reference_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Reference_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Reference_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Path_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Path_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Path_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Path_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSubmodelElementByPath-Path_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetSubmodelElementByPath-Path_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetFileByPath_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetFileByPath_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetFileByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetFileByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetFileByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetFileByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutFileByPath_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test.skip('waiver: PutFileByPath_AasRepository should cover 204 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutFileByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: PutFileByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation PutFileByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: PutFileByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteFileByPath_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteFileByPath_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteFileByPath_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteFileByPath_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation DeleteFileByPath_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: DeleteFileByPath_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperation_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperation_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperation_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperation_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperation_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperation_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperation-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperation-ValueOnly_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperation-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperation-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperation-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperation-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperationAsync_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperationAsync_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperationAsync_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperationAsync_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperationAsync-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperationAsync-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation InvokeOperationAsync-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: InvokeOperationAsync-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncStatus_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncStatus_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncStatus_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncStatus_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncStatus_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncStatus_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncResult_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncResult_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncResult_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncResult_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncResult_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncResult_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncResult-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncResult-ValueOnly_AasRepository should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncResult-ValueOnly_AasRepository
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncResult-ValueOnly_AasRepository should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetOperationAsyncResult-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
-     */
-    test.skip('waiver: GetOperationAsyncResult-ValueOnly_AasRepository should cover 404 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GenerateSerializationByIds
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GenerateSerializationByIds should cover 200 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GenerateSerializationByIds
-     * @status 400 [known-backend-bug]
-     */
-    test.skip('waiver: GenerateSerializationByIds should cover 400 when backend/spec parity is available', async () => {});
-
-    /**
-     * @operation GetSelfDescription
-     * @status 200 [known-backend-bug]
-     */
-    test.skip('waiver: GetSelfDescription should cover 200 when backend/spec parity is available', async () => {});
-
-});
-// END AUTO-GENERATED OPENAPI WAIVER MATRIX
