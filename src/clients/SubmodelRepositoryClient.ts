@@ -1,7 +1,7 @@
 import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult } from '../models/api';
 import { SubmodelRepositoryService } from '../generated'; // Updated import
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -14,6 +14,33 @@ import { handleApiError } from '../lib/errorHandler';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
 
 export class SubmodelRepositoryClient {
+    private static requireIdentifier(value: string | null | undefined, field: string): string {
+        if (value === null || value === undefined || value.trim() === '') {
+            throw new RequiredError(field, `Required parameter "${field}" was null, undefined, or empty.`);
+        }
+
+        return value;
+    }
+
+    private static extractStatusCode(err: unknown, parsedError?: SubmodelRepositoryService.Result): number | undefined {
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
+        }
+
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
+
     /**
      * Returns all Submodels
      *
@@ -49,9 +76,9 @@ export class SubmodelRepositoryClient {
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
-            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+            const encodedSemanticId = semanticId ? base64Encode(semanticId) : undefined;
 
-            const result = await apiInstance.getAllSubmodels({
+            const response = await apiInstance.getAllSubmodelsRaw({
                 semanticId: encodedSemanticId,
                 idShort: idShort,
                 limit: limit,
@@ -59,21 +86,36 @@ export class SubmodelRepositoryClient {
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
             const submodels = (result.result ?? []).map(convertApiSubmodelToCoreSubmodel);
 
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodels },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns all Submodels in metadata representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelsMetadata(options: {
         configuration: Configuration;
@@ -86,24 +128,40 @@ export class SubmodelRepositoryClient {
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
-            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+            const encodedSemanticId = semanticId ? base64Encode(semanticId) : undefined;
 
-            const result = await apiInstance.getAllSubmodelsMetadata({
+            const response = await apiInstance.getAllSubmodelsMetadataRaw({
                 semanticId: encodedSemanticId,
                 idShort: idShort,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns all Submodels in value-only representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *  - extent?: Determines to which extent the resource is being serialized
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelsValueOnly(options: {
         configuration: Configuration;
@@ -118,9 +176,9 @@ export class SubmodelRepositoryClient {
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
-            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+            const encodedSemanticId = semanticId ? base64Encode(semanticId) : undefined;
 
-            const result = await apiInstance.getAllSubmodelsValueOnly({
+            const response = await apiInstance.getAllSubmodelsValueOnlyRaw({
                 semanticId: encodedSemanticId,
                 idShort: idShort,
                 limit: limit,
@@ -128,16 +186,31 @@ export class SubmodelRepositoryClient {
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns references to all Submodels
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelsReference(options: {
         configuration: Configuration;
@@ -151,25 +224,40 @@ export class SubmodelRepositoryClient {
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
-            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+            const encodedSemanticId = semanticId ? base64Encode(semanticId) : undefined;
 
-            const result = await apiInstance.getAllSubmodelsReference({
+            const response = await apiInstance.getAllSubmodelsReferenceRaw({
                 semanticId: encodedSemanticId,
                 idShort: idShort,
                 limit: limit,
                 cursor: cursor,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns paths of all Submodels
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - semanticId?: The value of the semantic id reference
+     *  - idShort?: The Asset Administration Shell's IdShort
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelsPath(options: {
         configuration: Configuration;
@@ -183,20 +271,25 @@ export class SubmodelRepositoryClient {
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
-            const encodedSemanticId = semanticId ? base64Encode(JSON.stringify(semanticId)) : undefined;
+            const encodedSemanticId = semanticId ? base64Encode(semanticId) : undefined;
 
-            const result = await apiInstance.getAllSubmodelsPath({
+            const response = await apiInstance.getAllSubmodelsPathRaw({
                 semanticId: encodedSemanticId,
                 idShort: idShort,
                 limit: limit,
                 cursor: cursor,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -218,14 +311,23 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const result = await apiInstance.postSubmodel({
+            const response = await apiInstance.postSubmodelRaw({
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelToCoreSubmodel(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelToCoreSubmodel(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -247,16 +349,23 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteSubmodelById({
+            const response = await apiInstance.deleteSubmodelByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -282,23 +391,40 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelById({
+            const response = await apiInstance.getSubmodelByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelToCoreSubmodel(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelToCoreSubmodel(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns a specific Submodel in reference representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdReference(options: {
         configuration: Configuration;
@@ -309,21 +435,35 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdReference({
+            const response = await apiInstance.getSubmodelByIdReferenceRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns a specific Submodel in path representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelByIdPath(options: {
         configuration: Configuration;
@@ -335,17 +475,24 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdPath({
+            const response = await apiInstance.getSubmodelByIdPathRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -369,22 +516,46 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putSubmodelById({
+            const response = await apiInstance.putSubmodelByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
             });
 
-            return { success: true, data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Updates an existing Submodel partially
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - submodel: Submodel object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelById(options: {
         configuration: Configuration;
@@ -397,18 +568,25 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelById({
+            const response = await apiInstance.patchSubmodelByIdRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -446,30 +624,46 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElements({
+            const response = await apiInstance.getAllSubmodelElementsRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
             const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
 
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElements },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns all submodel elements in metadata representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsMetadata(options: {
         configuration: Configuration;
@@ -484,23 +678,40 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsMetadataSubmodelRepo({
+            const response = await apiInstance.getAllSubmodelElementsMetadataSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns all submodel elements in value-only representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *  - extent?: Determines to which extent the resource is being serialized
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsValueOnly(options: {
         configuration: Configuration;
@@ -515,25 +726,41 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsValueOnlySubmodelRepo({
+            const response = await apiInstance.getAllSubmodelElementsValueOnlySubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns references to all submodel elements
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsReference(options: {
         configuration: Configuration;
@@ -547,24 +774,40 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsReferenceSubmodelRepo({
+            const response = await apiInstance.getAllSubmodelElementsReferenceSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns paths of all submodel elements
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getAllSubmodelElementsPath(options: {
         configuration: Configuration;
@@ -578,19 +821,26 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsPathSubmodelRepo({
+            const response = await apiInstance.getAllSubmodelElementsPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -613,17 +863,28 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.postSubmodelElementSubmodelRepo({
+            const response = await apiInstance.postSubmodelElementSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -651,24 +912,42 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathSubmodelRepo({
+            const response = await apiInstance.getSubmodelElementByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns metadata attributes of a specific submodel element
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathMetadata(options: {
         configuration: Configuration;
@@ -680,22 +959,36 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathMetadataSubmodelRepo({
+            const response = await apiInstance.getSubmodelElementByPathMetadataSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns a specific submodel element in reference representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathReference(options: {
         configuration: Configuration;
@@ -707,22 +1000,37 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathReferenceSubmodelRepo({
+            const response = await apiInstance.getSubmodelElementByPathReferenceSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns a specific submodel element in path representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSubmodelElementByPathPath(options: {
         configuration: Configuration;
@@ -735,18 +1043,25 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathPathSubmodelRepo({
+            const response = await apiInstance.getSubmodelElementByPathPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -772,18 +1087,29 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.postSubmodelElementByPathSubmodelRepo({
+            const response = await apiInstance.postSubmodelElementByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -807,17 +1133,24 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteSubmodelElementByPathSubmodelRepo({
+            const response = await apiInstance.deleteSubmodelElementByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -845,24 +1178,49 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putSubmodelElementByPathSubmodelRepo({
+            const response = await apiInstance.putSubmodelElementByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
                 level: level,
             });
 
-            return { success: true, data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Updates values of an existing submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - submodelElement: SubmodelElement object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementByPath(options: {
         configuration: Configuration;
@@ -876,19 +1234,26 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelElementByPathSubmodelRepo({
+            const response = await apiInstance.patchSubmodelElementByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -910,21 +1275,36 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdMetadata({
+            const response = await apiInstance.getSubmodelByIdMetadataRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Updates metadata attributes of an existing Submodel
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - submodelMetadata: SubmodelMetadata object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelByIdMetadata(options: {
         configuration: Configuration;
@@ -937,18 +1317,25 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelByIdMetadata({
+            const response = await apiInstance.patchSubmodelByIdMetadataRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodelMetadata: submodelMetadata,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -974,31 +1361,39 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdValueOnly({
+            const response = await apiInstance.getSubmodelByIdValueOnlyRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
-    //  * Updates the values of an existing Submodel
-    //  *
-    //  * @param options Object containing:
-    //  *  - configuration: The http request options
-    //  *  - submodelIdentifier: The Submodel’s unique id
-    //  *  - level?: Determines the structural depth of the respective resource content
-    //  *
-    //  * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-    //  */
+     * Updates the values of an existing Submodel
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - body: Value-only payload object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelByIdValueOnly(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1010,18 +1405,25 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelByIdValueOnly({
+            const response = await apiInstance.patchSubmodelByIdValueOnlyRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 body: body,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1049,34 +1451,41 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathValueOnlySubmodelRepo({
+            const response = await apiInstance.getSubmodelElementByPathValueOnlySubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
-    //  * Updates the value of an existing SubmodelElement
-    //  *
-    //  * @param options Object containing:
-    //  *  - configuration: The http request options
-    //  *  - submodelIdentifier: The Submodel’s unique id
-    //  *  - idShortPath: IdShort path to the submodel element (dot-separated) 
-    //  *  - submodelElementValue: SubmodelElementValue object
-    //  *  - level?: Determines the structural depth of the respective resource content
-    //  *
-    //  * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
-    //  */
+     * Updates the value of an existing SubmodelElement
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - submodelElementValue: SubmodelElementValue object
+     *  - level?: Determines the structural depth of the respective resource content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
     async patchSubmodelElementByPathValueOnly(options: {
         configuration: Configuration;
         submodelIdentifier: string;
@@ -1089,24 +1498,39 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelElementByPathValueOnlySubmodelRepo({
+            const response = await apiInstance.patchSubmodelElementByPathValueOnlySubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElementValue: submodelElementValue,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Updates metadata attributes of an existing SubmodelElement
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - submodelElementMetadata: SubmodelElementMetadata object
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async patchSubmodelElementByPathMetadata(options: {
         configuration: Configuration;
@@ -1119,23 +1543,37 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelElementByPathMetadataSubmodelRepo({
+            const response = await apiInstance.patchSubmodelElementByPathMetadataSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElementMetadata: submodelElementMetadata,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns file content for a submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getFileByPath(options: {
         configuration: Configuration;
@@ -1147,22 +1585,38 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getFileByPathSubmodelRepo({
+            const response = await apiInstance.getFileByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Updates file content for a submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - fileName?: Name of the uploaded file
+     *  - file?: File content
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async putFileByPath(options: {
         configuration: Configuration;
@@ -1176,24 +1630,38 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putFileByPathSubmodelRepo({
+            const response = await apiInstance.putFileByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 fileName: fileName,
                 file: file,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Deletes file content of an existing submodel element at a specified path
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteFileByPath(options: {
         configuration: Configuration;
@@ -1205,17 +1673,24 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteFileByPathSubmodelRepo({
+            const response = await apiInstance.deleteFileByPathSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1243,19 +1718,26 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationSubmodelRepo({
+            const response = await apiInstance.invokeOperationSubmodelRepoRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
                 //async: async,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1283,20 +1765,29 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationValueOnly({
+            const response = await apiInstance.invokeOperationValueOnlyRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1322,18 +1813,25 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationAsync({
+            const response = await apiInstance.invokeOperationAsyncRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1361,25 +1859,42 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationAsyncValueOnly({
+            const response = await apiInstance.invokeOperationAsyncValueOnlyRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns status of an asynchronously invoked operation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - handleId: Identifier of the asynchronous invocation handle
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getOperationAsyncStatus(options: {
         configuration: Configuration;
@@ -1392,23 +1907,38 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getOperationAsyncStatus({
+            const response = await apiInstance.getOperationAsyncStatusRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 handleId: handleId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns result of an asynchronously invoked operation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - handleId: Identifier of the asynchronous invocation handle
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getOperationAsyncResult(options: {
         configuration: Configuration;
@@ -1421,23 +1951,38 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getOperationAsyncResult({
+            const response = await apiInstance.getOperationAsyncResultRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 handleId: handleId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns result of an asynchronously invoked operation in value-only representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - submodelIdentifier: The Submodel's unique id
+     *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - handleId: Identifier of the asynchronous invocation handle
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getOperationAsyncResultValueOnly(options: {
         configuration: Configuration;
@@ -1450,23 +1995,38 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
 
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedSubmodelIdentifier = base64Encode(
+                SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getOperationAsyncResultValueOnly({
+            const response = await apiInstance.getOperationAsyncResultValueOnlyRaw({
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 handleId: handleId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns an appropriate serialization based on the specified format
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIds?: Asset Administration Shell IDs
+     *  - submodelIds?: Submodel IDs
+     *  - includeConceptDescriptions?: Whether to include referenced ConceptDescriptions in the serialization result
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async generateSerializationByIds(options: {
         configuration: Configuration;
@@ -1479,21 +2039,31 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.SerializationAPIApi(applyDefaults(configuration));
 
-            const result = await apiInstance.generateSerializationByIds({
+            const response = await apiInstance.generateSerializationByIdsRaw({
                 aasIds: aasIds,
                 submodelIds: submodelIds,
                 includeConceptDescriptions: includeConceptDescriptions,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
     /**
      * Returns the self-describing information of a network resource (ServiceDescription)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSelfDescription(options: {
         configuration: Configuration;
@@ -1503,12 +2073,17 @@ export class SubmodelRepositoryClient {
         try {
             const apiInstance = new SubmodelRepositoryService.DescriptionAPIApi(applyDefaults(configuration));
 
-            const result = await apiInstance.getSelfDescription();
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 }

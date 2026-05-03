@@ -40,6 +40,7 @@
     "validate:openapi-coverage:aasdiscovery": "node scripts/validate-openapi-coverage.mjs --service aasDiscovery",
     "validate:openapi-coverage:aasregistry": "node scripts/validate-openapi-coverage.mjs --service aasRegistry",
     "validate:openapi-coverage:smregistry": "node scripts/validate-openapi-coverage.mjs --service submodelRegistry",
+    "validate:openapi-coverage:smrepo": "node scripts/validate-openapi-coverage.mjs --service submodelRepository",
     "validate:openapi-coverage:cdrepo": "node scripts/validate-openapi-coverage.mjs --service conceptDescriptionRepository",
     "validate:openapi-coverage:aasxfileserver": "node scripts/validate-openapi-coverage.mjs --service aasxFileServer",
     "docs": "typedoc --options typedoc.json",

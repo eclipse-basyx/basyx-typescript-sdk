@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
 
-const REQUIRED_STATUSES = new Set([200, 201, 204, 400, 404]);
-const NON_BLOCKING_STATUSES = new Set([409]);
+const REQUIRED_STATUSES = new Set([200, 201, 204, 400, 404, 409]);
+const NON_BLOCKING_STATUSES = new Set();
 const WAIVER_TAGS = new Set(['known-backend-bug', 'known-specification-bug', 'known-behavior-mismatch']);
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
@@ -22,6 +22,11 @@ const SERVICE_CONFIG = {
         openapiFile: 'openapi/smregistry.yaml',
         clientFile: 'src/clients/SubmodelRegistryClient.ts',
         integrationTestFile: 'src/integration-tests/submodelRegistry.integration.test.ts',
+    },
+    submodelRepository: {
+        openapiFile: 'openapi/smrepository.yaml',
+        clientFile: 'src/clients/SubmodelRepositoryClient.ts',
+        integrationTestFile: 'src/integration-tests/submodelRepo.integration.test.ts',
     },
     conceptDescriptionRepository: {
         openapiFile: 'openapi/cdrepository.yaml',
@@ -54,7 +59,25 @@ function lcFirst(value) {
 }
 
 function operationIdToMethodName(operationId) {
-    const normalized = operationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
+    if (operationId === 'InvokeOperation_SubmodelRepo') {
+        return 'postInvokeOperationSubmodelRepo';
+    }
+
+    if (operationId === 'InvokeOperation-ValueOnly') {
+        return 'postInvokeOperationValueOnly';
+    }
+
+    if (operationId === 'InvokeOperationAsync') {
+        return 'postInvokeOperationAsync';
+    }
+
+    if (operationId === 'InvokeOperationAsync-ValueOnly') {
+        return 'postInvokeOperationAsyncValueOnly';
+    }
+
+    const normalizedOperationId = operationId.replace(/_SubmodelRepo$/i, '').replace(/SubmodelRepo$/i, '');
+
+    const normalized = normalizedOperationId.replace(/[^A-Za-z0-9]+(.)?/g, (_, nextChar) =>
         nextChar ? nextChar.toUpperCase() : ''
     );
     return lcFirst(normalized);
@@ -125,10 +148,12 @@ function findMatchingBrace(source, openBraceIndex) {
 function parseStatusTags(suffix) {
     const tags = [...suffix.matchAll(/\[([^\]]+)\]/g)].map((match) => match[1].trim().toLowerCase());
     const waiverTag = tags.find((tag) => WAIVER_TAGS.has(tag));
+    const unknownTags = tags.filter((tag) => tag !== 'non-blocking' && !WAIVER_TAGS.has(tag));
 
     return {
         nonBlocking: tags.includes('non-blocking'),
         waiverTag,
+        unknownTags,
     };
 }
 
@@ -164,16 +189,24 @@ function parseIntegrationMetadata(testSource) {
                 status,
                 nonBlocking: tags.nonBlocking,
                 waiverTag: tags.waiverTag,
+                unknownTags: tags.unknownTags,
             });
         }
 
         const assertions = new Map();
         for (const { status } of statuses) {
             const hasStatusCodeAssert = new RegExp(`statusCode\\)\\.toBe\\(${status}\\)`).test(body);
+            const hasRawStatusAssert = new RegExp(`\\bstatus\\)\\.toBe\\(${status}\\)`).test(body);
             const hasMessageCodeAssert = new RegExp(
                 `messages\\?\\.\\[0\\]\\?\\.code\\)\\.toBe\\((['"])${status}\\1\\)`
             ).test(body);
-            assertions.set(status, hasStatusCodeAssert || hasMessageCodeAssert);
+            const hasFailureHelperAssert = new RegExp(`assertApiFailureCode\\([^)]*,\\s*(['"])${status}\\1\\)`).test(
+                body
+            );
+            assertions.set(
+                status,
+                hasStatusCodeAssert || hasRawStatusAssert || hasMessageCodeAssert || hasFailureHelperAssert
+            );
         }
 
         metadata.push({
@@ -182,6 +215,7 @@ function parseIntegrationMetadata(testSource) {
             skipped,
             statuses,
             assertions,
+            usesGenericSuccessHelper: /\bassertApiResult\(/.test(body),
         });
     }
 
@@ -201,6 +235,8 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
                 tests: [],
                 skippedTests: [],
                 missingAssertions: [],
+                skippedMissingWaiver: [],
+                helperMissingStatusAssertions: [],
             });
         }
 
@@ -211,7 +247,7 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
             coverage.tests.push(entry.testName);
         }
 
-        for (const { status, waiverTag } of entry.statuses) {
+        for (const { status, waiverTag, unknownTags } of entry.statuses) {
             coverage.annotatedStatuses.add(status);
 
             if (entry.skipped && waiverTag) {
@@ -224,6 +260,11 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
             }
 
             if (entry.skipped) {
+                coverage.skippedMissingWaiver.push({
+                    status,
+                    testName: entry.testName,
+                    unknownTags,
+                });
                 continue;
             }
 
@@ -231,6 +272,19 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
                 coverage.assertedStatuses.add(status);
             } else {
                 coverage.missingAssertions.push({ status, testName: entry.testName });
+            }
+        }
+
+        if (!entry.skipped && entry.usesGenericSuccessHelper) {
+            const missingRequiredStatuses = entry.statuses
+                .map(({ status }) => status)
+                .filter((status) => REQUIRED_STATUSES.has(status) && !entry.assertions.get(status));
+
+            if (missingRequiredStatuses.length > 0) {
+                coverage.helperMissingStatusAssertions.push({
+                    testName: entry.testName,
+                    statuses: [...new Set(missingRequiredStatuses)].sort((a, b) => a - b),
+                });
             }
         }
     }
@@ -288,6 +342,25 @@ function buildCoverageReport(operations, clientMethods, testMetadata) {
                         `${operation.operationId} status ${missing.status} is annotated but not asserted in test "${missing.testName}"`
                     );
                 }
+            }
+        }
+
+        if (coverage?.helperMissingStatusAssertions?.length) {
+            for (const helperFinding of coverage.helperMissingStatusAssertions) {
+                criticalFindings.push(
+                    `${operation.operationId} uses assertApiResult without explicit status assertions for ${helperFinding.statuses.join(', ')} in test "${helperFinding.testName}"`
+                );
+            }
+        }
+
+        if (coverage?.skippedMissingWaiver?.length) {
+            for (const skippedFinding of coverage.skippedMissingWaiver) {
+                const unknownTagSuffix = skippedFinding.unknownTags.length
+                    ? `; unsupported tags: ${skippedFinding.unknownTags.join(', ')}`
+                    : '';
+                warnings.push(
+                    `${operation.operationId} skipped test "${skippedFinding.testName}" annotates status ${skippedFinding.status} without a supported waiver tag${unknownTagSuffix}`
+                );
             }
         }
 

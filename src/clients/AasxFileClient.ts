@@ -246,6 +246,10 @@ export class AasxFileClient {
     /**
      * Returns the self-describing information of a network resource (ServiceDescription)
      *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async getSelfDescription(options: {
         configuration: Configuration;
