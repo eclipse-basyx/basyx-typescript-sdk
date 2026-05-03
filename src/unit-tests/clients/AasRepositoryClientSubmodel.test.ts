@@ -479,7 +479,7 @@ describe('AasRepositoryClient', () => {
 
     it('should create a new Submodel during update', async () => {
         // Arrange
-        mockApiInstance.putSubmodelByIdAasRepository.mockResolvedValue(API_REFERENCE1);
+        mockApiInstance.putSubmodelByIdAasRepository.mockResolvedValue(API_SUBMODEL1);
 
         const client = new AasRepositoryClient();
 
@@ -501,10 +501,10 @@ describe('AasRepositoryClient', () => {
             submodel: API_SUBMODEL1,
         });
         expect(convertCoreSubmodelToApiSubmodel).toHaveBeenCalledWith(CORE_SUBMODEL1);
-        expect(convertApiReferenceToCoreReference).toHaveBeenCalledWith(API_REFERENCE1);
+        expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledWith(API_SUBMODEL1);
         expect(response.success).toBe(true);
         if (response.success) {
-            expect(response.data).toEqual(CORE_REFERENCE1); // After conversion
+            expect(response.data).toEqual(CORE_SUBMODEL1); // After conversion
         }
     });
 

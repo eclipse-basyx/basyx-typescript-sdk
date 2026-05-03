@@ -808,16 +808,25 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutSubmodelById_AasRepository
-        * @status 201 [known-backend-bug]
+     * @status 201
      */
-        test.skip('should create Submodel by ID through AAS repository superpath', async () => {
+    test('should create Submodel by ID through AAS repository superpath', async () => {
+        const scopedShell = createTestShell();
+        scopedShell.id = `${scopedShell.id}-put-submodel-create-${uniqueSuffix()}`;
+
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
         const createdSubmodel = createTestSubmodel();
-        createdSubmodel.id = randomMissingSubmodelIdentifier();
+        createdSubmodel.id = `http://acplt.org/Submodels/Assets/TestAsset/Identification-${uniqueSuffix()}`;
         createdSubmodel.submodelElements = [createTestSubmodelElement()];
 
         const response = await client.putSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             submodelIdentifier: createdSubmodel.id,
             submodel: createdSubmodel,
         });
@@ -826,28 +835,48 @@ describe('AAS Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(201);
         }
+
+        const cleanupResponse = await client.deleteAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: scopedShell.id,
+        });
+        expect(cleanupResponse.success).toBe(true);
     });
 
     /**
      * @operation PutSubmodelById_AasRepository
-        * @status 204 [known-backend-bug]
+     * @status 204
      */
-        test.skip('should update Submodel by ID through AAS repository superpath', async () => {
-            const seededSubmodel = testSubmodel;
-            seededSubmodel.submodelElements = [testSubmodelElement, testFileSubmodelElement];
+    test('should update Submodel by ID through AAS repository superpath', async () => {
+        const scopedShell = createTestShell();
+        scopedShell.id = `${scopedShell.id}-put-submodel-update-${uniqueSuffix()}`;
+
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
+        const seededSubmodel = createTestSubmodel();
+        seededSubmodel.id = `http://acplt.org/Submodels/Assets/TestAsset/Identification-${uniqueSuffix()}`;
+        seededSubmodel.submodelElements = [createTestSubmodelElement()];
 
         const seedResponse = await client.putSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: scopedShell.id,
+            submodelIdentifier: seededSubmodel.id,
             submodel: seededSubmodel,
         });
         expect(seedResponse.success).toBe(true);
+        if (seedResponse.success) {
+            expect(seedResponse.statusCode).toBe(201);
+        }
 
+        seededSubmodel.submodelElements = [testSubmodelElement, testFileSubmodelElement];
         const response = await client.putSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: scopedShell.id,
+            submodelIdentifier: seededSubmodel.id,
             submodel: seededSubmodel,
         });
 
@@ -855,6 +884,12 @@ describe('AAS Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
+
+        const cleanupResponse = await client.deleteAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: scopedShell.id,
+        });
+        expect(cleanupResponse.success).toBe(true);
     });
 
     /**
@@ -877,9 +912,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutSubmodelById_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404
      */
-        test.skip('should return not found when putting Submodel by ID for a missing Asset Administration Shell', async () => {
+    test('should return not found when putting Submodel by ID for a missing Asset Administration Shell', async () => {
         const response = await client.putSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: randomMissingAasIdentifier(),
@@ -895,9 +930,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById_AasRepository
-        * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
-        test.skip('should get Submodel by ID through AAS repository superpath', async () => {
+    test.skip('should get Submodel by ID through AAS repository superpath', async () => {
         const response = await client.getSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -930,9 +965,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404
      */
-        test.skip('should return not found when getting Submodel by missing ID', async () => {
+    test('should return not found when getting Submodel by missing ID', async () => {
         const response = await client.getSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -947,9 +982,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodel_AasRepository
-        * @status 204 [known-backend-bug]
+     * @status 204 [known-backend-bug]
      */
-        test.skip('should patch Submodel through AAS repository superpath', async () => {
+    test.skip('should patch Submodel through AAS repository superpath', async () => {
         const response = await client.patchSubmodelAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -983,9 +1018,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodel_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when patching a missing Submodel', async () => {
+    test.skip('should return not found when patching a missing Submodel', async () => {
         const response = await client.patchSubmodelAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1001,9 +1036,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Metadata_AasRepository
-        * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
-        test.skip('should get Submodel metadata by ID through AAS repository superpath', async () => {
+    test.skip('should get Submodel metadata by ID through AAS repository superpath', async () => {
         const response = await client.getSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1036,9 +1071,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Metadata_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when getting metadata for a missing Submodel', async () => {
+    test.skip('should return not found when getting metadata for a missing Submodel', async () => {
         const response = await client.getSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1053,9 +1088,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-Metadata_AasRepository
-        * @status 204 [known-backend-bug]
+     * @status 204 [known-backend-bug]
      */
-        test.skip('should patch Submodel metadata by ID through AAS repository superpath', async () => {
+    test.skip('should patch Submodel metadata by ID through AAS repository superpath', async () => {
         const response = await client.patchSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1089,9 +1124,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-Metadata_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when patching metadata for a missing Submodel', async () => {
+    test.skip('should return not found when patching metadata for a missing Submodel', async () => {
         const response = await client.patchSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1107,9 +1142,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-ValueOnly_AasRepository
-        * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
-        test.skip('should get Submodel value-only by ID through AAS repository superpath', async () => {
+    test.skip('should get Submodel value-only by ID through AAS repository superpath', async () => {
         const response = await client.getSubmodelByIdValueOnlyAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1142,9 +1177,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-ValueOnly_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when getting value-only for a missing Submodel', async () => {
+    test.skip('should return not found when getting value-only for a missing Submodel', async () => {
         const response = await client.getSubmodelByIdValueOnlyAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1159,9 +1194,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-ValueOnly_AasRepository
-        * @status 204 [known-backend-bug]
+     * @status 204 [known-backend-bug]
      */
-        test.skip('should patch Submodel value-only by ID through AAS repository superpath', async () => {
+    test.skip('should patch Submodel value-only by ID through AAS repository superpath', async () => {
         const response = await client.patchSubmodelByIdValueOnlyAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1195,9 +1230,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-ValueOnly_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when patching value-only for a missing Submodel', async () => {
+    test.skip('should return not found when patching value-only for a missing Submodel', async () => {
         const response = await client.patchSubmodelByIdValueOnlyAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1213,9 +1248,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Reference_AasRepository
-        * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
-        test.skip('should get Submodel reference by ID through AAS repository superpath', async () => {
+    test.skip('should get Submodel reference by ID through AAS repository superpath', async () => {
         const response = await client.getSubmodelByIdReferenceAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1248,9 +1283,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Reference_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when getting reference for a missing Submodel', async () => {
+    test.skip('should return not found when getting reference for a missing Submodel', async () => {
         const response = await client.getSubmodelByIdReferenceAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1265,9 +1300,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Path_AasRepository
-        * @status 200 [known-backend-bug]
+     * @status 200 [known-backend-bug]
      */
-        test.skip('should get Submodel path by ID through AAS repository superpath', async () => {
+    test.skip('should get Submodel path by ID through AAS repository superpath', async () => {
         const response = await client.getSubmodelByIdPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -1300,9 +1335,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Path_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when getting path for a missing Submodel', async () => {
+    test.skip('should return not found when getting path for a missing Submodel', async () => {
         const response = await client.getSubmodelByIdPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -3193,9 +3228,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation DeleteSubmodelById_AasRepository
-        * @status 404 [known-backend-bug]
+     * @status 404 [known-backend-bug]
      */
-        test.skip('should return not found when deleting a missing Submodel by ID', async () => {
+    test.skip('should return not found when deleting a missing Submodel by ID', async () => {
         const response = await client.deleteSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -3210,9 +3245,9 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation DeleteSubmodelById_AasRepository
-        * @status 204 [known-backend-bug]
+     * @status 204 [known-backend-bug]
      */
-        test.skip('should delete Submodel by ID through AAS repository superpath', async () => {
+    test.skip('should delete Submodel by ID through AAS repository superpath', async () => {
         const response = await client.deleteSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: testShell.id,

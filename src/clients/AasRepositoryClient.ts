@@ -845,7 +845,7 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         submodel: Submodel;
-    }): Promise<ApiResult<Reference | void, AasRepositoryService.Result>> {
+    }): Promise<ApiResult<Submodel | void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, submodelIdentifier, submodel } = options;
 
         try {
@@ -861,9 +861,31 @@ export class AasRepositoryClient {
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
             });
-            const result = await response.value();
 
-            return { success: true, data: result ? convertApiReferenceToCoreReference(result) : undefined, statusCode: response.raw.status };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            if (response.raw.status === 201) {
+                try {
+                    const createdSubmodel = await response.value();
+                    return {
+                        success: true,
+                        data: createdSubmodel ? convertApiSubmodelToCoreSubmodel(createdSubmodel) : undefined,
+                        statusCode: response.raw.status,
+                    };
+                } catch {
+                    // Some servers acknowledge creation with an empty or non-JSON body.
+                    return { success: true, data: undefined, statusCode: response.raw.status };
+                }
+            }
+
+            const result = await response.value();
+            return {
+                success: true,
+                data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
