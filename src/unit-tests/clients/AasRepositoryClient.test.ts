@@ -96,6 +96,10 @@ const SERIALIZATION_BLOB = new Blob(['serialized-environment'], { type: 'applica
 const SERVICE_DESCRIPTION: AasRepositoryService.ServiceDescription = {
     profiles: ['aas-repository-service-profile'],
 };
+const apiResponse = <T>(value: T, status = 200) => ({
+    raw: { status },
+    value: vi.fn().mockResolvedValue(value),
+});
 
 describe('AasRepositoryClient', () => {
     // Helper function to create expected configuration matcher
@@ -132,6 +136,31 @@ describe('AasRepositoryClient', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+
+        const bridgeRawResponses = () => {
+            const statusFromMethod = (methodName: string, value: unknown): number => {
+                if (methodName === 'postAssetAdministrationShell') return 201;
+                if (methodName === 'deleteAssetAdministrationShellById') return 204;
+                if (methodName === 'putAssetAdministrationShellById') return value === undefined ? 204 : 201;
+                if (methodName === 'putAssetInformationAasRepository') return 204;
+                if (methodName === 'putThumbnailAasRepository') return 204;
+                if (methodName === 'postSubmodelReferenceAasRepository') return 201;
+                if (methodName === 'deleteSubmodelReferenceAasRepository') return 204;
+                return 200;
+            };
+
+            for (const methodName of Object.keys(mockApiInstance)) {
+                const target = mockApiInstance as Record<string, Mock>;
+                target[`${methodName}Raw`] = vi.fn(async (request?: unknown) => {
+                    const value =
+                        request === undefined ? await target[methodName]() : await target[methodName](request);
+                    return apiResponse(value, statusFromMethod(methodName, value));
+                }) as unknown as Mock;
+            }
+        };
+
+        bridgeRawResponses();
+
         // Setup mock for base64Encode
         (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor

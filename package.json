@@ -37,6 +37,7 @@
     "test:unit": "vitest run --project unit-tests",
     "test:integration": "vitest run --project integration-tests",
     "validate:openapi-coverage": "node scripts/validate-openapi-coverage.mjs",
+    "validate:openapi-coverage:aasrepo": "node scripts/validate-openapi-coverage.mjs --service aasRepository",
     "validate:openapi-coverage:aasdiscovery": "node scripts/validate-openapi-coverage.mjs --service aasDiscovery",
     "validate:openapi-coverage:aasregistry": "node scripts/validate-openapi-coverage.mjs --service aasRegistry",
     "validate:openapi-coverage:smregistry": "node scripts/validate-openapi-coverage.mjs --service submodelRegistry",

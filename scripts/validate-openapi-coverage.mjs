@@ -8,6 +8,11 @@ const WAIVER_TAGS = new Set(['known-backend-bug', 'known-specification-bug', 'kn
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
 const SERVICE_CONFIG = {
+    aasRepository: {
+        openapiFile: 'openapi/aasrepository.yaml',
+        clientFile: 'src/clients/AasRepositoryClient.ts',
+        integrationTestFile: 'src/integration-tests/aasRepo.integration.test.ts',
+    },
     aasDiscovery: {
         openapiFile: 'openapi/aasdiscovery.yaml',
         clientFile: 'src/clients/AasDiscoveryClient.ts',

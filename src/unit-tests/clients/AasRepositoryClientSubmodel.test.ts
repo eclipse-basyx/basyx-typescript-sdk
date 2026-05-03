@@ -224,6 +224,10 @@ const TEST_CONFIGURATION = new Configuration({
     basePath: 'http://localhost:8081',
     fetchApi: globalThis.fetch,
 });
+const apiResponse = <T>(value: T, status = 200) => ({
+    raw: { status },
+    value: vi.fn().mockResolvedValue(value),
+});
 
 describe('AasRepositoryClient', () => {
     // Helper function to create expected configuration matcher
@@ -281,6 +285,37 @@ describe('AasRepositoryClient', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+
+        const bridgeRawResponses = () => {
+            const statusFromMethod = (methodName: string, value: unknown): number => {
+                if (methodName === 'putSubmodelByIdAasRepository') return value === undefined ? 204 : 201;
+                if (methodName === 'deleteSubmodelByIdAasRepository') return 204;
+                if (methodName === 'patchSubmodelAasRepository') return 204;
+                if (methodName === 'patchSubmodelByIdMetadataAasRepository') return 204;
+                if (methodName === 'patchSubmodelByIdValueOnlyAasRepository') return 204;
+                if (methodName === 'postSubmodelElementAasRepository') return 201;
+                if (methodName === 'postSubmodelElementByPathAasRepository') return 201;
+                if (methodName === 'putSubmodelElementByPathAasRepository') return value === undefined ? 204 : 201;
+                if (methodName === 'patchSubmodelElementValueByPathAasRepository') return 204;
+                if (methodName === 'patchSubmodelElementValueByPathMetadata') return 204;
+                if (methodName === 'patchSubmodelElementValueByPathValueOnly') return 204;
+                if (methodName === 'deleteSubmodelElementByPathAasRepository') return 204;
+                if (methodName === 'putFileByPathAasRepository') return 204;
+                return 200;
+            };
+
+            for (const methodName of Object.keys(mockApiInstance)) {
+                const target = mockApiInstance as Record<string, Mock>;
+                target[`${methodName}Raw`] = vi.fn(async (request?: unknown) => {
+                    const value =
+                        request === undefined ? await target[methodName]() : await target[methodName](request);
+                    return apiResponse(value, statusFromMethod(methodName, value));
+                }) as unknown as Mock;
+            }
+        };
+
+        bridgeRawResponses();
+
         // Setup mock for base64Encode
         (base64Encode as Mock).mockImplementation((input) => `encoded_${input}`);
         // Setup mock for constructor
