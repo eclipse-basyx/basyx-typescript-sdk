@@ -1,6 +1,33 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+type ClientMethodData = {
+    methodNames: string[];
+    delegationMap: Map<string, string>;
+};
+
+function parseClientMethodData(clientSource: string): ClientMethodData {
+    const methodRegex = /async\s+([A-Za-z0-9_]+)\s*\(/g;
+    const delegatorRegex =
+        /async\s+([A-Za-z0-9_]+)\s*\(\s*options\s*:\s*\{[\s\S]*?\}\s*\)\s*:\s*Promise<[\s\S]*?>\s*\{\s*return\s+this\.([A-Za-z0-9_]+)\(options\);\s*\}/g;
+    const methodNames = new Set<string>();
+    const delegationMap = new Map<string, string>();
+
+    let match: RegExpExecArray | null;
+    while ((match = methodRegex.exec(clientSource)) !== null) {
+        methodNames.add(match[1]);
+    }
+
+    while ((match = delegatorRegex.exec(clientSource)) !== null) {
+        delegationMap.set(match[1], match[2]);
+    }
+
+    return {
+        methodNames: [...methodNames],
+        delegationMap,
+    };
+}
+
 describe('Client Integration Coverage Guard', () => {
     test('all client methods are covered in component integration tests', () => {
         const workspaceRoot = process.cwd();
@@ -26,11 +53,17 @@ describe('Client Integration Coverage Guard', () => {
 
         for (const clientFile of clientFiles) {
             const clientSource = fs.readFileSync(clientFile, 'utf8');
-            const methodMatches = [...clientSource.matchAll(/async\s+([A-Za-z0-9_]+)\s*\(/g)];
-            const methodNames = [...new Set(methodMatches.map((match) => match[1]))];
+            const { methodNames, delegationMap } = parseClientMethodData(clientSource);
 
             for (const methodName of methodNames) {
-                if (!integrationText.includes(methodName)) {
+                const delegatedAliases = [...delegationMap.entries()]
+                    .filter(([, targetMethod]) => targetMethod === methodName)
+                    .map(([aliasMethod]) => aliasMethod);
+
+                const isCoveredDirectly = integrationText.includes(methodName);
+                const isCoveredViaAlias = delegatedAliases.some((aliasMethod) => integrationText.includes(aliasMethod));
+
+                if (!isCoveredDirectly && !isCoveredViaAlias) {
                     const clientBaseName = path.basename(clientFile);
                     missingMethods.push(`${clientBaseName}:${methodName}`);
                 }
