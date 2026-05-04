@@ -8,7 +8,7 @@ import type {
 import type { ApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasRepositoryService } from '../generated';
-import { Configuration } from '../generated/runtime';
+import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import {
@@ -28,6 +28,32 @@ import {
 import { handleApiError } from '../lib/errorHandler';
 
 export class AasRepositoryClient {
+    private static requireIdentifier(value: string | null | undefined, field: string): string {
+        if (value === null || value === undefined || value.trim() === '') {
+            throw new RequiredError(field, `Required parameter "${field}" was null, undefined, or empty.`);
+        }
+
+        return value;
+    }
+
+    private static extractStatusCode(err: unknown, parsedError?: AasRepositoryService.Result): number | undefined {
+        const responseStatus = (err as { response?: { status?: unknown } })?.response?.status;
+        if (typeof responseStatus === 'number') {
+            return responseStatus;
+        }
+
+        if (err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError') {
+            return 400;
+        }
+
+        const code = parsedError?.messages?.[0]?.code;
+        if (!code) {
+            return undefined;
+        }
+
+        const parsedCode = Number.parseInt(code, 10);
+        return Number.isNaN(parsedCode) ? undefined : parsedCode;
+    }
     /**
      * Returns all Asset Administration Shells
      *
@@ -63,21 +89,27 @@ export class AasRepositoryClient {
             );
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
-            const result = await apiInstance.getAllAssetAdministrationShells({
+            const response = await apiInstance.getAllAssetAdministrationShellsRaw({
                 assetIds: encodedAssetIds,
                 idShort: idShort,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             const shells = (result.result ?? []).map(convertApiAasToCoreAas);
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: shells },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -116,22 +148,28 @@ export class AasRepositoryClient {
             );
             const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
 
-            const result = await apiInstance.getAllAssetAdministrationShellsReference({
+            const response = await apiInstance.getAllAssetAdministrationShellsReferenceRaw({
                 assetIds: encodedAssetIds,
                 idShort: idShort,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             const shellReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
 
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: shellReferences },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -155,14 +193,19 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const result = await apiInstance.postAssetAdministrationShell({
+            const response = await apiInstance.postAssetAdministrationShellRaw({
                 assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiAasToCoreAas(result) };
+            return { success: true, data: convertApiAasToCoreAas(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -186,16 +229,23 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.deleteAssetAdministrationShellById({
+            const response = await apiInstance.deleteAssetAdministrationShellByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -219,16 +269,23 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.getAssetAdministrationShellById({
+            const response = await apiInstance.getAssetAdministrationShellByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiAasToCoreAas(result) };
+            return { success: true, data: convertApiAasToCoreAas(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -254,17 +311,77 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.putAssetAdministrationShellById({
+            const response = await apiInstance.putAssetAdministrationShellByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
                 assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
             });
 
-            return { success: true, data: result ? convertApiAasToCoreAas(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: result ? convertApiAasToCoreAas(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
+        }
+    }
+
+    /**
+     * Returns a specific Asset Administration Shell in reference representation
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     */
+    async getAssetAdministrationShellByIdReferenceAasRepository(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+    }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
+        const { configuration, aasIdentifier } = options;
+
+        try {
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+
+            const response = await apiInstance.getAssetAdministrationShellByIdReferenceAasRepositoryRaw({
+                aasIdentifier: encodedAasIdentifier,
+            });
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: convertApiReferenceToCoreReference(result),
+                statusCode: response.raw.status,
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -277,7 +394,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAssetInformation(options: {
+    async getAssetInformationAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<AssetInformation, AasRepositoryService.Result>> {
@@ -288,19 +405,27 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.getAssetInformationAasRepository({
+            const response = await apiInstance.getAssetInformationAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
             return {
                 success: true,
                 data: convertApiAssetInformationToCoreAssetInformation(result),
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -314,7 +439,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async putAssetInformation(options: {
+    async putAssetInformationAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
@@ -326,17 +451,24 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.putAssetInformationAasRepository({
+            const response = await apiInstance.putAssetInformationAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 assetInformation: convertCoreAssetInformationToApiAssetInformation(assetInformation),
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -349,7 +481,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async deleteThumbnail(options: {
+    async deleteThumbnailAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
@@ -359,16 +491,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.deleteThumbnailAasRepository({
+            const response = await apiInstance.deleteThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
 
-            return { success: true, data: result };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            const result = await response.value();
+
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -381,7 +525,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getThumbnail(options: {
+    async getThumbnailAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
     }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
@@ -392,16 +536,23 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.getThumbnailAasRepository({
+            const response = await apiInstance.getThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -416,7 +567,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async putThumbnail(options: {
+    async putThumbnailAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
         fileName: string;
@@ -429,18 +580,25 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.putThumbnailAasRepository({
+            const response = await apiInstance.putThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 fileName: fileName,
                 file: file,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -455,7 +613,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelReferences(options: {
+    async getAllSubmodelReferencesAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
         limit?: number;
@@ -473,13 +631,16 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelReferencesAasRepository({
+            const response = await apiInstance.getAllSubmodelReferencesAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             const submodelReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
             return {
@@ -488,10 +649,15 @@ export class AasRepositoryClient {
                     pagedResult: result.paging_metadata,
                     result: submodelReferences,
                 },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -505,7 +671,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async postSubmodelReference(options: {
+    async postSubmodelReferenceAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
@@ -517,17 +683,24 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
-            const result = await apiInstance.postSubmodelReferenceAasRepository({
+            const response = await apiInstance.postSubmodelReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 reference: convertCoreReferenceToApiReference(submodelReference),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiReferenceToCoreReference(result) };
+            return { success: true, data: convertApiReferenceToCoreReference(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -541,7 +714,7 @@ export class AasRepositoryClient {
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async deleteSubmodelReferenceById(options: {
+    async deleteSubmodelReferenceAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
@@ -553,19 +726,96 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteSubmodelReferenceAasRepository({
+            const response = await apiInstance.deleteSubmodelReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
+    }
+
+    async getAssetInformation(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+    }): Promise<ApiResult<AssetInformation, AasRepositoryService.Result>> {
+        return this.getAssetInformationAasRepository(options);
+    }
+
+    async putAssetInformation(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+        assetInformation: AssetInformation;
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+        return this.putAssetInformationAasRepository(options);
+    }
+
+    async deleteThumbnail(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+        return this.deleteThumbnailAasRepository(options);
+    }
+
+    async getThumbnail(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+    }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
+        return this.getThumbnailAasRepository(options);
+    }
+
+    async putThumbnail(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+        fileName: string;
+        file: Blob;
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+        return this.putThumbnailAasRepository(options);
+    }
+
+    async getAllSubmodelReferences(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            { pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined; result: Reference[] },
+            AasRepositoryService.Result
+        >
+    > {
+        return this.getAllSubmodelReferencesAasRepository(options);
+    }
+
+    async postSubmodelReference(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+        submodelReference: Reference;
+    }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
+        return this.postSubmodelReferenceAasRepository(options);
+    }
+
+    async deleteSubmodelReferenceById(options: {
+        configuration: Configuration;
+        aasIdentifier: string;
+        submodelIdentifier: string;
+    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+        return this.deleteSubmodelReferenceAasRepository(options);
     }
 
     /**
@@ -594,20 +844,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdAasRepository({
+            const response = await apiInstance.getSubmodelByIdAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelToCoreSubmodel(result) };
+            return { success: true, data: convertApiSubmodelToCoreSubmodel(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -627,7 +886,7 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         submodel: Submodel;
-    }): Promise<ApiResult<Reference | void, AasRepositoryService.Result>> {
+    }): Promise<ApiResult<Submodel | void, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, submodelIdentifier, submodel } = options;
 
         try {
@@ -635,19 +894,50 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putSubmodelByIdAasRepository({
+            const response = await apiInstance.putSubmodelByIdAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
             });
 
-            return { success: true, data: result ? convertApiReferenceToCoreReference(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            if (response.raw.status === 201) {
+                try {
+                    const createdSubmodel = await response.value();
+                    return {
+                        success: true,
+                        data: createdSubmodel ? convertApiSubmodelToCoreSubmodel(createdSubmodel) : undefined,
+                        statusCode: response.raw.status,
+                    };
+                } catch {
+                    // Some servers acknowledge creation with an empty or non-JSON body.
+                    return { success: true, data: undefined, statusCode: response.raw.status };
+                }
+            }
+
+            const result = await response.value();
+            return {
+                success: true,
+                data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -673,18 +963,27 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteSubmodelByIdAasRepository({
+            const response = await apiInstance.deleteSubmodelByIdAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -714,20 +1013,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelAasRepository({
+            const response = await apiInstance.patchSubmodelAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodel: convertCoreSubmodelToApiSubmodel(submodel),
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -753,18 +1061,27 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdMetadataAasRepository({
+            const response = await apiInstance.getSubmodelByIdMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -792,19 +1109,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelByIdMetadataAasRepository({
+            const response = await apiInstance.patchSubmodelByIdMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodelMetadata: submodelMetadata,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -834,20 +1160,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdValueOnlyAasRepository({
+            const response = await apiInstance.getSubmodelByIdValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -876,20 +1211,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelByIdValueOnlyAasRepository({
+            const response = await apiInstance.patchSubmodelByIdValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 body: body,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -915,18 +1259,27 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdReferenceAasRepository({
+            const response = await apiInstance.getSubmodelByIdReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiReferenceToCoreReference(result) };
+            return { success: true, data: convertApiReferenceToCoreReference(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -954,19 +1307,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelByIdPathAasRepository({
+            const response = await apiInstance.getSubmodelByIdPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1008,10 +1370,14 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsAasRepository({
+            const response = await apiInstance.getAllSubmodelElementsAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
@@ -1019,15 +1385,21 @@ export class AasRepositoryClient {
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
             const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElements },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1055,19 +1427,32 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.postSubmodelElementAasRepository({
+            const response = await apiInstance.postSubmodelElementAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1105,25 +1490,35 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsMetadataAasRepository({
+            const response = await apiInstance.getAllSubmodelElementsMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
             });
+            const result = await response.value();
 
             //const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
             const submodelElementsMetadata = result.result ?? [];
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElementsMetadata },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1163,26 +1558,36 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsValueOnlyAasRepository({
+            const response = await apiInstance.getAllSubmodelElementsValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
                 level: level,
             });
+            const result = await response.value();
 
             //const submodelElementsValue = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
             const submodelElementValues = result.result ?? [];
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElementValues },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1222,25 +1627,35 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsReferenceAasRepository({
+            const response = await apiInstance.getAllSubmodelElementsReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
                 cursor: cursor,
                 level: level,
             });
+            const result = await response.value();
 
             const submodelElementReferences = (result.result ?? []).map(convertApiReferenceToCoreReference);
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElementReferences },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1282,10 +1697,14 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getAllSubmodelElementsPathAasRepository({
+            const response = await apiInstance.getAllSubmodelElementsPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 limit: limit,
@@ -1293,16 +1712,22 @@ export class AasRepositoryClient {
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
             //const submodelElements = (result.result ?? []).map(convertApiSubmodelElementToCoreSubmodelElement);
             const submodelElements = result.result ?? [];
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElements },
+                statusCode: response.raw.status,
             };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1334,21 +1759,34 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathAasRepository({
+            const response = await apiInstance.getSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1378,20 +1816,33 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.postSubmodelElementByPathAasRepository({
+            const response = await apiInstance.postSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result) };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1419,19 +1870,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteSubmodelElementByPathAasRepository({
+            const response = await apiInstance.deleteSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1461,20 +1921,54 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putSubmodelElementByPathAasRepository({
+            const response = await apiInstance.putSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
 
-            return { success: true, data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined };
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            if (response.raw.status === 201) {
+                try {
+                    const createdSubmodelElement = await response.value();
+                    return {
+                        success: true,
+                        data: createdSubmodelElement
+                            ? convertApiSubmodelElementToCoreSubmodelElement(createdSubmodelElement)
+                            : undefined,
+                        statusCode: response.raw.status,
+                    };
+                } catch {
+                    // Some servers acknowledge creation with an empty or non-JSON body.
+                    return { success: true, data: undefined, statusCode: response.raw.status };
+                }
+            }
+
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1506,21 +2000,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelElementValueByPathAasRepository({
+            const response = await apiInstance.patchSubmodelElementValueByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1548,19 +2051,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathMetadataAasRepository({
+            const response = await apiInstance.getSubmodelElementByPathMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1590,20 +2102,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelElementValueByPathMetadata({
+            const response = await apiInstance.patchSubmodelElementValueByPathMetadataRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElementMetadata: submodelElementMetadata,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1635,21 +2156,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathValueOnlyAasRepository({
+            const response = await apiInstance.getSubmodelElementByPathValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
                 extent: extent,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1681,21 +2211,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.patchSubmodelElementValueByPathValueOnly({
+            const response = await apiInstance.patchSubmodelElementValueByPathValueOnlyRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 submodelElementValue: submodelElementValue,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1725,20 +2264,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathReferenceAasRepository({
+            const response = await apiInstance.getSubmodelElementByPathReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: convertApiReferenceToCoreReference(result) };
+            return { success: true, data: convertApiReferenceToCoreReference(result), statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1768,20 +2316,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getSubmodelElementByPathPathAasRepository({
+            const response = await apiInstance.getSubmodelElementByPathPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 level: level,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1809,19 +2366,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.getFileByPathAasRepository({
+            const response = await apiInstance.getFileByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1853,21 +2419,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.putFileByPathAasRepository({
+            const response = await apiInstance.putFileByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 fileName: fileName,
                 file: file,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1895,19 +2470,28 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.deleteFileByPathAasRepository({
+            const response = await apiInstance.deleteFileByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1937,20 +2521,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationAasRepository({
+            const response = await apiInstance.invokeOperationAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -1980,20 +2573,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationValueOnlyAasRepository({
+            const response = await apiInstance.invokeOperationValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2023,20 +2625,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationAsyncAasRepository({
+            const response = await apiInstance.invokeOperationAsyncAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2066,20 +2677,29 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
-            const result = await apiInstance.invokeOperationAsyncValueOnlyAasRepository({
+            const response = await apiInstance.invokeOperationAsyncValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2109,21 +2729,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
-            const encodedHandleId = base64Encode(handleId);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
+            const encodedHandleId = base64Encode(AasRepositoryClient.requireIdentifier(handleId, 'handleId'));
 
-            const result = await apiInstance.getOperationAsyncStatusAasRepository({
+            const response = await apiInstance.getOperationAsyncStatusAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 handleId: encodedHandleId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2153,21 +2782,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
-            const encodedHandleId = base64Encode(handleId);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
+            const encodedHandleId = base64Encode(AasRepositoryClient.requireIdentifier(handleId, 'handleId'));
 
-            const result = await apiInstance.getOperationAsyncResultAasRepository({
+            const response = await apiInstance.getOperationAsyncResultAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 handleId: encodedHandleId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2197,21 +2835,30 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(aasIdentifier);
-            const encodedSubmodelIdentifier = base64Encode(submodelIdentifier);
-            const encodedHandleId = base64Encode(handleId);
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
+            const encodedHandleId = base64Encode(AasRepositoryClient.requireIdentifier(handleId, 'handleId'));
 
-            const result = await apiInstance.getOperationAsyncResultValueOnlyAasRepository({
+            const response = await apiInstance.getOperationAsyncResultValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 handleId: encodedHandleId,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2237,16 +2884,21 @@ export class AasRepositoryClient {
         try {
             const apiInstance = new AasRepositoryService.SerializationAPIApi(applyDefaults(configuration));
 
-            const result = await apiInstance.generateSerializationByIds({
+            const response = await apiInstance.generateSerializationByIdsRaw({
                 aasIds: aasIds,
                 submodelIds: submodelIds,
                 includeConceptDescriptions: includeConceptDescriptions,
             });
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 
@@ -2265,12 +2917,17 @@ export class AasRepositoryClient {
 
         try {
             const apiInstance = new AasRepositoryService.DescriptionAPIApi(applyDefaults(configuration));
-            const result = await apiInstance.getSelfDescription();
+            const response = await apiInstance.getSelfDescriptionRaw();
+            const result = await response.value();
 
-            return { success: true, data: result };
+            return { success: true, data: result, statusCode: response.raw.status };
         } catch (err) {
             const customError = await handleApiError(err);
-            return { success: false, error: customError };
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+            };
         }
     }
 }

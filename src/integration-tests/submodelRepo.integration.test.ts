@@ -94,14 +94,22 @@ describe('Submodel Repository Integration Tests', () => {
         expect(response.statusCode).toBe(409);
     }
 
+    beforeAll(async () => {
+        await ensureTestSubmodelExists();
+    });
+
     /**
      * @operation PostSubmodel
      * @status 201
      */
     test('should create a new Submodel', async () => {
+        const createdSubmodel = createTestSubmodel();
+        createdSubmodel.id = `${createdSubmodel.id}-create-${uniqueSuffix()}`;
+        createdSubmodel.idShort = `${createdSubmodel.idShort ?? 'submodel'}Create${uniqueSuffix()}`;
+
         const response = await client.postSubmodel({
             configuration,
-            submodel: testSubmodel,
+            submodel: createdSubmodel,
         });
 
         // Log the error details if the request failed
@@ -112,7 +120,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testSubmodel);
+            expect(response.data).toEqual(createdSubmodel);
         }
     });
 
@@ -252,10 +260,14 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 201
      */
     test('should create a new SubmodelElement', async () => {
+        await ensureTestSubmodelExists();
+        const createdSubmodelElement = createNewSubmodelElement();
+        createdSubmodelElement.idShort = `testPropertyCreate-${uniqueSuffix()}`;
+
         const response = await client.postSubmodelElement({
             configuration,
             submodelIdentifier: testSubmodel.id,
-            submodelElement: testSubmodelElement,
+            submodelElement: createdSubmodelElement,
         });
 
         // Log the error details if the request failed
@@ -266,7 +278,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testSubmodelElement);
+            expect(response.data).toEqual(createdSubmodelElement);
         }
     });
 
@@ -626,8 +638,11 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 201
      */
     test('should create a new SubmodelElement at a specified path within submodel elements hierarchy', async () => {
+        await ensureTestSubmodelExists();
+        await ensureParentCollectionExists();
+
         const nestedSubmodelElement = createNewSubmodelElement();
-        nestedSubmodelElement.idShort = 'nestedProperty';
+        nestedSubmodelElement.idShort = `nestedProperty-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementByPath({
             configuration,

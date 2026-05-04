@@ -2720,7 +2720,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
     /**
      * Creates or updates the Submodel
      */
-    async putSubmodelByIdAasRepositoryRaw(requestParameters: PutSubmodelByIdAasRepositoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Reference>> {
+    async putSubmodelByIdAasRepositoryRaw(requestParameters: PutSubmodelByIdAasRepositoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Submodel>> {
         if (requestParameters['aasIdentifier'] == null) {
             throw new runtime.RequiredError(
                 'aasIdentifier',
@@ -2762,7 +2762,7 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
     /**
      * Creates or updates the Submodel
      */
-    async putSubmodelByIdAasRepository(requestParameters: PutSubmodelByIdAasRepositoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Reference | null | undefined > {
+    async putSubmodelByIdAasRepository(requestParameters: PutSubmodelByIdAasRepositoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Submodel | null | undefined > {
         const response = await this.putSubmodelByIdAasRepositoryRaw(requestParameters, initOverrides);
         switch (response.raw.status) {
             case 201:
