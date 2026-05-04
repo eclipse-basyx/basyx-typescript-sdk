@@ -79,7 +79,11 @@ describe('AAS Repository Integration Tests', () => {
 
         const seededSubmodel = createTestSubmodel();
         seededSubmodel.id = testSubmodel.id;
-        seededSubmodel.submodelElements = [testSubmodelElement, testFileSubmodelElement, createTestSubmodelElementCollection()];
+        seededSubmodel.submodelElements = [
+            testSubmodelElement,
+            testFileSubmodelElement,
+            createTestSubmodelElementCollection(),
+        ];
 
         const submodelResponse = await client.putSubmodelByIdAasRepository({
             configuration,

@@ -229,7 +229,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.deleteAssetAdministrationShellByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -267,7 +269,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.getAssetAdministrationShellByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -307,7 +311,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.putAssetAdministrationShellByIdRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -320,7 +326,11 @@ export class AasRepositoryClient {
 
             const result = await response.value();
 
-            return { success: true, data: result ? convertApiAasToCoreAas(result) : undefined, statusCode: response.raw.status };
+            return {
+                success: true,
+                data: result ? convertApiAasToCoreAas(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
@@ -395,7 +405,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.getAssetInformationAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -439,7 +451,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.putAssetInformationAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -477,7 +491,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.deleteThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -520,7 +536,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.getThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -562,7 +580,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.putThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -611,7 +631,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.getAllSubmodelReferencesAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -661,7 +683,9 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
 
             const response = await apiInstance.postSubmodelReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -702,8 +726,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.deleteSubmodelReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -790,7 +818,6 @@ export class AasRepositoryClient {
         return this.deleteSubmodelReferenceAasRepository(options);
     }
 
-
     /**
      * Returns the Submodel
      *
@@ -817,8 +844,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelByIdAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -863,8 +894,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.putSubmodelByIdAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -928,8 +963,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.deleteSubmodelByIdAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -974,8 +1013,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.patchSubmodelAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1018,8 +1061,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelByIdMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1062,8 +1109,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.patchSubmodelByIdMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1109,8 +1160,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelByIdValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1156,8 +1211,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.patchSubmodelByIdValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1200,8 +1259,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelByIdReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1244,8 +1307,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelByIdPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1303,8 +1370,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getAllSubmodelElementsAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1356,8 +1427,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.postSubmodelElementAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1366,7 +1441,11 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
@@ -1411,8 +1490,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getAllSubmodelElementsMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1475,8 +1558,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getAllSubmodelElementsValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1540,8 +1627,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getAllSubmodelElementsReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1606,8 +1697,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getAllSubmodelElementsPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1664,8 +1759,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1676,7 +1775,11 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
@@ -1713,8 +1816,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.postSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1724,7 +1831,11 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelElementToCoreSubmodelElement(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiSubmodelElementToCoreSubmodelElement(result),
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
@@ -1759,8 +1870,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.deleteSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1806,8 +1921,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.putSubmodelElementByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1881,8 +2000,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.patchSubmodelElementValueByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1928,8 +2051,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelElementByPathMetadataAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -1975,8 +2102,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.patchSubmodelElementValueByPathMetadataRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2025,8 +2156,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelElementByPathValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2076,8 +2211,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.patchSubmodelElementValueByPathValueOnlyRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2125,8 +2264,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelElementByPathReferenceAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2173,8 +2316,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getSubmodelElementByPathPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2219,8 +2366,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.getFileByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2268,8 +2419,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.putFileByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2315,8 +2470,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.deleteFileByPathAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2362,8 +2521,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.invokeOperationAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2410,8 +2573,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.invokeOperationValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2458,8 +2625,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.invokeOperationAsyncAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2506,8 +2677,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
 
             const response = await apiInstance.invokeOperationAsyncValueOnlyAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
@@ -2554,8 +2729,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
             const encodedHandleId = base64Encode(AasRepositoryClient.requireIdentifier(handleId, 'handleId'));
 
             const response = await apiInstance.getOperationAsyncStatusAasRepositoryRaw({
@@ -2603,8 +2782,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
             const encodedHandleId = base64Encode(AasRepositoryClient.requireIdentifier(handleId, 'handleId'));
 
             const response = await apiInstance.getOperationAsyncResultAasRepositoryRaw({
@@ -2652,8 +2835,12 @@ export class AasRepositoryClient {
                 applyDefaults(configuration)
             );
 
-            const encodedAasIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier'));
-            const encodedSubmodelIdentifier = base64Encode(AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier'));
+            const encodedAasIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
+            );
+            const encodedSubmodelIdentifier = base64Encode(
+                AasRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
+            );
             const encodedHandleId = base64Encode(AasRepositoryClient.requireIdentifier(handleId, 'handleId'));
 
             const response = await apiInstance.getOperationAsyncResultValueOnlyAasRepositoryRaw({
