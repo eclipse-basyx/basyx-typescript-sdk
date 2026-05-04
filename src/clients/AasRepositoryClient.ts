@@ -313,6 +313,11 @@ export class AasRepositoryClient {
                 aasIdentifier: encodedAasIdentifier,
                 assetAdministrationShell: convertCoreAasToApiAas(assetAdministrationShell),
             });
+
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
             const result = await response.value();
 
             return { success: true, data: result ? convertApiAasToCoreAas(result) : undefined, statusCode: response.raw.status };
@@ -477,6 +482,11 @@ export class AasRepositoryClient {
             const response = await apiInstance.deleteThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
             });
+
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
             const result = await response.value();
 
             return { success: true, data: result, statusCode: response.raw.status };
@@ -1805,9 +1815,34 @@ export class AasRepositoryClient {
                 idShortPath: idShortPath,
                 submodelElement: convertCoreSubmodelElementToApiSubmodelElement(submodelElement),
             });
+
+            if (response.raw.status === 204) {
+                return { success: true, data: undefined, statusCode: response.raw.status };
+            }
+
+            if (response.raw.status === 201) {
+                try {
+                    const createdSubmodelElement = await response.value();
+                    return {
+                        success: true,
+                        data: createdSubmodelElement
+                            ? convertApiSubmodelElementToCoreSubmodelElement(createdSubmodelElement)
+                            : undefined,
+                        statusCode: response.raw.status,
+                    };
+                } catch {
+                    // Some servers acknowledge creation with an empty or non-JSON body.
+                    return { success: true, data: undefined, statusCode: response.raw.status };
+                }
+            }
+
             const result = await response.value();
 
-            return { success: true, data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined, statusCode: response.raw.status };
+            return {
+                success: true,
+                data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined,
+                statusCode: response.raw.status,
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {

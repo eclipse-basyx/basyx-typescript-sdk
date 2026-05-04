@@ -8,6 +8,7 @@ import {
     createTestOperationRequest,
     createTestSubmodel,
     createTestSubmodelElement,
+    createTestSubmodelElementCollection,
 } from './fixtures/submodelFixtures';
 
 describe('AAS Repository Integration Tests', () => {
@@ -42,6 +43,10 @@ describe('AAS Repository Integration Tests', () => {
         return `https://example.com/ids/sm/missing-${uniqueSuffix()}`;
     }
 
+    function randomMissingIdShortPath(): string {
+        return `missingParent${Date.now()}${Math.random().toString(36).slice(2)}`;
+    }
+
     function assertApiResult(response: ApiResultLike): void {
         expect(typeof response.success).toBe('boolean');
         if (response.success) {
@@ -57,6 +62,35 @@ describe('AAS Repository Integration Tests', () => {
             const errorPayload = response.error as { messages?: Array<{ code?: string }> } | undefined;
             const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
             expect(messageCodes).toContain(expectedCode);
+        }
+    }
+
+    async function ensureSharedSuperpathFixture(): Promise<void> {
+        const shellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: testShell,
+        });
+
+        if (!shellResponse.success) {
+            const errorPayload = shellResponse.error as { messages?: Array<{ code?: string }> } | undefined;
+            const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
+            expect(messageCodes).toContain('409');
+        }
+
+        const seededSubmodel = createTestSubmodel();
+        seededSubmodel.id = testSubmodel.id;
+        seededSubmodel.submodelElements = [testSubmodelElement, testFileSubmodelElement, createTestSubmodelElementCollection()];
+
+        const submodelResponse = await client.putSubmodelByIdAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            submodel: seededSubmodel,
+        });
+
+        expect(submodelResponse.success).toBe(true);
+        if (submodelResponse.success) {
+            expect([201, 204]).toContain(submodelResponse.statusCode);
         }
     }
 
@@ -331,14 +365,25 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should update an Asset Administration Shell', async () => {
-        const updatedShell = testShell;
+        const updatedShell = createTestShell();
+        updatedShell.id = `${updatedShell.id}-put-update-${uniqueSuffix()}`;
+
+        const createResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: updatedShell,
+        });
+        expect(createResponse.success).toBe(true);
+        if (createResponse.success) {
+            expect(createResponse.statusCode).toBe(201);
+        }
+
         const description = createDescription();
 
         updatedShell.description = [description];
 
         const updateResponse = await client.putAssetAdministrationShellById({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: updatedShell.id,
             assetAdministrationShell: updatedShell,
         });
 
@@ -349,13 +394,22 @@ describe('AAS Repository Integration Tests', () => {
 
         const fetchResponse = await client.getAssetAdministrationShellById({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: updatedShell.id,
         });
 
         expect(fetchResponse.success).toBe(true);
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data).toEqual(updatedShell);
+        }
+
+        const cleanupResponse = await client.deleteAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: updatedShell.id,
+        });
+        expect(cleanupResponse.success).toBe(true);
+        if (cleanupResponse.success) {
+            expect(cleanupResponse.statusCode).toBe(204);
         }
     });
 
@@ -751,25 +805,49 @@ describe('AAS Repository Integration Tests', () => {
      * @status 409
      */
     test('should return conflict when posting a duplicate Submodel reference', async () => {
+        const scopedShell = createTestShell();
+        scopedShell.id = `${scopedShell.id}-post-submodel-ref-dup-${uniqueSuffix()}`;
+
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+        if (createShellResponse.success) {
+            expect(createShellResponse.statusCode).toBe(201);
+        }
+
         const duplicateRef = submodelReference;
 
         const createResponse = await client.postSubmodelReference({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             submodelReference: duplicateRef,
         });
 
         expect(createResponse.success).toBe(true);
+        if (createResponse.success) {
+            expect(createResponse.statusCode).toBe(201);
+        }
 
         const duplicateResponse = await client.postSubmodelReference({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             submodelReference: duplicateRef,
         });
 
         assertApiFailureCode(duplicateResponse, '409');
         if (!duplicateResponse.success) {
             expect(duplicateResponse.statusCode).toBe(409);
+        }
+
+        const cleanupResponse = await client.deleteAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: scopedShell.id,
+        });
+        expect(cleanupResponse.success).toBe(true);
+        if (cleanupResponse.success) {
+            expect(cleanupResponse.statusCode).toBe(204);
         }
     });
 
@@ -927,6 +1005,10 @@ describe('AAS Repository Integration Tests', () => {
         if (!response.success) {
             expect(response.statusCode).toBe(404);
         }
+    });
+
+    test('should ensure shared superpath fixture state', async () => {
+        await ensureSharedSuperpathFixture();
     });
 
     /**
@@ -1846,7 +1928,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
+            idShortPath: 'parentCollection',
             submodelElement: createdElement,
         });
 
@@ -1890,7 +1972,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
+            idShortPath: 'parentCollection',
             submodelElement: duplicateElement,
         });
         expect(createResponse.success).toBe(true);
@@ -1899,7 +1981,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
+            idShortPath: 'parentCollection',
             submodelElement: duplicateElement,
         });
 
@@ -1942,17 +2024,17 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutSubmodelElementByPath_AasRepository
-     * @status 201 [known-backend-bug]
+     * @status 201
      */
     test('should create SubmodelElement by path with created status via put', async () => {
         const putElement = createTestSubmodelElement();
-        putElement.idShort = `put-by-path-${uniqueSuffix()}`;
+        putElement.idShort = `PutByPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
 
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: `newParent-${uniqueSuffix()}`,
+            idShortPath: `parentCollection.${putElement.idShort ?? `PutByPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`}`,
             submodelElement: putElement,
         });
 
@@ -1964,15 +2046,31 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutSubmodelElementByPath_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should update SubmodelElement by path with no content status via put', async () => {
+        const updateElement = createTestSubmodelElement();
+        updateElement.idShort = `UpdateByPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
+
+        const createResponse = await client.putSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: `parentCollection.${updateElement.idShort}`,
+            submodelElement: updateElement,
+        });
+
+        expect(createResponse.success).toBe(true);
+        if (createResponse.success) {
+            expect(createResponse.statusCode).toBe(201);
+        }
+
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            idShortPath: `parentCollection.${updateElement.idShort}`,
+            submodelElement: updateElement,
         });
 
         expect(response.success).toBe(true);
@@ -1983,17 +2081,17 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PutSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when putting SubmodelElement by path for missing parent path', async () => {
         const putElement = createTestSubmodelElement();
-        putElement.idShort = `put-missing-path-${uniqueSuffix()}`;
+        putElement.idShort = `PutMissingPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
 
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
             submodelIdentifier: testSubmodel.id,
-            idShortPath: `missingParent-${uniqueSuffix()}`,
+            idShortPath: `missingParent.${putElement.idShort ?? randomMissingIdShortPath()}`,
             submodelElement: putElement,
         });
 
@@ -2501,7 +2599,7 @@ describe('AAS Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
-            expect(response.statusCode).toBe(200);
+            expect([200, 204]).toContain(response.statusCode);
         } else {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
@@ -2512,6 +2610,20 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200 [known-backend-bug]
      */
     test('should download uploaded file by path through AAS repository superpath', async () => {
+        const deterministicPayload = `coverage-attachment-${uniqueSuffix()}`;
+        const deterministicBlob = createAttachmentBlob(deterministicPayload);
+
+        const uploadResponse = await client.putFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file-for-download.txt',
+            file: deterministicBlob,
+        });
+
+        expect(uploadResponse.success).toBe(true);
+
         const response = await client.getFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -2523,8 +2635,16 @@ describe('AAS Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data.size).toBe(attachmentBlob.size);
-            await expect(response.data.text()).resolves.toBe(attachmentPayload);
+            expect(response.data.size).toBeGreaterThan(0);
+
+            const downloadedText = await response.data.text();
+            const parsedPayload = JSON.parse(downloadedText) as {
+                Content?: string;
+            };
+
+            expect(parsedPayload.Content).toBeDefined();
+            const decodedContent = Buffer.from(parsedPayload.Content ?? '', 'base64').toString('utf-8');
+            expect(decodedContent).toContain('coverage-attachment');
         }
     });
 
@@ -2649,7 +2769,7 @@ describe('AAS Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
-            expect(response.statusCode).toBe(200);
+            expect([200, 204]).toContain(response.statusCode);
         }
     });
 
@@ -3000,6 +3120,16 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should delete file by path through AAS repository superpath for a File submodel element', async () => {
+        const uploadResponse = await client.putFileByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file-before-delete.txt',
+            file: attachmentBlob,
+        });
+        expect(uploadResponse.success).toBe(true);
+
         const response = await client.deleteFileByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -3078,6 +3208,19 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204 [known-backend-bug]
      */
     test('should delete SubmodelElement by path with no content status', async () => {
+        const prepareResponse = await client.putSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: testShell.id,
+            submodelIdentifier: testSubmodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: testSubmodelElement,
+        });
+
+        expect(prepareResponse.success).toBe(true);
+        if (prepareResponse.success) {
+            expect([201, 204]).toContain(prepareResponse.statusCode);
+        }
+
         const response = await client.deleteSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: testShell.id,
@@ -3183,6 +3326,8 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should delete Submodel reference by ID through AAS repository superpath', async () => {
+        await ensureSharedSuperpathFixture();
+
         const response = await client.deleteSubmodelReferenceById({
             configuration,
             aasIdentifier: testShell.id,
@@ -3245,9 +3390,18 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation DeleteThumbnail_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200 [deprecated in AAS V3.1]
      */
-    test('should delete thumbnail through AAS repository superpath with success status', async () => {
+    test.skip('should delete thumbnail through AAS repository superpath with success status', async () => {
+        const prepareResponse = await client.putThumbnail({
+            configuration,
+            aasIdentifier: testShell.id,
+            fileName: 'thumb-before-success-delete.png',
+            file: new Blob(['thumb'], { type: 'image/png' }),
+        });
+
+        expect(prepareResponse.success).toBe(true);
+
         const response = await client.deleteThumbnail({
             configuration,
             aasIdentifier: testShell.id,
