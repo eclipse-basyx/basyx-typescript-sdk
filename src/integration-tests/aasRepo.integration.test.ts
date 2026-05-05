@@ -36,6 +36,25 @@ describe('AAS Repository Integration Tests', () => {
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+    function createUniqueShell(): ReturnType<typeof createTestShell> {
+        const shell = createTestShell();
+        const uniqueId = `https://example.com/ids/aas/it-${uniqueSuffix()}`;
+        shell.id = uniqueId;
+        shell.assetInformation.globalAssetId = createGlobalAssetId();
+        return shell;
+    }
+
+    async function cleanupShell(aasIdentifier: string): Promise<void> {
+        const cleanupResponse = await client.deleteAssetAdministrationShellById({
+            configuration,
+            aasIdentifier,
+        });
+
+        if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+            throw new Error(`Failed to cleanup shell ${aasIdentifier} (status ${cleanupResponse.statusCode})`);
+        }
+    }
+
     function randomMissingAasIdentifier(): string {
         return `https://example.com/ids/aas/missing-${uniqueSuffix()}`;
     }
@@ -66,37 +85,39 @@ describe('AAS Repository Integration Tests', () => {
         }
     }
 
-    async function ensureSharedSuperpathFixture(): Promise<void> {
+    async function createScopedSuperpathFixture(submodelIdentifier?: string): Promise<{
+        shell: ReturnType<typeof createTestShell>;
+        submodel: ReturnType<typeof createTestSubmodel>;
+    }> {
+        const shell = createUniqueShell();
         const shellResponse = await client.postAssetAdministrationShell({
             configuration,
-            assetAdministrationShell: testShell,
+            assetAdministrationShell: shell,
         });
+        expect(shellResponse.success).toBe(true);
 
-        if (!shellResponse.success) {
-            const errorPayload = shellResponse.error as { messages?: Array<{ code?: string }> } | undefined;
-            const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
-            expect(messageCodes).toContain('409');
-        }
-
-        const seededSubmodel = createTestSubmodel();
-        seededSubmodel.id = testSubmodel.id;
-        seededSubmodel.submodelElements = [
-            testSubmodelElement,
-            testFileSubmodelElement,
+        const submodel = createTestSubmodel();
+        submodel.id = submodelIdentifier ?? `${submodel.id}-aas-${uniqueSuffix()}`;
+        submodel.idShort = `${submodel.idShort ?? 'submodel'}Aas${uniqueSuffix()}`;
+        submodel.submodelElements = [
+            createTestSubmodelElement(),
+            createTestFileSubmodelElement(),
             createTestSubmodelElementCollection(),
         ];
 
         const submodelResponse = await client.putSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            submodel: seededSubmodel,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            submodel,
         });
 
         expect(submodelResponse.success).toBe(true);
         if (submodelResponse.success) {
             expect([201, 204]).toContain(submodelResponse.statusCode);
         }
+
+        return { shell, submodel };
     }
 
     /**
@@ -104,16 +125,22 @@ describe('AAS Repository Integration Tests', () => {
      * @status 201
      */
     test('should create a new Asset Administration Shell', async () => {
+        const createdShell = createUniqueShell();
+
         const response = await client.postAssetAdministrationShell({
             configuration,
-            assetAdministrationShell: testShell,
+            assetAdministrationShell: createdShell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
-            expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testShell);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+                expect(response.data).toBeDefined();
+                expect(response.data).toEqual(createdShell);
+            }
+        } finally {
+            await cleanupShell(createdShell.id);
         }
     });
 
@@ -144,28 +171,23 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: duplicateShell,
         });
 
-        expect(createResponse.success).toBe(true);
-        if (createResponse.success) {
-            expect(createResponse.statusCode).toBe(201);
-        }
+        try {
+            expect(createResponse.success).toBe(true);
+            if (createResponse.success) {
+                expect(createResponse.statusCode).toBe(201);
+            }
 
-        const duplicateResponse = await client.postAssetAdministrationShell({
-            configuration,
-            assetAdministrationShell: duplicateShell,
-        });
+            const duplicateResponse = await client.postAssetAdministrationShell({
+                configuration,
+                assetAdministrationShell: duplicateShell,
+            });
 
-        assertApiFailureCode(duplicateResponse, '409');
-        if (!duplicateResponse.success) {
-            expect(duplicateResponse.statusCode).toBe(409);
-        }
-
-        const cleanupResponse = await client.deleteAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: duplicateShell.id,
-        });
-        expect(cleanupResponse.success).toBe(true);
-        if (cleanupResponse.success) {
-            expect(cleanupResponse.statusCode).toBe(204);
+            assertApiFailureCode(duplicateResponse, '409');
+            if (!duplicateResponse.success) {
+                expect(duplicateResponse.statusCode).toBe(409);
+            }
+        } finally {
+            await cleanupShell(duplicateShell.id);
         }
     });
 
@@ -174,16 +196,28 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch an Asset Administration Shell by ID', async () => {
-        const response = await client.getAssetAdministrationShellById({
+        const scopedShell = createUniqueShell();
+        const createResponse = await client.postAssetAdministrationShell({
             configuration,
-            aasIdentifier: testShell.id,
+            assetAdministrationShell: scopedShell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testShell);
+        expect(createResponse.success).toBe(true);
+
+        const response = await client.getAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: scopedShell.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+                expect(response.data).toEqual(scopedShell);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -225,16 +259,28 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all Asset Administration Shells', async () => {
+        const scopedShell = createUniqueShell();
+        const createResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllAssetAdministrationShells({
             configuration,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
-            expect(response.data.result.length).toBeGreaterThan(0);
-            expect(response.data.result).toContainEqual(testShell);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+                expect(response.data.result.length).toBeGreaterThan(0);
+                expect(response.data.result).toContainEqual(scopedShell);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -259,15 +305,27 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch references to all Asset Administration Shells', async () => {
+        const scopedShell = createUniqueShell();
+        const createResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllAssetAdministrationShellsReference({
             configuration,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
-            expect(response.data.result.length).toBeGreaterThan(0);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+                expect(response.data.result.length).toBeGreaterThan(0);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -292,15 +350,27 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch Asset Administration Shell by ID in reference representation', async () => {
-        const response = await client.getAssetAdministrationShellByIdReferenceAasRepository({
+        const scopedShell = createUniqueShell();
+        const createResponse = await client.postAssetAdministrationShell({
             configuration,
-            aasIdentifier: testShell.id,
+            assetAdministrationShell: scopedShell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        expect(createResponse.success).toBe(true);
+
+        const response = await client.getAssetAdministrationShellByIdReferenceAasRepository({
+            configuration,
+            aasIdentifier: scopedShell.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -350,18 +420,13 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: putShell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
-        }
-
-        const cleanupResponse = await client.deleteAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: putShell.id,
-        });
-        expect(cleanupResponse.success).toBe(true);
-        if (cleanupResponse.success) {
-            expect(cleanupResponse.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
+        } finally {
+            await cleanupShell(putShell.id);
         }
     });
 
@@ -392,29 +457,24 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: updatedShell,
         });
 
-        expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.statusCode).toBe(204);
-        }
+        try {
+            expect(updateResponse.success).toBe(true);
+            if (updateResponse.success) {
+                expect(updateResponse.statusCode).toBe(204);
+            }
 
-        const fetchResponse = await client.getAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: updatedShell.id,
-        });
+            const fetchResponse = await client.getAssetAdministrationShellById({
+                configuration,
+                aasIdentifier: updatedShell.id,
+            });
 
-        expect(fetchResponse.success).toBe(true);
-        if (fetchResponse.success) {
-            expect(fetchResponse.data).toBeDefined();
-            expect(fetchResponse.data).toEqual(updatedShell);
-        }
-
-        const cleanupResponse = await client.deleteAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: updatedShell.id,
-        });
-        expect(cleanupResponse.success).toBe(true);
-        if (cleanupResponse.success) {
-            expect(cleanupResponse.statusCode).toBe(204);
+            expect(fetchResponse.success).toBe(true);
+            if (fetchResponse.success) {
+                expect(fetchResponse.data).toBeDefined();
+                expect(fetchResponse.data).toEqual(updatedShell);
+            }
+        } finally {
+            await cleanupShell(updatedShell.id);
         }
     });
 
@@ -440,16 +500,28 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should get the Asset Information of an Asset Administration Shell', async () => {
-        const response = await client.getAssetInformation({
+        const scopedShell = createUniqueShell();
+        const createResponse = await client.postAssetAdministrationShell({
             configuration,
-            aasIdentifier: testShell.id,
+            assetAdministrationShell: scopedShell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
-            expect(response.data).toEqual(testShell.assetInformation);
+        expect(createResponse.success).toBe(true);
+
+        const response = await client.getAssetInformation({
+            configuration,
+            aasIdentifier: scopedShell.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+                expect(response.data).toEqual(scopedShell.assetInformation);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -490,29 +562,41 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should update the Asset Information of an Asset Administration Shell', async () => {
-        const updatedAssetInfo = testShell.assetInformation;
+        const scopedShell = createUniqueShell();
+        const createResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+
+        expect(createResponse.success).toBe(true);
+
+        const updatedAssetInfo = scopedShell.assetInformation;
         updatedAssetInfo.globalAssetId = createGlobalAssetId();
 
         const updateResponse = await client.putAssetInformation({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             assetInformation: updatedAssetInfo,
         });
 
-        expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.statusCode).toBe(204);
-        }
+        try {
+            expect(updateResponse.success).toBe(true);
+            if (updateResponse.success) {
+                expect(updateResponse.statusCode).toBe(204);
+            }
 
-        const fetchResponse = await client.getAssetInformation({
-            configuration,
-            aasIdentifier: testShell.id,
-        });
+            const fetchResponse = await client.getAssetInformation({
+                configuration,
+                aasIdentifier: scopedShell.id,
+            });
 
-        expect(fetchResponse.success).toBe(true);
-        if (fetchResponse.success) {
-            expect(fetchResponse.data).toBeDefined();
-            expect(fetchResponse.data).toEqual(updatedAssetInfo);
+            expect(fetchResponse.success).toBe(true);
+            if (fetchResponse.success) {
+                expect(fetchResponse.data).toBeDefined();
+                expect(fetchResponse.data).toEqual(updatedAssetInfo);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -555,20 +639,31 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should add a thumbnail to an Asset Administration Shell', async () => {
+        const scopedShell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
         const fileName = 'test_thumbnail.png';
         const payload = 'base64_encoded_image_data';
         const file = new Blob([payload], { type: 'image/png' });
 
         const updateResponse = await client.putThumbnail({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             fileName,
             file,
         });
 
-        expect(updateResponse.success).toBe(true);
-        if (updateResponse.success) {
-            expect(updateResponse.statusCode).toBe(204);
+        try {
+            expect(updateResponse.success).toBe(true);
+            if (updateResponse.success) {
+                expect(updateResponse.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -577,16 +672,38 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should get thumbnail of an Asset Administration Shell', async () => {
+        const scopedShell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
+        const fileName = 'test_thumbnail.png';
+        const payload = 'base64_encoded_image_data';
+        const file = new Blob([payload], { type: 'image/png' });
+        const putResponse = await client.putThumbnail({
+            configuration,
+            aasIdentifier: scopedShell.id,
+            fileName,
+            file,
+        });
+        expect(putResponse.success).toBe(true);
+
         const fetchResponse = await client.getThumbnail({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
         });
 
-        expect(fetchResponse.success).toBe(true);
-        if (fetchResponse.success) {
-            expect(fetchResponse.statusCode).toBe(200);
-            expect(fetchResponse.data).toBeDefined();
-            expect(fetchResponse.data.size).toBeGreaterThan(0);
+        try {
+            expect(fetchResponse.success).toBe(true);
+            if (fetchResponse.success) {
+                expect(fetchResponse.statusCode).toBe(200);
+                expect(fetchResponse.data).toBeDefined();
+                expect(fetchResponse.data.size).toBeGreaterThan(0);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -709,15 +826,26 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should get all Submodel references through AAS repository superpath', async () => {
+        const scopedShell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
         const response = await client.getAllSubmodelReferences({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -758,16 +886,27 @@ describe('AAS Repository Integration Tests', () => {
      * @status 201
      */
     test('should post Submodel reference through AAS repository superpath', async () => {
+        const scopedShell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
         const response = await client.postSubmodelReference({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             submodelReference,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -830,29 +969,24 @@ describe('AAS Repository Integration Tests', () => {
             submodelReference: duplicateRef,
         });
 
-        expect(createResponse.success).toBe(true);
-        if (createResponse.success) {
-            expect(createResponse.statusCode).toBe(201);
-        }
+        try {
+            expect(createResponse.success).toBe(true);
+            if (createResponse.success) {
+                expect(createResponse.statusCode).toBe(201);
+            }
 
-        const duplicateResponse = await client.postSubmodelReference({
-            configuration,
-            aasIdentifier: scopedShell.id,
-            submodelReference: duplicateRef,
-        });
+            const duplicateResponse = await client.postSubmodelReference({
+                configuration,
+                aasIdentifier: scopedShell.id,
+                submodelReference: duplicateRef,
+            });
 
-        assertApiFailureCode(duplicateResponse, '409');
-        if (!duplicateResponse.success) {
-            expect(duplicateResponse.statusCode).toBe(409);
-        }
-
-        const cleanupResponse = await client.deleteAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: scopedShell.id,
-        });
-        expect(cleanupResponse.success).toBe(true);
-        if (cleanupResponse.success) {
-            expect(cleanupResponse.statusCode).toBe(204);
+            assertApiFailureCode(duplicateResponse, '409');
+            if (!duplicateResponse.success) {
+                expect(duplicateResponse.statusCode).toBe(409);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -864,7 +998,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.deleteSubmodelReferenceById({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -878,15 +1012,26 @@ describe('AAS Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when deleting a missing Submodel reference', async () => {
+        const scopedShell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
+            configuration,
+            assetAdministrationShell: scopedShell,
+        });
+        expect(createShellResponse.success).toBe(true);
+
         const response = await client.deleteSubmodelReferenceById({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: scopedShell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
     });
 
@@ -915,16 +1060,14 @@ describe('AAS Repository Integration Tests', () => {
             submodel: createdSubmodel,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
-
-        const cleanupResponse = await client.deleteAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: scopedShell.id,
-        });
-        expect(cleanupResponse.success).toBe(true);
     });
 
     /**
@@ -964,16 +1107,14 @@ describe('AAS Repository Integration Tests', () => {
             submodel: seededSubmodel,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(scopedShell.id);
         }
-
-        const cleanupResponse = await client.deleteAssetAdministrationShellById({
-            configuration,
-            aasIdentifier: scopedShell.id,
-        });
-        expect(cleanupResponse.success).toBe(true);
     });
 
     /**
@@ -981,11 +1122,14 @@ describe('AAS Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in put Submodel by ID', async () => {
+        const payloadSubmodel = createTestSubmodel();
+        payloadSubmodel.id = `http://acplt.org/Submodels/Assets/TestAsset/MissingAas-${uniqueSuffix()}`;
+
         const response = await client.putSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
-            submodel: testSubmodel,
+            submodelIdentifier: payloadSubmodel.id,
+            submodel: payloadSubmodel,
         });
 
         assertApiFailureCode(response, '400');
@@ -999,11 +1143,14 @@ describe('AAS Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when putting Submodel by ID for a missing Asset Administration Shell', async () => {
+        const payloadSubmodel = createTestSubmodel();
+        payloadSubmodel.id = `http://acplt.org/Submodels/Assets/TestAsset/MissingAas-${uniqueSuffix()}`;
+
         const response = await client.putSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: randomMissingAasIdentifier(),
-            submodelIdentifier: testSubmodel.id,
-            submodel: testSubmodel,
+            submodelIdentifier: payloadSubmodel.id,
+            submodel: payloadSubmodel,
         });
 
         assertApiFailureCode(response, '404');
@@ -1012,25 +1159,27 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
-    test('should ensure shared superpath fixture state', async () => {
-        await ensureSharedSuperpathFixture();
-    });
-
     /**
      * @operation GetSubmodelById_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200
      */
     test('should get Submodel by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1042,7 +1191,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1056,33 +1205,45 @@ describe('AAS Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when getting Submodel by missing ID', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PatchSubmodel_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should patch Submodel through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            submodel: testSubmodel,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            submodel,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1091,11 +1252,14 @@ describe('AAS Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in patch Submodel', async () => {
+        const payloadSubmodel = createTestSubmodel();
+        payloadSubmodel.id = `${payloadSubmodel.id}-missing-shell-${uniqueSuffix()}`;
+
         const response = await client.patchSubmodelAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
-            submodel: testSubmodel,
+            submodelIdentifier: payloadSubmodel.id,
+            submodel: payloadSubmodel,
         });
 
         assertApiFailureCode(response, '400');
@@ -1106,37 +1270,49 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodel_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when patching a missing Submodel', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
-            submodel: testSubmodel,
+            submodel,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelById-Metadata_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200
      */
     test('should get Submodel metadata by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1148,7 +1324,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1159,36 +1335,48 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when getting metadata for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PatchSubmodelById-Metadata_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should patch Submodel metadata by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture(testSubmodel.id);
+
         const response = await client.patchSubmodelByIdMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             submodelMetadata: submodelMetadataPatch,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1200,7 +1388,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.patchSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             submodelMetadata: submodelMetadataPatch,
         });
 
@@ -1212,37 +1400,49 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when patching metadata for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelByIdMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
             submodelMetadata: submodelMetadataPatch,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelById-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200
      */
     test('should get Submodel value-only by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1254,7 +1454,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelByIdValueOnlyAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1265,36 +1465,48 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when getting value-only for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PatchSubmodelById-ValueOnly_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should patch Submodel value-only by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelByIdValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             body: {},
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1306,7 +1518,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.patchSubmodelByIdValueOnlyAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             body: {},
         });
 
@@ -1318,37 +1530,49 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation PatchSubmodelById-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when patching value-only for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelByIdValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
             body: {},
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelById-Reference_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200
      */
     test('should get Submodel reference by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdReferenceAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1360,7 +1584,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelByIdReferenceAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1371,36 +1595,48 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Reference_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when getting reference for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdReferenceAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelById-Path_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200
      */
     test('should get Submodel path by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1412,7 +1648,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelByIdPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1423,62 +1659,86 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetSubmodelById-Path_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when getting path for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelByIdPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     test('should get all SubmodelElements through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetAllSubmodelElements_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return all SubmodelElements with success status', async () => {
-        const response = await client.getAllSubmodelElementsAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetAllSubmodelElements_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElements for a missing Submodel', async () => {
+    test('should return all SubmodelElements with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElements for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
+        const response = await client.getAllSubmodelElementsAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1490,7 +1750,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getAllSubmodelElementsAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1500,85 +1760,108 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should post SubmodelElement through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const element = createTestSubmodelElement();
+        element.idShort = `postElement-${uniqueSuffix()}`;
+
         const response = await client.postSubmodelElementAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            submodelElement: testSubmodelElement,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            submodelElement: element,
         });
 
-        assertApiResult(response);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
      * @operation PostSubmodelElement_AasRepository
-     * @status 201 [known-backend-bug]
+     * @status 201
      */
     test('should create SubmodelElement through AAS repository superpath with created status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const createdElement = createTestSubmodelElement();
         createdElement.idShort = `createdElement-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             submodelElement: createdElement,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PostSubmodelElement_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when posting SubmodelElement for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
         const createdElement = createTestSubmodelElement();
         createdElement.idShort = `missingSubmodelElement-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
             submodelElement: createdElement,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PostSubmodelElement_AasRepository
-     * @status 409 [known-backend-bug]
+     * @status 409
      */
     test('should return conflict when posting duplicate SubmodelElement', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const duplicateElement = createTestSubmodelElement();
         duplicateElement.idShort = `duplicateElement-${uniqueSuffix()}`;
 
         const createResponse = await client.postSubmodelElementAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             submodelElement: duplicateElement,
         });
 
-        expect(createResponse.success).toBe(true);
+        try {
+            expect(createResponse.success).toBe(true);
 
-        const duplicateResponse = await client.postSubmodelElementAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            submodelElement: duplicateElement,
-        });
+            const duplicateResponse = await client.postSubmodelElementAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                submodelElement: duplicateElement,
+            });
 
-        assertApiFailureCode(duplicateResponse, '409');
-        if (!duplicateResponse.success) {
-            expect(duplicateResponse.statusCode).toBe(409);
+            assertApiFailureCode(duplicateResponse, '409');
+            if (!duplicateResponse.success) {
+                expect(duplicateResponse.statusCode).toBe(409);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1587,11 +1870,14 @@ describe('AAS Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in post SubmodelElement', async () => {
+        const element = createTestSubmodelElement();
+        element.idShort = `missingAasElement-${uniqueSuffix()}`;
+
         const response = await client.postSubmodelElementAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
-            submodelElement: testSubmodelElement,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
+            submodelElement: element,
         });
 
         assertApiFailureCode(response, '400');
@@ -1601,46 +1887,64 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get all SubmodelElements metadata through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetAllSubmodelElements-Metadata_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElements metadata with success status', async () => {
-        const response = await client.getAllSubmodelElementsMetadataAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetAllSubmodelElements-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElements metadata for a missing Submodel', async () => {
+    test('should return SubmodelElements metadata with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Metadata_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElements metadata for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
+        const response = await client.getAllSubmodelElementsMetadataAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1652,7 +1956,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getAllSubmodelElementsMetadataAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1662,46 +1966,64 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get all SubmodelElements value-only through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElements value-only with success status', async () => {
-        const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetAllSubmodelElements-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElements value-only for a missing Submodel', async () => {
+    test('should return SubmodelElements value-only with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-ValueOnly_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElements value-only for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
+        const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1713,7 +2035,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getAllSubmodelElementsValueOnlyAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1723,46 +2045,64 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get all SubmodelElements reference through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsReferenceAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetAllSubmodelElements-Reference_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElements references with success status', async () => {
-        const response = await client.getAllSubmodelElementsReferenceAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetAllSubmodelElements-Reference_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElements references for a missing Submodel', async () => {
+    test('should return SubmodelElements references with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsReferenceAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Reference_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElements references for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
+        const response = await client.getAllSubmodelElementsReferenceAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1774,7 +2114,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getAllSubmodelElementsReferenceAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1784,46 +2124,64 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get all SubmodelElements path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetAllSubmodelElements-Path_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElements paths with success status', async () => {
-        const response = await client.getAllSubmodelElementsPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetAllSubmodelElements-Path_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElements paths for a missing Submodel', async () => {
+    test('should return SubmodelElements paths with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getAllSubmodelElementsPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetAllSubmodelElements-Path_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElements paths for a missing Submodel', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
+        const response = await client.getAllSubmodelElementsPathAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1835,7 +2193,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getAllSubmodelElementsPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1845,49 +2203,67 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get SubmodelElement by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetSubmodelElementByPath_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElement by path with success status', async () => {
-        const response = await client.getSubmodelElementByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElement by missing path', async () => {
+    test('should return SubmodelElement by path with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElement by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.getSubmodelElementByPathAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -1899,7 +2275,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
         });
 
@@ -1910,89 +2286,112 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should post SubmodelElement by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const element = createTestSubmodelElement();
+        element.idShort = `postByPath-${uniqueSuffix()}`;
+
         const response = await client.postSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            submodelElement: element,
         });
 
-        assertApiResult(response);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
      * @operation PostSubmodelElementByPath_AasRepository
-     * @status 201 [known-backend-bug]
+     * @status 201
      */
     test('should create SubmodelElement by path with created status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const createdElement = createTestSubmodelElement();
         createdElement.idShort = `post-by-path-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'parentCollection',
             submodelElement: createdElement,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PostSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when posting SubmodelElement by path for missing parent path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const createdElement = createTestSubmodelElement();
         createdElement.idShort = `post-by-missing-path-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missingParent-${uniqueSuffix()}`,
             submodelElement: createdElement,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PostSubmodelElementByPath_AasRepository
-     * @status 409 [known-backend-bug]
+     * @status 409
      */
     test('should return conflict when posting duplicate SubmodelElement by path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const duplicateElement = createTestSubmodelElement();
         duplicateElement.idShort = `post-by-path-duplicate-${uniqueSuffix()}`;
 
         const createResponse = await client.postSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'parentCollection',
             submodelElement: duplicateElement,
         });
-        expect(createResponse.success).toBe(true);
+        try {
+            expect(createResponse.success).toBe(true);
 
-        const duplicateResponse = await client.postSubmodelElementByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'parentCollection',
-            submodelElement: duplicateElement,
-        });
+            const duplicateResponse = await client.postSubmodelElementByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: 'parentCollection',
+                submodelElement: duplicateElement,
+            });
 
-        assertApiFailureCode(duplicateResponse, '409');
-        if (!duplicateResponse.success) {
-            expect(duplicateResponse.statusCode).toBe(409);
+            assertApiFailureCode(duplicateResponse, '409');
+            if (!duplicateResponse.success) {
+                expect(duplicateResponse.statusCode).toBe(409);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2001,12 +2400,15 @@ describe('AAS Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in post SubmodelElement by path', async () => {
+        const element = createTestSubmodelElement();
+        element.idShort = `missingAasPostByPath-${uniqueSuffix()}`;
+
         const response = await client.postSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            submodelElement: element,
         });
 
         assertApiFailureCode(response, '400');
@@ -2016,15 +2418,23 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should put SubmodelElement by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const element = createTestSubmodelElement();
+        element.idShort = `putByPath-${uniqueSuffix()}`;
+
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            submodelElement: element,
         });
 
-        assertApiResult(response);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
@@ -2032,20 +2442,25 @@ describe('AAS Repository Integration Tests', () => {
      * @status 201
      */
     test('should create SubmodelElement by path with created status via put', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const putElement = createTestSubmodelElement();
         putElement.idShort = `PutByPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
 
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `parentCollection.${putElement.idShort ?? `PutByPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`}`,
             submodelElement: putElement,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2054,33 +2469,38 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should update SubmodelElement by path with no content status via put', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const updateElement = createTestSubmodelElement();
         updateElement.idShort = `UpdateByPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
 
         const createResponse = await client.putSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `parentCollection.${updateElement.idShort}`,
             submodelElement: updateElement,
         });
 
-        expect(createResponse.success).toBe(true);
-        if (createResponse.success) {
-            expect(createResponse.statusCode).toBe(201);
-        }
+        try {
+            expect(createResponse.success).toBe(true);
+            if (createResponse.success) {
+                expect(createResponse.statusCode).toBe(201);
+            }
 
-        const response = await client.putSubmodelElementByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: `parentCollection.${updateElement.idShort}`,
-            submodelElement: updateElement,
-        });
+            const response = await client.putSubmodelElementByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: `parentCollection.${updateElement.idShort}`,
+                submodelElement: updateElement,
+            });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2089,20 +2509,25 @@ describe('AAS Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when putting SubmodelElement by path for missing parent path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const putElement = createTestSubmodelElement();
         putElement.idShort = `PutMissingPath${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
 
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missingParent.${putElement.idShort ?? randomMissingIdShortPath()}`,
             submodelElement: putElement,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2111,12 +2536,15 @@ describe('AAS Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in put SubmodelElement by path', async () => {
+        const element = createTestSubmodelElement();
+        element.idShort = `missingAasPutByPath-${uniqueSuffix()}`;
+
         const response = await client.putSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            submodelElement: element,
         });
 
         assertApiFailureCode(response, '400');
@@ -2126,52 +2554,76 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should patch SubmodelElement value by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const element = createTestSubmodelElement();
+        element.idShort = `patchByPath-${uniqueSuffix()}`;
+
         const response = await client.patchSubmodelElementValueByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            submodelElement: element,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation PatchSubmodelElementValueByPath_AasRepository
-     * @status 204 [known-backend-bug]
-     */
-    test('should patch SubmodelElement by path with no content status', async () => {
-        const response = await client.patchSubmodelElementValueByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PatchSubmodelElementValueByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 204
      */
-    test('should return not found when patching SubmodelElement by missing path', async () => {
+    test('should patch SubmodelElement by path with no content status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const element = createTestSubmodelElement();
+        element.idShort = `patchByPathStatus-${uniqueSuffix()}`;
+
         const response = await client.patchSubmodelElementValueByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: `missing-path-${uniqueSuffix()}`,
-            submodelElement: testSubmodelElement,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+            submodelElement: element,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath_AasRepository
+     * @status 404
+     */
+    test('should return not found when patching SubmodelElement by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const element = createTestSubmodelElement();
+        element.idShort = `patchMissingPath-${uniqueSuffix()}`;
+
+        const response = await client.patchSubmodelElementValueByPathAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: `missing-path-${uniqueSuffix()}`,
+            submodelElement: element,
+        });
+
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2180,12 +2632,15 @@ describe('AAS Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Asset Administration Shell identifier in patch SubmodelElement value by path', async () => {
+        const element = createTestSubmodelElement();
+        element.idShort = `missingAasPatchByPath-${uniqueSuffix()}`;
+
         const response = await client.patchSubmodelElementValueByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            submodelElement: element,
         });
 
         assertApiFailureCode(response, '400');
@@ -2195,49 +2650,67 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get SubmodelElement metadata by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetSubmodelElementByPath-Metadata_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElement metadata by path with success status', async () => {
-        const response = await client.getSubmodelElementByPathMetadataAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelElementByPath-Metadata_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElement metadata by missing path', async () => {
+    test('should return SubmodelElement metadata by path with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathMetadataAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Metadata_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElement metadata by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.getSubmodelElementByPathMetadataAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2249,7 +2722,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathMetadataAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
         });
 
@@ -2260,52 +2733,70 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should patch SubmodelElement metadata by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelElementValueByPathMetadata({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
             submodelElementMetadata: submodelElementMetadataPatch,
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-Metadata
-     * @status 204 [known-backend-bug]
-     */
-    test('should patch SubmodelElement metadata by path with no content status', async () => {
-        const response = await client.patchSubmodelElementValueByPathMetadata({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-            submodelElementMetadata: submodelElementMetadataPatch,
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PatchSubmodelElementValueByPath-Metadata
-     * @status 404 [known-backend-bug]
+     * @status 204
      */
-    test('should return not found when patching SubmodelElement metadata by missing path', async () => {
+    test('should patch SubmodelElement metadata by path with no content status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelElementValueByPathMetadata({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+            submodelElementMetadata: submodelElementMetadataPatch,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath-Metadata
+     * @status 404
+     */
+    test('should return not found when patching SubmodelElement metadata by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.patchSubmodelElementValueByPathMetadata({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
             submodelElementMetadata: submodelElementMetadataPatch,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2317,7 +2808,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.patchSubmodelElementValueByPathMetadata({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
             submodelElementMetadata: submodelElementMetadataPatch,
         });
@@ -2329,49 +2820,67 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get SubmodelElement value-only by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElement value-only by path with success status', async () => {
-        const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElement value-only by missing path', async () => {
+    test('should return SubmodelElement value-only by path with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-ValueOnly_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElement value-only by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2383,7 +2892,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathValueOnlyAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
         });
 
@@ -2394,52 +2903,70 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should patch SubmodelElement value-only by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelElementValueByPathValueOnly({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
             submodelElementValue: 'coverage-value',
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation PatchSubmodelElementValueByPath-ValueOnly
-     * @status 204 [known-backend-bug]
-     */
-    test('should patch SubmodelElement value-only by path with no content status', async () => {
-        const response = await client.patchSubmodelElementValueByPathValueOnly({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-            submodelElementValue: 'coverage-value',
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation PatchSubmodelElementValueByPath-ValueOnly
-     * @status 404 [known-backend-bug]
+     * @status 204
      */
-    test('should return not found when patching SubmodelElement value-only by missing path', async () => {
+    test('should patch SubmodelElement value-only by path with no content status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.patchSubmodelElementValueByPathValueOnly({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+            submodelElementValue: 'coverage-value',
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation PatchSubmodelElementValueByPath-ValueOnly
+     * @status 404
+     */
+    test('should return not found when patching SubmodelElement value-only by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.patchSubmodelElementValueByPathValueOnly({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
             submodelElementValue: 'coverage-value',
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2451,7 +2978,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.patchSubmodelElementValueByPathValueOnly({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
             submodelElementValue: 'coverage-value',
         });
@@ -2463,49 +2990,67 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get SubmodelElement reference by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathReferenceAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetSubmodelElementByPath-Reference_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElement reference by path with success status', async () => {
-        const response = await client.getSubmodelElementByPathReferenceAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelElementByPath-Reference_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElement reference by missing path', async () => {
+    test('should return SubmodelElement reference by path with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathReferenceAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Reference_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElement reference by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.getSubmodelElementByPathReferenceAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2517,7 +3062,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathReferenceAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
         });
 
@@ -2528,49 +3073,67 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should get SubmodelElement path by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
         });
 
-        assertApiResult(response);
-    });
-
-    /**
-     * @operation GetSubmodelElementByPath-Path_AasRepository
-     * @status 200 [known-backend-bug]
-     */
-    test('should return SubmodelElement path by path with success status', async () => {
-        const response = await client.getSubmodelElementByPathPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-        });
-
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetSubmodelElementByPath-Path_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 200
      */
-    test('should return not found when getting SubmodelElement path by missing path', async () => {
+    test('should return SubmodelElement path by path with success status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getSubmodelElementByPathPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: 'testProperty',
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
+        } finally {
+            await cleanupShell(shell.id);
+        }
+    });
+
+    /**
+     * @operation GetSubmodelElementByPath-Path_AasRepository
+     * @status 404
+     */
+    test('should return not found when getting SubmodelElement path by missing path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const response = await client.getSubmodelElementByPathPathAasRepository({
+            configuration,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2582,7 +3145,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
         });
 
@@ -2593,63 +3156,74 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should upload file by path through AAS repository superpath for a File submodel element', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: attachmentIdShortPath,
             fileName: 'coverage-file.txt',
             file: attachmentBlob,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect([200, 204]).toContain(response.statusCode);
-        } else {
-            console.error('API Error:', JSON.stringify(response.error, null, 2));
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect([200, 204]).toContain(response.statusCode);
+            } else {
+                console.error('API Error:', JSON.stringify(response.error, null, 2));
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation GetFileByPath_AasRepository
-     * @status 200 [known-backend-bug]
+     * @status 200
      */
     test('should download uploaded file by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
         const deterministicPayload = `coverage-attachment-${uniqueSuffix()}`;
         const deterministicBlob = createAttachmentBlob(deterministicPayload);
 
         const uploadResponse = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: attachmentIdShortPath,
             fileName: 'coverage-file-for-download.txt',
             file: deterministicBlob,
         });
 
-        expect(uploadResponse.success).toBe(true);
+        try {
+            expect(uploadResponse.success).toBe(true);
 
-        const response = await client.getFileByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: attachmentIdShortPath,
-        });
+            const response = await client.getFileByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: attachmentIdShortPath,
+            });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data).toBeDefined();
-            expect(response.data.size).toBeGreaterThan(0);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data).toBeDefined();
+                expect(response.data.size).toBeGreaterThan(0);
 
-            const downloadedText = await response.data.text();
-            const parsedPayload = JSON.parse(downloadedText) as {
-                Content?: string;
-            };
+                const downloadedText = await response.data.text();
+                const parsedPayload = JSON.parse(downloadedText) as {
+                    Content?: string;
+                };
 
-            expect(parsedPayload.Content).toBeDefined();
-            const decodedContent = Buffer.from(parsedPayload.Content ?? '', 'base64').toString('utf-8');
-            expect(decodedContent).toContain('coverage-attachment');
+                expect(parsedPayload.Content).toBeDefined();
+                const decodedContent = Buffer.from(parsedPayload.Content ?? '', 'base64').toString('utf-8');
+                expect(decodedContent).toContain('coverage-attachment');
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2661,7 +3235,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.getFileByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: attachmentIdShortPath,
         });
 
@@ -2672,35 +3246,47 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should reject file upload on non-File submodel element through AAS repository superpath with 405', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
             fileName: 'invalid-property-file.txt',
             file: createAttachmentBlob('invalid-property-payload'),
         });
 
-        assertApiFailureCode(response, '405');
+        try {
+            assertApiFailureCode(response, '405');
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
      * @operation PutFileByPath_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should return no content when uploading file by path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: attachmentIdShortPath,
             fileName: 'coverage-file-204.txt',
             file: attachmentBlob,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -2712,7 +3298,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.putFileByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: attachmentIdShortPath,
             fileName: 'coverage-file.txt',
             file: attachmentBlob,
@@ -2726,36 +3312,48 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation GetFileByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should reject file download for missing submodel element through AAS repository superpath with 404', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.getFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'missingAttachmentPath',
         });
 
-        assertApiFailureCode(response, '404');
+        try {
+            assertApiFailureCode(response, '404');
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
      * @operation PutFileByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when uploading file for missing submodel element', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missingAttachmentPath-${uniqueSuffix()}`,
             fileName: 'coverage-missing-file.txt',
             file: attachmentBlob,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -3125,58 +3723,97 @@ describe('AAS Repository Integration Tests', () => {
      * @status 200
      */
     test('should delete file by path through AAS repository superpath for a File submodel element', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const uploadResponse = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: attachmentIdShortPath,
             fileName: 'coverage-file-before-delete.txt',
             file: attachmentBlob,
         });
-        expect(uploadResponse.success).toBe(true);
 
-        const response = await client.deleteFileByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: attachmentIdShortPath,
-        });
+        try {
+            expect(uploadResponse.success).toBe(true);
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-        } else {
-            console.error('API Error:', JSON.stringify(response.error, null, 2));
+            const response = await client.deleteFileByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: attachmentIdShortPath,
+            });
+
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            } else {
+                console.error('API Error:', JSON.stringify(response.error, null, 2));
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation DeleteFileByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when deleting missing file by path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.deleteFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missingAttachmentPath-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     test('should return not found when downloading a deleted file through AAS repository superpath', async () => {
-        const response = await client.getFileByPathAasRepository({
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const uploadResponse = await client.putFileByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file-before-download-after-delete.txt',
+            file: attachmentBlob,
         });
 
-        assertApiFailureCode(response, '404');
+        try {
+            expect(uploadResponse.success).toBe(true);
+
+            const deleteResponse = await client.deleteFileByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: attachmentIdShortPath,
+            });
+
+            expect(deleteResponse.success).toBe(true);
+
+            const response = await client.getFileByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: attachmentIdShortPath,
+            });
+
+            assertApiFailureCode(response, '404');
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
@@ -3187,7 +3824,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.deleteFileByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: attachmentIdShortPath,
         });
 
@@ -3198,62 +3835,82 @@ describe('AAS Repository Integration Tests', () => {
     });
 
     test('should delete SubmodelElement by path through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.deleteSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
         });
 
-        assertApiResult(response);
+        try {
+            assertApiResult(response);
+        } finally {
+            await cleanupShell(shell.id);
+        }
     });
 
     /**
      * @operation DeleteSubmodelElementByPath_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should delete SubmodelElement by path with no content status', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+        const updateElement = createTestSubmodelElement();
+        updateElement.idShort = `deleteByPath-${uniqueSuffix()}`;
+
         const prepareResponse = await client.putSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-            submodelElement: testSubmodelElement,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
+            idShortPath: `parentCollection.${updateElement.idShort}`,
+            submodelElement: updateElement,
         });
 
-        expect(prepareResponse.success).toBe(true);
-        if (prepareResponse.success) {
-            expect([201, 204]).toContain(prepareResponse.statusCode);
-        }
+        try {
+            expect(prepareResponse.success).toBe(true);
+            if (prepareResponse.success) {
+                expect([201, 204]).toContain(prepareResponse.statusCode);
+            }
 
-        const response = await client.deleteSubmodelElementByPathAasRepository({
-            configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: 'testProperty',
-        });
+            const response = await client.deleteSubmodelElementByPathAasRepository({
+                configuration,
+                aasIdentifier: shell.id,
+                submodelIdentifier: submodel.id,
+                idShortPath: `parentCollection.${updateElement.idShort}`,
+            });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation DeleteSubmodelElementByPath_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when deleting missing SubmodelElement by path', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.deleteSubmodelElementByPathAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -3265,7 +3922,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.deleteSubmodelElementByPathAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
         });
 
@@ -3283,7 +3940,7 @@ describe('AAS Repository Integration Tests', () => {
         const response = await client.deleteSubmodelByIdAasRepository({
             configuration,
             aasIdentifier: undefined as unknown as string,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -3294,35 +3951,47 @@ describe('AAS Repository Integration Tests', () => {
 
     /**
      * @operation DeleteSubmodelById_AasRepository
-     * @status 404 [known-backend-bug]
+     * @status 404
      */
     test('should return not found when deleting a missing Submodel by ID', async () => {
+        const { shell } = await createScopedSuperpathFixture();
+
         const response = await client.deleteSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier: shell.id,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
         });
 
-        assertApiFailureCode(response, '404');
-        if (!response.success) {
-            expect(response.statusCode).toBe(404);
+        try {
+            assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
     /**
      * @operation DeleteSubmodelById_AasRepository
-     * @status 204 [known-backend-bug]
+     * @status 204
      */
     test('should delete Submodel by ID through AAS repository superpath', async () => {
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
         const response = await client.deleteSubmodelByIdAasRepository({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -3331,17 +4000,21 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should delete Submodel reference by ID through AAS repository superpath', async () => {
-        await ensureSharedSuperpathFixture();
+        const { shell, submodel } = await createScopedSuperpathFixture();
 
         const response = await client.deleteSubmodelReferenceById({
             configuration,
-            aasIdentifier: testShell.id,
-            submodelIdentifier: testSubmodel.id,
+            aasIdentifier: shell.id,
+            submodelIdentifier: submodel.id,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -3382,14 +4055,34 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should delete thumbnail through AAS repository superpath', async () => {
-        const response = await client.deleteThumbnail({
+        const shell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
             configuration,
-            aasIdentifier: testShell.id,
+            assetAdministrationShell: shell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        expect(createShellResponse.success).toBe(true);
+
+        const putThumbnailResponse = await client.putThumbnail({
+            configuration,
+            aasIdentifier: shell.id,
+            fileName: 'thumb-before-delete.png',
+            file: new Blob(['thumb'], { type: 'image/png' }),
+        });
+
+        const response = await client.deleteThumbnail({
+            configuration,
+            aasIdentifier: shell.id,
+        });
+
+        try {
+            expect(putThumbnailResponse.success).toBe(true);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 
@@ -3439,14 +4132,26 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should delete Asset Administration Shell by ID', async () => {
-        const response = await client.deleteAssetAdministrationShellById({
+        const shell = createUniqueShell();
+        const createShellResponse = await client.postAssetAdministrationShell({
             configuration,
-            aasIdentifier: testShell.id,
+            assetAdministrationShell: shell,
         });
 
-        expect(response.success).toBe(true);
-        if (response.success) {
-            expect(response.statusCode).toBe(204);
+        expect(createShellResponse.success).toBe(true);
+
+        const response = await client.deleteAssetAdministrationShellById({
+            configuration,
+            aasIdentifier: shell.id,
+        });
+
+        try {
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
+        } finally {
+            await cleanupShell(shell.id);
         }
     });
 });

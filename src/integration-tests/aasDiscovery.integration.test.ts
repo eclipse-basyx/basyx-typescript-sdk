@@ -2,10 +2,7 @@ import { SpecificAssetId as CoreSpecificAssetId } from '@aas-core-works/aas-core
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
-import {
-    createTestSpecificAssetId1,
-    createTestSpecificAssetId2,
-} from './fixtures/aasDiscoveryFixtures';
+import { createTestSpecificAssetId1, createTestSpecificAssetId2 } from './fixtures/aasDiscoveryFixtures';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
@@ -40,7 +37,9 @@ describe('AAS Discovery Integration Tests', () => {
             });
 
             if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
-                throw new Error(`Failed to cleanup asset links for ${aasIdentifier} (status ${cleanupResponse.statusCode})`);
+                throw new Error(
+                    `Failed to cleanup asset links for ${aasIdentifier} (status ${cleanupResponse.statusCode})`
+                );
             }
         });
     };
