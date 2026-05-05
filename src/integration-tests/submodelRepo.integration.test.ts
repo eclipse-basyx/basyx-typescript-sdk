@@ -58,6 +58,17 @@ describe('Submodel Repository Integration Tests', () => {
         }
     }
 
+    function assertNonEmptyResult(result: unknown): void {
+        if (Array.isArray(result)) {
+            expect(result.length).toBeGreaterThan(0);
+            return;
+        }
+
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+        expect(Object.keys((result ?? {}) as Record<string, unknown>).length).toBeGreaterThan(0);
+    }
+
     function randomMissingSubmodelIdentifier(): string {
         return `https://example.com/ids/sm/missing-${uniqueSuffix()}`;
     }
@@ -646,7 +657,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
             const matchingElement = (response.data.result ?? []).find(
                 (element) => element.idShort === seededElement.idShort
             ) as { value?: unknown } | undefined;
@@ -1452,7 +1463,14 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            const valueOnlyResult = response.data.result as unknown;
+            if (Array.isArray(valueOnlyResult)) {
+                expect(valueOnlyResult.length).toBeGreaterThan(0);
+            } else {
+                expect(typeof valueOnlyResult).toBe('object');
+                expect(valueOnlyResult).not.toBeNull();
+                expect(Object.keys((valueOnlyResult ?? {}) as Record<string, unknown>).length).toBeGreaterThan(0);
+            }
         }
     });
 
@@ -1638,7 +1656,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1693,7 +1711,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1748,7 +1766,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1803,7 +1821,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -2126,7 +2144,7 @@ describe('Submodel Repository Integration Tests', () => {
         const scopedMetadataPatch = {
             ...submodelMetadataPatch,
             id: scopedSubmodel.id,
-            idShort: scopedSubmodel.idShort,
+            idShort: scopedSubmodel.idShort ?? undefined,
         };
 
         const response = await client.patchSubmodelByIdMetadata({
