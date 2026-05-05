@@ -10,6 +10,7 @@ import {
     createTestSubmodelElement,
     createTestSubmodelElementCollection,
 } from './fixtures/submodelFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('AAS Repository Integration Tests', () => {
     const client = new AasRepositoryClient();
@@ -21,7 +22,7 @@ describe('AAS Repository Integration Tests', () => {
     const attachmentBlob = createAttachmentBlob(attachmentPayload);
     const attachmentIdShortPath = testFileSubmodelElement.idShort ?? 'testFileElement';
     const configuration = new Configuration({
-        basePath: 'http://localhost:8081',
+        basePath: getIntegrationBasePath('aasRepository'),
     });
     const { submodelReference, submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
         createAasRepositoryPayloadFixtures(testSubmodel.id);

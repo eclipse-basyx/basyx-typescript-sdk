@@ -78,6 +78,67 @@ Use `.nvmrc` to align local Node.js with CI:
 nvm use
 ```
 
+## Integration Test Engine
+
+The repository includes a CLI test engine that reuses the integration suites for infrastructure components. The user
+provides a component ID and endpoint URL, and the engine produces selectable reports with passed checks and failed
+checks including reasons.
+
+The engine targets unsecured endpoints and does not start Docker by itself.
+
+### Available Components
+
+- `aas-repository`
+- `submodel-repository`
+- `concept-description-repository`
+- `aas-registry`
+- `submodel-registry`
+- `aas-discovery`
+- `aasx-file-server`
+
+List components:
+
+```bash
+pnpm test:engine:list-components
+```
+
+Run against one component endpoint:
+
+```bash
+pnpm test:engine -- --component submodel-repository --url http://localhost:8082
+```
+
+Select output formats (`console`, `json`, `junit`, `markdown`):
+
+```bash
+pnpm test:engine -- --component aas-repository --url http://localhost:8081 --report console,json,junit,markdown
+```
+
+Strict known-issues mode (waived known issues become failures):
+
+```bash
+pnpm test:engine -- --component aas-discovery --url http://localhost:8086 --strict-known-issues
+```
+
+Use a custom artifact directory:
+
+```bash
+pnpm test:engine -- --component aasx-file-server --url http://localhost:8087 --report-dir coverage/test-engine
+```
+
+### Report Behavior
+
+- `console`: run summary plus failed checks and reasons.
+- `json`: machine-readable report for workflow processing.
+- `junit`: CI-compatible XML artifact.
+- `markdown`: shareable summary document.
+
+Exit code behavior:
+
+- `0` if all non-waived checks pass.
+- non-zero if any integration check fails or OpenAPI critical findings exist.
+- in strict mode, waived known issues also fail the run.
+
 ## Import Styles
 
 The SDK supports multiple import styles for flexibility:
