@@ -12,9 +12,18 @@ export function createPerTestCleanupRunner() {
     afterEach(async () => {
         const pendingTasks = [...tasks].reverse();
         tasks = [];
+        const cleanupErrors: Error[] = [];
 
         for (const task of pendingTasks) {
-            await task();
+            try {
+                await task();
+            } catch (error) {
+                cleanupErrors.push(error instanceof Error ? error : new Error(String(error)));
+            }
+        }
+
+        if (cleanupErrors.length > 0) {
+            throw new AggregateError(cleanupErrors, 'One or more cleanup tasks failed');
         }
     });
 

@@ -1361,13 +1361,18 @@ describe('AAS Repository Integration Tests', () => {
      * @status 204
      */
     test('should patch Submodel metadata by ID through AAS repository superpath', async () => {
-        const { shell, submodel } = await createScopedSuperpathFixture(testSubmodel.id);
+        const { shell, submodel } = await createScopedSuperpathFixture();
+
+        const scopedMetadataPatch = {
+            ...submodelMetadataPatch,
+            id: submodel.id,
+        };
 
         const response = await client.patchSubmodelByIdMetadataAasRepository({
             configuration,
             aasIdentifier: shell.id,
             submodelIdentifier: submodel.id,
-            submodelMetadata: submodelMetadataPatch,
+            submodelMetadata: scopedMetadataPatch,
         });
 
         try {
@@ -2556,7 +2561,7 @@ describe('AAS Repository Integration Tests', () => {
     test('should patch SubmodelElement value by path through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
         const element = createTestSubmodelElement();
-        element.idShort = `patchByPath-${uniqueSuffix()}`;
+        element.idShort = 'testProperty';
 
         const response = await client.patchSubmodelElementValueByPathAasRepository({
             configuration,
@@ -2580,7 +2585,7 @@ describe('AAS Repository Integration Tests', () => {
     test('should patch SubmodelElement by path with no content status', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
         const element = createTestSubmodelElement();
-        element.idShort = `patchByPathStatus-${uniqueSuffix()}`;
+        element.idShort = 'testProperty';
 
         const response = await client.patchSubmodelElementValueByPathAasRepository({
             configuration,
