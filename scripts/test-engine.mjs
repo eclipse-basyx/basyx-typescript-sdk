@@ -77,9 +77,7 @@ function parseReports(reportValues) {
                 continue;
             }
             if (!REPORT_FORMATS.has(format)) {
-                throw new Error(
-                    `Unsupported report format "${format}". Supported: ${[...REPORT_FORMATS].join(', ')}`
-                );
+                throw new Error(`Unsupported report format "${format}". Supported: ${[...REPORT_FORMATS].join(', ')}`);
             }
             selected.add(format);
         }
