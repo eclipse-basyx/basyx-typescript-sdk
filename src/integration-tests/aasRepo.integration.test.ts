@@ -1661,6 +1661,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetAllSubmodelElements_AasRepository
+     * @status 200
+     */
     test('should get all SubmodelElements through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
 
@@ -1672,6 +1676,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -1740,6 +1747,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation PostSubmodelElement_AasRepository
+     * @status 201
+     */
     test('should post SubmodelElement through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
         const element = createTestSubmodelElement();
@@ -1754,6 +1765,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -1867,6 +1881,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetAllSubmodelElements-Metadata_AasRepository
+     * @status 200
+     */
     test('should get all SubmodelElements metadata through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
 
@@ -1878,6 +1896,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -1957,6 +1978,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2036,6 +2060,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2115,6 +2142,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2195,6 +2225,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2275,12 +2308,15 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             aasIdentifier: shell.id,
             submodelIdentifier: submodel.id,
-            idShortPath: 'testProperty',
+            idShortPath: 'parentCollection',
             submodelElement: element,
         });
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(201);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2398,6 +2434,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation PutSubmodelElementByPath_AasRepository
+     * @status 204
+     */
     test('should put SubmodelElement by path through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
         const element = createTestSubmodelElement();
@@ -2413,6 +2453,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2534,6 +2577,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation PatchSubmodelElementValueByPath_AasRepository
+     * @status 204
+     */
     test('should patch SubmodelElement value by path through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
         const element = createTestSubmodelElement();
@@ -2549,6 +2596,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2630,6 +2680,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetSubmodelElementByPath-Metadata_AasRepository
+     * @status 200
+     */
     test('should get SubmodelElement metadata by path through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
 
@@ -2642,6 +2696,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2726,6 +2783,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2812,6 +2872,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2896,6 +2959,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -2982,6 +3048,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -3065,6 +3134,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -3240,6 +3312,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiFailureCode(response, '405');
+            if (!response.success) {
+                expect(response.statusCode).toBe(405);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -3307,6 +3382,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -3760,6 +3838,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation GetFileByPath_AasRepository
+     * @status 404
+     */
     test('should return not found when downloading a deleted file through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
 
@@ -3792,6 +3874,9 @@ describe('AAS Repository Integration Tests', () => {
             });
 
             assertApiFailureCode(response, '404');
+            if (!response.success) {
+                expect(response.statusCode).toBe(404);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
@@ -3815,6 +3900,10 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation DeleteSubmodelElementByPath_AasRepository
+     * @status 204
+     */
     test('should delete SubmodelElement by path through AAS repository superpath', async () => {
         const { shell, submodel } = await createScopedSuperpathFixture();
 
@@ -3827,6 +3916,9 @@ describe('AAS Repository Integration Tests', () => {
 
         try {
             assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(204);
+            }
         } finally {
             await cleanupShell(shell.id);
         }
