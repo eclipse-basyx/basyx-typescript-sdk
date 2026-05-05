@@ -1,6 +1,7 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { URL } from 'node:url';
 
 const REPORT_FORMATS = new Set(['console', 'json', 'junit', 'markdown']);
 const DEFAULT_REPORTS = ['console', 'json'];
@@ -77,7 +78,7 @@ function parseReports(reportValues) {
             }
             if (!REPORT_FORMATS.has(format)) {
                 throw new Error(
-                    `Unsupported report format \"${format}\". Supported: ${[...REPORT_FORMATS].join(', ')}`
+                    `Unsupported report format "${format}". Supported: ${[...REPORT_FORMATS].join(', ')}`
                 );
             }
             selected.add(format);
@@ -511,18 +512,18 @@ function writeJunitReport(report, outputPath) {
         .map((test) => {
             const failureXml =
                 test.status === 'failed'
-                    ? `\n      <failure message=\"${escapeXml(test.message)}\"><![CDATA[${test.message}]]></failure>`
+                    ? `\n      <failure message="${escapeXml(test.message)}"><![CDATA[${test.message}]]></failure>`
                     : '';
 
-            return `    <testcase classname=\"${escapeXml(test.suiteName)}\" name=\"${escapeXml(test.name)}\" time=\"${(
+            return `    <testcase classname="${escapeXml(test.suiteName)}" name="${escapeXml(test.name)}" time="${(
                 (test.durationMs ?? 0) / 1000
-            ).toFixed(6)}\">${failureXml}\n    </testcase>`;
+            ).toFixed(6)}">${failureXml}\n    </testcase>`;
         })
         .join('\n');
 
-    const xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites name=\"basyx-test-engine\" tests=\"${total}\" failures=\"${failures}\">\n  <testsuite name=\"${escapeXml(
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<testsuites name="basyx-test-engine" tests="${total}" failures="${failures}">\n  <testsuite name="${escapeXml(
         report.component.id
-    )}\" tests=\"${total}\" failures=\"${failures}\" skipped=\"0\" errors=\"0\">\n${testCaseXml}\n  </testsuite>\n</testsuites>\n`;
+    )}" tests="${total}" failures="${failures}" skipped="0" errors="0">\n${testCaseXml}\n  </testsuite>\n</testsuites>\n`;
 
     fs.writeFileSync(outputPath, xml, 'utf8');
 }
@@ -583,7 +584,7 @@ function main() {
     const componentConfig = COMPONENT_CATALOG[args.component];
     assert(
         componentConfig,
-        `Unsupported component \"${args.component}\". Use --list-components to inspect valid options.`
+        `Unsupported component "${args.component}". Use --list-components to inspect valid options.`
     );
 
     const baseUrl = normalizeBaseUrl(args.url);
