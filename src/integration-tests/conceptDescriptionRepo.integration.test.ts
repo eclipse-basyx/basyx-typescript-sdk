@@ -236,6 +236,10 @@ describe('Concept Description Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation PutConceptDescriptionById
+     * @status 201
+     */
     test('should create a Concept Description through put by ID with current backend status', async () => {
         const conceptDescription = createUniqueConceptDescription();
 
@@ -281,6 +285,10 @@ describe('Concept Description Repository Integration Tests', () => {
         }
     });
 
+    /**
+     * @operation PutConceptDescriptionById
+     * @status 204
+     */
     test('should update a Concept Description through put by ID with current backend status', async () => {
         const conceptDescription = createUniqueConceptDescription();
         const createResponse = await client.postConceptDescription({

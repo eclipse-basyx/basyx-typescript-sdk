@@ -590,6 +590,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -606,6 +609,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1109,6 +1115,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1122,6 +1131,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1165,6 +1177,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1178,6 +1193,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1224,6 +1242,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1245,6 +1266,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1312,6 +1336,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1327,6 +1354,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1365,6 +1395,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1417,6 +1450,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1500,6 +1536,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1538,6 +1577,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1551,6 +1593,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1593,6 +1638,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1606,6 +1654,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1648,6 +1699,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1661,6 +1715,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1703,6 +1760,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1716,6 +1776,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1758,6 +1821,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1771,6 +1837,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1813,6 +1882,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1826,6 +1898,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1870,6 +1945,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1891,6 +1969,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -1935,6 +2016,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -1956,6 +2040,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2000,6 +2087,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2021,6 +2111,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2035,6 +2128,7 @@ describe('Submodel Repository Integration Tests', () => {
 
         assertApiResult(response);
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
             expect(response.data.size).toBeGreaterThan(0);
         }
@@ -2052,6 +2146,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2153,6 +2250,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2218,6 +2318,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2240,6 +2343,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2335,6 +2441,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '405');
+        if (!response.success) {
+            expect(response.statusCode).toBe(405);
+        }
     });
 
     /**
@@ -2349,6 +2458,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2372,6 +2484,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2389,6 +2504,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2404,6 +2522,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiResult(response);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+        }
     });
 
     /**
@@ -2419,6 +2540,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2434,6 +2558,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2469,6 +2596,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2485,6 +2615,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2518,6 +2651,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2533,6 +2669,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2568,6 +2707,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2584,6 +2726,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2617,6 +2762,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2632,6 +2780,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2665,6 +2816,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2680,6 +2834,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2713,6 +2870,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2728,6 +2888,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2779,6 +2942,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2800,6 +2966,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2838,6 +3007,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2880,6 +3052,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '400');
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+        }
     });
 
     /**
@@ -2901,6 +3076,9 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 
     /**
@@ -2937,5 +3115,8 @@ describe('Submodel Repository Integration Tests', () => {
         });
 
         assertApiFailureCode(response, '404');
+        if (!response.success) {
+            expect(response.statusCode).toBe(404);
+        }
     });
 });
