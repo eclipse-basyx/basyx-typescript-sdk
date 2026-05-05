@@ -10,6 +10,20 @@ export type ApiResultLike = {
     error?: unknown;
 };
 
+type ApiSuccessResultLike<TData = unknown> = {
+    success: true;
+    statusCode?: number;
+    data: TData;
+    error?: unknown;
+};
+
+type ApiFailureResultLike<TError = unknown> = {
+    success: false;
+    statusCode?: number;
+    data?: unknown;
+    error: TError;
+};
+
 const MAX_FALLBACK_LENGTH = 400;
 
 function asNonEmptyString(value: unknown): string | undefined {
@@ -100,7 +114,10 @@ function formatFailureContext(response: ApiResultLike): string {
     return `status=${status}; errorCodes=${codeSummary}; errorMessages=${messageSummary}`;
 }
 
-export function assertApiResult(response: ApiResultLike, context = 'API request'): void {
+export function assertApiResult<TData = unknown, TError = unknown>(
+    response: ApiResultLike & ({ data: TData } | { error: TError }),
+    context = 'API request'
+): asserts response is ApiSuccessResultLike<TData> {
     if (typeof response.success !== 'boolean') {
         throw new Error(`${context} produced an invalid result: success flag is not a boolean.`);
     }
@@ -114,7 +131,10 @@ export function assertApiResult(response: ApiResultLike, context = 'API request'
     }
 }
 
-export function assertApiFailure(response: ApiResultLike, context = 'API request'): void {
+export function assertApiFailure<TData = unknown, TError = unknown>(
+    response: ApiResultLike & ({ data: TData } | { error: TError }),
+    context = 'API request'
+): asserts response is ApiFailureResultLike<TError> {
     if (typeof response.success !== 'boolean') {
         throw new Error(`${context} produced an invalid result: success flag is not a boolean.`);
     }
