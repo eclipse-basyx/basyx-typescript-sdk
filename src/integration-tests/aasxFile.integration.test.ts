@@ -4,6 +4,7 @@ import { Configuration } from '../generated';
 import { AasxFileService } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createTestShell } from './fixtures/aasxFileFixtures';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 type StoredPackageDescription = AasxFileService.PackageDescription & { packageId: string };
@@ -33,10 +34,7 @@ describe('AASX File Server Integration Tests', () => {
             file: createPackageFile(),
         });
 
-        expect(response.success).toBe(true);
-        if (!response.success) {
-            throw new Error('Failed to create AASX package fixture');
-        }
+        assertApiResult(response, 'Create AASX package fixture');
 
         expect(response.data.packageId).toBeDefined();
         if (!response.data.packageId) {
@@ -68,7 +66,7 @@ describe('AASX File Server Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(Array.isArray(response.data.result)).toBe(true);
@@ -87,7 +85,7 @@ describe('AASX File Server Integration Tests', () => {
             limit: -1,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -104,7 +102,7 @@ describe('AASX File Server Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -126,7 +124,7 @@ describe('AASX File Server Integration Tests', () => {
             file: createPackageFile(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data.packageId).toBeDefined();
@@ -148,7 +146,7 @@ describe('AASX File Server Integration Tests', () => {
             file: new Blob([], { type: 'application/asset-administration-shell-package' }),
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -171,7 +169,7 @@ describe('AASX File Server Integration Tests', () => {
             fileName,
             file,
         });
-        expect(initialResponse.success).toBe(true);
+        assertApiResult(initialResponse);
         if (initialResponse.success && initialResponse.data.packageId) {
             createdPackageIds.push(initialResponse.data.packageId);
         }
@@ -208,7 +206,7 @@ describe('AASX File Server Integration Tests', () => {
             packageId: packageDescription.packageId,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.size).toBeGreaterThan(0);
@@ -225,7 +223,7 @@ describe('AASX File Server Integration Tests', () => {
             packageId: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -242,7 +240,7 @@ describe('AASX File Server Integration Tests', () => {
             packageId: `non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -267,7 +265,7 @@ describe('AASX File Server Integration Tests', () => {
             file: createPackageFile(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             createdPackageIds.push(packageId);
@@ -291,7 +289,7 @@ describe('AASX File Server Integration Tests', () => {
             file: createPackageFile(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -310,7 +308,7 @@ describe('AASX File Server Integration Tests', () => {
             file: createPackageFile(),
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -332,7 +330,7 @@ describe('AASX File Server Integration Tests', () => {
         });
         createdPackageIds.splice(createdPackageIds.indexOf(packageDescription.packageId), 1);
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -349,7 +347,7 @@ describe('AASX File Server Integration Tests', () => {
             packageId: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -366,7 +364,7 @@ describe('AASX File Server Integration Tests', () => {
             packageId: `non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -382,7 +380,7 @@ describe('AASX File Server Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -401,7 +399,7 @@ describe('AASX File Server Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -419,7 +417,7 @@ describe('AASX File Server Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');

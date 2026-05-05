@@ -2,6 +2,7 @@ import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { SubmodelService } from '../services/SubmodelService';
 import { createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createTestSubmodel } from './fixtures/submodelFixtures';
 
 describe('SubmodelService Integration Tests', () => {
@@ -43,7 +44,7 @@ describe('SubmodelService Integration Tests', () => {
                 submodel: testSubmodel,
             });
 
-            expect(createResult.success).toBe(true);
+            assertApiResult(createResult);
             if (createResult.success) {
                 expect(createResult.data.submodel).toBeDefined();
                 expect(createResult.data.submodel.id).toBe(testSubmodel.id);
@@ -62,14 +63,14 @@ describe('SubmodelService Integration Tests', () => {
             const createResult = await submodelService.createSubmodel({
                 submodel: testSubmodel,
             });
-            expect(createResult.success).toBe(true);
+            assertApiResult(createResult);
 
             // Then deregister
             const deregisterResult = await submodelService.deleteSubmodel({
                 submodelIdentifier: testSubmodel.id,
             });
 
-            expect(deregisterResult.success).toBe(true);
+            assertApiResult(deregisterResult);
         });
 
         test('should fail to deregister non-existent Submodel', async () => {
@@ -77,7 +78,7 @@ describe('SubmodelService Integration Tests', () => {
                 submodelIdentifier: 'non-existent-id',
             });
 
-            expect(deregisterResult.success).toBe(false);
+            assertApiFailure(deregisterResult);
         });
     });
 
@@ -98,7 +99,7 @@ describe('SubmodelService Integration Tests', () => {
                 submodel: testSubmodel,
             });
 
-            expect(updateResult.success).toBe(true);
+            assertApiResult(updateResult);
             if (updateResult.success) {
                 expect(updateResult.data.submodel).toBeDefined();
                 expect(updateResult.data.submodel.id).toBe(testSubmodel.id);
@@ -125,7 +126,7 @@ describe('SubmodelService Integration Tests', () => {
                 submodelIdentifier: testSubmodel.id,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
             if (endpointResult.success) {
                 expect(endpointResult.data).toContain('/submodels/');
                 expect(endpointResult.data).toContain('http://localhost:8082');
@@ -150,7 +151,7 @@ describe('SubmodelService Integration Tests', () => {
                 useRegistry: false,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
             if (endpointResult.success) {
                 expect(endpointResult.data).toContain('/submodels/');
                 expect(endpointResult.data).toContain('http://localhost:8082');
@@ -175,7 +176,7 @@ describe('SubmodelService Integration Tests', () => {
                 submodelIdentifier: testSubmodel.id,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
 
             if (endpointResult.success) {
                 // Use endpoint to fetch Submodel
@@ -183,7 +184,7 @@ describe('SubmodelService Integration Tests', () => {
                     endpoint: endpointResult.data,
                 });
 
-                expect(submodelResult.success).toBe(true);
+                assertApiResult(submodelResult);
                 if (submodelResult.success) {
                     expect(submodelResult.data.submodel).toBeDefined();
                     expect(submodelResult.data.submodel.id).toBe(testSubmodel.id);
@@ -201,7 +202,7 @@ describe('SubmodelService Integration Tests', () => {
                 endpoint: invalidEndpoint,
             });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('InvalidEndpoint');
             }
@@ -219,7 +220,7 @@ describe('SubmodelService Integration Tests', () => {
 
             const result = await submodelService.getSubmodelList({ preferRegistry: true });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('registry');
                 expect(result.data.submodels).toBeDefined();
@@ -244,7 +245,7 @@ describe('SubmodelService Integration Tests', () => {
 
             const result = await submodelService.getSubmodelList({ preferRegistry: false });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('repository');
                 expect(result.data.submodels).toBeDefined();
@@ -266,7 +267,7 @@ describe('SubmodelService Integration Tests', () => {
 
             const result = await submodelService.getSubmodelList({ limit: 1, preferRegistry: true });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('registry');
                 // The limit parameter should restrict the result to at most 1 item
@@ -293,7 +294,7 @@ describe('SubmodelService Integration Tests', () => {
                 useRegistryEndpoint: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.submodel).toBeDefined();
                 expect(result.data.submodel.id).toBe(testSubmodel.id);
@@ -320,7 +321,7 @@ describe('SubmodelService Integration Tests', () => {
                 useRegistryEndpoint: false,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.submodel).toBeDefined();
                 expect(result.data.submodel.id).toBe(testSubmodel.id);
@@ -337,7 +338,7 @@ describe('SubmodelService Integration Tests', () => {
                 useRegistryEndpoint: false,
             });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
         });
     });
 
@@ -359,7 +360,7 @@ describe('SubmodelService Integration Tests', () => {
             // Try to get list with bad registry - should fall back to repository
             const result = await serviceWithBadRegistry.getSubmodelList();
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('repository');
                 expect(result.data.submodels).toBeDefined();
@@ -376,7 +377,7 @@ describe('SubmodelService Integration Tests', () => {
         test('should work with only repository configuration', async () => {
             const result = await repoOnlyService.getSubmodelList();
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('repository');
             }
@@ -389,7 +390,7 @@ describe('SubmodelService Integration Tests', () => {
         test('should fail when no configuration is provided', async () => {
             const result = await emptyService.getSubmodelList();
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('ConfigurationError');
             }
@@ -418,7 +419,7 @@ describe('SubmodelService Integration Tests', () => {
                 includeConceptDescriptions: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.submodels.length).toBeGreaterThan(0);
                 expect(result.data.conceptDescriptions).toBeDefined();
@@ -445,7 +446,7 @@ describe('SubmodelService Integration Tests', () => {
                 includeConceptDescriptions: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.submodel.id).toBe(testSubmodel.id);
                 expect(result.data.conceptDescriptions).toBeDefined();
@@ -472,7 +473,7 @@ describe('SubmodelService Integration Tests', () => {
                 includeConceptDescriptions: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.submodel.id).toBe(testSubmodel.id);
                 expect(result.data.conceptDescriptions).toBeDefined();

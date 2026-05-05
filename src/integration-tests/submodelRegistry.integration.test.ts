@@ -2,6 +2,7 @@ import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createDisplayName, createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
@@ -50,7 +51,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
@@ -71,7 +72,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelDescriptor: invalidSubmodelDescriptor,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -89,7 +90,7 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
             submodelDescriptor,
         });
-        expect(initialResponse.success).toBe(true);
+        assertApiResult(initialResponse);
 
         const duplicateResponse = await client.postSubmodelDescriptor({
             configuration,
@@ -114,14 +115,14 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
             submodelDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelDescriptorById({
             configuration,
             submodelIdentifier: submodelDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -139,7 +140,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelIdentifier: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -157,7 +158,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelIdentifier: nonExistingId,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -189,13 +190,13 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
             submodelDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllSubmodelDescriptors({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -214,7 +215,7 @@ describe('Submodel Registry Integration Tests', () => {
             limit: -1,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -231,7 +232,7 @@ describe('Submodel Registry Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -248,7 +249,7 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -268,7 +269,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(submodelDescriptor);
@@ -285,7 +286,7 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
             submodelDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const updatedSubmodelDescriptor = createUniqueSubmodelDescriptor();
         updatedSubmodelDescriptor.id = submodelDescriptor.id;
@@ -297,7 +298,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelDescriptor: updatedSubmodelDescriptor,
         });
 
-        expect(updateResponse.success).toBe(true);
+        assertApiResult(updateResponse);
         if (updateResponse.success) {
             expect(updateResponse.statusCode).toBe(204);
             expect(updateResponse.data).toBeUndefined();
@@ -308,7 +309,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelIdentifier: submodelDescriptor.id,
         });
 
-        expect(fetchResponse.success).toBe(true);
+        assertApiResult(fetchResponse);
         if (fetchResponse.success) {
             expect(fetchResponse.statusCode).toBe(200);
             expect(fetchResponse.data.displayName).toEqual(updatedSubmodelDescriptor.displayName);
@@ -329,7 +330,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -346,14 +347,14 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
             submodelDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.deleteSubmodelDescriptorById({
             configuration,
             submodelIdentifier: submodelDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -372,7 +373,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelIdentifier: nonExistingId,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -389,7 +390,7 @@ describe('Submodel Registry Integration Tests', () => {
             submodelIdentifier: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -405,7 +406,7 @@ describe('Submodel Registry Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();

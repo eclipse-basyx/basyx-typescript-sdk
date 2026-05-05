@@ -11,6 +11,7 @@ import { base64Encode } from '../lib/base64Url';
 import { AasService } from '../services/AasService';
 import { createGlobalAssetIdFromAasId, createTestShell } from './fixtures/aasFixtures';
 import { createTestShellDescriptor } from './fixtures/aasregistryFixtures';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 
 describe('AasService Integration Tests', () => {
     const aasRegistryConfig = new Configuration({ basePath: 'http://localhost:8084' });
@@ -52,7 +53,7 @@ describe('AasService Integration Tests', () => {
                 shell: testShell,
             });
 
-            expect(createResult.success).toBe(true);
+            assertApiResult(createResult);
             if (createResult.success) {
                 expect(createResult.data.shell).toBeDefined();
                 expect(createResult.data.shell.id).toBe(testShell.id);
@@ -71,14 +72,14 @@ describe('AasService Integration Tests', () => {
             const createResult = await aasService.createAas({
                 shell: testShell,
             });
-            expect(createResult.success).toBe(true);
+            assertApiResult(createResult);
 
             // Then deregister
             const deregisterResult = await aasService.deleteAas({
                 aasIdentifier: testShell.id,
             });
 
-            expect(deregisterResult.success).toBe(true);
+            assertApiResult(deregisterResult);
         });
 
         test('should fail to deregister non-existent AAS', async () => {
@@ -86,7 +87,7 @@ describe('AasService Integration Tests', () => {
                 aasIdentifier: 'non-existent-id',
             });
 
-            expect(deregisterResult.success).toBe(false);
+            assertApiFailure(deregisterResult);
         });
     });
 
@@ -107,7 +108,7 @@ describe('AasService Integration Tests', () => {
                 shell: testShell,
             });
 
-            expect(updateResult.success).toBe(true);
+            assertApiResult(updateResult);
             if (updateResult.success) {
                 expect(updateResult.data.shell).toBeDefined();
                 expect(updateResult.data.shell.id).toBe(testShell.id);
@@ -134,7 +135,7 @@ describe('AasService Integration Tests', () => {
                 aasIdentifier: testShell.id,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
             if (endpointResult.success) {
                 expect(endpointResult.data).toContain('/shells/');
                 expect(endpointResult.data).toContain('http://localhost:8081');
@@ -159,7 +160,7 @@ describe('AasService Integration Tests', () => {
                 useRegistry: false,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
             if (endpointResult.success) {
                 expect(endpointResult.data).toContain('/shells/');
                 expect(endpointResult.data).toContain('http://localhost:8081');
@@ -184,7 +185,7 @@ describe('AasService Integration Tests', () => {
                 aasIdentifier: testShell.id,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
 
             if (endpointResult.success) {
                 // Use endpoint to fetch AAS
@@ -192,7 +193,7 @@ describe('AasService Integration Tests', () => {
                     endpoint: endpointResult.data,
                 });
 
-                expect(shellResult.success).toBe(true);
+                assertApiResult(shellResult);
                 if (shellResult.success) {
                     expect(shellResult.data.shell).toBeDefined();
                     expect(shellResult.data.shell.id).toBe(testShell.id);
@@ -210,7 +211,7 @@ describe('AasService Integration Tests', () => {
                 endpoint: invalidEndpoint,
             });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('InvalidEndpoint');
             }
@@ -228,7 +229,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await aasService.getAasList({ preferRegistry: true });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('registry');
                 expect(result.data.shells).toBeDefined();
@@ -253,7 +254,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await aasService.getAasList({ preferRegistry: false });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('repository');
                 expect(result.data.shells).toBeDefined();
@@ -275,7 +276,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await aasService.getAasList({ limit: 1, preferRegistry: true });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('registry');
                 // The limit parameter should restrict the result to at most 1 item
@@ -302,7 +303,7 @@ describe('AasService Integration Tests', () => {
                 useRegistryEndpoint: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shell).toBeDefined();
                 expect(result.data.shell.id).toBe(testShell.id);
@@ -329,7 +330,7 @@ describe('AasService Integration Tests', () => {
                 useRegistryEndpoint: false,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shell).toBeDefined();
                 expect(result.data.shell.id).toBe(testShell.id);
@@ -346,7 +347,7 @@ describe('AasService Integration Tests', () => {
                 useRegistryEndpoint: false,
             });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
         });
     });
 
@@ -368,7 +369,7 @@ describe('AasService Integration Tests', () => {
             // Try to get list with bad registry - should fall back to repository
             const result = await serviceWithBadRegistry.getAasList();
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('repository');
                 expect(result.data.shells).toBeDefined();
@@ -385,7 +386,7 @@ describe('AasService Integration Tests', () => {
         test('should work with only repository configuration', async () => {
             const result = await repoOnlyService.getAasList();
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.source).toBe('repository');
             }
@@ -398,7 +399,7 @@ describe('AasService Integration Tests', () => {
         test('should fail when no configuration is provided', async () => {
             const result = await emptyService.getAasList();
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('ConfigurationError');
             }
@@ -418,7 +419,7 @@ describe('AasService Integration Tests', () => {
                 includeSubmodels: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells).toBeDefined();
                 expect(result.data.submodels).toBeDefined();
@@ -441,7 +442,7 @@ describe('AasService Integration Tests', () => {
                 includeSubmodels: false,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells).toBeDefined();
                 expect(result.data.submodels).toBeUndefined();
@@ -464,7 +465,7 @@ describe('AasService Integration Tests', () => {
                 includeSubmodels: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shell).toBeDefined();
                 expect(result.data.submodels).toBeDefined();
@@ -486,7 +487,7 @@ describe('AasService Integration Tests', () => {
                 aasIdentifier: testShell.id,
             });
 
-            expect(endpointResult.success).toBe(true);
+            assertApiResult(endpointResult);
 
             if (endpointResult.success) {
                 // Get by endpoint with submodels
@@ -495,7 +496,7 @@ describe('AasService Integration Tests', () => {
                     includeSubmodels: true,
                 });
 
-                expect(result.success).toBe(true);
+                assertApiResult(result);
                 if (result.success) {
                     expect(result.data.shell).toBeDefined();
                     expect(result.data.submodels).toBeDefined();
@@ -529,7 +530,7 @@ describe('AasService Integration Tests', () => {
                 includeConceptDescriptions: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells.length).toBeGreaterThan(0);
                 expect(result.data.submodels).toBeDefined();
@@ -554,7 +555,7 @@ describe('AasService Integration Tests', () => {
                 includeConceptDescriptions: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shell.id).toBe(testShell.id);
                 expect(result.data.submodels).toBeDefined();
@@ -580,7 +581,7 @@ describe('AasService Integration Tests', () => {
                 includeConceptDescriptions: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shell.id).toBe(testShell.id);
                 expect(result.data.submodels).toBeDefined();
@@ -601,7 +602,7 @@ describe('AasService Integration Tests', () => {
 
             // Create AAS
             const createResult = await aasServiceWithDiscovery.createAas({ shell: testShell });
-            expect(createResult.success).toBe(true);
+            assertApiResult(createResult);
 
             // Register asset links (assuming the shell has asset information with specific asset IDs)
             const assetIds = [
@@ -620,7 +621,7 @@ describe('AasService Integration Tests', () => {
             // Find AAS by asset IDs
             const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells.length).toBeGreaterThan(0);
                 expect(result.data.aasIds).toContain(testShell.id);
@@ -641,7 +642,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells).toHaveLength(0);
                 expect(result.data.aasIds).toHaveLength(0);
@@ -675,7 +676,7 @@ describe('AasService Integration Tests', () => {
             // Find AAS by the shared asset ID
             const result = await aasServiceWithDiscovery.getAasByAssetId({ assetIds: [sharedAssetId] });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells.length).toBeGreaterThanOrEqual(2);
                 expect(result.data.aasIds).toContain(testShell1.id);
@@ -700,7 +701,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await aasService.getAasByAssetId({ assetIds });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('ConfigurationError');
                 expect(result.error.message).toContain('Discovery service configuration not provided');
@@ -729,7 +730,7 @@ describe('AasService Integration Tests', () => {
                 includeSubmodels: true,
             });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.shells.length).toBeGreaterThan(0);
                 // Submodels would be included if the AAS had any
@@ -768,7 +769,7 @@ describe('AasService Integration Tests', () => {
             // Resolve reference
             const result = await serviceWithSubmodels.resolveReference({ reference });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 expect(result.data.aasEndpoint).toBeDefined();
                 expect(result.data.aasEndpoint).toContain('http://localhost:8081/shells/');
@@ -779,7 +780,7 @@ describe('AasService Integration Tests', () => {
                 const shellByEndpoint = await serviceWithSubmodels.getAasByEndpoint({
                     endpoint: result.data.aasEndpoint!,
                 });
-                expect(shellByEndpoint.success).toBe(true);
+                assertApiResult(shellByEndpoint);
                 if (shellByEndpoint.success) {
                     expect(shellByEndpoint.data.shell.id).toBe(testShell.id);
                 }
@@ -799,7 +800,7 @@ describe('AasService Integration Tests', () => {
             const result = await serviceWithSubmodels.resolveReference({ reference });
 
             // Should still return success with constructed endpoint (from repository config fallback)
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 // Endpoint is constructed from repository config even if AAS doesn't exist
                 expect(result.data.aasEndpoint).toBeDefined();
@@ -809,7 +810,7 @@ describe('AasService Integration Tests', () => {
                 const shellByEndpoint = await serviceWithSubmodels.getAasByEndpoint({
                     endpoint: result.data.aasEndpoint!,
                 });
-                expect(shellByEndpoint.success).toBe(false);
+                assertApiFailure(shellByEndpoint);
             }
         });
 
@@ -820,7 +821,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await serviceWithSubmodels.resolveReference({ reference });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('UnsupportedReferenceType');
             }
@@ -831,7 +832,7 @@ describe('AasService Integration Tests', () => {
 
             const result = await serviceWithSubmodels.resolveReference({ reference });
 
-            expect(result.success).toBe(false);
+            assertApiFailure(result);
             if (!result.success) {
                 expect(result.error.errorType).toBe('InvalidReference');
             }
@@ -851,7 +852,7 @@ describe('AasService Integration Tests', () => {
             // Resolve reference with useRegistry=false in getAasEndpointById
             const result = await serviceWithSubmodels.resolveReference({ reference });
 
-            expect(result.success).toBe(true);
+            assertApiResult(result);
             if (result.success) {
                 // Should construct endpoint from repository config
                 expect(result.data.aasEndpoint).toBeDefined();
