@@ -52,7 +52,9 @@ const COMPONENT_CATALOG = {
 };
 
 function printUsage() {
-    console.log(`Usage:\n  node scripts/test-engine.mjs --component <id> --url <http(s)://host:port> [options] [-- <vitest args>]\n\nOptions:\n  --component <id>               Component ID to test\n  --url <base-url>               Base URL for the selected component\n  --report <formats>             Report output(s): console,json,junit,markdown\n                                 Repeatable or comma-separated\n  --report-dir <dir>             Output directory (default: coverage/test-engine)\n  --strict-known-issues          Treat known waived OpenAPI issues as failures\n  --list-components              Print available component IDs and exit\n  --help                         Show this help\n\nExamples:\n  node scripts/test-engine.mjs --component submodel-repository --url http://localhost:8082\n  node scripts/test-engine.mjs --component aas-repository --url http://localhost:8081 --report console,json,markdown\n  node scripts/test-engine.mjs --component aas-discovery --url http://localhost:8086 --strict-known-issues -- --testNamePattern "lookup"`);
+    console.log(
+        `Usage:\n  node scripts/test-engine.mjs --component <id> --url <http(s)://host:port> [options] [-- <vitest args>]\n\nOptions:\n  --component <id>               Component ID to test\n  --url <base-url>               Base URL for the selected component\n  --report <formats>             Report output(s): console,json,junit,markdown\n                                 Repeatable or comma-separated\n  --report-dir <dir>             Output directory (default: coverage/test-engine)\n  --strict-known-issues          Treat known waived OpenAPI issues as failures\n  --list-components              Print available component IDs and exit\n  --help                         Show this help\n\nExamples:\n  node scripts/test-engine.mjs --component submodel-repository --url http://localhost:8082\n  node scripts/test-engine.mjs --component aas-repository --url http://localhost:8081 --report console,json,markdown\n  node scripts/test-engine.mjs --component aas-discovery --url http://localhost:8086 --strict-known-issues -- --testNamePattern "lookup"`
+    );
 }
 
 function assert(condition, message) {
@@ -74,7 +76,9 @@ function parseReports(reportValues) {
                 continue;
             }
             if (!REPORT_FORMATS.has(format)) {
-                throw new Error(`Unsupported report format \"${format}\". Supported: ${[...REPORT_FORMATS].join(', ')}`);
+                throw new Error(
+                    `Unsupported report format \"${format}\". Supported: ${[...REPORT_FORMATS].join(', ')}`
+                );
             }
             selected.add(format);
         }
@@ -351,15 +355,7 @@ function parseOpenApiResults(openApiReport, strictKnownIssues) {
     };
 }
 
-function buildReport({
-    component,
-    baseUrl,
-    strictKnownIssues,
-    vitestRun,
-    vitestResult,
-    openApiRun,
-    openApiResult,
-}) {
+function buildReport({ component, baseUrl, strictKnownIssues, vitestRun, vitestResult, openApiRun, openApiResult }) {
     const vitestParsed = parseVitestResults(vitestResult);
     const openApiParsed = parseOpenApiResults(openApiResult, strictKnownIssues);
 
@@ -519,8 +515,7 @@ function writeJunitReport(report, outputPath) {
                     : '';
 
             return `    <testcase classname=\"${escapeXml(test.suiteName)}\" name=\"${escapeXml(test.name)}\" time=\"${(
-                (test.durationMs ?? 0) /
-                1000
+                (test.durationMs ?? 0) / 1000
             ).toFixed(6)}\">${failureXml}\n    </testcase>`;
         })
         .join('\n');
@@ -641,7 +636,12 @@ function main() {
         throw new Error(`Failed to execute OpenAPI coverage validation: ${openApiRun.error.message}`);
     }
 
-    const openApiReportPath = path.join(process.cwd(), 'coverage', 'openapi-coverage', `${componentConfig.openapiService}.json`);
+    const openApiReportPath = path.join(
+        process.cwd(),
+        'coverage',
+        'openapi-coverage',
+        `${componentConfig.openapiService}.json`
+    );
     assert(fs.existsSync(openApiReportPath), `OpenAPI coverage report was not created at ${openApiReportPath}`);
     const openApiResult = readJson(openApiReportPath);
 

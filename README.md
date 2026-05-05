@@ -80,7 +80,9 @@ nvm use
 
 ## Integration Test Engine
 
-The repository includes a CLI test engine that reuses the integration suites for infrastructure components. The user provides a component ID and endpoint URL, and the engine produces selectable reports with passed checks and failed checks including reasons.
+The repository includes a CLI test engine that reuses the integration suites for infrastructure components. The user
+provides a component ID and endpoint URL, and the engine produces selectable reports with passed checks and failed
+checks including reasons.
 
 The engine targets unsecured endpoints and does not start Docker by itself.
 
