@@ -1508,6 +1508,7 @@ describe('Submodel Repository Integration Tests', () => {
 
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
         }
     });
