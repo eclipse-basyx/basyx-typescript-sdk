@@ -36,6 +36,8 @@
     "test:watch": "vitest",
     "test:unit": "vitest run --project unit-tests",
     "test:integration": "vitest run --project integration-tests",
+    "test:engine": "node scripts/test-engine.mjs",
+    "test:engine:list-components": "node scripts/test-engine.mjs --list-components",
     "validate:openapi-coverage": "node scripts/validate-openapi-coverage.mjs",
     "validate:openapi-coverage:aasrepo": "node scripts/validate-openapi-coverage.mjs --service aasRepository",
     "validate:openapi-coverage:aasdiscovery": "node scripts/validate-openapi-coverage.mjs --service aasDiscovery",

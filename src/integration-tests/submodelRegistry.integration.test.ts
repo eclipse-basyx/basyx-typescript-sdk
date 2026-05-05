@@ -2,11 +2,12 @@ import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createDisplayName, createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Submodel Registry Integration Tests', () => {
     const client = new SubmodelRegistryClient();
     const configuration = new Configuration({
-        basePath: 'http://localhost:8085',
+        basePath: getIntegrationBasePath('submodelRegistry'),
     });
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;

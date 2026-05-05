@@ -13,6 +13,7 @@ import {
     createTestSubmodelElementCollection,
     createValue,
 } from './fixtures/submodelFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Submodel Repository Integration Tests', () => {
     const client = new SubmodelRepositoryClient();
@@ -28,7 +29,7 @@ describe('Submodel Repository Integration Tests', () => {
     //const OPERATION_RESULT = createTestOperationResult();
     //const testOperationSubmodelElement = createTestOperationElement();
     const configuration = new Configuration({
-        basePath: 'http://localhost:8082',
+        basePath: getIntegrationBasePath('submodelRepository'),
     });
     const { submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
         createSubmodelRepositoryPayloadFixtures(testSubmodel.id);

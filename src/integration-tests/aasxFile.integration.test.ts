@@ -4,6 +4,7 @@ import { Configuration } from '../generated';
 import { AasxFileService } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createTestShell } from './fixtures/aasxFileFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 type StoredPackageDescription = AasxFileService.PackageDescription & { packageId: string };
 
@@ -11,7 +12,7 @@ describe('AASX File Server Integration Tests', () => {
     const client = new AasxFileClient();
     const testShell = createTestShell();
     const configuration = new Configuration({
-        basePath: 'http://localhost:8087',
+        basePath: getIntegrationBasePath('aasxFileServer'),
     });
 
     const createdPackageIds: string[] = [];

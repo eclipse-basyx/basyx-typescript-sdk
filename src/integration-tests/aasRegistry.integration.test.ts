@@ -8,11 +8,12 @@ import {
     createTestShellDescriptor,
     createTestSubmodelDescriptor,
 } from './fixtures/aasregistryFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('AAS Registry Integration Tests', () => {
     const client = new AasRegistryClient();
     const configuration = new Configuration({
-        basePath: 'http://localhost:8084',
+        basePath: getIntegrationBasePath('aasRegistry'),
     });
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;

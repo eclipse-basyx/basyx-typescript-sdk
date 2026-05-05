@@ -7,6 +7,7 @@ import {
     createTestSpecificAssetId1,
     createTestSpecificAssetId2,
 } from './fixtures/aasDiscoveryFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('AAS Discovery Integration Tests', () => {
     const client = new AasDiscoveryClient();
@@ -14,7 +15,7 @@ describe('AAS Discovery Integration Tests', () => {
     const testSpecificAssetId1 = createTestSpecificAssetId1();
     const testSpecificAssetId2 = createTestSpecificAssetId2();
     const configuration = new Configuration({
-        basePath: 'http://localhost:8086',
+        basePath: getIntegrationBasePath('aasDiscovery'),
     });
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const unavailableCursor = (): string =>

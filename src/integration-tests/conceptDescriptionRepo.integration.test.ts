@@ -2,11 +2,12 @@ import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptio
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createDescription, createTestCD } from './fixtures/conceptDescriptionFixtures';
+import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Concept Description Repository Integration Tests', () => {
     const client = new ConceptDescriptionRepositoryClient();
     const configuration = new Configuration({
-        basePath: 'http://localhost:8083',
+        basePath: getIntegrationBasePath('conceptDescriptionRepository'),
     });
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;

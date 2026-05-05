@@ -1,6 +1,10 @@
 import { execSync } from 'child_process';
 import path from 'path';
 
+function shouldSkipDockerLifecycle(): boolean {
+    return process.env.BASYX_TEST_ENGINE_MODE === 'true' || process.env.BASYX_SKIP_DOCKER_SETUP === 'true';
+}
+
 async function waitForContainer(containerName: string, timeoutMs = 300000, intervalMs = 1000): Promise<void> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -22,6 +26,11 @@ async function waitForContainer(containerName: string, timeoutMs = 300000, inter
 }
 
 export default async () => {
+    if (shouldSkipDockerLifecycle()) {
+        console.log('Skipping docker setup for test engine mode.');
+        return;
+    }
+
     try {
         const composeFilePath = path.join(process.cwd(), 'ci/docker-compose.yml');
         execSync(`docker-compose -f ${composeFilePath} up -d`, { stdio: 'inherit' });
