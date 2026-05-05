@@ -5,6 +5,17 @@ function shouldSkipDockerLifecycle(): boolean {
     return process.env.BASYX_TEST_ENGINE_MODE === 'true' || process.env.BASYX_SKIP_DOCKER_SETUP === 'true';
 }
 
+function getSkipDockerLifecycleReasons(): string[] {
+    const reasons: string[] = [];
+    if (process.env.BASYX_TEST_ENGINE_MODE === 'true') {
+        reasons.push('BASYX_TEST_ENGINE_MODE=true');
+    }
+    if (process.env.BASYX_SKIP_DOCKER_SETUP === 'true') {
+        reasons.push('BASYX_SKIP_DOCKER_SETUP=true');
+    }
+    return reasons;
+}
+
 async function waitForContainer(containerName: string, timeoutMs = 300000, intervalMs = 1000): Promise<void> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -27,7 +38,8 @@ async function waitForContainer(containerName: string, timeoutMs = 300000, inter
 
 export default async () => {
     if (shouldSkipDockerLifecycle()) {
-        console.log('Skipping docker setup for test engine mode.');
+        const reasons = getSkipDockerLifecycleReasons();
+        console.log(`Skipping docker setup (${reasons.join(', ') || 'no explicit reason'}).`);
         return;
     }
 

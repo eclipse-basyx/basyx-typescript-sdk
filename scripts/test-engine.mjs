@@ -64,6 +64,15 @@ function assert(condition, message) {
     }
 }
 
+function readRequiredValue(argv, index, flagName) {
+    const value = argv[index + 1];
+    if (!value || value.startsWith('--')) {
+        throw new Error(`Missing value for ${flagName}.`);
+    }
+
+    return value;
+}
+
 function parseReports(reportValues) {
     if (reportValues.length === 0) {
         return [...DEFAULT_REPORTS];
@@ -142,7 +151,7 @@ function parseArgs(argv) {
         }
 
         if (arg === '--component') {
-            parsed.component = argv[index + 1];
+            parsed.component = readRequiredValue(argv, index, '--component');
             index += 2;
             continue;
         }
@@ -154,7 +163,7 @@ function parseArgs(argv) {
         }
 
         if (arg === '--url') {
-            parsed.url = argv[index + 1];
+            parsed.url = readRequiredValue(argv, index, '--url');
             index += 2;
             continue;
         }
@@ -166,7 +175,7 @@ function parseArgs(argv) {
         }
 
         if (arg === '--report') {
-            reportValues.push(argv[index + 1] ?? '');
+            reportValues.push(readRequiredValue(argv, index, '--report'));
             index += 2;
             continue;
         }
@@ -178,7 +187,7 @@ function parseArgs(argv) {
         }
 
         if (arg === '--report-dir') {
-            parsed.reportDir = argv[index + 1];
+            parsed.reportDir = readRequiredValue(argv, index, '--report-dir');
             index += 2;
             continue;
         }
@@ -510,7 +519,7 @@ function writeJunitReport(report, outputPath) {
         .map((test) => {
             const failureXml =
                 test.status === 'failed'
-                    ? `\n      <failure message="${escapeXml(test.message)}"><![CDATA[${test.message}]]></failure>`
+                    ? `\n      <failure message="${escapeXml(test.message)}">${escapeXml(test.message)}</failure>`
                     : '';
 
             return `    <testcase classname="${escapeXml(test.suiteName)}" name="${escapeXml(test.name)}" time="${(
