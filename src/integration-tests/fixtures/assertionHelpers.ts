@@ -36,9 +36,7 @@ function stringifyFallback(value: unknown): string {
             return 'unstructured error payload';
         }
 
-        return serialized.length > MAX_FALLBACK_LENGTH
-            ? `${serialized.slice(0, MAX_FALLBACK_LENGTH)}...`
-            : serialized;
+        return serialized.length > MAX_FALLBACK_LENGTH ? `${serialized.slice(0, MAX_FALLBACK_LENGTH)}...` : serialized;
     } catch {
         return 'unstructured error payload';
     }
@@ -127,7 +125,9 @@ export function assertApiFailure(response: ApiResultLike, context = 'API request
 
     // Keep failure assertion resilient even when some backends return sparse payloads.
     if (response.error === undefined) {
-        throw new Error(`${context} failed but did not return an error payload. status=${response.statusCode ?? 'n/a'}`);
+        throw new Error(
+            `${context} failed but did not return an error payload. status=${response.statusCode ?? 'n/a'}`
+        );
     }
 }
 
