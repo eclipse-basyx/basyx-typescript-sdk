@@ -8,6 +8,7 @@ import {
     createTestShellDescriptor,
     createTestSubmodelDescriptor,
 } from './fixtures/aasregistryFixtures';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
@@ -87,7 +88,7 @@ describe('AAS Registry Integration Tests', () => {
             assetAdministrationShellDescriptor: shellDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(shellDescriptor);
@@ -104,7 +105,7 @@ describe('AAS Registry Integration Tests', () => {
             assetAdministrationShellDescriptor: createInvalidShellDescriptorWithEmptyId(),
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -122,7 +123,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(initialResponse.success).toBe(true);
+        assertApiResult(initialResponse);
 
         const duplicateResponse = await client.postAssetAdministrationShellDescriptor({
             configuration,
@@ -147,14 +148,14 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAssetAdministrationShellDescriptorById({
             configuration,
             aasIdentifier: shellDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(shellDescriptor);
@@ -171,7 +172,7 @@ describe('AAS Registry Integration Tests', () => {
             aasIdentifier: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -188,7 +189,7 @@ describe('AAS Registry Integration Tests', () => {
             aasIdentifier: `https://example.com/ids/aas-desc/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -205,13 +206,13 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllAssetAdministrationShellDescriptors({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result.length).toBeGreaterThan(0);
@@ -229,7 +230,7 @@ describe('AAS Registry Integration Tests', () => {
             limit: -1,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -246,7 +247,7 @@ describe('AAS Registry Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -267,7 +268,7 @@ describe('AAS Registry Integration Tests', () => {
             assetAdministrationShellDescriptor: shellDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(shellDescriptor);
@@ -284,7 +285,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const updatedShellDescriptor = createUniqueShellDescriptor();
         updatedShellDescriptor.id = shellDescriptor.id;
@@ -296,7 +297,7 @@ describe('AAS Registry Integration Tests', () => {
             assetAdministrationShellDescriptor: updatedShellDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -316,7 +317,7 @@ describe('AAS Registry Integration Tests', () => {
             assetAdministrationShellDescriptor: shellDescriptor,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -333,14 +334,14 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.deleteAssetAdministrationShellDescriptorById({
             configuration,
             aasIdentifier: shellDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -357,7 +358,7 @@ describe('AAS Registry Integration Tests', () => {
             aasIdentifier: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -374,7 +375,7 @@ describe('AAS Registry Integration Tests', () => {
             aasIdentifier: `https://example.com/ids/aas-desc/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -392,7 +393,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
@@ -400,7 +401,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(submodelDescriptor);
@@ -420,7 +421,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -438,7 +439,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor: createUniqueSubmodelDescriptor(),
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -456,14 +457,14 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const initialResponse = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
             submodelDescriptor,
         });
-        expect(initialResponse.success).toBe(true);
+        assertApiResult(initialResponse);
 
         const duplicateResponse = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
@@ -490,13 +491,13 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
         const createSubmodelResponse = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
             submodelDescriptor,
         });
-        expect(createSubmodelResponse.success).toBe(true);
+        assertApiResult(createSubmodelResponse);
 
         const response = await client.getSubmodelDescriptorByIdThroughSuperpath({
             configuration,
@@ -504,7 +505,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelIdentifier: submodelDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(submodelDescriptor);
@@ -522,7 +523,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelIdentifier: createUniqueSubmodelDescriptor().id,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -539,7 +540,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.getSubmodelDescriptorByIdThroughSuperpath({
             configuration,
@@ -547,7 +548,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelIdentifier: `https://example.com/ids/sm-desc/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -565,20 +566,20 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
         const createSubmodelResponse = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
             submodelDescriptor,
         });
-        expect(createSubmodelResponse.success).toBe(true);
+        assertApiResult(createSubmodelResponse);
 
         const response = await client.getAllSubmodelDescriptorsThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result.length).toBeGreaterThan(0);
@@ -596,7 +597,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.getAllSubmodelDescriptorsThroughSuperpath({
             configuration,
@@ -604,7 +605,7 @@ describe('AAS Registry Integration Tests', () => {
             limit: -1,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -621,7 +622,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.getAllSubmodelDescriptorsThroughSuperpath({
             configuration,
@@ -629,7 +630,7 @@ describe('AAS Registry Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -647,7 +648,7 @@ describe('AAS Registry Integration Tests', () => {
             aasIdentifier: `https://example.com/ids/aas-desc/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -665,7 +666,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.putSubmodelDescriptorByIdThroughSuperpath({
             configuration,
@@ -674,7 +675,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(submodelDescriptor);
@@ -692,13 +693,13 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
         const createSubmodelResponse = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
             submodelDescriptor,
         });
-        expect(createSubmodelResponse.success).toBe(true);
+        assertApiResult(createSubmodelResponse);
 
         const updatedSubmodelDescriptor = createUniqueSubmodelDescriptor();
         updatedSubmodelDescriptor.id = submodelDescriptor.id;
@@ -711,7 +712,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor: updatedSubmodelDescriptor,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -732,7 +733,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -753,7 +754,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelDescriptor,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -771,13 +772,13 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
         const createSubmodelResponse = await client.postSubmodelDescriptorThroughSuperpath({
             configuration,
             aasIdentifier: shellDescriptor.id,
             submodelDescriptor,
         });
-        expect(createSubmodelResponse.success).toBe(true);
+        assertApiResult(createSubmodelResponse);
 
         const response = await client.deleteSubmodelDescriptorByIdThroughSuperpath({
             configuration,
@@ -785,7 +786,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelIdentifier: submodelDescriptor.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -803,7 +804,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelIdentifier: createUniqueSubmodelDescriptor().id,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -820,7 +821,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
             assetAdministrationShellDescriptor: shellDescriptor,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.deleteSubmodelDescriptorByIdThroughSuperpath({
             configuration,
@@ -828,7 +829,7 @@ describe('AAS Registry Integration Tests', () => {
             submodelIdentifier: `https://example.com/ids/sm-desc/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -844,7 +845,7 @@ describe('AAS Registry Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();

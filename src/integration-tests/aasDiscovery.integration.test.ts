@@ -3,6 +3,7 @@ import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createTestSpecificAssetId1, createTestSpecificAssetId2 } from './fixtures/aasDiscoveryFixtures';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
@@ -55,10 +56,7 @@ describe('AAS Discovery Integration Tests', () => {
             specificAssetId: [specificAssetId1, specificAssetId2],
         });
 
-        expect(createResponse.success).toBe(true);
-        if (!createResponse.success) {
-            throw new Error('Failed to seed AAS discovery asset links fixture');
-        }
+        assertApiResult(createResponse, 'Seed AAS discovery asset links fixture');
 
         registerAssetLinkCleanup(aasIdentifier);
         return { aasIdentifier, specificAssetId1, specificAssetId2 };
@@ -79,7 +77,7 @@ describe('AAS Discovery Integration Tests', () => {
             specificAssetId: [specificAssetId1, specificAssetId2],
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             registerAssetLinkCleanup(aasIdentifier);
             expect(response.statusCode).toBe(201);
@@ -100,7 +98,7 @@ describe('AAS Discovery Integration Tests', () => {
             aasIdentifier,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -118,7 +116,7 @@ describe('AAS Discovery Integration Tests', () => {
             configuration,
             aasIdentifier: nonExistingId,
         });
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error).toBeDefined();
@@ -153,7 +151,7 @@ describe('AAS Discovery Integration Tests', () => {
             assetIds: [specificAssetId1, specificAssetId2],
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -176,7 +174,7 @@ describe('AAS Discovery Integration Tests', () => {
             limit: -1,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -197,7 +195,7 @@ describe('AAS Discovery Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -217,7 +215,7 @@ describe('AAS Discovery Integration Tests', () => {
             assetLink: [specificAssetId1, specificAssetId2],
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toContainEqual(aasIdentifier);
@@ -234,7 +232,7 @@ describe('AAS Discovery Integration Tests', () => {
             assetLink: [{ name: 'globalAssetId' } as unknown as CoreSpecificAssetId],
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -255,7 +253,7 @@ describe('AAS Discovery Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -277,7 +275,7 @@ describe('AAS Discovery Integration Tests', () => {
             specificAssetId: [invalidSpecificAssetId],
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -297,7 +295,7 @@ describe('AAS Discovery Integration Tests', () => {
             specificAssetId: [specificAssetId1],
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(405);
             expect(response.error.messages?.[0]?.code).toBe('405');
@@ -317,7 +315,7 @@ describe('AAS Discovery Integration Tests', () => {
             specificAssetId: [specificAssetId1],
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -358,7 +356,7 @@ describe('AAS Discovery Integration Tests', () => {
             aasIdentifier,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -377,7 +375,7 @@ describe('AAS Discovery Integration Tests', () => {
             aasIdentifier: nonExistingAasIdentifier,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -394,7 +392,7 @@ describe('AAS Discovery Integration Tests', () => {
             aasIdentifier: '',
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(405);
             expect(response.error.messages?.[0]?.code).toBe('405');
@@ -410,7 +408,7 @@ describe('AAS Discovery Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();

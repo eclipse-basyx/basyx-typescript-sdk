@@ -1,6 +1,7 @@
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 //import { Configuration } from '../generated';
 import { Configuration } from '../generated';
+import { assertApiFailureCode, assertApiResult } from './fixtures/assertionHelpers';
 import { createSubmodelRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
 import {
     createAttachmentBlob,
@@ -32,31 +33,6 @@ describe('Submodel Repository Integration Tests', () => {
         createSubmodelRepositoryPayloadFixtures(testSubmodel.id);
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const { track } = createPerTestCleanupRunner();
-
-    type ApiResultLike = {
-        success: boolean;
-        statusCode?: number;
-        data?: unknown;
-        error?: unknown;
-    };
-
-    function assertApiResult(response: ApiResultLike): void {
-        expect(typeof response.success).toBe('boolean');
-        if (response.success) {
-            expect(response.error).toBeUndefined();
-        } else {
-            expect(response.error).toBeDefined();
-        }
-    }
-
-    function assertApiFailureCode(response: ApiResultLike, expectedCode: string): void {
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            const errorPayload = response.error as { messages?: Array<{ code?: string }> } | undefined;
-            const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
-            expect(messageCodes).toContain(expectedCode);
-        }
-    }
 
     function assertNonEmptyResult(result: unknown): void {
         if (Array.isArray(result)) {
@@ -91,7 +67,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
         }
@@ -107,7 +83,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: collectionElement,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
         }
@@ -123,7 +99,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: fileSubmodelElement,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
         }
@@ -165,7 +141,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (!response.success && response.error) {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
@@ -201,7 +177,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodel: duplicateSubmodel,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
         if (createResponse.success) {
             expect(createResponse.statusCode).toBe(201);
         }
@@ -228,14 +204,14 @@ describe('Submodel Repository Integration Tests', () => {
             submodel: scopedSubmodel,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelById({
             configuration,
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -289,13 +265,13 @@ describe('Submodel Repository Integration Tests', () => {
             submodel: scopedSubmodel,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllSubmodels({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -331,7 +307,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const createdSubmodelElement = createNewSubmodelElement();
         createdSubmodelElement.idShort = `testPropertyCreate-${uniqueSuffix()}`;
@@ -346,7 +322,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (!response.success && response.error) {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
@@ -364,7 +340,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const duplicateSubmodelElement = createNewSubmodelElement();
         duplicateSubmodelElement.idShort = `dup-${uniqueSuffix()}`;
@@ -375,7 +351,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: duplicateSubmodelElement,
         });
 
-        expect(createElementResponse.success).toBe(true);
+        assertApiResult(createElementResponse);
         if (createElementResponse.success) {
             expect(createElementResponse.statusCode).toBe(201);
         }
@@ -441,7 +417,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodel: putSubmodel,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
@@ -458,7 +434,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const updatedProperty = createTestSubmodelElement();
         updatedProperty.idShort = `updated-property-${uniqueSuffix()}`;
@@ -480,7 +456,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodel: updatedSubmodel,
         });
 
-        expect(updateResponse.success).toBe(true);
+        assertApiResult(updateResponse);
         if (updateResponse.success) {
             expect(updateResponse.statusCode).toBe(204);
         }
@@ -490,7 +466,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(fetchResponse.success).toBe(true);
+        assertApiResult(fetchResponse);
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data.id).toEqual(updatedSubmodel.id);
@@ -514,7 +490,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const patchedSubmodel = createTestSubmodel();
         patchedSubmodel.id = scopedSubmodel.id;
@@ -526,7 +502,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodel: patchedSubmodel,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
@@ -580,7 +556,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const valueOnlyElement = createTestSubmodelElement();
         valueOnlyElement.idShort = `value-only-${uniqueSuffix()}`;
@@ -594,7 +570,7 @@ describe('Submodel Repository Integration Tests', () => {
             },
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
@@ -642,7 +618,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `seeded-property-${uniqueSuffix()}`;
@@ -653,7 +629,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -708,7 +684,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `path-property-${uniqueSuffix()}`;
@@ -720,7 +696,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -740,7 +716,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelElementByPath({
             configuration,
@@ -781,7 +757,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const parentCollection = createTestSubmodelElementCollection();
         parentCollection.idShort = `parentCollection-${uniqueSuffix()}`;
@@ -801,7 +777,7 @@ describe('Submodel Repository Integration Tests', () => {
         if (!response.success && response.error) {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
@@ -819,7 +795,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const parentCollection = createTestSubmodelElementCollection();
         parentCollection.idShort = `parentCollection-${uniqueSuffix()}`;
@@ -835,7 +811,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: nestedSubmodelElement,
         });
 
-        expect(createElementResponse.success).toBe(true);
+        assertApiResult(createElementResponse);
         if (createElementResponse.success) {
             expect(createElementResponse.statusCode).toBe(201);
         }
@@ -863,7 +839,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const nestedSubmodelElement = createNewSubmodelElement();
         nestedSubmodelElement.idShort = `nested-${uniqueSuffix()}`;
@@ -910,7 +886,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `putByPath-${uniqueSuffix()}`;
@@ -928,7 +904,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: updatedSubmodelElement,
         });
 
-        expect(updateResponse.success).toBe(true);
+        assertApiResult(updateResponse);
         if (updateResponse.success) {
             expect(updateResponse.statusCode).toBe(204);
         }
@@ -939,7 +915,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(fetchResponse.success).toBe(true);
+        assertApiResult(fetchResponse);
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data).toEqual(updatedSubmodelElement);
@@ -956,7 +932,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const parentCollection = createTestSubmodelElementCollection();
         parentCollection.idShort = `putParent-${uniqueSuffix()}`;
@@ -972,7 +948,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: createdElement,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
         }
@@ -1030,7 +1006,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `patchByPath-${uniqueSuffix()}`;
@@ -1046,7 +1022,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElement: patchedSubmodelElement,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
@@ -1080,7 +1056,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.patchSubmodelElementByPath({
             configuration,
@@ -1106,14 +1082,14 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelByIdMetadata({
             configuration,
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -1158,7 +1134,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `valueOnlySubmodel-${uniqueSuffix()}`;
@@ -1169,7 +1145,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -1214,7 +1190,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `valueOnlyByPath-${uniqueSuffix()}`;
@@ -1226,7 +1202,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             const newPropertyElement = seededElement as { value?: unknown };
@@ -1260,7 +1236,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelElementByPathValueOnly({
             configuration,
@@ -1281,7 +1257,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `valueOnlyPatch-${uniqueSuffix()}`;
@@ -1298,7 +1274,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElementValue: updatedPropertyValue,
         });
 
-        expect(updateResponse.success).toBe(true);
+        assertApiResult(updateResponse);
         if (updateResponse.success) {
             expect(updateResponse.statusCode).toBe(204);
         }
@@ -1309,7 +1285,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(fetchResponse.success).toBe(true);
+        assertApiResult(fetchResponse);
         if (fetchResponse.success) {
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data).toEqual(updatedPropertyValue);
@@ -1326,7 +1302,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.patchSubmodelElementByPathValueOnly({
             configuration,
@@ -1363,13 +1339,13 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllSubmodelsMetadata({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1401,13 +1377,13 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllSubmodelsValueOnly({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1453,13 +1429,13 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllSubmodelsReference({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1500,13 +1476,13 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllSubmodelsPath({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1536,14 +1512,14 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelByIdReference({
             configuration,
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -1587,7 +1563,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `pathRepresentation-${uniqueSuffix()}`;
@@ -1598,7 +1574,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -1642,7 +1618,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `metadataList-${uniqueSuffix()}`;
@@ -1653,7 +1629,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1697,7 +1673,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `valueOnlyList-${uniqueSuffix()}`;
@@ -1708,7 +1684,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1752,7 +1728,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `referenceList-${uniqueSuffix()}`;
@@ -1763,7 +1739,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1807,7 +1783,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `pathList-${uniqueSuffix()}`;
@@ -1818,7 +1794,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
@@ -1862,7 +1838,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `metaByPath-${uniqueSuffix()}`;
@@ -1874,7 +1850,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -1906,7 +1882,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelElementByPathMetadata({
             configuration,
@@ -1927,7 +1903,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `referenceByPath-${uniqueSuffix()}`;
@@ -1939,7 +1915,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -1971,7 +1947,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelElementByPathReference({
             configuration,
@@ -1992,7 +1968,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `pathByPath-${uniqueSuffix()}`;
@@ -2004,7 +1980,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort!,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -2036,7 +2012,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getSubmodelElementByPathPath({
             configuration,
@@ -2057,7 +2033,7 @@ describe('Submodel Repository Integration Tests', () => {
             includeConceptDescriptions: true,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.data).toBeDefined();
             expect(response.data.size).toBeGreaterThan(0);
@@ -2087,7 +2063,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -2140,7 +2116,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const scopedMetadataPatch = {
             ...submodelMetadataPatch,
@@ -2154,7 +2130,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelMetadata: scopedMetadataPatch,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
@@ -2210,7 +2186,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createNewSubmodelElement();
         seededElement.idShort = `metadataPatch-${uniqueSuffix()}`;
@@ -2223,7 +2199,7 @@ describe('Submodel Repository Integration Tests', () => {
             submodelElementMetadata: submodelElementMetadataPatch,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
@@ -2254,7 +2230,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.patchSubmodelElementByPathMetadata({
             configuration,
@@ -2276,7 +2252,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
         const attachmentBlob = createAttachmentBlob(attachmentPayload);
@@ -2289,7 +2265,7 @@ describe('Submodel Repository Integration Tests', () => {
             file: attachmentBlob,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (!response.success) {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
@@ -2308,7 +2284,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
         const attachmentBlob = createAttachmentBlob(attachmentPayload);
@@ -2319,7 +2295,7 @@ describe('Submodel Repository Integration Tests', () => {
             fileName: 'coverage-file.txt',
             file: attachmentBlob,
         });
-        expect(uploadResponse.success).toBe(true);
+        assertApiResult(uploadResponse);
 
         const response = await client.getFileByPath({
             configuration,
@@ -2327,7 +2303,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: attachmentIdShortPath,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -2346,7 +2322,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const nonFileElement = createTestSubmodelElement();
         nonFileElement.idShort = `nonFileElement-${uniqueSuffix()}`;
@@ -2385,7 +2361,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.putFileByPath({
             configuration,
@@ -2473,7 +2449,7 @@ describe('Submodel Repository Integration Tests', () => {
             operationRequestValueOnly,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -2523,7 +2499,7 @@ describe('Submodel Repository Integration Tests', () => {
             operationRequest: createTestOperationRequest(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -2572,7 +2548,7 @@ describe('Submodel Repository Integration Tests', () => {
             operationRequestValueOnly,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -2622,7 +2598,7 @@ describe('Submodel Repository Integration Tests', () => {
             handleId: 'coverage-handle-id',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -2670,7 +2646,7 @@ describe('Submodel Repository Integration Tests', () => {
             handleId: 'coverage-handle-id',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -2718,7 +2694,7 @@ describe('Submodel Repository Integration Tests', () => {
             handleId: 'coverage-handle-id',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -2764,7 +2740,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
         const uploadResponse = await client.putFileByPath({
@@ -2774,7 +2750,7 @@ describe('Submodel Repository Integration Tests', () => {
             fileName: 'coverage-file.txt',
             file: createAttachmentBlob(attachmentPayload),
         });
-        expect(uploadResponse.success).toBe(true);
+        assertApiResult(uploadResponse);
 
         const response = await client.deleteFileByPath({
             configuration,
@@ -2782,7 +2758,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: attachmentIdShortPath,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (!response.success) {
             console.error('API Error:', JSON.stringify(response.error, null, 2));
         }
@@ -2815,7 +2791,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.deleteFileByPath({
             configuration,
@@ -2836,7 +2812,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
         const uploadResponse = await client.putFileByPath({
@@ -2846,14 +2822,14 @@ describe('Submodel Repository Integration Tests', () => {
             fileName: 'coverage-file.txt',
             file: createAttachmentBlob(attachmentPayload),
         });
-        expect(uploadResponse.success).toBe(true);
+        assertApiResult(uploadResponse);
 
         const deleteResponse = await client.deleteFileByPath({
             configuration,
             submodelIdentifier: scopedSubmodel.id,
             idShortPath: attachmentIdShortPath,
         });
-        expect(deleteResponse.success).toBe(true);
+        assertApiResult(deleteResponse);
 
         const response = await client.getFileByPath({
             configuration,
@@ -2874,7 +2850,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const seededElement = createTestSubmodelElement();
         seededElement.idShort = `deleteElement-${uniqueSuffix()}`;
@@ -2886,7 +2862,7 @@ describe('Submodel Repository Integration Tests', () => {
             idShortPath: seededElement.idShort ?? 'testProperty',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }
@@ -2916,7 +2892,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.deleteSubmodelElementByPath({
             configuration,
@@ -2937,14 +2913,14 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodel: scopedSubmodel,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.deleteSubmodelById({
             configuration,
             submodelIdentifier: scopedSubmodel.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
         }

@@ -251,6 +251,40 @@ function escapeXml(value) {
         .replaceAll("'", '&apos;');
 }
 
+function normalizeFailureMessage(message) {
+    if (!message) {
+        return '';
+    }
+
+    return String(message).trim();
+}
+
+function sanitizeFailureMessages(messages) {
+    if (!Array.isArray(messages)) {
+        return [];
+    }
+
+    return messages.map((message) => normalizeFailureMessage(message)).filter(Boolean);
+}
+
+function compactFailureReason(message) {
+    const normalized = normalizeFailureMessage(message);
+    if (!normalized) {
+        return '';
+    }
+
+    const firstLine = normalized
+        .split('\n')
+        .map((line) => line.trim())
+        .find(Boolean);
+
+    return firstLine || normalized;
+}
+
+function formatFailureDetailLine(message) {
+    return normalizeFailureMessage(message).replace(/\s+/g, ' ').trim();
+}
+
 function parseVitestResults(vitestReport) {
     const passedChecks = [];
     const failedChecks = [];
@@ -260,12 +294,14 @@ function parseVitestResults(vitestReport) {
         let suiteHasFailedAssertion = false;
 
         for (const assertion of suite.assertionResults ?? []) {
+            const failureMessages = sanitizeFailureMessages(assertion.failureMessages);
             const check = {
                 checkType: 'integration-test',
                 suite: suite.name,
                 name: assertion.fullName || assertion.title,
                 durationMs: assertion.duration,
-                reason: assertion.failureMessages?.[0] || '',
+                reason: failureMessages[0] || '',
+                failureMessages,
                 status: assertion.status,
             };
 
@@ -284,12 +320,14 @@ function parseVitestResults(vitestReport) {
         }
 
         if (suite.status === 'failed' && !suiteHasFailedAssertion) {
+            const suiteMessage = normalizeFailureMessage(suite.message);
             failedChecks.push({
                 checkType: 'integration-suite',
                 suite: suite.name,
                 name: `Suite failure: ${suite.name}`,
                 durationMs: 0,
-                reason: suite.message || 'Suite failed before assertions (setup hook or runtime error).',
+                reason: suiteMessage || 'Suite failed before assertions (setup hook or runtime error).',
+                failureMessages: suiteMessage ? [suiteMessage] : [],
                 status: 'failed',
             });
         }
@@ -449,7 +487,15 @@ function writeMarkdownReport(report, outputPath) {
             if (failure.suite) {
                 lines.push(`  - suite: ${failure.suite}`);
             }
-            lines.push(`  - reason: ${failure.reason || 'No failure reason provided'}`);
+
+            const primaryReason = failure.reason || failure.failureMessages?.[0] || 'No failure reason provided';
+            lines.push(`  - reason: ${primaryReason}`);
+
+            if (Array.isArray(failure.failureMessages) && failure.failureMessages.length > 1) {
+                for (const extraMessage of failure.failureMessages.slice(1, 5)) {
+                    lines.push(`  - detail: ${formatFailureDetailLine(extraMessage)}`);
+                }
+            }
         }
     }
     lines.push('');
@@ -498,7 +544,7 @@ function writeJunitReport(report, outputPath) {
             name: check.name,
             status: 'failed',
             durationMs: check.durationMs ?? 0,
-            message: check.reason || 'No failure message',
+            message: compactFailureReason(check.reason || check.failureMessages?.[0] || 'No failure message'),
         });
     }
 
@@ -550,7 +596,14 @@ function printConsoleSummary(report, artifactPaths) {
         console.log('Failed checks:');
         for (const failure of report.failedChecks) {
             console.log(`- [${failure.checkType}] ${failure.name}`);
-            console.log(`  reason: ${failure.reason || 'No failure reason provided'}`);
+            const primaryReason = failure.reason || failure.failureMessages?.[0] || 'No failure reason provided';
+            console.log(`  reason: ${primaryReason}`);
+
+            if (Array.isArray(failure.failureMessages) && failure.failureMessages.length > 1) {
+                for (const extraMessage of failure.failureMessages.slice(1, 3)) {
+                    console.log(`  detail: ${formatFailureDetailLine(extraMessage)}`);
+                }
+            }
         }
     }
 

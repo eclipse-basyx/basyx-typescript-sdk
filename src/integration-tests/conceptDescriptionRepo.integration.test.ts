@@ -1,6 +1,7 @@
 import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptionRepositoryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
+import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createDescription, createTestCD } from './fixtures/conceptDescriptionFixtures';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
@@ -50,7 +51,7 @@ describe('Concept Description Repository Integration Tests', () => {
             conceptDescription,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(conceptDescription);
@@ -83,7 +84,7 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
             conceptDescription,
         });
-        expect(initialResponse.success).toBe(true);
+        assertApiResult(initialResponse);
 
         const duplicateResponse = await client.postConceptDescription({
             configuration,
@@ -108,14 +109,14 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
             conceptDescription,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getConceptDescriptionById({
             configuration,
             cdIdentifier: conceptDescription.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(conceptDescription);
@@ -132,7 +133,7 @@ describe('Concept Description Repository Integration Tests', () => {
             cdIdentifier: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -149,7 +150,7 @@ describe('Concept Description Repository Integration Tests', () => {
             cdIdentifier: `https://example.com/ids/cd/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -166,13 +167,13 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
             conceptDescription,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllConceptDescriptions({
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result.length).toBeGreaterThan(0);
@@ -190,7 +191,7 @@ describe('Concept Description Repository Integration Tests', () => {
             limit: -1,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -207,7 +208,7 @@ describe('Concept Description Repository Integration Tests', () => {
             cursor: unavailableCursor(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.pagedResult).toEqual({});
@@ -228,7 +229,7 @@ describe('Concept Description Repository Integration Tests', () => {
             conceptDescription,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(conceptDescription);
@@ -244,7 +245,7 @@ describe('Concept Description Repository Integration Tests', () => {
             conceptDescription,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data).toEqual(conceptDescription);
@@ -261,7 +262,7 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
             conceptDescription,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const updatedConceptDescription = createUniqueConceptDescription();
         updatedConceptDescription.id = conceptDescription.id;
@@ -273,7 +274,7 @@ describe('Concept Description Repository Integration Tests', () => {
             conceptDescription: updatedConceptDescription,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -286,7 +287,7 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
             conceptDescription,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const updatedConceptDescription = createUniqueConceptDescription();
         updatedConceptDescription.id = conceptDescription.id;
@@ -298,7 +299,7 @@ describe('Concept Description Repository Integration Tests', () => {
             conceptDescription: updatedConceptDescription,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -316,7 +317,7 @@ describe('Concept Description Repository Integration Tests', () => {
             conceptDescription: createUniqueConceptDescription(),
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -333,14 +334,14 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
             conceptDescription,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.deleteConceptDescriptionById({
             configuration,
             cdIdentifier: conceptDescription.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(204);
             expect(response.data).toBeUndefined();
@@ -357,7 +358,7 @@ describe('Concept Description Repository Integration Tests', () => {
             cdIdentifier: undefined as unknown as string,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -374,7 +375,7 @@ describe('Concept Description Repository Integration Tests', () => {
             cdIdentifier: `https://example.com/ids/cd/non-existing-${uniqueSuffix()}`,
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(404);
             expect(response.error.messages?.[0]?.code).toBe('404');
@@ -393,7 +394,7 @@ describe('Concept Description Repository Integration Tests', () => {
             includeConceptDescriptions: true,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -413,7 +414,7 @@ describe('Concept Description Repository Integration Tests', () => {
             aasIds: [''],
         });
 
-        expect(response.success).toBe(false);
+        assertApiFailure(response);
         if (!response.success) {
             expect(response.statusCode).toBe(400);
             expect(response.error.messages?.[0]?.code).toBe('400');
@@ -429,7 +430,7 @@ describe('Concept Description Repository Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();

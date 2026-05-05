@@ -1,6 +1,7 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
+import { assertApiFailureCode, assertApiResult } from './fixtures/assertionHelpers';
 import { createAasRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
 import {
     createAttachmentBlob,
@@ -26,13 +27,6 @@ describe('AAS Repository Integration Tests', () => {
     });
     const { submodelReference, submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
         createAasRepositoryPayloadFixtures(testSubmodel.id);
-
-    type ApiResultLike = {
-        success: boolean;
-        statusCode?: number;
-        data?: unknown;
-        error?: unknown;
-    };
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -67,24 +61,6 @@ describe('AAS Repository Integration Tests', () => {
         return `missingParent${Date.now()}${Math.random().toString(36).slice(2)}`;
     }
 
-    function assertApiResult(response: ApiResultLike): void {
-        expect(typeof response.success).toBe('boolean');
-        if (response.success) {
-            expect(response.error).toBeUndefined();
-        } else {
-            expect(response.error).toBeDefined();
-        }
-    }
-
-    function assertApiFailureCode(response: ApiResultLike, expectedCode: string): void {
-        expect(response.success).toBe(false);
-        if (!response.success) {
-            const errorPayload = response.error as { messages?: Array<{ code?: string }> } | undefined;
-            const messageCodes = (errorPayload?.messages ?? []).map((message) => message.code);
-            expect(messageCodes).toContain(expectedCode);
-        }
-    }
-
     async function createScopedSuperpathFixture(submodelIdentifier?: string): Promise<{
         shell: ReturnType<typeof createTestShell>;
         submodel: ReturnType<typeof createTestSubmodel>;
@@ -94,7 +70,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: shell,
         });
-        expect(shellResponse.success).toBe(true);
+        assertApiResult(shellResponse);
 
         const submodel = createTestSubmodel();
         submodel.id = submodelIdentifier ?? `${submodel.id}-aas-${uniqueSuffix()}`;
@@ -112,7 +88,7 @@ describe('AAS Repository Integration Tests', () => {
             submodel,
         });
 
-        expect(submodelResponse.success).toBe(true);
+        assertApiResult(submodelResponse);
         if (submodelResponse.success) {
             expect([201, 204]).toContain(submodelResponse.statusCode);
         }
@@ -133,7 +109,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
                 expect(response.data).toBeDefined();
@@ -172,7 +148,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(createResponse.success).toBe(true);
+            assertApiResult(createResponse);
             if (createResponse.success) {
                 expect(createResponse.statusCode).toBe(201);
             }
@@ -202,7 +178,7 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: scopedShell,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAssetAdministrationShellById({
             configuration,
@@ -210,7 +186,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -265,14 +241,14 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: scopedShell,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllAssetAdministrationShells({
             configuration,
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -311,14 +287,14 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: scopedShell,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAllAssetAdministrationShellsReference({
             configuration,
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -356,7 +332,7 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: scopedShell,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAssetAdministrationShellByIdReferenceAasRepository({
             configuration,
@@ -364,7 +340,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -421,7 +397,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
             }
@@ -442,7 +418,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: updatedShell,
         });
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
         if (createResponse.success) {
             expect(createResponse.statusCode).toBe(201);
         }
@@ -458,7 +434,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(updateResponse.success).toBe(true);
+            assertApiResult(updateResponse);
             if (updateResponse.success) {
                 expect(updateResponse.statusCode).toBe(204);
             }
@@ -468,7 +444,7 @@ describe('AAS Repository Integration Tests', () => {
                 aasIdentifier: updatedShell.id,
             });
 
-            expect(fetchResponse.success).toBe(true);
+            assertApiResult(fetchResponse);
             if (fetchResponse.success) {
                 expect(fetchResponse.data).toBeDefined();
                 expect(fetchResponse.data).toEqual(updatedShell);
@@ -506,7 +482,7 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: scopedShell,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const response = await client.getAssetInformation({
             configuration,
@@ -514,7 +490,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -568,7 +544,7 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: scopedShell,
         });
 
-        expect(createResponse.success).toBe(true);
+        assertApiResult(createResponse);
 
         const updatedAssetInfo = scopedShell.assetInformation;
         updatedAssetInfo.globalAssetId = createGlobalAssetId();
@@ -580,7 +556,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(updateResponse.success).toBe(true);
+            assertApiResult(updateResponse);
             if (updateResponse.success) {
                 expect(updateResponse.statusCode).toBe(204);
             }
@@ -590,7 +566,7 @@ describe('AAS Repository Integration Tests', () => {
                 aasIdentifier: scopedShell.id,
             });
 
-            expect(fetchResponse.success).toBe(true);
+            assertApiResult(fetchResponse);
             if (fetchResponse.success) {
                 expect(fetchResponse.data).toBeDefined();
                 expect(fetchResponse.data).toEqual(updatedAssetInfo);
@@ -644,7 +620,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const fileName = 'test_thumbnail.png';
         const payload = 'base64_encoded_image_data';
@@ -658,7 +634,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(updateResponse.success).toBe(true);
+            assertApiResult(updateResponse);
             if (updateResponse.success) {
                 expect(updateResponse.statusCode).toBe(204);
             }
@@ -677,7 +653,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const fileName = 'test_thumbnail.png';
         const payload = 'base64_encoded_image_data';
@@ -688,7 +664,7 @@ describe('AAS Repository Integration Tests', () => {
             fileName,
             file,
         });
-        expect(putResponse.success).toBe(true);
+        assertApiResult(putResponse);
 
         const fetchResponse = await client.getThumbnail({
             configuration,
@@ -696,7 +672,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(fetchResponse.success).toBe(true);
+            assertApiResult(fetchResponse);
             if (fetchResponse.success) {
                 expect(fetchResponse.statusCode).toBe(200);
                 expect(fetchResponse.data).toBeDefined();
@@ -787,7 +763,7 @@ describe('AAS Repository Integration Tests', () => {
             includeConceptDescriptions: true,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.data).toBeDefined();
             expect(response.data.size).toBeGreaterThan(0);
@@ -813,7 +789,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
@@ -831,7 +807,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.getAllSubmodelReferences({
             configuration,
@@ -839,7 +815,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -891,7 +867,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.postSubmodelReference({
             configuration,
@@ -900,7 +876,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
                 expect(response.data).toBeDefined();
@@ -956,7 +932,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
         if (createShellResponse.success) {
             expect(createShellResponse.statusCode).toBe(201);
         }
@@ -970,7 +946,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(createResponse.success).toBe(true);
+            assertApiResult(createResponse);
             if (createResponse.success) {
                 expect(createResponse.statusCode).toBe(201);
             }
@@ -1017,7 +993,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.deleteSubmodelReferenceById({
             configuration,
@@ -1047,7 +1023,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const createdSubmodel = createTestSubmodel();
         createdSubmodel.id = `http://acplt.org/Submodels/Assets/TestAsset/Identification-${uniqueSuffix()}`;
@@ -1061,7 +1037,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
             }
@@ -1082,7 +1058,7 @@ describe('AAS Repository Integration Tests', () => {
             configuration,
             assetAdministrationShell: scopedShell,
         });
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const seededSubmodel = createTestSubmodel();
         seededSubmodel.id = `http://acplt.org/Submodels/Assets/TestAsset/Identification-${uniqueSuffix()}`;
@@ -1094,7 +1070,7 @@ describe('AAS Repository Integration Tests', () => {
             submodelIdentifier: seededSubmodel.id,
             submodel: seededSubmodel,
         });
-        expect(seedResponse.success).toBe(true);
+        assertApiResult(seedResponse);
         if (seedResponse.success) {
             expect(seedResponse.statusCode).toBe(201);
         }
@@ -1108,7 +1084,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -1173,7 +1149,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -1238,7 +1214,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -1306,7 +1282,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -1376,7 +1352,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -1441,7 +1417,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -1506,7 +1482,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -1571,7 +1547,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -1635,7 +1611,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -1715,7 +1691,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -1800,7 +1776,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
             }
@@ -1852,7 +1828,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(createResponse.success).toBe(true);
+            assertApiResult(createResponse);
 
             const duplicateResponse = await client.postSubmodelElementAasRepository({
                 configuration,
@@ -1921,7 +1897,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2000,7 +1976,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2079,7 +2055,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2158,7 +2134,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2239,7 +2215,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2328,7 +2304,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
             }
@@ -2381,7 +2357,7 @@ describe('AAS Repository Integration Tests', () => {
             submodelElement: duplicateElement,
         });
         try {
-            expect(createResponse.success).toBe(true);
+            assertApiResult(createResponse);
 
             const duplicateResponse = await client.postSubmodelElementByPathAasRepository({
                 configuration,
@@ -2460,7 +2436,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(201);
             }
@@ -2487,7 +2463,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(createResponse.success).toBe(true);
+            assertApiResult(createResponse);
             if (createResponse.success) {
                 expect(createResponse.statusCode).toBe(201);
             }
@@ -2500,7 +2476,7 @@ describe('AAS Repository Integration Tests', () => {
                 submodelElement: updateElement,
             });
 
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -2596,7 +2572,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -2686,7 +2662,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2771,7 +2747,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -2856,7 +2832,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -2941,7 +2917,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -3026,7 +3002,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -3109,7 +3085,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             }
@@ -3173,7 +3149,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect([200, 204]).toContain(response.statusCode);
             } else {
@@ -3203,7 +3179,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(uploadResponse.success).toBe(true);
+            assertApiResult(uploadResponse);
 
             const response = await client.getFileByPathAasRepository({
                 configuration,
@@ -3212,7 +3188,7 @@ describe('AAS Repository Integration Tests', () => {
                 idShortPath: attachmentIdShortPath,
             });
 
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
                 expect(response.data).toBeDefined();
@@ -3286,7 +3262,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -3375,7 +3351,7 @@ describe('AAS Repository Integration Tests', () => {
             operationRequest: createTestOperationRequest(),
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect([200, 204]).toContain(response.statusCode);
         }
@@ -3432,7 +3408,7 @@ describe('AAS Repository Integration Tests', () => {
             operationRequestValueOnly,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -3565,7 +3541,7 @@ describe('AAS Repository Integration Tests', () => {
             handleId: 'coverage-handle-id',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -3622,7 +3598,7 @@ describe('AAS Repository Integration Tests', () => {
             handleId: 'coverage-handle-id',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -3679,7 +3655,7 @@ describe('AAS Repository Integration Tests', () => {
             handleId: 'coverage-handle-id',
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -3740,7 +3716,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(uploadResponse.success).toBe(true);
+            assertApiResult(uploadResponse);
 
             const response = await client.deleteFileByPathAasRepository({
                 configuration,
@@ -3749,7 +3725,7 @@ describe('AAS Repository Integration Tests', () => {
                 idShortPath: attachmentIdShortPath,
             });
 
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(200);
             } else {
@@ -3797,7 +3773,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(uploadResponse.success).toBe(true);
+            assertApiResult(uploadResponse);
 
             const deleteResponse = await client.deleteFileByPathAasRepository({
                 configuration,
@@ -3806,7 +3782,7 @@ describe('AAS Repository Integration Tests', () => {
                 idShortPath: attachmentIdShortPath,
             });
 
-            expect(deleteResponse.success).toBe(true);
+            assertApiResult(deleteResponse);
 
             const response = await client.getFileByPathAasRepository({
                 configuration,
@@ -3874,7 +3850,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(prepareResponse.success).toBe(true);
+            assertApiResult(prepareResponse);
             if (prepareResponse.success) {
                 expect([201, 204]).toContain(prepareResponse.statusCode);
             }
@@ -3886,7 +3862,7 @@ describe('AAS Repository Integration Tests', () => {
                 idShortPath: `parentCollection.${updateElement.idShort}`,
             });
 
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -3991,7 +3967,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -4014,7 +3990,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -4066,7 +4042,7 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: shell,
         });
 
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const putThumbnailResponse = await client.putThumbnail({
             configuration,
@@ -4081,8 +4057,8 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(putThumbnailResponse.success).toBe(true);
-            expect(response.success).toBe(true);
+            assertApiResult(putThumbnailResponse);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
@@ -4103,14 +4079,14 @@ describe('AAS Repository Integration Tests', () => {
             file: new Blob(['thumb'], { type: 'image/png' }),
         });
 
-        expect(prepareResponse.success).toBe(true);
+        assertApiResult(prepareResponse);
 
         const response = await client.deleteThumbnail({
             configuration,
             aasIdentifier: testShell.id,
         });
 
-        expect(response.success).toBe(true);
+        assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
         }
@@ -4143,7 +4119,7 @@ describe('AAS Repository Integration Tests', () => {
             assetAdministrationShell: shell,
         });
 
-        expect(createShellResponse.success).toBe(true);
+        assertApiResult(createShellResponse);
 
         const response = await client.deleteAssetAdministrationShellById({
             configuration,
@@ -4151,7 +4127,7 @@ describe('AAS Repository Integration Tests', () => {
         });
 
         try {
-            expect(response.success).toBe(true);
+            assertApiResult(response);
             if (response.success) {
                 expect(response.statusCode).toBe(204);
             }
