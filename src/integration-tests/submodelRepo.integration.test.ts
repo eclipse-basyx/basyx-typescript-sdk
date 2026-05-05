@@ -13,6 +13,7 @@ import {
     createTestSubmodelElementCollection,
     createValue,
 } from './fixtures/submodelFixtures';
+import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Submodel Repository Integration Tests', () => {
@@ -34,6 +35,7 @@ describe('Submodel Repository Integration Tests', () => {
     const { submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
         createSubmodelRepositoryPayloadFixtures(testSubmodel.id);
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const { track } = createPerTestCleanupRunner();
 
     type ApiResultLike = {
         success: boolean;
@@ -95,6 +97,21 @@ describe('Submodel Repository Integration Tests', () => {
         expect(response.statusCode).toBe(409);
     }
 
+    function registerSubmodelCleanup(submodelIdentifier: string): void {
+        track(async () => {
+            const cleanupResponse = await client.deleteSubmodelById({
+                configuration,
+                submodelIdentifier,
+            });
+
+            if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+                throw new Error(
+                    `Failed to cleanup submodel ${submodelIdentifier} (status ${cleanupResponse.statusCode})`
+                );
+            }
+        });
+    }
+
     beforeAll(async () => {
         await ensureTestSubmodelExists();
     });
@@ -107,6 +124,7 @@ describe('Submodel Repository Integration Tests', () => {
         const createdSubmodel = createTestSubmodel();
         createdSubmodel.id = `${createdSubmodel.id}-create-${uniqueSuffix()}`;
         createdSubmodel.idShort = `${createdSubmodel.idShort ?? 'submodel'}Create${uniqueSuffix()}`;
+        registerSubmodelCleanup(createdSubmodel.id);
 
         const response = await client.postSubmodel({
             configuration,
@@ -146,6 +164,7 @@ describe('Submodel Repository Integration Tests', () => {
     test('should return conflict when creating a duplicate Submodel', async () => {
         const duplicateSubmodel = createTestSubmodel();
         duplicateSubmodel.id = `${duplicateSubmodel.id}-duplicate-${uniqueSuffix()}`;
+        registerSubmodelCleanup(duplicateSubmodel.id);
 
         const createResponse = await client.postSubmodel({
             configuration,
@@ -357,6 +376,7 @@ describe('Submodel Repository Integration Tests', () => {
     test('should create a Submodel through put by ID with created status', async () => {
         const putSubmodel = createTestSubmodel();
         putSubmodel.id = `${putSubmodel.id}-put-${uniqueSuffix()}`;
+        registerSubmodelCleanup(putSubmodel.id);
 
         const response = await client.putSubmodelById({
             configuration,

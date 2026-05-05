@@ -2,6 +2,7 @@ import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createDisplayName, createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
+import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Submodel Registry Integration Tests', () => {
@@ -9,14 +10,31 @@ describe('Submodel Registry Integration Tests', () => {
     const configuration = new Configuration({
         basePath: getIntegrationBasePath('submodelRegistry'),
     });
+    const { track } = createPerTestCleanupRunner();
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const unavailableCursor = (): string =>
         base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
-    const createUniqueSubmodelDescriptor = () => {
+    const createUniqueSubmodelDescriptor = (withCleanup = true) => {
         const descriptor = createTestSubmodelDescriptor();
         descriptor.id = `${descriptor.id}-${uniqueSuffix()}`;
+
+        if (withCleanup) {
+            track(async () => {
+                const cleanupResponse = await client.deleteSubmodelDescriptorById({
+                    configuration,
+                    submodelIdentifier: descriptor.id,
+                });
+
+                if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+                    throw new Error(
+                        `Failed to cleanup submodel descriptor ${descriptor.id} (status ${cleanupResponse.statusCode})`
+                    );
+                }
+            });
+        }
+
         return descriptor;
     };
 
@@ -45,7 +63,7 @@ describe('Submodel Registry Integration Tests', () => {
      * @status 400
      */
     test('should reject invalid Submodel Descriptor payload with bad request', async () => {
-        const invalidSubmodelDescriptor = createUniqueSubmodelDescriptor();
+        const invalidSubmodelDescriptor = createUniqueSubmodelDescriptor(false);
         invalidSubmodelDescriptor.id = '';
 
         const response = await client.postSubmodelDescriptor({
@@ -302,7 +320,7 @@ describe('Submodel Registry Integration Tests', () => {
      * @status 400
      */
     test('should reject missing put Submodel Descriptor identifier with bad request', async () => {
-        const submodelDescriptor = createUniqueSubmodelDescriptor();
+        const submodelDescriptor = createUniqueSubmodelDescriptor(false);
         submodelDescriptor.id = '';
 
         const response = await client.putSubmodelDescriptorById({

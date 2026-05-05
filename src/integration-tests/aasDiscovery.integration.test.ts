@@ -3,40 +3,89 @@ import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import {
-    createTestShell,
     createTestSpecificAssetId1,
     createTestSpecificAssetId2,
 } from './fixtures/aasDiscoveryFixtures';
+import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('AAS Discovery Integration Tests', () => {
     const client = new AasDiscoveryClient();
-    const testShell = createTestShell();
-    const testSpecificAssetId1 = createTestSpecificAssetId1();
-    const testSpecificAssetId2 = createTestSpecificAssetId2();
     const configuration = new Configuration({
         basePath: getIntegrationBasePath('aasDiscovery'),
     });
+    const { track } = createPerTestCleanupRunner();
+
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const unavailableCursor = (): string =>
         base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
+
+    const createUniqueShellId = (): string => `https://example.com/ids/aas/discovery-${uniqueSuffix()}`;
+    const createUniqueSpecificAssetId1 = () => {
+        const specificAssetId = createTestSpecificAssetId1();
+        specificAssetId.value = `https://example.com/ids/asset/discovery-1-${uniqueSuffix()}`;
+        return specificAssetId;
+    };
+    const createUniqueSpecificAssetId2 = () => {
+        const specificAssetId = createTestSpecificAssetId2();
+        specificAssetId.value = `https://example.com/ids/asset/discovery-2-${uniqueSuffix()}`;
+        return specificAssetId;
+    };
+
+    const registerAssetLinkCleanup = (aasIdentifier: string) => {
+        track(async () => {
+            const cleanupResponse = await client.deleteAllAssetLinksById({
+                configuration,
+                aasIdentifier,
+            });
+
+            if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+                throw new Error(`Failed to cleanup asset links for ${aasIdentifier} (status ${cleanupResponse.statusCode})`);
+            }
+        });
+    };
+
+    const seedAssetLinks = async () => {
+        const aasIdentifier = createUniqueShellId();
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+        const specificAssetId2 = createUniqueSpecificAssetId2();
+
+        const createResponse = await client.postAllAssetLinksById({
+            configuration,
+            aasIdentifier,
+            specificAssetId: [specificAssetId1, specificAssetId2],
+        });
+
+        expect(createResponse.success).toBe(true);
+        if (!createResponse.success) {
+            throw new Error('Failed to seed AAS discovery asset links fixture');
+        }
+
+        registerAssetLinkCleanup(aasIdentifier);
+        return { aasIdentifier, specificAssetId1, specificAssetId2 };
+    };
 
     /**
      * @operation PostAllAssetLinksById
      * @status 201
      */
     test('should create specific asset identifiers linked to an Asset Administration Shell', async () => {
+        const aasIdentifier = createUniqueShellId();
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+        const specificAssetId2 = createUniqueSpecificAssetId2();
+
         const response = await client.postAllAssetLinksById({
             configuration,
-            aasIdentifier: testShell.id,
-            specificAssetId: [testSpecificAssetId1, testSpecificAssetId2],
+            aasIdentifier,
+            specificAssetId: [specificAssetId1, specificAssetId2],
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
+            registerAssetLinkCleanup(aasIdentifier);
             expect(response.statusCode).toBe(201);
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual([testSpecificAssetId1, testSpecificAssetId2]);
+            expect(response.data).toEqual([specificAssetId1, specificAssetId2]);
         }
     });
 
@@ -45,16 +94,18 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 200
      */
     test('should fetch a list of specific asset identifiers based on an Asset Administration Shell ID', async () => {
+        const { aasIdentifier, specificAssetId1, specificAssetId2 } = await seedAssetLinks();
+
         const response = await client.getAllAssetLinksById({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual([testSpecificAssetId1, testSpecificAssetId2]);
+            expect(response.data).toEqual([specificAssetId1, specificAssetId2]);
         }
     });
 
@@ -96,9 +147,11 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 200
      */
     test('should fetch a list of Asset Administration Shell IDs', async () => {
+        const { aasIdentifier, specificAssetId1, specificAssetId2 } = await seedAssetLinks();
+
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration,
-            assetIds: [testSpecificAssetId1, testSpecificAssetId2],
+            assetIds: [specificAssetId1, specificAssetId2],
         });
 
         expect(response.success).toBe(true);
@@ -106,7 +159,7 @@ describe('AAS Discovery Integration Tests', () => {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
             expect(response.data.result.length).toBeGreaterThan(0);
-            expect(response.data.result).toContainEqual(testShell.id);
+            expect(response.data.result).toContainEqual(aasIdentifier);
         }
     });
 
@@ -115,9 +168,12 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 400
      */
     test('should reject invalid AAS discovery lookup limit with bad request', async () => {
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+        const specificAssetId2 = createUniqueSpecificAssetId2();
+
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration,
-            assetIds: [testSpecificAssetId1, testSpecificAssetId2],
+            assetIds: [specificAssetId1, specificAssetId2],
             limit: -1,
         });
 
@@ -133,9 +189,12 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 200
      */
     test('should return an empty AAS discovery lookup page for an unavailable cursor', async () => {
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+        const specificAssetId2 = createUniqueSpecificAssetId2();
+
         const response = await client.getAllAssetAdministrationShellIdsByAssetLink({
             configuration,
-            assetIds: [testSpecificAssetId1, testSpecificAssetId2],
+            assetIds: [specificAssetId1, specificAssetId2],
             cursor: unavailableCursor(),
         });
 
@@ -152,15 +211,17 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 200
      */
     test('should fetch a list of Asset Administration Shell IDs via search endpoint', async () => {
+        const { aasIdentifier, specificAssetId1, specificAssetId2 } = await seedAssetLinks();
+
         const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
             configuration,
-            assetLink: [testSpecificAssetId1, testSpecificAssetId2],
+            assetLink: [specificAssetId1, specificAssetId2],
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
-            expect(response.data.result).toContainEqual(testShell.id);
+            expect(response.data.result).toContainEqual(aasIdentifier);
         }
     });
 
@@ -171,7 +232,7 @@ describe('AAS Discovery Integration Tests', () => {
     test('should reject malformed search payload with bad request', async () => {
         const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
             configuration,
-            assetLink: [{ name: 'globalAssetId' } as any],
+            assetLink: [{ name: 'globalAssetId' } as unknown as CoreSpecificAssetId],
         });
 
         expect(response.success).toBe(false);
@@ -186,9 +247,12 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 200
      */
     test('should return an empty AAS discovery search page for an unavailable cursor', async () => {
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+        const specificAssetId2 = createUniqueSpecificAssetId2();
+
         const response = await client.searchAllAssetAdministrationShellIdsByAssetLink({
             configuration,
-            assetLink: [testSpecificAssetId1, testSpecificAssetId2],
+            assetLink: [specificAssetId1, specificAssetId2],
             cursor: unavailableCursor(),
         });
 
@@ -206,10 +270,11 @@ describe('AAS Discovery Integration Tests', () => {
      */
     test('should reject invalid specific asset IDs with bad request', async () => {
         const invalidSpecificAssetId = new CoreSpecificAssetId('', '');
+        const aasIdentifier = createUniqueShellId();
 
         const response = await client.postAllAssetLinksById({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier,
             specificAssetId: [invalidSpecificAssetId],
         });
 
@@ -225,10 +290,12 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 405
      */
     test('should reject trailing slash (empty aasIdentifier) for post by id with method not allowed', async () => {
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+
         const response = await client.postAllAssetLinksById({
             configuration,
             aasIdentifier: '',
-            specificAssetId: [testSpecificAssetId1],
+            specificAssetId: [specificAssetId1],
         });
 
         expect(response.success).toBe(false);
@@ -243,10 +310,12 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 404 [known-specification-bug]
      */
     test.skip('should return not found when creating links for a non-existing AAS (spec mismatch: endpoint behaves as create-or-update)', async () => {
+        const specificAssetId1 = createUniqueSpecificAssetId1();
+
         const response = await client.postAllAssetLinksById({
             configuration,
             aasIdentifier: 'https://example.com/ids/aas/does-not-exist',
-            specificAssetId: [testSpecificAssetId1],
+            specificAssetId: [specificAssetId1],
         });
 
         expect(response.success).toBe(false);
@@ -261,10 +330,12 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 409 [known-specification-bug]
      */
     test.skip('should surface conflict status for duplicate link creation when backend enforces it', async () => {
+        const { aasIdentifier, specificAssetId1 } = await seedAssetLinks();
+
         const response = await client.postAllAssetLinksById({
             configuration,
-            aasIdentifier: testShell.id,
-            specificAssetId: [testSpecificAssetId1],
+            aasIdentifier,
+            specificAssetId: [specificAssetId1],
         });
 
         if (response.success) {
@@ -281,9 +352,11 @@ describe('AAS Discovery Integration Tests', () => {
      * @status 204
      */
     test('should delete all specific asset identifiers for an Asset Administration Shell ID', async () => {
+        const { aasIdentifier } = await seedAssetLinks();
+
         const response = await client.deleteAllAssetLinksById({
             configuration,
-            aasIdentifier: testShell.id,
+            aasIdentifier,
         });
 
         expect(response.success).toBe(true);
