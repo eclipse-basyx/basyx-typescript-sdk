@@ -13,6 +13,7 @@ import {
     createTestSubmodelElementCollection,
     createValue,
 } from './fixtures/submodelFixtures';
+import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Submodel Repository Integration Tests', () => {
@@ -20,11 +21,7 @@ describe('Submodel Repository Integration Tests', () => {
     const testSubmodel = createTestSubmodel();
     const testSubmodelElement = createTestSubmodelElement();
     const testFileSubmodelElement = createTestFileSubmodelElement();
-    const newSubmodelElement = createNewSubmodelElement();
-    const testSubmodelElementCollection = createTestSubmodelElementCollection();
     const attachmentPayload = 'coverage-attachment-payload';
-    const attachmentBlob = createAttachmentBlob(attachmentPayload);
-    const attachmentIdShortPath = testFileSubmodelElement.idShort ?? 'testFileElement';
     //const OPERATION_REQUEST = createTestOperationRequest();
     //const OPERATION_RESULT = createTestOperationResult();
     //const testOperationSubmodelElement = createTestOperationElement();
@@ -34,6 +31,7 @@ describe('Submodel Repository Integration Tests', () => {
     const { submodelMetadataPatch, submodelElementMetadataPatch, operationRequestValueOnly } =
         createSubmodelRepositoryPayloadFixtures(testSubmodel.id);
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const { track } = createPerTestCleanupRunner();
 
     type ApiResultLike = {
         success: boolean;
@@ -60,44 +58,93 @@ describe('Submodel Repository Integration Tests', () => {
         }
     }
 
+    function assertNonEmptyResult(result: unknown): void {
+        if (Array.isArray(result)) {
+            expect(result.length).toBeGreaterThan(0);
+            return;
+        }
+
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+        expect(Object.keys((result ?? {}) as Record<string, unknown>).length).toBeGreaterThan(0);
+    }
+
     function randomMissingSubmodelIdentifier(): string {
         return `https://example.com/ids/sm/missing-${uniqueSuffix()}`;
     }
 
-    async function ensureTestSubmodelExists(): Promise<void> {
-        const response = await client.postSubmodel({
-            configuration,
-            submodel: testSubmodel,
-        });
-
-        if (response.success) {
-            expect(response.statusCode).toBe(201);
-            return;
-        }
-
-        assertApiFailureCode(response, '409');
-        expect(response.statusCode).toBe(409);
+    function createUniqueSubmodelFixture() {
+        const submodel = createTestSubmodel();
+        submodel.id = `${submodel.id}-fixture-${uniqueSuffix()}`;
+        submodel.idShort = `${submodel.idShort ?? 'submodel'}Fixture${uniqueSuffix()}`;
+        registerSubmodelCleanup(submodel.id);
+        return submodel;
     }
 
-    async function ensureParentCollectionExists(): Promise<void> {
+    async function seedSubmodelElement(
+        submodelIdentifier: string,
+        submodelElement: ReturnType<typeof createTestSubmodelElement>
+    ) {
         const response = await client.postSubmodelElement({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            submodelElement: testSubmodelElementCollection,
+            submodelIdentifier,
+            submodelElement,
         });
 
+        expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(201);
-            return;
         }
-
-        assertApiFailureCode(response, '409');
-        expect(response.statusCode).toBe(409);
     }
 
-    beforeAll(async () => {
-        await ensureTestSubmodelExists();
-    });
+    async function seedSubmodelCollection(
+        submodelIdentifier: string,
+        collectionElement: ReturnType<typeof createTestSubmodelElementCollection>
+    ) {
+        const response = await client.postSubmodelElement({
+            configuration,
+            submodelIdentifier,
+            submodelElement: collectionElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+        }
+    }
+
+    async function seedFileSubmodelElement(submodelIdentifier: string): Promise<string> {
+        const fileSubmodelElement = createTestFileSubmodelElement();
+        fileSubmodelElement.idShort = `fileElement-${uniqueSuffix()}`;
+
+        const response = await client.postSubmodelElement({
+            configuration,
+            submodelIdentifier,
+            submodelElement: fileSubmodelElement,
+        });
+
+        expect(response.success).toBe(true);
+        if (response.success) {
+            expect(response.statusCode).toBe(201);
+        }
+
+        return fileSubmodelElement.idShort ?? 'testFileElement';
+    }
+
+    function registerSubmodelCleanup(submodelIdentifier: string): void {
+        track(async () => {
+            const cleanupResponse = await client.deleteSubmodelById({
+                configuration,
+                submodelIdentifier,
+            });
+
+            if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+                throw new Error(
+                    `Failed to cleanup submodel ${submodelIdentifier} (status ${cleanupResponse.statusCode})`
+                );
+            }
+        });
+    }
 
     /**
      * @operation PostSubmodel
@@ -107,6 +154,7 @@ describe('Submodel Repository Integration Tests', () => {
         const createdSubmodel = createTestSubmodel();
         createdSubmodel.id = `${createdSubmodel.id}-create-${uniqueSuffix()}`;
         createdSubmodel.idShort = `${createdSubmodel.idShort ?? 'submodel'}Create${uniqueSuffix()}`;
+        registerSubmodelCleanup(createdSubmodel.id);
 
         const response = await client.postSubmodel({
             configuration,
@@ -146,6 +194,7 @@ describe('Submodel Repository Integration Tests', () => {
     test('should return conflict when creating a duplicate Submodel', async () => {
         const duplicateSubmodel = createTestSubmodel();
         duplicateSubmodel.id = `${duplicateSubmodel.id}-duplicate-${uniqueSuffix()}`;
+        registerSubmodelCleanup(duplicateSubmodel.id);
 
         const createResponse = await client.postSubmodel({
             configuration,
@@ -173,17 +222,25 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch a Submodel by ID', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelById({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data.id).toEqual(testSubmodel.id);
-            expect(response.data.idShort).toEqual(testSubmodel.idShort);
+            expect(response.data.id).toEqual(scopedSubmodel.id);
+            expect(response.data.idShort).toEqual(scopedSubmodel.idShort);
             expect(Array.isArray(response.data.submodelElements) || response.data.submodelElements === null).toBe(true);
         }
     });
@@ -226,6 +283,14 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all Submodels', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllSubmodels({
             configuration,
         });
@@ -235,7 +300,7 @@ describe('Submodel Repository Integration Tests', () => {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
             expect((response.data.result ?? []).length).toBeGreaterThan(0);
-            expect((response.data.result ?? []).map((submodel) => submodel.id)).toContain(testSubmodel.id);
+            expect((response.data.result ?? []).map((submodel) => submodel.id)).toContain(scopedSubmodel.id);
         }
     });
 
@@ -261,13 +326,19 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 201
      */
     test('should create a new SubmodelElement', async () => {
-        await ensureTestSubmodelExists();
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const createdSubmodelElement = createNewSubmodelElement();
         createdSubmodelElement.idShort = `testPropertyCreate-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElement({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             submodelElement: createdSubmodelElement,
         });
 
@@ -288,25 +359,30 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 409
      */
     test('should return conflict when creating duplicate SubmodelElement', async () => {
-        await ensureTestSubmodelExists();
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
 
         const duplicateSubmodelElement = createNewSubmodelElement();
         duplicateSubmodelElement.idShort = `dup-${uniqueSuffix()}`;
 
-        const createResponse = await client.postSubmodelElement({
+        const createElementResponse = await client.postSubmodelElement({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             submodelElement: duplicateSubmodelElement,
         });
 
-        expect(createResponse.success).toBe(true);
-        if (createResponse.success) {
-            expect(createResponse.statusCode).toBe(201);
+        expect(createElementResponse.success).toBe(true);
+        if (createElementResponse.success) {
+            expect(createElementResponse.statusCode).toBe(201);
         }
 
         const response = await client.postSubmodelElement({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             submodelElement: duplicateSubmodelElement,
         });
 
@@ -357,6 +433,7 @@ describe('Submodel Repository Integration Tests', () => {
     test('should create a Submodel through put by ID with created status', async () => {
         const putSubmodel = createTestSubmodel();
         putSubmodel.id = `${putSubmodel.id}-put-${uniqueSuffix()}`;
+        registerSubmodelCleanup(putSubmodel.id);
 
         const response = await client.putSubmodelById({
             configuration,
@@ -376,17 +453,30 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should update a Submodel', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const updatedProperty = createTestSubmodelElement();
+        updatedProperty.idShort = `updated-property-${uniqueSuffix()}`;
+        const updatedCollection = createTestSubmodelElementCollection();
+        updatedCollection.idShort = `updated-collection-${uniqueSuffix()}`;
+        const updatedNewElement = createNewSubmodelElement();
+        updatedNewElement.idShort = `updated-new-${uniqueSuffix()}`;
+        const updatedFileElement = createTestFileSubmodelElement();
+        updatedFileElement.idShort = `updated-file-${uniqueSuffix()}`;
+
         const updatedSubmodel = createTestSubmodel();
-        updatedSubmodel.submodelElements = [
-            testSubmodelElement,
-            testSubmodelElementCollection,
-            newSubmodelElement,
-            testFileSubmodelElement,
-        ];
+        updatedSubmodel.id = scopedSubmodel.id;
+        updatedSubmodel.idShort = `${scopedSubmodel.idShort ?? 'submodel'}Updated${uniqueSuffix()}`;
+        updatedSubmodel.submodelElements = [updatedProperty, updatedCollection, updatedNewElement, updatedFileElement];
 
         const updateResponse = await client.putSubmodelById({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             submodel: updatedSubmodel,
         });
 
@@ -397,7 +487,7 @@ describe('Submodel Repository Integration Tests', () => {
 
         const fetchResponse = await client.getSubmodelById({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(fetchResponse.success).toBe(true);
@@ -407,10 +497,10 @@ describe('Submodel Repository Integration Tests', () => {
             expect(fetchResponse.data.idShort).toEqual(updatedSubmodel.idShort);
 
             const idShorts = (fetchResponse.data.submodelElements ?? []).map((element) => element.idShort);
-            expect(idShorts).toContain(testSubmodelElement.idShort);
-            expect(idShorts).toContain(testSubmodelElementCollection.idShort);
-            expect(idShorts).toContain(newSubmodelElement.idShort);
-            expect(idShorts).toContain(testFileSubmodelElement.idShort);
+            expect(idShorts).toContain(updatedProperty.idShort);
+            expect(idShorts).toContain(updatedCollection.idShort);
+            expect(idShorts).toContain(updatedNewElement.idShort);
+            expect(idShorts).toContain(updatedFileElement.idShort);
         }
     });
 
@@ -419,13 +509,20 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should patch a Submodel by ID', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const patchedSubmodel = createTestSubmodel();
-        patchedSubmodel.id = testSubmodel.id;
+        patchedSubmodel.id = scopedSubmodel.id;
         patchedSubmodel.description = [createDescription()];
 
         const response = await client.patchSubmodelById({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             submodel: patchedSubmodel,
         });
 
@@ -478,11 +575,22 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should patch a Submodel by ID in value-only representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const valueOnlyElement = createTestSubmodelElement();
+        valueOnlyElement.idShort = `value-only-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, valueOnlyElement);
+
         const response = await client.patchSubmodelByIdValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             body: {
-                [testSubmodelElement.idShort ?? 'testProperty']: createValue(),
+                [valueOnlyElement.idShort ?? 'testProperty']: createValue(),
             },
         });
 
@@ -501,7 +609,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodelIdentifier: undefined as unknown as string,
             body: {
-                [testSubmodelElement.idShort ?? 'testProperty']: createValue(),
+                [`missing-id-${uniqueSuffix()}`]: createValue(),
             },
         });
 
@@ -517,7 +625,7 @@ describe('Submodel Repository Integration Tests', () => {
             configuration,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
             body: {
-                [testSubmodelElement.idShort ?? 'testProperty']: createValue(),
+                [`missing-id-${uniqueSuffix()}`]: createValue(),
             },
         });
 
@@ -529,18 +637,29 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all SubmodelElements', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `seeded-property-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getAllSubmodelElements({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
             const matchingElement = (response.data.result ?? []).find(
-                (element) => element.idShort === testSubmodelElement.idShort
+                (element) => element.idShort === seededElement.idShort
             ) as { value?: unknown } | undefined;
             expect(matchingElement).toBeDefined();
             expect(typeof matchingElement?.value).toBe('string');
@@ -584,10 +703,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch SubmodelElement by the path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `path-property-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(response.success).toBe(true);
@@ -595,7 +725,7 @@ describe('Submodel Repository Integration Tests', () => {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
             const propertyResponse = response.data as { idShort?: string; value?: unknown };
-            expect(propertyResponse.idShort).toBe(testSubmodelElement.idShort);
+            expect(propertyResponse.idShort).toBe(seededElement.idShort);
             expect(typeof propertyResponse.value).toBe('string');
         }
     });
@@ -605,9 +735,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when fetching SubmodelElement by missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
         });
 
@@ -639,16 +776,24 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 201
      */
     test('should create a new SubmodelElement at a specified path within submodel elements hierarchy', async () => {
-        await ensureTestSubmodelExists();
-        await ensureParentCollectionExists();
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const parentCollection = createTestSubmodelElementCollection();
+        parentCollection.idShort = `parentCollection-${uniqueSuffix()}`;
+        await seedSubmodelCollection(scopedSubmodel.id, parentCollection);
 
         const nestedSubmodelElement = createNewSubmodelElement();
         nestedSubmodelElement.idShort = `nestedProperty-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElementCollection.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: parentCollection.idShort!,
             submodelElement: nestedSubmodelElement,
         });
 
@@ -669,28 +814,36 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 409
      */
     test('should return conflict when creating duplicate SubmodelElement by path', async () => {
-        await ensureTestSubmodelExists();
-        await ensureParentCollectionExists();
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const parentCollection = createTestSubmodelElementCollection();
+        parentCollection.idShort = `parentCollection-${uniqueSuffix()}`;
+        await seedSubmodelCollection(scopedSubmodel.id, parentCollection);
 
         const nestedSubmodelElement = createNewSubmodelElement();
         nestedSubmodelElement.idShort = `conflict-${uniqueSuffix()}`;
 
-        const createResponse = await client.postSubmodelElementByPath({
+        const createElementResponse = await client.postSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElementCollection.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: parentCollection.idShort!,
             submodelElement: nestedSubmodelElement,
         });
 
-        expect(createResponse.success).toBe(true);
-        if (createResponse.success) {
-            expect(createResponse.statusCode).toBe(201);
+        expect(createElementResponse.success).toBe(true);
+        if (createElementResponse.success) {
+            expect(createElementResponse.statusCode).toBe(201);
         }
 
         const response = await client.postSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElementCollection.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: parentCollection.idShort!,
             submodelElement: nestedSubmodelElement,
         });
 
@@ -705,12 +858,19 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when creating SubmodelElement for missing path parent', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const nestedSubmodelElement = createNewSubmodelElement();
         nestedSubmodelElement.idShort = `nested-${uniqueSuffix()}`;
 
         const response = await client.postSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-collection-${uniqueSuffix()}`,
             submodelElement: nestedSubmodelElement,
         });
@@ -730,7 +890,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.postSubmodelElementByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElementCollection.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
             submodelElement: nestedSubmodelElement,
         });
 
@@ -745,15 +905,26 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should update the submodel element at the specified path ', async () => {
-        const updatedSubmodelElement = testSubmodelElement;
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `putByPath-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
+        const updatedSubmodelElement = createTestSubmodelElement();
+        updatedSubmodelElement.idShort = seededElement.idShort;
         const description = createDescription();
         updatedSubmodelElement.description = [description];
-        //updatedSubmodelElement.submodelElements = [testSubmodelElement];
 
         const updateResponse = await client.putSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
             submodelElement: updatedSubmodelElement,
         });
 
@@ -764,8 +935,8 @@ describe('Submodel Repository Integration Tests', () => {
 
         const fetchResponse = await client.getSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(fetchResponse.success).toBe(true);
@@ -780,13 +951,24 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 201
      */
     test('should create a new SubmodelElement via put by path with created status', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const parentCollection = createTestSubmodelElementCollection();
+        parentCollection.idShort = `putParent-${uniqueSuffix()}`;
+        await seedSubmodelCollection(scopedSubmodel.id, parentCollection);
+
         const createdElement = createNewSubmodelElement();
         createdElement.idShort = `put-created-${uniqueSuffix()}`;
 
         const response = await client.putSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: `${testSubmodelElementCollection.idShort}.${createdElement.idShort}`,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: `${parentCollection.idShort}.${createdElement.idShort}`,
             submodelElement: createdElement,
         });
 
@@ -801,11 +983,14 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when updating SubmodelElement by path for a missing Submodel', async () => {
+        const replacementElement = createNewSubmodelElement();
+        replacementElement.idShort = `missing-submodel-path-${uniqueSuffix()}`;
+
         const response = await client.putSubmodelElementByPath({
             configuration,
             submodelIdentifier: randomMissingSubmodelIdentifier(),
-            idShortPath: testSubmodelElement.idShort!,
-            submodelElement: createNewSubmodelElement(),
+            idShortPath: replacementElement.idShort!,
+            submodelElement: replacementElement,
         });
 
         assertApiFailureCode(response, '404');
@@ -819,11 +1004,14 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Submodel identifier when updating SubmodelElement by path', async () => {
+        const replacementElement = createNewSubmodelElement();
+        replacementElement.idShort = `missing-id-path-${uniqueSuffix()}`;
+
         const response = await client.putSubmodelElementByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort!,
-            submodelElement: createNewSubmodelElement(),
+            idShortPath: replacementElement.idShort!,
+            submodelElement: replacementElement,
         });
 
         assertApiFailureCode(response, '400');
@@ -837,13 +1025,24 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should patch SubmodelElement by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `patchByPath-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const patchedSubmodelElement = createNewSubmodelElement();
-        patchedSubmodelElement.idShort = testSubmodelElement.idShort;
+        patchedSubmodelElement.idShort = seededElement.idShort;
 
         const response = await client.patchSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
             submodelElement: patchedSubmodelElement,
         });
 
@@ -861,7 +1060,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.patchSubmodelElementByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
             submodelElement: testSubmodelElement,
         });
 
@@ -876,9 +1075,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when patching missing SubmodelElement by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.patchSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-patch-se-${uniqueSuffix()}`,
             submodelElement: testSubmodelElement,
         });
@@ -895,17 +1101,24 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch Submodel metadata by ID', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelByIdMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data.id).toEqual(testSubmodel.id);
-            expect(response.data.idShort).toEqual(testSubmodel.idShort);
+            expect(response.data.id).toEqual(scopedSubmodel.id);
+            expect(response.data.idShort).toEqual(scopedSubmodel.idShort);
         }
     });
 
@@ -940,9 +1153,20 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch Submodel in the ValueOnly representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `valueOnlySubmodel-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelByIdValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
@@ -985,17 +1209,27 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch SubmodelElement by path in the ValueOnly representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `valueOnlyByPath-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelElementByPathValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: newSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
-            console.log('Element ValueOnly response:', JSON.stringify(response.data, null, 2));
-            const newPropertyElement = newSubmodelElement as { value?: unknown };
+            const newPropertyElement = seededElement as { value?: unknown };
 
             expect(response.data).toBeDefined();
             expect(response.data).toEqual(newPropertyElement.value);
@@ -1010,7 +1244,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathValueOnly({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: newSubmodelElement.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1021,9 +1255,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found for ValueOnly SubmodelElement retrieval with missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelElementByPathValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-value-path-${uniqueSuffix()}`,
         });
 
@@ -1035,14 +1276,25 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should update SubmodelElement in the ValueOnly representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `valueOnlyPatch-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const updatedPropertyValue = createValue();
-        const updatedSubmodelElement = testSubmodelElement as { value?: unknown };
+        const updatedSubmodelElement = seededElement as { value?: unknown };
         updatedSubmodelElement.value = updatedPropertyValue;
 
         const updateResponse = await client.patchSubmodelElementByPathValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
             submodelElementValue: updatedPropertyValue,
         });
 
@@ -1053,13 +1305,12 @@ describe('Submodel Repository Integration Tests', () => {
 
         const fetchResponse = await client.getSubmodelElementByPathValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(fetchResponse.success).toBe(true);
         if (fetchResponse.success) {
-            console.log('Updated Value:', fetchResponse.data);
             expect(fetchResponse.data).toBeDefined();
             expect(fetchResponse.data).toEqual(updatedPropertyValue);
         }
@@ -1070,9 +1321,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when patching ValueOnly SubmodelElement for missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.patchSubmodelElementByPathValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-patch-path-${uniqueSuffix()}`,
             submodelElementValue: createValue(),
         });
@@ -1088,7 +1346,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.patchSubmodelElementByPathValueOnly({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
             submodelElementValue: createValue(),
         });
 
@@ -1100,6 +1358,13 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all Submodels in metadata representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllSubmodelsMetadata({
             configuration,
         });
@@ -1108,6 +1373,8 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
+            const resultIds = (response.data.result ?? []).map((submodel) => submodel.id);
+            expect(resultIds).toContain(scopedSubmodel.id);
         }
     });
 
@@ -1129,6 +1396,13 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all Submodels in value-only representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllSubmodelsValueOnly({
             configuration,
         });
@@ -1174,6 +1448,13 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch references to all Submodels', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllSubmodelsReference({
             configuration,
         });
@@ -1182,7 +1463,14 @@ describe('Submodel Repository Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            const valueOnlyResult = response.data.result as unknown;
+            if (Array.isArray(valueOnlyResult)) {
+                expect(valueOnlyResult.length).toBeGreaterThan(0);
+            } else {
+                expect(typeof valueOnlyResult).toBe('object');
+                expect(valueOnlyResult).not.toBeNull();
+                expect(Object.keys((valueOnlyResult ?? {}) as Record<string, unknown>).length).toBeGreaterThan(0);
+            }
         }
     });
 
@@ -1207,14 +1495,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch paths of all Submodels', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getAllSubmodelsPath({
             configuration,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
+            expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
         }
     });
 
@@ -1236,9 +1531,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch Submodel by ID in reference representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelByIdReference({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
@@ -1280,9 +1582,20 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch Submodel by ID in path representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `pathRepresentation-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelByIdPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
@@ -1324,15 +1637,27 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all SubmodelElements in metadata representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `metadataList-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getAllSubmodelElementsMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1367,15 +1692,27 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch all SubmodelElements in value-only representation', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `valueOnlyList-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getAllSubmodelElementsValueOnly({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1410,16 +1747,27 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch references to all SubmodelElements', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `referenceList-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getAllSubmodelElementsReference({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1454,16 +1802,27 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch paths of all SubmodelElements', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `pathList-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getAllSubmodelElementsPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data.result).toBeDefined();
-            expect((response.data.result ?? []).length).toBeGreaterThan(0);
+            assertNonEmptyResult(response.data.result);
         }
     });
 
@@ -1498,17 +1857,28 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch SubmodelElement metadata by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `metaByPath-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelElementByPathMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(response.success).toBe(true);
         if (response.success) {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data.idShort).toEqual(testSubmodelElement.idShort);
+            expect(response.data.idShort).toEqual(seededElement.idShort);
         }
     });
 
@@ -1520,7 +1890,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathMetadata({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1531,9 +1901,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found for SubmodelElement metadata by missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelElementByPathMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-meta-path-${uniqueSuffix()}`,
         });
 
@@ -1545,10 +1922,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch SubmodelElement reference by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `referenceByPath-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelElementByPathReference({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(response.success).toBe(true);
@@ -1567,7 +1955,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathReference({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1578,9 +1966,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found for SubmodelElement reference by missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelElementByPathReference({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-ref-path-${uniqueSuffix()}`,
         });
 
@@ -1592,10 +1987,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should fetch SubmodelElement path by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `pathByPath-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.getSubmodelElementByPathPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort!,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort!,
         });
 
         expect(response.success).toBe(true);
@@ -1614,7 +2020,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.getSubmodelElementByPathPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort!,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1625,9 +2031,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found for SubmodelElement path by missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.getSubmodelElementByPathPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-path-view-${uniqueSuffix()}`,
         });
 
@@ -1687,10 +2100,12 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing put Submodel identifier with bad request', async () => {
+        const payloadSubmodel = createTestSubmodel();
+
         const response = await client.putSubmodelById({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            submodel: testSubmodel,
+            submodel: payloadSubmodel,
         });
 
         assertApiFailureCode(response, '400');
@@ -1720,10 +2135,23 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should patch Submodel metadata by ID', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const scopedMetadataPatch = {
+            ...submodelMetadataPatch,
+            id: scopedSubmodel.id,
+            idShort: scopedSubmodel.idShort ?? undefined,
+        };
+
         const response = await client.patchSubmodelByIdMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            submodelMetadata: submodelMetadataPatch,
+            submodelIdentifier: scopedSubmodel.id,
+            submodelMetadata: scopedMetadataPatch,
         });
 
         expect(response.success).toBe(true);
@@ -1737,10 +2165,15 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 400
      */
     test('should reject missing Submodel identifier when patching Submodel metadata', async () => {
+        const payloadMetadataPatch = {
+            ...submodelMetadataPatch,
+            id: `missing-id-${uniqueSuffix()}`,
+        };
+
         const response = await client.patchSubmodelByIdMetadata({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            submodelMetadata: submodelMetadataPatch,
+            submodelMetadata: payloadMetadataPatch,
         });
 
         assertApiFailureCode(response, '400');
@@ -1772,10 +2205,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should patch SubmodelElement metadata by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createNewSubmodelElement();
+        seededElement.idShort = `metadataPatch-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.patchSubmodelElementByPathMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort ?? 'testProperty',
             submodelElementMetadata: submodelElementMetadataPatch,
         });
 
@@ -1793,7 +2237,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.patchSubmodelElementByPathMetadata({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            idShortPath: `missing-id-${uniqueSuffix()}`,
             submodelElementMetadata: submodelElementMetadataPatch,
         });
 
@@ -1805,9 +2249,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when patching SubmodelElement metadata by missing path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.patchSubmodelElementByPathMetadata({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-meta-patch-${uniqueSuffix()}`,
             submodelElementMetadata: submodelElementMetadataPatch,
         });
@@ -1820,9 +2271,19 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should upload file by path to a File submodel element', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
+        const attachmentBlob = createAttachmentBlob(attachmentPayload);
+
         const response = await client.putFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: attachmentIdShortPath,
             fileName: 'coverage-file.txt',
             file: attachmentBlob,
@@ -1842,9 +2303,27 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should download uploaded file by path from a File submodel element', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
+        const attachmentBlob = createAttachmentBlob(attachmentPayload);
+        const uploadResponse = await client.putFileByPath({
+            configuration,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file.txt',
+            file: attachmentBlob,
+        });
+        expect(uploadResponse.success).toBe(true);
+
         const response = await client.getFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: attachmentIdShortPath,
         });
 
@@ -1862,10 +2341,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 405
      */
     test('should reject file download on non-File submodel element with 405', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const nonFileElement = createTestSubmodelElement();
+        nonFileElement.idShort = `nonFileElement-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, nonFileElement);
+
         const response = await client.getFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: nonFileElement.idShort ?? 'testProperty',
         });
 
         assertApiFailureCode(response, '405');
@@ -1879,7 +2369,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.getFileByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: attachmentIdShortPath,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -1890,9 +2380,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should reject file upload by path for missing submodel element with 404', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.putFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: 'missingAttachmentPath',
             fileName: 'missing-element-file.txt',
             file: createAttachmentBlob('missing-element-payload'),
@@ -1906,6 +2403,7 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 400 [Currently not testable]
      */
     test.skip('should reject missing Submodel identifier when uploading file by path', async () => {
+        const attachmentIdShortPath = testFileSubmodelElement.idShort ?? 'testFileElement';
         const response = await client.putFileByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
@@ -2261,9 +2759,26 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 200
      */
     test('should delete file by path from a File submodel element', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
+        const uploadResponse = await client.putFileByPath({
+            configuration,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file.txt',
+            file: createAttachmentBlob(attachmentPayload),
+        });
+        expect(uploadResponse.success).toBe(true);
+
         const response = await client.deleteFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: attachmentIdShortPath,
         });
 
@@ -2284,7 +2799,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.deleteFileByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: attachmentIdShortPath,
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -2295,9 +2810,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when deleting missing file by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.deleteFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-file-${uniqueSuffix()}`,
         });
 
@@ -2309,9 +2831,33 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when downloading a deleted file by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const attachmentIdShortPath = await seedFileSubmodelElement(scopedSubmodel.id);
+        const uploadResponse = await client.putFileByPath({
+            configuration,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+            fileName: 'coverage-file.txt',
+            file: createAttachmentBlob(attachmentPayload),
+        });
+        expect(uploadResponse.success).toBe(true);
+
+        const deleteResponse = await client.deleteFileByPath({
+            configuration,
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: attachmentIdShortPath,
+        });
+        expect(deleteResponse.success).toBe(true);
+
         const response = await client.getFileByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: attachmentIdShortPath,
         });
 
@@ -2323,10 +2869,21 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should delete SubmodelElement by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
+        const seededElement = createTestSubmodelElement();
+        seededElement.idShort = `deleteElement-${uniqueSuffix()}`;
+        await seedSubmodelElement(scopedSubmodel.id, seededElement);
+
         const response = await client.deleteSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            submodelIdentifier: scopedSubmodel.id,
+            idShortPath: seededElement.idShort ?? 'testProperty',
         });
 
         expect(response.success).toBe(true);
@@ -2343,7 +2900,7 @@ describe('Submodel Repository Integration Tests', () => {
         const response = await client.deleteSubmodelElementByPath({
             configuration,
             submodelIdentifier: undefined as unknown as string,
-            idShortPath: testSubmodelElement.idShort ?? 'testProperty',
+            idShortPath: `missing-id-${uniqueSuffix()}`,
         });
 
         assertApiFailureCode(response, '400');
@@ -2354,9 +2911,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 404
      */
     test('should return not found when deleting missing SubmodelElement by path', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.deleteSubmodelElementByPath({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
             idShortPath: `missing-delete-path-${uniqueSuffix()}`,
         });
 
@@ -2368,9 +2932,16 @@ describe('Submodel Repository Integration Tests', () => {
      * @status 204
      */
     test('should delete Submodel by ID', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        const createResponse = await client.postSubmodel({
+            configuration,
+            submodel: scopedSubmodel,
+        });
+        expect(createResponse.success).toBe(true);
+
         const response = await client.deleteSubmodelById({
             configuration,
-            submodelIdentifier: testSubmodel.id,
+            submodelIdentifier: scopedSubmodel.id,
         });
 
         expect(response.success).toBe(true);

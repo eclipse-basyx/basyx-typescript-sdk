@@ -2,6 +2,7 @@ import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptio
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { createDescription, createTestCD } from './fixtures/conceptDescriptionFixtures';
+import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('Concept Description Repository Integration Tests', () => {
@@ -9,14 +10,31 @@ describe('Concept Description Repository Integration Tests', () => {
     const configuration = new Configuration({
         basePath: getIntegrationBasePath('conceptDescriptionRepository'),
     });
+    const { track } = createPerTestCleanupRunner();
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const unavailableCursor = (): string =>
         base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
-    const createUniqueConceptDescription = () => {
+    const createUniqueConceptDescription = (withCleanup = true) => {
         const conceptDescription = createTestCD();
         conceptDescription.id = `${conceptDescription.id}-${uniqueSuffix()}`;
+
+        if (withCleanup) {
+            track(async () => {
+                const cleanupResponse = await client.deleteConceptDescriptionById({
+                    configuration,
+                    cdIdentifier: conceptDescription.id,
+                });
+
+                if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+                    throw new Error(
+                        `Failed to cleanup concept description ${conceptDescription.id} (status ${cleanupResponse.statusCode})`
+                    );
+                }
+            });
+        }
+
         return conceptDescription;
     };
 

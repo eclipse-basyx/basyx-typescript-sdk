@@ -58,6 +58,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Type-check Integration Tests
+        run: pnpm exec tsc -p src/integration-tests/tsconfig.json --noEmit
+
       - name: Pull Docker Images
         run: docker-compose -f ci/docker-compose.yml pull
 

@@ -8,6 +8,7 @@ import {
     createTestShellDescriptor,
     createTestSubmodelDescriptor,
 } from './fixtures/aasregistryFixtures';
+import { createPerTestCleanupRunner } from './fixtures/testCleanup';
 import { getIntegrationBasePath } from './testEngineConfig';
 
 describe('AAS Registry Integration Tests', () => {
@@ -15,19 +16,36 @@ describe('AAS Registry Integration Tests', () => {
     const configuration = new Configuration({
         basePath: getIntegrationBasePath('aasRegistry'),
     });
+    const { track } = createPerTestCleanupRunner();
 
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const unavailableCursor = (): string =>
         base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
 
-    const createUniqueShellDescriptor = () => {
+    const createUniqueShellDescriptor = (withCleanup = true) => {
         const descriptor = createTestShellDescriptor();
         descriptor.id = `${descriptor.id}-${uniqueSuffix()}`;
+
+        if (withCleanup) {
+            track(async () => {
+                const cleanupResponse = await client.deleteAssetAdministrationShellDescriptorById({
+                    configuration,
+                    aasIdentifier: descriptor.id,
+                });
+
+                if (!cleanupResponse.success && cleanupResponse.statusCode !== 404) {
+                    throw new Error(
+                        `Failed to cleanup AAS descriptor ${descriptor.id} (status ${cleanupResponse.statusCode})`
+                    );
+                }
+            });
+        }
+
         return descriptor;
     };
 
     const createInvalidShellDescriptorWithEmptyId = () => {
-        const descriptor = createUniqueShellDescriptor();
+        const descriptor = createUniqueShellDescriptor(false);
         descriptor.id = '';
         descriptor.assetKind = AssetKind.Type;
         descriptor.assetType = 'Type';
