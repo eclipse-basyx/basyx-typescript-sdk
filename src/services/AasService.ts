@@ -463,7 +463,18 @@ export class AasService {
         const [, baseUrl, encodedId] = match;
 
         // Decode the ID
-        const aasIdentifier = base64Decode(encodedId);
+        let aasIdentifier: string;
+        try {
+            aasIdentifier = base64Decode(encodedId);
+        } catch {
+            return {
+                success: false,
+                error: {
+                    errorType: 'InvalidEndpoint',
+                    message: 'Endpoint contains an invalid Base64URL-encoded AAS identifier.',
+                },
+            };
+        }
 
         // Create configuration for the endpoint
         const config = this.createRepositoryEndpointConfiguration(baseUrl);

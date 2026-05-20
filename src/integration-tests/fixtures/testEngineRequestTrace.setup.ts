@@ -282,11 +282,11 @@ function resolveRequestHeaders(input: RequestInfo | URL, init: RequestInit | und
 }
 
 function resolveCurrentTestName(): string {
-    const maybeExpect = globalThis.expect as
-        | {
-              getState?: () => { currentTestName?: string };
-          }
-        | undefined;
+    const maybeExpect = (globalThis as {
+        expect?: {
+            getState?: () => { currentTestName?: string };
+        };
+    }).expect;
 
     return maybeExpect?.getState?.().currentTestName || '(unknown-test)';
 }
@@ -299,12 +299,7 @@ function appendTraceEvent(traceFilePath: string, event: RequestResponseTraceEven
     }
 }
 
-function buildCurlCommand(
-    method: string,
-    url: string,
-    requestHeaders: HeaderRecord,
-    bodySummary: BodySummary
-): string {
+function buildCurlCommand(method: string, url: string, requestHeaders: HeaderRecord, bodySummary: BodySummary): string {
     const curlSegments = [`curl -X ${method}`, toShellQuoted(url)];
 
     for (const [key, value] of Object.entries(requestHeaders)) {

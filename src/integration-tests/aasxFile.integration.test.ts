@@ -21,8 +21,12 @@ describe('AASX File Server Integration Tests', () => {
     const unavailableCursor = (): string =>
         base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
     const normalizeEncodedIdentifier = (identifier: string): string => {
-        const decoded = base64Decode(identifier);
-        return decoded && base64Encode(decoded) === identifier ? decoded : identifier;
+        try {
+            const decoded = base64Decode(identifier);
+            return decoded && base64Encode(decoded) === identifier ? decoded : identifier;
+        } catch {
+            return identifier;
+        }
     };
     const createPackageFile = (): Blob =>
         new Blob([fs.readFileSync('test-data/sample.aasx')], {

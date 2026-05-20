@@ -487,12 +487,17 @@ function enrichIntegrationFailures(failedChecks, traceEvents, fallbackByTestName
             return check;
         }
 
-        const { matchedTestName, traceEvent } = resolveTraceEventForCheck(check, traceEventsByTestName, fallbackByTestName);
+        const { matchedTestName, traceEvent } = resolveTraceEventForCheck(
+            check,
+            traceEventsByTestName,
+            fallbackByTestName
+        );
         const fallback = matchedTestName ? fallbackByTestName.get(matchedTestName) : undefined;
 
         const requestMethod = (traceEvent?.method || fallback?.method || '').toUpperCase() || undefined;
         const requestEndpoint = traceEvent?.endpoint || fallback?.endpoint || undefined;
-        const curlCommand = traceEvent?.curlCommand || buildFallbackCurlCommand(requestMethod, requestEndpoint, baseUrl);
+        const curlCommand =
+            traceEvent?.curlCommand || buildFallbackCurlCommand(requestMethod, requestEndpoint, baseUrl);
 
         const responseStatus =
             typeof traceEvent?.responseStatus === 'number' && Number.isFinite(traceEvent.responseStatus)
