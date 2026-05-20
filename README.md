@@ -130,10 +130,20 @@ pnpm test:engine --component aasx-file-server --url http://localhost:8087 --repo
 
 ### Report Behavior
 
-- `console`: run summary plus failed checks and reasons.
-- `json`: machine-readable report for workflow processing.
-- `junit`: CI-compatible XML artifact.
-- `markdown`: shareable summary document.
+- `console`: run summary plus failed checks and reasons, including endpoint and response snippets when available.
+- `json`: machine-readable report for workflow processing, including failure diagnostics such as request
+  method/endpoint, request body summary, response status, response body snippet, and trace source for integration-test
+  failures.
+- `junit`: CI-compatible XML artifact; integration-test failure entries include endpoint and response context in the
+  failure message.
+- `markdown`: shareable summary document with failure diagnostics and copyable cURL replay blocks for integration-test
+  failures.
+
+Failure diagnostics are captured only in test-engine mode and are sanitized:
+
+- Authorization and cookie-style headers are redacted.
+- Large request/response bodies are truncated to compact snippets.
+- Multipart/binary replay commands use real relative file names when available; otherwise placeholders are emitted.
 
 Exit code behavior:
 

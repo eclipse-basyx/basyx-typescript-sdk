@@ -46,6 +46,7 @@ export default defineConfig({
                     name: 'integration-tests',
                     include: ['src/integration-tests/**/*.test.ts'],
                     globalSetup: ['./ci/vitestGlobalSetup.ts'],
+                    setupFiles: ['./src/integration-tests/fixtures/testEngineRequestTrace.setup.ts'],
                     fileParallelism: false,
                     maxConcurrency: 1,
                 },

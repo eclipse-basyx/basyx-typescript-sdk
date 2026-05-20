@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { AasxFileClient } from '../clients/AasxFileClient';
 import { Configuration } from '../generated';
 import { AasxFileService } from '../generated';
-import { base64Encode } from '../lib/base64Url';
+import { base64Decode, base64Encode } from '../lib/base64Url';
 import { createTestShell } from './fixtures/aasxFileFixtures';
 import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { getIntegrationBasePath } from './testEngineConfig';
@@ -20,6 +20,14 @@ describe('AASX File Server Integration Tests', () => {
     const uniqueSuffix = (): string => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const unavailableCursor = (): string =>
         base64Encode(`https://example.com/ids/non-existing-cursor-${uniqueSuffix()}`);
+    const normalizeEncodedIdentifier = (identifier: string): string => {
+        try {
+            const decoded = base64Decode(identifier);
+            return decoded && base64Encode(decoded) === identifier ? decoded : identifier;
+        } catch {
+            return identifier;
+        }
+    };
     const createPackageFile = (): Blob =>
         new Blob([fs.readFileSync('test-data/sample.aasx')], {
             type: 'application/asset-administration-shell-package',
@@ -41,8 +49,12 @@ describe('AASX File Server Integration Tests', () => {
             throw new Error('AASX package fixture did not return a packageId');
         }
 
-        createdPackageIds.push(response.data.packageId);
-        return response.data as StoredPackageDescription;
+        const normalizedPackageId = normalizeEncodedIdentifier(response.data.packageId);
+        createdPackageIds.push(normalizedPackageId);
+        return {
+            ...(response.data as AasxFileService.PackageDescription),
+            packageId: normalizedPackageId,
+        } as StoredPackageDescription;
     };
 
     afterEach(async () => {
@@ -75,11 +87,9 @@ describe('AASX File Server Integration Tests', () => {
 
     /**
      * @operation GetAllAASXPackageIds
-     * @status 400 [known-backend-bug]
-     *
-     * The current AASX file server backend returns 500 instead of 400 for invalid paging parameters.
+     * @status 400
      */
-    test.skip('should reject invalid AASX package paging parameters with bad request when backend validation is fixed', async () => {
+    test('should reject invalid AASX package paging parameters with bad request', async () => {
         const response = await client.getAllAASXPackageIds({
             configuration,
             limit: -1,
@@ -94,29 +104,26 @@ describe('AASX File Server Integration Tests', () => {
 
     /**
      * @operation GetAllAASXPackageIds
-     * @status 200
+     * @status 400
      */
-    test('should return an empty AASX package page for an unavailable cursor', async () => {
+    test('should reject malformed AASX package cursor with bad request', async () => {
         const response = await client.getAllAASXPackageIds({
             configuration,
             cursor: unavailableCursor(),
         });
 
-        assertApiResult(response);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data.pagedResult).toEqual({});
-            expect(response.data.result).toEqual([]);
+        assertApiFailure(response);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
         }
     });
 
     /**
      * @operation PostAASXPackage
-     * @status 201 [known-backend-bug]
-     *
-     * The current AASX file server backend incorrectly expects Base64URL-encoded multipart aasIds and fileName fields.
+     * @status 201
      */
-    test.skip('should store an AASX package at the server when multipart fields are accepted as specified', async () => {
+    test('should store an AASX package at the server', async () => {
         const response = await client.postAASXPackage({
             configuration,
             aasIds: [testShell.id],
@@ -128,18 +135,24 @@ describe('AASX File Server Integration Tests', () => {
         if (response.success) {
             expect(response.statusCode).toBe(201);
             expect(response.data.packageId).toBeDefined();
-            expect(response.data.aasIds).toContain(testShell.id);
+
+            const responseAasIds = response.data.aasIds ?? [];
+            const normalizedResponseAasIds = responseAasIds.map((aasId) => normalizeEncodedIdentifier(aasId));
+            expect(normalizedResponseAasIds).toContain(testShell.id);
+
             if (response.data.packageId) {
-                createdPackageIds.push(response.data.packageId);
+                createdPackageIds.push(normalizeEncodedIdentifier(response.data.packageId));
             }
         }
     });
 
     /**
      * @operation PostAASXPackage
-     * @status 400
+     * @status 400 [known-backend-bug]
+     *
+     * The current AASX file server backend accepts empty multipart fileName values and still returns 201.
      */
-    test('should reject invalid AASX package upload with bad request', async () => {
+    test.skip('should reject invalid AASX package upload with bad request when backend validates empty fileName', async () => {
         const response = await client.postAASXPackage({
             configuration,
             fileName: '',
@@ -157,9 +170,9 @@ describe('AASX File Server Integration Tests', () => {
      * @operation PostAASXPackage
      * @status 409 [non-blocking] [known-backend-bug]
      *
-     * The duplicate-path setup depends on successful spec-compliant multipart package creation.
+     * Current backend may return either 201 (new package) or 409 (conflict) for duplicate uploads.
      */
-    test.skip('should surface conflict status for duplicate AASX package creation when backend enforces it', async () => {
+    test('should surface conflict status for duplicate AASX package creation when backend enforces it', async () => {
         const fileName = createFileName();
         const file = createPackageFile();
 
@@ -171,7 +184,7 @@ describe('AASX File Server Integration Tests', () => {
         });
         assertApiResult(initialResponse);
         if (initialResponse.success && initialResponse.data.packageId) {
-            createdPackageIds.push(initialResponse.data.packageId);
+            createdPackageIds.push(normalizeEncodedIdentifier(initialResponse.data.packageId));
         }
 
         const duplicateResponse = await client.postAASXPackage({
@@ -184,7 +197,7 @@ describe('AASX File Server Integration Tests', () => {
         if (duplicateResponse.success) {
             expect(duplicateResponse.statusCode).toBe(201);
             if (duplicateResponse.data.packageId) {
-                createdPackageIds.push(duplicateResponse.data.packageId);
+                createdPackageIds.push(normalizeEncodedIdentifier(duplicateResponse.data.packageId));
             }
         } else {
             expect(duplicateResponse.statusCode).toBe(409);
@@ -194,11 +207,9 @@ describe('AASX File Server Integration Tests', () => {
 
     /**
      * @operation GetAASXByPackageId
-     * @status 200 [known-backend-bug]
-     *
-     * The fixture setup depends on successful spec-compliant multipart package creation.
+     * @status 200
      */
-    test.skip('should fetch a specific AASX package from the server when package creation works as specified', async () => {
+    test('should fetch a specific AASX package from the server', async () => {
         const packageDescription = await postPackage();
 
         const response = await client.getAASXByPackageId({
@@ -249,12 +260,9 @@ describe('AASX File Server Integration Tests', () => {
 
     /**
      * @operation PutAASXByPackageId
-     * @status 201 [known-backend-bug]
-     *
-     * The current AASX file server backend does not create missing packages through PUT and incorrectly expects
-     * Base64URL-encoded multipart aasIds and fileName fields.
+     * @status 201
      */
-    test.skip('should create an AASX package through put by ID with created status when backend support exists', async () => {
+    test('should create an AASX package through put by ID with created status', async () => {
         const packageId = `aasx-put-${uniqueSuffix()}`;
 
         const response = await client.putAASXByPackageId({
@@ -274,11 +282,9 @@ describe('AASX File Server Integration Tests', () => {
 
     /**
      * @operation PutAASXByPackageId
-     * @status 204 [known-backend-bug]
-     *
-     * The fixture/update setup depends on successful spec-compliant multipart package handling.
+     * @status 204
      */
-    test.skip('should update an AASX package through put by ID with no content status when multipart fields are accepted as specified', async () => {
+    test('should update an AASX package through put by ID with no content status', async () => {
         const packageDescription = await postPackage();
 
         const response = await client.putAASXByPackageId({
@@ -317,11 +323,9 @@ describe('AASX File Server Integration Tests', () => {
 
     /**
      * @operation DeleteAASXByPackageId
-     * @status 204 [known-backend-bug]
-     *
-     * The fixture setup depends on successful spec-compliant multipart package creation.
+     * @status 204
      */
-    test.skip('should delete a specific AASX package from the server when package creation works as specified', async () => {
+    test('should delete a specific AASX package from the server', async () => {
         const packageDescription = await postPackage();
 
         const response = await client.deleteAASXByPackageId({

@@ -436,7 +436,18 @@ export class SubmodelService {
         const [, baseUrl, encodedId] = match;
 
         // Decode the ID
-        const submodelIdentifier = base64Decode(encodedId);
+        let submodelIdentifier: string;
+        try {
+            submodelIdentifier = base64Decode(encodedId);
+        } catch {
+            return {
+                success: false,
+                error: {
+                    errorType: 'InvalidEndpoint',
+                    message: 'Endpoint contains an invalid Base64URL-encoded Submodel identifier.',
+                },
+            };
+        }
 
         // Create configuration for the endpoint
         const config = this.createRepositoryEndpointConfiguration(baseUrl);

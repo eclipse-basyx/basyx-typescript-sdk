@@ -163,16 +163,30 @@ services:
 
   # AASX File Server
   aasx-file-server:
-    image: eclipsebasyx/aasxfileserver:2.0.0-milestone-08
+    image: eclipsebasyx/aasxfileserver-go:SNAPSHOT
     container_name: aasx-file-server
+    command: ["/app/aasxfileserver"]
     ports:
       - '8087:8081'
     environment:
       # Service Configuration
-      SERVER_PORT: 8081
-      BASYX_BACKEND: "InMemory"
-      BASYX_CORS_ALLOWED_ORIGINS: "*"
-      BASYX_CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, PUT, OPTIONS, HEAD"
+      - SERVER_PORT=8081
+      - CORS_ALLOWEDORIGINS=*
+      - CORS_ALLOWEDHEADERS=*
+      - CORS_ALLOWEDCREDENTIALS=true
+      - CORS_ALLOWEDMETHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DBNAME=basyxTestDB
+      - POSTGRES_MAXOPENCONNECTIONS=500
+      - POSTGRES_MAXIDLECONNECTIONS=500
+      - POSTGRES_CONNMAXLIFETIMEMINUTES=5
+      - ABAC_ENABLED=false
+    depends_on:
+      db-schema-init:
+        condition: service_completed_successfully
 
   # PostgreSQL database
   db:
