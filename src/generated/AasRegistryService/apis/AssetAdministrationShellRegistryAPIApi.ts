@@ -13,7 +13,7 @@
  */
 
 
-import * as runtime from '../runtime';
+import * as runtime from '../../runtime';
 import type {
   AssetAdministrationShellDescriptor,
   AssetKind,
