@@ -1,4 +1,4 @@
-import { Configuration } from '../generated';
+import { Configuration, type FetchAPI } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { SubmodelService } from '../services/SubmodelService';
 import { createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
@@ -274,6 +274,43 @@ describe('SubmodelService Integration Tests', () => {
                 expect(result.data.submodels.length).toBeLessThanOrEqual(1);
                 expect(result.data.submodels.length).toBeGreaterThanOrEqual(0);
             }
+
+            // Cleanup
+            await submodelService.deleteSubmodel({ submodelIdentifier: testSubmodel.id });
+        });
+
+        test('should apply repository fetchApi when resolving registry descriptor endpoints', async () => {
+            const { testSubmodel } = createUniqueTestData();
+
+            // Register a Submodel first
+            await submodelService.createSubmodel({
+                submodel: testSubmodel,
+            });
+
+            let repositoryFetchCalls = 0;
+            const trackedFetchApi: FetchAPI = async (input, init) => {
+                repositoryFetchCalls++;
+                return fetch(input, init);
+            };
+
+            const serviceWithTrackedRepositoryFetch = new SubmodelService({
+                submodelRegistryConfig: new Configuration({ basePath: 'http://localhost:8085' }),
+                submodelRepositoryConfig: new Configuration({
+                    basePath: 'http://localhost:8082',
+                    fetchApi: trackedFetchApi,
+                }),
+            });
+
+            const result = await serviceWithTrackedRepositoryFetch.getSubmodelList({ preferRegistry: true });
+
+            assertApiResult(result);
+            if (result.success) {
+                expect(result.data.source).toBe('registry');
+                const foundSubmodel = result.data.submodels.find((s) => s.id === testSubmodel.id);
+                expect(foundSubmodel).toBeDefined();
+            }
+            // Ensures endpoint-resolution repository calls actually used repository Configuration.
+            expect(repositoryFetchCalls).toBeGreaterThan(0);
 
             // Cleanup
             await submodelService.deleteSubmodel({ submodelIdentifier: testSubmodel.id });

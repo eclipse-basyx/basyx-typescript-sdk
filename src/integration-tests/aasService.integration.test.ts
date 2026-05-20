@@ -6,7 +6,7 @@ import {
     SpecificAssetId,
 } from '@aas-core-works/aas-core3.1-typescript/types';
 import { AasDiscoveryClient } from '../clients/AasDiscoveryClient';
-import { Configuration } from '../generated';
+import { Configuration, type FetchAPI } from '../generated';
 import { base64Encode } from '../lib/base64Url';
 import { AasService } from '../services/AasService';
 import { createGlobalAssetIdFromAasId, createTestShell } from './fixtures/aasFixtures';
@@ -283,6 +283,43 @@ describe('AasService Integration Tests', () => {
                 expect(result.data.shells.length).toBeLessThanOrEqual(1);
                 expect(result.data.shells.length).toBeGreaterThanOrEqual(0);
             }
+
+            // Cleanup
+            await aasService.deleteAas({ aasIdentifier: testShell.id });
+        });
+
+        test('should apply repository fetchApi when resolving registry descriptor endpoints', async () => {
+            const { testShell } = createUniqueTestData();
+
+            // Register an AAS first
+            await aasService.createAas({
+                shell: testShell,
+            });
+
+            let repositoryFetchCalls = 0;
+            const trackedFetchApi: FetchAPI = async (input, init) => {
+                repositoryFetchCalls++;
+                return fetch(input, init);
+            };
+
+            const serviceWithTrackedRepositoryFetch = new AasService({
+                aasRegistryConfig: new Configuration({ basePath: 'http://localhost:8084' }),
+                aasRepositoryConfig: new Configuration({
+                    basePath: 'http://localhost:8081',
+                    fetchApi: trackedFetchApi,
+                }),
+            });
+
+            const result = await serviceWithTrackedRepositoryFetch.getAasList({ preferRegistry: true });
+
+            assertApiResult(result);
+            if (result.success) {
+                expect(result.data.source).toBe('registry');
+                const foundShell = result.data.shells.find((s) => s.id === testShell.id);
+                expect(foundShell).toBeDefined();
+            }
+            // Ensures endpoint-resolution repository calls actually used repository Configuration.
+            expect(repositoryFetchCalls).toBeGreaterThan(0);
 
             // Cleanup
             await aasService.deleteAas({ aasIdentifier: testShell.id });

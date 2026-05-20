@@ -15,10 +15,12 @@ High-level orchestration services:
   - Create, read, update, delete AAS with automatic registry synchronization
   - Fetch AAS with their submodels in a single call
   - Automatic endpoint resolution and fallback handling
+  - Optional registry resolution warnings and strict fail-fast mode for list operations
 - **SubmodelService**: Unified API for Submodel operations across registry and repository
   - Create, read, update, delete Submodels with automatic registry synchronization
   - Flexible endpoint-based retrieval
   - Automatic fallback to repository when registry unavailable
+  - Optional registry resolution warnings and strict fail-fast mode for list operations
 
 Clients for the AAS API components:
 
@@ -258,7 +260,16 @@ if (createResult.success) {
 const listResult = await service.getAasList();
 if (listResult.success) {
   console.log('All shells:', listResult.data.shells);
+  // Optional warnings for descriptors that could not be resolved
+  if (listResult.data.warnings?.length) {
+    console.warn('Registry resolution warnings:', listResult.data.warnings);
+  }
 }
+
+// Strict mode: fail immediately if any registry descriptor cannot be resolved
+const strictListResult = await service.getAasList({
+  strictRegistryResolution: true,
+});
 
 // Get AAS by ID (uses registry endpoint if available)
 const getResult = await service.getAasById({
@@ -431,7 +442,17 @@ const listResult = await service.getSubmodelList({ preferRegistry: true });
 if (listResult.success) {
   console.log('All submodels:', listResult.data.submodels);
   console.log('Fetched from:', listResult.data.source); // 'registry' or 'repository'
+  // Optional warnings for descriptors that could not be resolved
+  if (listResult.data.warnings?.length) {
+    console.warn('Registry resolution warnings:', listResult.data.warnings);
+  }
 }
+
+// Strict mode: fail immediately if any registry descriptor cannot be resolved
+const strictSubmodelListResult = await service.getSubmodelList({
+  preferRegistry: true,
+  strictRegistryResolution: true,
+});
 
 // Get Submodel by ID (uses registry endpoint if available)
 const getResult = await service.getSubmodelById({

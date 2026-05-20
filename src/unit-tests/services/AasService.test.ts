@@ -107,6 +107,116 @@ describe('AasService Unit Tests', () => {
             expect(mockRepositoryClient.getAssetAdministrationShellById).toHaveBeenCalledTimes(1);
         });
 
+        it('should preserve repository auth configuration when using descriptor endpoints', async () => {
+            const accessToken = vi.fn().mockResolvedValue('oidc-token');
+            const middleware = [{ pre: vi.fn(async () => undefined) }];
+            const headers = { Authorization: 'Bearer test-token' };
+            const repositoryConfigWithAuth = new Configuration({
+                basePath: 'http://localhost:8081',
+                accessToken,
+                middleware,
+                headers,
+            });
+
+            const serviceWithAuthConfig = new AasService({
+                aasRegistryConfig,
+                aasRepositoryConfig: repositoryConfigWithAuth,
+            });
+            const registryClientForAuthConfig = (
+                AasRegistryClient as MockedClass<typeof AasRegistryClient>
+            ).mock.instances.at(-1) as Mocked<AasRegistryClient>;
+            const repositoryClientForAuthConfig = (
+                AasRepositoryClient as MockedClass<typeof AasRepositoryClient>
+            ).mock.instances.at(-1) as Mocked<AasRepositoryClient>;
+
+            registryClientForAuthConfig.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testDescriptor],
+                    pagedResult: undefined,
+                },
+            });
+            repositoryClientForAuthConfig.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
+                success: true,
+                data: testShell,
+            });
+
+            const result = await serviceWithAuthConfig.getAasList();
+
+            expect(result.success).toBe(true);
+            expect(repositoryClientForAuthConfig.getAssetAdministrationShellById).toHaveBeenCalledTimes(1);
+
+            const endpointConfig = repositoryClientForAuthConfig.getAssetAdministrationShellById.mock.calls[0][0]
+                .configuration as Configuration;
+            expect(endpointConfig.basePath).toBe('http://localhost:8081');
+            expect(endpointConfig.accessToken).toBe(accessToken);
+            expect(endpointConfig.middleware).toEqual(middleware);
+            expect(endpointConfig.headers).toEqual(headers);
+        });
+
+        it('should fall back to repository when all registry endpoint resolutions fail', async () => {
+            const mockShells = [testShell];
+            mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testDescriptor],
+                    pagedResult: undefined,
+                },
+            });
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'UnauthorizedError', message: 'Token missing' },
+            });
+            mockRepositoryClient.getAllAssetAdministrationShells = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: mockShells,
+                    pagedResult: undefined,
+                },
+            });
+
+            const result = await aasService.getAasList();
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.source).toBe('repository');
+                expect(result.data.shells).toEqual(mockShells);
+                expect(result.data.warnings).toBeDefined();
+                expect(result.data.warnings?.[0]).toMatchObject({
+                    descriptorId: testAasId,
+                    errorType: 'UnauthorizedError',
+                });
+            }
+            expect(mockRepositoryClient.getAllAssetAdministrationShells).toHaveBeenCalledTimes(1);
+        });
+
+        it('should fail when strictRegistryResolution is true and registry endpoint resolution fails', async () => {
+            mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testDescriptor],
+                    pagedResult: undefined,
+                },
+            });
+            mockRepositoryClient.getAssetAdministrationShellById = vi.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'UnauthorizedError', message: 'Token missing' },
+            });
+
+            const result = await aasService.getAasList({ strictRegistryResolution: true });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('RegistryResolutionError');
+                expect(result.error.warnings).toBeDefined();
+                expect(result.error.warnings[0]).toMatchObject({
+                    descriptorId: testAasId,
+                    errorType: 'UnauthorizedError',
+                });
+            }
+            expect(mockRepositoryClient.getAllAssetAdministrationShells).not.toHaveBeenCalled();
+        });
+
         it('should fall back to repository when registry fails', async () => {
             const mockShells = [testShell];
             mockRegistryClient.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
