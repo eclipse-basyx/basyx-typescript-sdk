@@ -61,7 +61,11 @@ export class SubmodelService {
      *  - cursor?: Pagination cursor
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { submodels, source, conceptDescriptions? } }` or `{ success: false; error: ... }`.
+     * @returns Either
+     *  `{ success: true; data: { submodels, source, conceptDescriptions?, warnings? } }`
+     *  or `{ success: false; error: ... }`.
+     *  When `strictRegistryResolution` is `true`, unresolved registry descriptors return
+     *  `RegistryResolutionError` with `warnings`.
      */
     async getSubmodelList(options?: {
         preferRegistry?: boolean;
@@ -95,53 +99,72 @@ export class SubmodelService {
 
             if (registryResult.success) {
                 const descriptors = registryResult.data.result;
-                const warnings: SubmodelListResolutionWarning[] = [];
 
-                // Fetch submodels from their endpoints
-                const submodelPromises = descriptors.map(async (descriptor): Promise<Submodel | null> => {
-                    if (!descriptor.id) {
-                        warnings.push({
-                            errorType: 'MissingDescriptorId',
-                            message: 'Submodel descriptor does not contain an id and cannot be resolved',
-                        });
-                        return null;
-                    }
+                // Resolve submodels from descriptor endpoints and aggregate warnings deterministically.
+                const descriptorResults = await Promise.all(
+                    descriptors.map(
+                        async (
+                            descriptor
+                        ): Promise<{
+                            submodel: Submodel | null;
+                            warning?: SubmodelListResolutionWarning;
+                        }> => {
+                            if (!descriptor.id) {
+                                return {
+                                    submodel: null,
+                                    warning: {
+                                        errorType: 'MissingDescriptorId',
+                                        message: 'Submodel descriptor does not contain an id and cannot be resolved',
+                                    },
+                                };
+                            }
 
-                    const endpoint = descriptor.endpoints?.[0]?.protocolInformation?.href;
-                    if (!endpoint) {
-                        warnings.push({
-                            submodelIdentifier: descriptor.id,
-                            errorType: 'MissingEndpoint',
-                            message: 'Submodel descriptor has no endpoint and cannot be resolved',
-                        });
-                        return null;
-                    }
+                            const endpoint = descriptor.endpoints?.[0]?.protocolInformation?.href;
+                            if (!endpoint) {
+                                return {
+                                    submodel: null,
+                                    warning: {
+                                        submodelIdentifier: descriptor.id,
+                                        errorType: 'MissingEndpoint',
+                                        message: 'Submodel descriptor has no endpoint and cannot be resolved',
+                                    },
+                                };
+                            }
 
-                    const submodelResult = await this.getSubmodelByEndpoint({ endpoint });
-                    if (submodelResult.success) {
-                        return submodelResult.data.submodel;
-                    }
+                            const submodelResult = await this.getSubmodelByEndpoint({ endpoint });
+                            if (submodelResult.success) {
+                                return { submodel: submodelResult.data.submodel };
+                            }
 
-                    const resolutionError = submodelResult.error as
-                        | {
-                              errorType?: string;
-                              message?: string;
-                              messages?: Array<{ text?: string }>;
-                          }
-                        | undefined;
-                    warnings.push({
-                        submodelIdentifier: descriptor.id,
-                        endpoint,
-                        errorType: resolutionError?.errorType || 'EndpointResolutionError',
-                        message:
-                            resolutionError?.message ||
-                            resolutionError?.messages?.[0]?.text ||
-                            'Failed to resolve Submodel from descriptor endpoint',
-                    });
-                    return null;
-                });
+                            const resolutionError = submodelResult.error as
+                                | {
+                                      errorType?: string;
+                                      message?: string;
+                                      messages?: Array<{ text?: string }>;
+                                  }
+                                | undefined;
+                            return {
+                                submodel: null,
+                                warning: {
+                                    submodelIdentifier: descriptor.id,
+                                    endpoint,
+                                    errorType: resolutionError?.errorType || 'EndpointResolutionError',
+                                    message:
+                                        resolutionError?.message ||
+                                        resolutionError?.messages?.[0]?.text ||
+                                        'Failed to resolve Submodel from descriptor endpoint',
+                                },
+                            };
+                        }
+                    )
+                );
 
-                const submodels = (await Promise.all(submodelPromises)).filter((sm): sm is Submodel => sm !== null);
+                const submodels = descriptorResults
+                    .map((result) => result.submodel)
+                    .filter((sm): sm is Submodel => sm !== null);
+                const warnings = descriptorResults
+                    .map((result) => result.warning)
+                    .filter((warning): warning is SubmodelListResolutionWarning => warning !== undefined);
 
                 if (strictRegistryResolution && warnings.length > 0) {
                     return {

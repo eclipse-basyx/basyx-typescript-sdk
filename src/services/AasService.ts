@@ -83,7 +83,11 @@ export class AasService {
      *  - includeSubmodels?: Whether to fetch submodels for each shell (default: false)
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { shells, source, submodels? } }` or `{ success: false; error: ... }`.
+     * @returns Either
+     *  `{ success: true; data: { shells, source, submodels?, warnings? } }`
+     *  or `{ success: false; error: ... }`.
+     *  When `strictRegistryResolution` is `true`, unresolved registry descriptors return
+     *  `RegistryResolutionError` with `warnings`.
      */
     async getAasList(options?: {
         preferRegistry?: boolean;
@@ -199,7 +203,6 @@ export class AasService {
                         },
                     };
                 }
-
             } else {
                 registryResolutionWarnings = [];
             }

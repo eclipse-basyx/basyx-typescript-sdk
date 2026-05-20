@@ -106,8 +106,9 @@ describe('SubmodelService Unit Tests', () => {
                 submodelRegistryConfig,
                 submodelRepositoryConfig: repositoryConfigWithAuth,
             });
-            const registryClientForAuthConfig = (SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>)
-                .mock.instances.at(-1) as Mocked<SubmodelRegistryClient>;
+            const registryClientForAuthConfig = (
+                SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>
+            ).mock.instances.at(-1) as Mocked<SubmodelRegistryClient>;
             const repositoryClientForAuthConfig = (
                 SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
             ).mock.instances.at(-1) as Mocked<SubmodelRepositoryClient>;

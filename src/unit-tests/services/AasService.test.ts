@@ -122,10 +122,12 @@ describe('AasService Unit Tests', () => {
                 aasRegistryConfig,
                 aasRepositoryConfig: repositoryConfigWithAuth,
             });
-            const registryClientForAuthConfig = (AasRegistryClient as MockedClass<typeof AasRegistryClient>).mock
-                .instances.at(-1) as Mocked<AasRegistryClient>;
-            const repositoryClientForAuthConfig = (AasRepositoryClient as MockedClass<typeof AasRepositoryClient>).mock
-                .instances.at(-1) as Mocked<AasRepositoryClient>;
+            const registryClientForAuthConfig = (
+                AasRegistryClient as MockedClass<typeof AasRegistryClient>
+            ).mock.instances.at(-1) as Mocked<AasRegistryClient>;
+            const repositoryClientForAuthConfig = (
+                AasRepositoryClient as MockedClass<typeof AasRepositoryClient>
+            ).mock.instances.at(-1) as Mocked<AasRepositoryClient>;
 
             registryClientForAuthConfig.getAllAssetAdministrationShellDescriptors = vi.fn().mockResolvedValue({
                 success: true,
