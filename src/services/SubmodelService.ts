@@ -14,6 +14,13 @@ export interface SubmodelServiceConfig {
     conceptDescriptionRepositoryConfig?: Configuration;
 }
 
+export interface SubmodelListResolutionWarning {
+    submodelIdentifier?: string;
+    endpoint?: string;
+    errorType: string;
+    message: string;
+}
+
 /**
  * SubmodelService combines Submodel Registry, Submodel Repository, and Concept Description Repository clients
  * to provide higher-level functionality for working with Submodels.
@@ -49,6 +56,7 @@ export class SubmodelService {
      *
      * @param options Object containing:
      *  - preferRegistry?: Whether to prefer registry over repository (default: true)
+     *  - strictRegistryResolution?: Whether registry endpoint resolution failures should fail immediately (default: false)
      *  - limit?: Maximum number of elements to retrieve
      *  - cursor?: Pagination cursor
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
@@ -57,6 +65,7 @@ export class SubmodelService {
      */
     async getSubmodelList(options?: {
         preferRegistry?: boolean;
+        strictRegistryResolution?: boolean;
         limit?: number;
         cursor?: string;
         includeConceptDescriptions?: boolean;
@@ -66,12 +75,15 @@ export class SubmodelService {
                 submodels: Submodel[];
                 source: 'registry' | 'repository';
                 conceptDescriptions?: ConceptDescription[];
+                warnings?: SubmodelListResolutionWarning[];
             },
             any
         >
     > {
         const preferRegistry = options?.preferRegistry ?? true;
+        const strictRegistryResolution = options?.strictRegistryResolution ?? false;
         const includeConceptDescriptions = options?.includeConceptDescriptions ?? false;
+        let registryResolutionWarnings: SubmodelListResolutionWarning[] = [];
 
         // Try registry first if configured and preferred
         if (preferRegistry && this.submodelRegistryConfig) {
@@ -83,34 +95,87 @@ export class SubmodelService {
 
             if (registryResult.success) {
                 const descriptors = registryResult.data.result;
+                const warnings: SubmodelListResolutionWarning[] = [];
 
                 // Fetch submodels from their endpoints
-                const submodelPromises = descriptors.map(async (descriptor) => {
+                const submodelPromises = descriptors.map(async (descriptor): Promise<Submodel | null> => {
+                    if (!descriptor.id) {
+                        warnings.push({
+                            errorType: 'MissingDescriptorId',
+                            message: 'Submodel descriptor does not contain an id and cannot be resolved',
+                        });
+                        return null;
+                    }
+
                     const endpoint = descriptor.endpoints?.[0]?.protocolInformation?.href;
                     if (!endpoint) {
+                        warnings.push({
+                            submodelIdentifier: descriptor.id,
+                            errorType: 'MissingEndpoint',
+                            message: 'Submodel descriptor has no endpoint and cannot be resolved',
+                        });
                         return null;
                     }
 
                     const submodelResult = await this.getSubmodelByEndpoint({ endpoint });
-                    return submodelResult.success ? submodelResult.data.submodel : null;
+                    if (submodelResult.success) {
+                        return submodelResult.data.submodel;
+                    }
+
+                    const resolutionError = submodelResult.error as
+                        | {
+                              errorType?: string;
+                              message?: string;
+                              messages?: Array<{ text?: string }>;
+                          }
+                        | undefined;
+                    warnings.push({
+                        submodelIdentifier: descriptor.id,
+                        endpoint,
+                        errorType: resolutionError?.errorType || 'EndpointResolutionError',
+                        message:
+                            resolutionError?.message ||
+                            resolutionError?.messages?.[0]?.text ||
+                            'Failed to resolve Submodel from descriptor endpoint',
+                    });
+                    return null;
                 });
 
                 const submodels = (await Promise.all(submodelPromises)).filter((sm): sm is Submodel => sm !== null);
 
-                // Fetch concept descriptions if requested
-                let conceptDescriptions: ConceptDescription[] | undefined;
-                if (includeConceptDescriptions) {
-                    conceptDescriptions = await this.fetchConceptDescriptionsForSubmodels(submodels);
+                if (strictRegistryResolution && warnings.length > 0) {
+                    return {
+                        success: false,
+                        error: {
+                            errorType: 'RegistryResolutionError',
+                            message: 'Failed to resolve one or more Submodel descriptors via registry endpoints',
+                            warnings,
+                        },
+                    };
                 }
 
-                return {
-                    success: true,
-                    data: {
-                        submodels,
-                        source: 'registry',
-                        ...(conceptDescriptions && { conceptDescriptions }),
-                    },
-                };
+                // If registry descriptors exist but none were resolvable, fall back to repository when possible.
+                if (warnings.length > 0 && submodels.length === 0 && this.submodelRepositoryConfig) {
+                    registryResolutionWarnings = warnings;
+                } else {
+                    // Fetch concept descriptions if requested
+                    let conceptDescriptions: ConceptDescription[] | undefined;
+                    if (includeConceptDescriptions) {
+                        conceptDescriptions = await this.fetchConceptDescriptionsForSubmodels(submodels);
+                    }
+
+                    return {
+                        success: true,
+                        data: {
+                            submodels,
+                            source: 'registry',
+                            ...(conceptDescriptions && { conceptDescriptions }),
+                            ...(warnings.length > 0 && { warnings }),
+                        },
+                    };
+                }
+            } else {
+                registryResolutionWarnings = [];
             }
         }
 
@@ -137,6 +202,7 @@ export class SubmodelService {
                         submodels,
                         source: 'repository',
                         ...(conceptDescriptions && { conceptDescriptions }),
+                        ...(registryResolutionWarnings.length > 0 && { warnings: registryResolutionWarnings }),
                     },
                 };
             }
@@ -350,7 +416,7 @@ export class SubmodelService {
         const submodelIdentifier = base64Decode(encodedId);
 
         // Create configuration for the endpoint
-        const config = new Configuration({ basePath: baseUrl });
+        const config = this.createRepositoryEndpointConfiguration(baseUrl);
 
         // Fetch the submodel
         const submodelResult = await this.submodelRepositoryClient.getSubmodelById({
@@ -377,6 +443,31 @@ export class SubmodelService {
                 ...(conceptDescriptions && { conceptDescriptions }),
             },
         };
+    }
+
+    /**
+     * Creates a repository configuration for an endpoint while preserving auth and middleware.
+     *
+     * @param basePath The endpoint base path to target
+     * @returns Configuration with endpoint basePath plus repository auth/settings
+     */
+    private createRepositoryEndpointConfiguration(basePath: string): Configuration {
+        if (!this.submodelRepositoryConfig) {
+            return new Configuration({ basePath });
+        }
+
+        return new Configuration({
+            basePath,
+            fetchApi: this.submodelRepositoryConfig.fetchApi,
+            middleware: this.submodelRepositoryConfig.middleware,
+            queryParamsStringify: this.submodelRepositoryConfig.queryParamsStringify,
+            username: this.submodelRepositoryConfig.username,
+            password: this.submodelRepositoryConfig.password,
+            apiKey: this.submodelRepositoryConfig.apiKey,
+            accessToken: this.submodelRepositoryConfig.accessToken,
+            headers: this.submodelRepositoryConfig.headers,
+            credentials: this.submodelRepositoryConfig.credentials,
+        });
     }
 
     /**

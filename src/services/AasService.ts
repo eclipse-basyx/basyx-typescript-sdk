@@ -25,6 +25,13 @@ export interface AasServiceConfig {
     discoveryConfig?: Configuration;
 }
 
+export interface AasListResolutionWarning {
+    descriptorId?: string;
+    endpoint?: string;
+    errorType: string;
+    message: string;
+}
+
 /**
  * AasService combines and orchestrates multiple clients and services, including:
  * - AasRegistryClient
@@ -70,6 +77,7 @@ export class AasService {
      *
      * @param options Object containing:
      *  - preferRegistry?: Whether to prefer registry over repository (default: true)
+     *  - strictRegistryResolution?: Whether registry endpoint resolution failures should fail immediately (default: false)
      *  - limit?: Maximum number of elements to retrieve
      *  - cursor?: Pagination cursor
      *  - includeSubmodels?: Whether to fetch submodels for each shell (default: false)
@@ -79,6 +87,7 @@ export class AasService {
      */
     async getAasList(options?: {
         preferRegistry?: boolean;
+        strictRegistryResolution?: boolean;
         limit?: number;
         cursor?: string;
         includeSubmodels?: boolean;
@@ -89,12 +98,15 @@ export class AasService {
                 shells: AssetAdministrationShell[];
                 source: 'registry' | 'repository';
                 submodels?: Record<string, Submodel[]>;
+                warnings?: AasListResolutionWarning[];
             },
             any
         >
     > {
         const preferRegistry = options?.preferRegistry ?? true;
+        const strictRegistryResolution = options?.strictRegistryResolution ?? false;
         const includeSubmodels = options?.includeSubmodels ?? false;
+        let registryResolutionWarnings: AasListResolutionWarning[] = [];
 
         // Try registry first if configured and preferred
         if (preferRegistry && this.aasRegistryConfig) {
@@ -107,36 +119,89 @@ export class AasService {
             if (registryResult.success) {
                 // Fetch actual shells from descriptor endpoints
                 const shells: AssetAdministrationShell[] = [];
+                const warnings: AasListResolutionWarning[] = [];
                 for (const descriptor of registryResult.data.result) {
-                    const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
-                    if (endpoint && descriptor.id) {
-                        // Extract base URL from endpoint (remove /shells/{id} part)
-                        const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
-                        const config = new Configuration({ basePath: baseUrl });
-                        const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
-                            configuration: config,
-                            aasIdentifier: descriptor.id,
+                    if (!descriptor.id) {
+                        warnings.push({
+                            errorType: 'MissingDescriptorId',
+                            message: 'AAS descriptor does not contain an id and cannot be resolved',
                         });
-                        if (shellResult.success) {
-                            shells.push(shellResult.data);
-                        }
+                        continue;
+                    }
+
+                    const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
+                    if (!endpoint) {
+                        warnings.push({
+                            descriptorId: descriptor.id,
+                            errorType: 'MissingEndpoint',
+                            message: 'AAS descriptor has no AAS-3.0 endpoint and cannot be resolved',
+                        });
+                        continue;
+                    }
+
+                    // Extract base URL from endpoint (remove /shells/{id} part)
+                    const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
+                    const config = this.createRepositoryEndpointConfiguration(baseUrl);
+                    const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
+                        configuration: config,
+                        aasIdentifier: descriptor.id,
+                    });
+                    if (shellResult.success) {
+                        shells.push(shellResult.data);
+                    } else {
+                        const resolutionError = shellResult.error as
+                            | {
+                                  errorType?: string;
+                                  message?: string;
+                                  messages?: Array<{ text?: string }>;
+                              }
+                            | undefined;
+                        warnings.push({
+                            descriptorId: descriptor.id,
+                            endpoint,
+                            errorType: resolutionError?.errorType || 'EndpointResolutionError',
+                            message:
+                                resolutionError?.message ||
+                                resolutionError?.messages?.[0]?.text ||
+                                'Failed to resolve AAS from descriptor endpoint',
+                        });
                     }
                 }
 
-                // Fetch submodels if requested
-                let submodelsMap: Record<string, Submodel[]> | undefined;
-                if (includeSubmodels) {
-                    submodelsMap = await this.fetchSubmodelsForShells(shells, options?.includeConceptDescriptions);
+                if (strictRegistryResolution && warnings.length > 0) {
+                    return {
+                        success: false,
+                        error: {
+                            errorType: 'RegistryResolutionError',
+                            message: 'Failed to resolve one or more AAS descriptors via registry endpoints',
+                            warnings,
+                        },
+                    };
                 }
 
-                return {
-                    success: true,
-                    data: {
-                        shells,
-                        source: 'registry',
-                        ...(submodelsMap && { submodels: submodelsMap }),
-                    },
-                };
+                // If registry descriptors exist but none were resolvable, fall back to repository when possible.
+                if (warnings.length > 0 && shells.length === 0 && this.aasRepositoryConfig) {
+                    registryResolutionWarnings = warnings;
+                } else {
+                    // Fetch submodels if requested
+                    let submodelsMap: Record<string, Submodel[]> | undefined;
+                    if (includeSubmodels) {
+                        submodelsMap = await this.fetchSubmodelsForShells(shells, options?.includeConceptDescriptions);
+                    }
+
+                    return {
+                        success: true,
+                        data: {
+                            shells,
+                            source: 'registry',
+                            ...(submodelsMap && { submodels: submodelsMap }),
+                            ...(warnings.length > 0 && { warnings }),
+                        },
+                    };
+                }
+
+            } else {
+                registryResolutionWarnings = [];
             }
         }
 
@@ -163,6 +228,7 @@ export class AasService {
                         shells,
                         source: 'repository',
                         ...(submodelsMap && { submodels: submodelsMap }),
+                        ...(registryResolutionWarnings.length > 0 && { warnings: registryResolutionWarnings }),
                     },
                 };
             }
@@ -226,7 +292,7 @@ export class AasService {
                     // Extract base URL from endpoint (remove /shells/{id} part)
                     const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
                     // Try to fetch from descriptor endpoint
-                    const config = new Configuration({ basePath: baseUrl });
+                    const config = this.createRepositoryEndpointConfiguration(baseUrl);
                     const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
                         configuration: config,
                         aasIdentifier,
@@ -397,7 +463,7 @@ export class AasService {
         const aasIdentifier = base64Decode(encodedId);
 
         // Create configuration for the endpoint
-        const config = new Configuration({ basePath: baseUrl });
+        const config = this.createRepositoryEndpointConfiguration(baseUrl);
 
         // Fetch the shell
         const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
@@ -860,6 +926,31 @@ export class AasService {
                 submodelElementPath,
             },
         };
+    }
+
+    /**
+     * Creates a repository configuration for an endpoint while preserving auth and middleware.
+     *
+     * @param basePath The endpoint base path to target
+     * @returns Configuration with endpoint basePath plus repository auth/settings
+     */
+    private createRepositoryEndpointConfiguration(basePath: string): Configuration {
+        if (!this.aasRepositoryConfig) {
+            return new Configuration({ basePath });
+        }
+
+        return new Configuration({
+            basePath,
+            fetchApi: this.aasRepositoryConfig.fetchApi,
+            middleware: this.aasRepositoryConfig.middleware,
+            queryParamsStringify: this.aasRepositoryConfig.queryParamsStringify,
+            username: this.aasRepositoryConfig.username,
+            password: this.aasRepositoryConfig.password,
+            apiKey: this.aasRepositoryConfig.apiKey,
+            accessToken: this.aasRepositoryConfig.accessToken,
+            headers: this.aasRepositoryConfig.headers,
+            credentials: this.aasRepositoryConfig.credentials,
+        });
     }
 
     /**

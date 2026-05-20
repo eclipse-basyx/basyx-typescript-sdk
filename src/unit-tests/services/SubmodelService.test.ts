@@ -91,6 +91,115 @@ describe('SubmodelService Unit Tests', () => {
             expect(mockRepositoryClient.getSubmodelById).toHaveBeenCalledTimes(1);
         });
 
+        it('should preserve repository auth configuration when using descriptor endpoints', async () => {
+            const accessToken = vi.fn().mockResolvedValue('oidc-token');
+            const middleware = [{ pre: vi.fn(async () => undefined) }];
+            const headers = { Authorization: 'Bearer test-token' };
+            const repositoryConfigWithAuth = new Configuration({
+                basePath: 'http://localhost:8081',
+                accessToken,
+                middleware,
+                headers,
+            });
+
+            const serviceWithAuthConfig = new SubmodelService({
+                submodelRegistryConfig,
+                submodelRepositoryConfig: repositoryConfigWithAuth,
+            });
+            const registryClientForAuthConfig = (SubmodelRegistryClient as MockedClass<typeof SubmodelRegistryClient>)
+                .mock.instances.at(-1) as Mocked<SubmodelRegistryClient>;
+            const repositoryClientForAuthConfig = (
+                SubmodelRepositoryClient as MockedClass<typeof SubmodelRepositoryClient>
+            ).mock.instances.at(-1) as Mocked<SubmodelRepositoryClient>;
+
+            registryClientForAuthConfig.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testDescriptor],
+                    pagedResult: undefined,
+                },
+            });
+            repositoryClientForAuthConfig.getSubmodelById = vi.fn().mockResolvedValue({
+                success: true,
+                data: testSubmodel,
+            });
+
+            const result = await serviceWithAuthConfig.getSubmodelList();
+
+            expect(result.success).toBe(true);
+            expect(repositoryClientForAuthConfig.getSubmodelById).toHaveBeenCalledTimes(1);
+
+            const endpointConfig = repositoryClientForAuthConfig.getSubmodelById.mock.calls[0][0]
+                .configuration as Configuration;
+            expect(endpointConfig.basePath).toBe('http://localhost:8081');
+            expect(endpointConfig.accessToken).toBe(accessToken);
+            expect(endpointConfig.middleware).toEqual(middleware);
+            expect(endpointConfig.headers).toEqual(headers);
+        });
+
+        it('should fall back to repository when all registry endpoint resolutions fail', async () => {
+            const mockSubmodels = [testSubmodel];
+            mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testDescriptor],
+                    pagedResult: undefined,
+                },
+            });
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'UnauthorizedError', message: 'Token missing' },
+            });
+            mockRepositoryClient.getAllSubmodels = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: mockSubmodels,
+                    pagedResult: undefined,
+                },
+            });
+
+            const result = await submodelService.getSubmodelList();
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.source).toBe('repository');
+                expect(result.data.submodels).toEqual(mockSubmodels);
+                expect(result.data.warnings).toBeDefined();
+                expect(result.data.warnings?.[0]).toMatchObject({
+                    submodelIdentifier: testSubmodelId,
+                    errorType: 'UnauthorizedError',
+                });
+            }
+            expect(mockRepositoryClient.getAllSubmodels).toHaveBeenCalledTimes(1);
+        });
+
+        it('should fail when strictRegistryResolution is true and registry endpoint resolution fails', async () => {
+            mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
+                success: true,
+                data: {
+                    result: [testDescriptor],
+                    pagedResult: undefined,
+                },
+            });
+            mockRepositoryClient.getSubmodelById = vi.fn().mockResolvedValue({
+                success: false,
+                error: { errorType: 'UnauthorizedError', message: 'Token missing' },
+            });
+
+            const result = await submodelService.getSubmodelList({ strictRegistryResolution: true });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                expect(result.error.errorType).toBe('RegistryResolutionError');
+                expect(result.error.warnings).toBeDefined();
+                expect(result.error.warnings[0]).toMatchObject({
+                    submodelIdentifier: testSubmodelId,
+                    errorType: 'UnauthorizedError',
+                });
+            }
+            expect(mockRepositoryClient.getAllSubmodels).not.toHaveBeenCalled();
+        });
+
         it('should fall back to repository when registry fails', async () => {
             const mockSubmodels = [testSubmodel];
             mockRegistryClient.getAllSubmodelDescriptors = vi.fn().mockResolvedValue({
