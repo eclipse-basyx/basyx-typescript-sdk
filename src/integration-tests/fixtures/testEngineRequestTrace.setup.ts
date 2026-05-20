@@ -282,11 +282,13 @@ function resolveRequestHeaders(input: RequestInfo | URL, init: RequestInit | und
 }
 
 function resolveCurrentTestName(): string {
-    const maybeExpect = (globalThis as {
-        expect?: {
-            getState?: () => { currentTestName?: string };
-        };
-    }).expect;
+    const maybeExpect = (
+        globalThis as {
+            expect?: {
+                getState?: () => { currentTestName?: string };
+            };
+        }
+    ).expect;
 
     return maybeExpect?.getState?.().currentTestName || '(unknown-test)';
 }
