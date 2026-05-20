@@ -197,6 +197,40 @@ describe('AAS Repository Integration Tests', () => {
         }
     });
 
+    test('should attach Authorization header from accessToken configuration', async () => {
+        const scopedShell = createUniqueShell();
+        let sawBearerToken = false;
+        const trackedConfiguration = new Configuration({
+            basePath: getIntegrationBasePath('aasRepository'),
+            accessToken: async () => 'integration-token',
+            fetchApi: async (input, init) => {
+                const authorizationHeader = new Headers(init?.headers).get('Authorization');
+                if (authorizationHeader === 'Bearer integration-token') {
+                    sawBearerToken = true;
+                }
+                return fetch(input, init);
+            },
+        });
+
+        const createResponse = await client.postAssetAdministrationShell({
+            configuration: trackedConfiguration,
+            assetAdministrationShell: scopedShell,
+        });
+        assertApiResult(createResponse);
+
+        const response = await client.getAssetAdministrationShellById({
+            configuration: trackedConfiguration,
+            aasIdentifier: scopedShell.id,
+        });
+
+        try {
+            assertApiResult(response);
+            expect(sawBearerToken).toBe(true);
+        } finally {
+            await cleanupShell(scopedShell.id);
+        }
+    });
+
     /**
      * @operation GetAssetAdministrationShellById
      * @status 400

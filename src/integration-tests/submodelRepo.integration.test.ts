@@ -221,6 +221,36 @@ describe('Submodel Repository Integration Tests', () => {
         }
     });
 
+    test('should attach Authorization header from accessToken configuration', async () => {
+        const scopedSubmodel = createUniqueSubmodelFixture();
+        let sawBearerToken = false;
+        const trackedConfiguration = new Configuration({
+            basePath: getIntegrationBasePath('submodelRepository'),
+            accessToken: async () => 'integration-token',
+            fetchApi: async (input, init) => {
+                const authorizationHeader = new Headers(init?.headers).get('Authorization');
+                if (authorizationHeader === 'Bearer integration-token') {
+                    sawBearerToken = true;
+                }
+                return fetch(input, init);
+            },
+        });
+
+        const createResponse = await client.postSubmodel({
+            configuration: trackedConfiguration,
+            submodel: scopedSubmodel,
+        });
+        assertApiResult(createResponse);
+
+        const response = await client.getSubmodelById({
+            configuration: trackedConfiguration,
+            submodelIdentifier: scopedSubmodel.id,
+        });
+
+        assertApiResult(response);
+        expect(sawBearerToken).toBe(true);
+    });
+
     /**
      * @operation GetSubmodelById
      * @status 400

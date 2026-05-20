@@ -214,6 +214,8 @@ async function getAllShells() {
   const client = new AasRepositoryClient();
   const configuration = new Configuration({
     basePath: 'http://localhost:8081',
+    // Optional: automatically sends `Authorization: Bearer <token>` on requests
+    accessToken: async () => 'your-oidc-access-token',
   });
 
   const response = await client.getAllAssetAdministrationShells({ configuration });
@@ -225,6 +227,9 @@ async function getAllShells() {
   }
 }
 ```
+
+`Configuration.accessToken` is applied automatically by the runtime. You only need middleware if you want custom auth
+logic beyond bearer token injection.
 
 ### Using the AasService (High-level API)
 

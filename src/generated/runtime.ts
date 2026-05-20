@@ -151,6 +151,13 @@ export class BaseAPI {
 
         const headers = Object.assign({}, this.configuration.headers, context.headers);
         Object.keys(headers).forEach(key => headers[key] === undefined ? delete headers[key] : {});
+        const hasAuthorizationHeader = Object.keys(headers).some((key) => key.toLowerCase() === 'authorization');
+        if (!hasAuthorizationHeader && this.configuration.accessToken) {
+            const token = await this.configuration.accessToken();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
 
         const initOverrideFn =
             typeof initOverrides === "function"
