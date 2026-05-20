@@ -6,6 +6,8 @@ import { URL } from 'node:url';
 const REPORT_FORMATS = new Set(['console', 'json', 'junit', 'markdown']);
 const DEFAULT_REPORTS = ['console', 'json'];
 const ENGINE_MODE_ENV = 'BASYX_TEST_ENGINE_MODE';
+const REQUEST_TRACE_ENV = 'BASYX_TEST_ENGINE_REQUEST_TRACE_FILE';
+const MAX_TRACE_SNIPPET_LENGTH = 600;
 
 const COMPONENT_CATALOG = {
     'aas-repository': {
@@ -285,6 +287,262 @@ function formatFailureDetailLine(message) {
     return normalizeFailureMessage(message).replace(/\s+/g, ' ').trim();
 }
 
+function truncateTraceSnippet(value, maxLength = MAX_TRACE_SNIPPET_LENGTH) {
+    const compact = normalizeFailureMessage(value).replace(/\s+/g, ' ').trim();
+    if (compact.length <= maxLength) {
+        return compact;
+    }
+
+    return `${compact.slice(0, maxLength)}...`;
+}
+
+function loadLineDelimitedJson(filePath) {
+    if (!filePath || !fs.existsSync(filePath)) {
+        return [];
+    }
+
+    const lines = fs
+        .readFileSync(filePath, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+    const values = [];
+    for (const line of lines) {
+        try {
+            values.push(JSON.parse(line));
+        } catch {
+            // Ignore malformed trace rows to keep reporting resilient.
+        }
+    }
+
+    return values;
+}
+
+function parseIntegrationOperationAnnotations(testFilePath) {
+    if (!testFilePath || !fs.existsSync(testFilePath)) {
+        return [];
+    }
+
+    const source = fs.readFileSync(testFilePath, 'utf8');
+    const matches = [];
+    const testBlockRegex = /\/\*\*([\s\S]*?)\*\/\s*(?:test|it)(?:\.skip)?\(\s*(['"`])(.+?)\2\s*,/g;
+
+    let match;
+    while ((match = testBlockRegex.exec(source)) !== null) {
+        const jsdoc = match[1] ?? '';
+        const testName = match[3] ?? '';
+        const operationMatch = jsdoc.match(/@operation\s+([A-Za-z0-9_-]+)/);
+        if (!operationMatch) {
+            continue;
+        }
+
+        matches.push({
+            testName,
+            operationId: operationMatch[1],
+        });
+    }
+
+    return matches;
+}
+
+function buildOperationEndpointLookup(operationAnnotations, openApiMatrix) {
+    const operationToEndpoint = new Map();
+    for (const row of openApiMatrix ?? []) {
+        if (!row.operationId) {
+            continue;
+        }
+
+        operationToEndpoint.set(row.operationId, {
+            method: (row.method || '').toUpperCase(),
+            endpoint: row.routePath || '',
+        });
+    }
+
+    const lookup = new Map();
+    for (const annotation of operationAnnotations) {
+        const endpointInfo = operationToEndpoint.get(annotation.operationId);
+        if (!endpointInfo) {
+            continue;
+        }
+
+        lookup.set(annotation.testName, {
+            operationId: annotation.operationId,
+            method: endpointInfo.method,
+            endpoint: endpointInfo.endpoint,
+        });
+    }
+
+    return lookup;
+}
+
+function normalizeComparableName(value) {
+    return String(value || '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function resolveCheckTestName(checkName, explicitTestName, knownTestNames) {
+    const normalizedKnown = knownTestNames.map((name) => ({
+        original: name,
+        normalized: normalizeComparableName(name),
+    }));
+
+    const candidates = [explicitTestName, checkName].map((entry) => normalizeComparableName(entry)).filter(Boolean);
+    for (const candidate of candidates) {
+        const exactMatch = normalizedKnown.find((entry) => entry.normalized === candidate);
+        if (exactMatch) {
+            return exactMatch.original;
+        }
+
+        const suffixMatches = normalizedKnown
+            .filter(
+                (entry) =>
+                    candidate.endsWith(entry.normalized) ||
+                    entry.normalized.endsWith(candidate) ||
+                    entry.normalized.includes(` ${candidate}`)
+            )
+            .sort((left, right) => right.normalized.length - left.normalized.length);
+        if (suffixMatches.length > 0) {
+            return suffixMatches[0].original;
+        }
+    }
+
+    return undefined;
+}
+
+function indexTraceEventsByTestName(traceEvents) {
+    const byTestName = new Map();
+
+    for (const event of traceEvents) {
+        if (!event || typeof event !== 'object') {
+            continue;
+        }
+
+        const testName = typeof event.testName === 'string' ? event.testName : undefined;
+        if (!testName) {
+            continue;
+        }
+
+        if (!byTestName.has(testName)) {
+            byTestName.set(testName, []);
+        }
+
+        byTestName.get(testName).push(event);
+    }
+
+    return byTestName;
+}
+
+function resolveTraceEventForCheck(check, traceEventsByTestName, fallbackByTestName) {
+    const traceNames = [...traceEventsByTestName.keys()];
+    const fallbackNames = [...fallbackByTestName.keys()];
+
+    const matchedTraceName = resolveCheckTestName(check.name, check.testName, traceNames);
+    if (matchedTraceName) {
+        const traceEvents = traceEventsByTestName.get(matchedTraceName) ?? [];
+        return {
+            matchedTestName: matchedTraceName,
+            traceEvent: traceEvents.length > 0 ? traceEvents[traceEvents.length - 1] : undefined,
+        };
+    }
+
+    const matchedFallbackName = resolveCheckTestName(check.name, check.testName, fallbackNames);
+    if (!matchedFallbackName) {
+        return {
+            matchedTestName: undefined,
+            traceEvent: undefined,
+        };
+    }
+
+    const fallbackTraceEvents = traceEventsByTestName.get(matchedFallbackName) ?? [];
+    if (fallbackTraceEvents.length === 0) {
+        return {
+            matchedTestName: matchedFallbackName,
+            traceEvent: undefined,
+        };
+    }
+
+    return {
+        matchedTestName: matchedFallbackName,
+        traceEvent: fallbackTraceEvents[fallbackTraceEvents.length - 1],
+    };
+}
+
+function buildFallbackCurlCommand(method, endpoint, baseUrl) {
+    if (!method || !endpoint) {
+        return undefined;
+    }
+
+    const targetUrl = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
+    return `curl -X ${method} '${targetUrl}'`;
+}
+
+function enrichIntegrationFailures(failedChecks, traceEvents, fallbackByTestName, baseUrl) {
+    const traceEventsByTestName = indexTraceEventsByTestName(traceEvents);
+
+    return failedChecks.map((check) => {
+        if (check.checkType !== 'integration-test') {
+            return check;
+        }
+
+        const { matchedTestName, traceEvent } = resolveTraceEventForCheck(check, traceEventsByTestName, fallbackByTestName);
+        const fallback = matchedTestName ? fallbackByTestName.get(matchedTestName) : undefined;
+
+        const requestMethod = (traceEvent?.method || fallback?.method || '').toUpperCase() || undefined;
+        const requestEndpoint = traceEvent?.endpoint || fallback?.endpoint || undefined;
+        const curlCommand = traceEvent?.curlCommand || buildFallbackCurlCommand(requestMethod, requestEndpoint, baseUrl);
+
+        const responseStatus =
+            typeof traceEvent?.responseStatus === 'number' && Number.isFinite(traceEvent.responseStatus)
+                ? traceEvent.responseStatus
+                : undefined;
+        const responseBodySnippet =
+            typeof traceEvent?.responseBodySnippet === 'string'
+                ? truncateTraceSnippet(traceEvent.responseBodySnippet)
+                : undefined;
+
+        return {
+            ...check,
+            matchedTestName,
+            operationId: fallback?.operationId,
+            requestMethod,
+            requestEndpoint,
+            requestUrl: traceEvent?.url,
+            requestBodySummary:
+                typeof traceEvent?.requestBodySummary === 'string'
+                    ? truncateTraceSnippet(traceEvent.requestBodySummary)
+                    : undefined,
+            responseStatus,
+            responseContentType:
+                typeof traceEvent?.responseContentType === 'string' ? traceEvent.responseContentType : undefined,
+            responseBodySnippet,
+            curlCommand,
+            requestTraceSource: traceEvent ? 'trace' : fallback ? 'operation-fallback' : 'none',
+        };
+    });
+}
+
+function buildIntegrationFailureMessage(check) {
+    const primaryReason = compactFailureReason(check.reason || check.failureMessages?.[0] || 'No failure message');
+    const detailLines = [primaryReason];
+
+    if (check.requestMethod && check.requestEndpoint) {
+        detailLines.push(`Endpoint: ${check.requestMethod} ${check.requestEndpoint}`);
+    }
+
+    if (typeof check.responseStatus === 'number') {
+        detailLines.push(`ResponseStatus: ${check.responseStatus}`);
+    }
+
+    if (check.responseBodySnippet) {
+        detailLines.push(`ResponseSnippet: ${check.responseBodySnippet}`);
+    }
+
+    return detailLines.join('\n');
+}
+
 function parseVitestResults(vitestReport) {
     const passedChecks = [];
     const failedChecks = [];
@@ -299,6 +557,7 @@ function parseVitestResults(vitestReport) {
                 checkType: 'integration-test',
                 suite: suite.name,
                 name: assertion.fullName || assertion.title,
+                testName: assertion.title,
                 durationMs: assertion.duration,
                 reason: failureMessages[0] || '',
                 failureMessages,
@@ -401,11 +660,29 @@ function parseOpenApiResults(openApiReport, strictKnownIssues) {
     };
 }
 
-function buildReport({ component, baseUrl, strictKnownIssues, vitestRun, vitestResult, openApiRun, openApiResult }) {
+function buildReport({
+    component,
+    baseUrl,
+    strictKnownIssues,
+    vitestRun,
+    vitestResult,
+    openApiRun,
+    openApiResult,
+    requestTracePath,
+}) {
     const vitestParsed = parseVitestResults(vitestResult);
     const openApiParsed = parseOpenApiResults(openApiResult, strictKnownIssues);
+    const traceEvents = loadLineDelimitedJson(requestTracePath);
+    const operationAnnotations = parseIntegrationOperationAnnotations(path.join(process.cwd(), component.testFile));
+    const fallbackByTestName = buildOperationEndpointLookup(operationAnnotations, openApiResult.matrix ?? []);
+    const enrichedVitestFailedChecks = enrichIntegrationFailures(
+        vitestParsed.failedChecks,
+        traceEvents,
+        fallbackByTestName,
+        baseUrl
+    );
 
-    const allFailedChecks = [...vitestParsed.failedChecks, ...openApiParsed.failedChecks];
+    const allFailedChecks = [...enrichedVitestFailedChecks, ...openApiParsed.failedChecks];
 
     return {
         generatedAt: new Date().toISOString(),
@@ -438,10 +715,14 @@ function buildReport({ component, baseUrl, strictKnownIssues, vitestRun, vitestR
             knownIssues: openApiParsed.knownIssues.length,
             success: allFailedChecks.length === 0,
         },
+        requestTrace: {
+            tracePath: requestTracePath,
+            eventCount: traceEvents.length,
+        },
         vitest: {
             ...vitestParsed.summary,
             passedChecks: vitestParsed.passedChecks,
-            failedChecks: vitestParsed.failedChecks,
+            failedChecks: enrichedVitestFailedChecks,
             skippedChecks: vitestParsed.skippedChecks,
         },
         openapiCoverage: {
@@ -496,6 +777,30 @@ function writeMarkdownReport(report, outputPath) {
                     lines.push(`  - detail: ${formatFailureDetailLine(extraMessage)}`);
                 }
             }
+
+            if (failure.requestMethod && failure.requestEndpoint) {
+                lines.push(`  - endpoint: ${failure.requestMethod} ${failure.requestEndpoint}`);
+            }
+
+            if (failure.requestBodySummary) {
+                lines.push(`  - request body: ${failure.requestBodySummary}`);
+            }
+
+            if (typeof failure.responseStatus === 'number') {
+                lines.push(`  - response status: ${failure.responseStatus}`);
+            }
+
+            if (failure.responseBodySnippet) {
+                lines.push(`  - response snippet: ${failure.responseBodySnippet}`);
+            }
+
+            if (failure.curlCommand) {
+                lines.push('  - curl replay:');
+                lines.push('');
+                lines.push('```bash');
+                lines.push(failure.curlCommand);
+                lines.push('```');
+            }
         }
     }
     lines.push('');
@@ -544,7 +849,7 @@ function writeJunitReport(report, outputPath) {
             name: check.name,
             status: 'failed',
             durationMs: check.durationMs ?? 0,
-            message: compactFailureReason(check.reason || check.failureMessages?.[0] || 'No failure message'),
+            message: buildIntegrationFailureMessage(check),
         });
     }
 
@@ -598,6 +903,18 @@ function printConsoleSummary(report, artifactPaths) {
             console.log(`- [${failure.checkType}] ${failure.name}`);
             const primaryReason = failure.reason || failure.failureMessages?.[0] || 'No failure reason provided';
             console.log(`  reason: ${primaryReason}`);
+
+            if (failure.requestMethod && failure.requestEndpoint) {
+                console.log(`  endpoint: ${failure.requestMethod} ${failure.requestEndpoint}`);
+            }
+
+            if (typeof failure.responseStatus === 'number') {
+                console.log(`  response status: ${failure.responseStatus}`);
+            }
+
+            if (failure.responseBodySnippet) {
+                console.log(`  response snippet: ${failure.responseBodySnippet}`);
+            }
 
             if (Array.isArray(failure.failureMessages) && failure.failureMessages.length > 1) {
                 for (const extraMessage of failure.failureMessages.slice(1, 3)) {
@@ -654,10 +971,14 @@ function main() {
     const timestamp = toTimestamp();
     const reportPrefix = `${args.component}-${timestamp}`;
     const vitestReportPath = path.join(reportDir, `${reportPrefix}.vitest.raw.json`);
+    const requestTracePath = path.join(reportDir, `${reportPrefix}.requests.ndjson`);
+
+    fs.rmSync(requestTracePath, { force: true });
 
     const env = {
         ...process.env,
         [ENGINE_MODE_ENV]: 'true',
+        [REQUEST_TRACE_ENV]: requestTracePath,
         BASYX_SKIP_DOCKER_SETUP: 'true',
         [componentConfig.endpointEnvVar]: baseUrl,
     };
@@ -717,6 +1038,7 @@ function main() {
         vitestResult,
         openApiRun,
         openApiResult,
+        requestTracePath,
     });
 
     const artifactPaths = [];
