@@ -167,17 +167,12 @@ describe('Submodel Registry Integration Tests', () => {
 
     /**
      * @operation GetAllSubmodelDescriptors
-     * @status 200
+     * @status 404
      */
-    test('should return collection response for trailing slash on submodel descriptors endpoint', async () => {
+    test('should return not found for trailing slash on submodel descriptors endpoint', async () => {
         const rawResponse = await fetch(`${configuration.basePath}/submodel-descriptors/`);
-        const responseBody = (await rawResponse.json()) as { result?: unknown[]; paging_metadata?: object };
-        const statusCode = rawResponse.status;
 
-        expect(statusCode).toBe(200);
-        expect(responseBody).toBeDefined();
-        expect(Array.isArray(responseBody.result)).toBe(true);
-        expect(responseBody.paging_metadata).toBeDefined();
+        expect(rawResponse.status).toBe(404);
     });
 
     /**

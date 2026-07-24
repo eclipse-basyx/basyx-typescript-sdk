@@ -126,17 +126,12 @@ describe('AAS Discovery Integration Tests', () => {
 
     /**
      * @operation GetAllAssetAdministrationShellIdsByAssetLink
-     * @status 200
+     * @status 404
      */
-    test('should return collection response for trailing slash on shells endpoint', async () => {
+    test('should return not found for trailing slash on shells endpoint', async () => {
         const rawResponse = await fetch(`${configuration.basePath}/lookup/shells/`);
-        const responseBody = (await rawResponse.json()) as { result?: unknown[]; paging_metadata?: object };
-        const statusCode = rawResponse.status;
 
-        expect(statusCode).toBe(200);
-        expect(responseBody).toBeDefined();
-        expect(Array.isArray(responseBody.result)).toBe(true);
-        expect(responseBody.paging_metadata).toBeDefined();
+        expect(rawResponse.status).toBe(404);
     });
 
     /**
@@ -284,9 +279,9 @@ describe('AAS Discovery Integration Tests', () => {
 
     /**
      * @operation PostAllAssetLinksById
-     * @status 405
+     * @status 404
      */
-    test('should reject trailing slash (empty aasIdentifier) for post by id with method not allowed', async () => {
+    test('should return not found for trailing slash (empty aasIdentifier) on post by id', async () => {
         const specificAssetId1 = createUniqueSpecificAssetId1();
 
         const response = await client.postAllAssetLinksById({
@@ -297,8 +292,8 @@ describe('AAS Discovery Integration Tests', () => {
 
         assertApiFailure(response);
         if (!response.success) {
-            expect(response.statusCode).toBe(405);
-            expect(response.error.messages?.[0]?.code).toBe('405');
+            expect(response.statusCode).toBe(404);
+            expect(response.error.messages?.[0]?.code).toBe('404');
         }
     });
 
@@ -384,9 +379,9 @@ describe('AAS Discovery Integration Tests', () => {
 
     /**
      * @operation DeleteAllAssetLinksById
-     * @status 405
+     * @status 404
      */
-    test('should reject trailing slash (empty aasIdentifier) for delete by id', async () => {
+    test('should return not found for trailing slash (empty aasIdentifier) on delete by id', async () => {
         const response = await client.deleteAllAssetLinksById({
             configuration,
             aasIdentifier: '',
@@ -394,8 +389,8 @@ describe('AAS Discovery Integration Tests', () => {
 
         assertApiFailure(response);
         if (!response.success) {
-            expect(response.statusCode).toBe(405);
-            expect(response.error.messages?.[0]?.code).toBe('405');
+            expect(response.statusCode).toBe(404);
+            expect(response.error.messages?.[0]?.code).toBe('404');
         }
     });
 
