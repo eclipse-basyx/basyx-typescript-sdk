@@ -60,7 +60,10 @@ export class AasDiscoveryClient {
             const apiInstance = new AasDiscoveryService.AssetAdministrationShellBasicDiscoveryAPIApi(
                 applyDefaults(configuration)
             );
-            const encodedAssetIds = assetIds?.map((id) => base64Encode(JSON.stringify(id)));
+            // Only name and value: objects such as core SpecificAssetIds carry further fields that may be null
+            const encodedAssetIds = assetIds?.map((id) =>
+                base64Encode(JSON.stringify({ name: id.name, value: id.value }))
+            );
 
             const response = await apiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw({
                 assetIds: encodedAssetIds,
