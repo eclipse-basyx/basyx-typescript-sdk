@@ -11,6 +11,7 @@ import { AasRegistryClient } from '../clients/AasRegistryClient';
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { base64Decode, base64Encode } from '../lib/base64Url';
+import { pickConditionalErrorFields } from '../lib/conditionalRequests';
 import { AssetId } from '../models/AssetId';
 import { AssetAdministrationShellDescriptor } from '../models/Descriptors';
 import { extractEndpointHref } from '../utils/DescriptorUtils';
@@ -261,7 +262,8 @@ export class AasService {
      *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { shell, descriptor?, submodels? } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { shell, descriptor?, submodels? }; etag? }` or `{ success: false; error: ... }`.
+     *  `etag` is the entity tag of the shell, if the repository sends one.
      */
     async getAasById(options: {
         aasIdentifier: string;
@@ -321,6 +323,7 @@ export class AasService {
                                 descriptor,
                                 ...(submodels && { submodels }),
                             },
+                            etag: shellResult.etag,
                         };
                     }
                 }
@@ -360,6 +363,7 @@ export class AasService {
                     descriptor: undefined,
                     ...(submodels && { submodels }),
                 },
+                etag: shellResult.etag,
             };
         }
 
@@ -429,7 +433,8 @@ export class AasService {
      *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { shell, submodels? } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { shell, submodels? }; etag? }` or `{ success: false; error: ... }`.
+     *  `etag` is the entity tag of the shell, if the repository sends one.
      */
     async getAasByEndpoint(options: {
         endpoint: string;
@@ -504,6 +509,7 @@ export class AasService {
                 shell,
                 ...(submodels && { submodels }),
             },
+            etag: shellResult.etag,
         };
     }
 
@@ -594,10 +600,16 @@ export class AasService {
      * @param options Object containing:
      *  - shell: The updated AAS
      *  - updateInRegistry?: Whether to update the descriptor in the registry (default: true)
+     *  - ifMatch?: Sent as `If-Match` header with the repository update; if the shell has changed, the update fails with
+     *    `preconditionFailed` and the registry is not updated
      *
      * @returns Either `{ success: true; data: { shell, descriptor? } }` or `{ success: false; error: ... }`.
      */
-    async updateAas(options: { shell: AssetAdministrationShell; updateInRegistry?: boolean }): Promise<
+    async updateAas(options: {
+        shell: AssetAdministrationShell;
+        updateInRegistry?: boolean;
+        ifMatch?: string;
+    }): Promise<
         ApiResult<
             {
                 shell: AssetAdministrationShell;
@@ -606,7 +618,7 @@ export class AasService {
             any
         >
     > {
-        const { shell, updateInRegistry = true } = options;
+        const { shell, updateInRegistry = true, ifMatch } = options;
 
         if (!this.aasRepositoryConfig) {
             return {
@@ -623,10 +635,11 @@ export class AasService {
             configuration: this.aasRepositoryConfig,
             aasIdentifier: shell.id,
             assetAdministrationShell: shell,
+            ifMatch,
         });
 
         if (!shellResult.success) {
-            return { success: false, error: shellResult.error };
+            return { success: false, error: shellResult.error, ...pickConditionalErrorFields(shellResult) };
         }
 
         // Use the returned shell if available, otherwise use the input shell
@@ -673,16 +686,31 @@ export class AasService {
      * Deletes an Asset Administration Shell and optionally removes it from the registry.
      *
      * This method removes the descriptor from the registry first (if requested),
-     * then deletes the AAS from the repository.
+     * then deletes the AAS from the repository. With `ifMatch`, the AAS is deleted from the repository first,
+     * so that a failed precondition leaves the descriptor in the registry.
      *
      * @param options Object containing:
      *  - aasIdentifier: The AAS identifier to remove
      *  - deleteFromRegistry?: Whether to delete from registry (default: true)
+     *  - ifMatch?: Sent as `If-Match` header with the repository delete; if the shell has changed, the delete fails with
+     *    `preconditionFailed`
      *
      * @returns Either `{ success: true; data: void }` or `{ success: false; error: ... }`.
      */
-    async deleteAas(options: { aasIdentifier: string; deleteFromRegistry?: boolean }): Promise<ApiResult<void, any>> {
-        const { aasIdentifier, deleteFromRegistry = true } = options;
+    async deleteAas(options: {
+        aasIdentifier: string;
+        deleteFromRegistry?: boolean;
+        ifMatch?: string;
+    }): Promise<ApiResult<void, any>> {
+        const { aasIdentifier, deleteFromRegistry = true, ifMatch } = options;
+
+        // A conditional delete must not remove the descriptor if the precondition fails
+        if (ifMatch) {
+            const repoResult = await this.deleteAasFromRepository(aasIdentifier, ifMatch);
+            if (!repoResult.success) {
+                return repoResult;
+            }
+        }
 
         // Remove from registry first if configured and requested
         if (deleteFromRegistry && this.aasRegistryConfig) {
@@ -697,14 +725,26 @@ export class AasService {
         }
 
         // Remove from repository
+        if (!ifMatch) {
+            const repoResult = await this.deleteAasFromRepository(aasIdentifier);
+            if (!repoResult.success) {
+                return repoResult;
+            }
+        }
+
+        return { success: true, data: undefined };
+    }
+
+    private async deleteAasFromRepository(aasIdentifier: string, ifMatch?: string): Promise<ApiResult<void, any>> {
         if (this.aasRepositoryConfig) {
             const repoResult = await this.aasRepositoryClient.deleteAssetAdministrationShellById({
                 configuration: this.aasRepositoryConfig,
                 aasIdentifier,
+                ifMatch,
             });
 
             if (!repoResult.success) {
-                return { success: false, error: repoResult.error };
+                return { success: false, error: repoResult.error, ...pickConditionalErrorFields(repoResult) };
             }
         }
 

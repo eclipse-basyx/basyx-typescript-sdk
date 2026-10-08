@@ -127,7 +127,7 @@ function parseOpenApiOperations(openapiSource) {
 
 function parseClientMethods(clientSource) {
     const methods = new Set();
-    for (const match of clientSource.matchAll(/async\s+([A-Za-z0-9_]+)\s*\(/g)) {
+    for (const match of clientSource.matchAll(/async\s+([A-Za-z0-9_]+)\s*(?:<[^<>]*>)?\s*\(/g)) {
         methods.add(match[1]);
     }
     return methods;

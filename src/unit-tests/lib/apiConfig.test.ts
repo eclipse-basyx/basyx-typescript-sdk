@@ -179,5 +179,47 @@ describe('apiConfig', () => {
             expect(result.headers).toEqual(customHeaders);
             expect(result.credentials).toBe('same-origin');
         });
+
+        it('should keep the configured headers when no conditional headers are passed', () => {
+            const headers = { 'X-Custom-Header': 'value' };
+            const config = new Configuration({ headers });
+
+            const result = applyDefaults(config, {});
+
+            expect(result.headers).toBe(headers);
+        });
+
+        it('should add If-Match and If-None-Match headers', () => {
+            const config = new Configuration({ headers: { 'X-Custom-Header': 'value' } });
+
+            const result = applyDefaults(config, { ifMatch: '"1-a"', ifNoneMatch: '*' });
+
+            expect(result.headers).toEqual({ 'X-Custom-Header': 'value', 'If-Match': '"1-a"', 'If-None-Match': '*' });
+        });
+
+        it('should add conditional headers without configured headers', () => {
+            const result = applyDefaults(new Configuration({}), { ifNoneMatch: '"1-a"' });
+
+            expect(result.headers).toEqual({ 'If-None-Match': '"1-a"' });
+        });
+
+        it('should replace configured conditional headers regardless of case', () => {
+            const headers = { 'if-match': '"stale"', 'IF-NONE-MATCH': '"stale"', Accept: 'application/json' };
+            const config = new Configuration({ headers });
+
+            const result = applyDefaults(config, { ifMatch: '"1-a"', ifNoneMatch: '*' });
+
+            expect(result.headers).toEqual({ Accept: 'application/json', 'If-Match': '"1-a"', 'If-None-Match': '*' });
+            expect(headers).toEqual({ 'if-match': '"stale"', 'IF-NONE-MATCH': '"stale"', Accept: 'application/json' });
+        });
+
+        it('should ignore empty conditional headers', () => {
+            const headers = { 'If-Match': '"configured"' };
+            const config = new Configuration({ headers });
+
+            const result = applyDefaults(config, { ifMatch: '', ifNoneMatch: undefined });
+
+            expect(result.headers).toBe(headers);
+        });
     });
 });

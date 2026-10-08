@@ -1,8 +1,9 @@
-import type { ApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult } from '../models/api';
 import { SubmodelRegistryService } from '../generated';
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
+import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import {
     convertApiSubmodelDescriptorToCoreSubmodelDescriptor,
     convertCoreSubmodelDescriptorToApiSubmodelDescriptor,
@@ -78,6 +79,7 @@ export class SubmodelRegistryClient {
                 success: true,
                 data: { pagedResult, result: submodelDescriptors },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -85,6 +87,7 @@ export class SubmodelRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -116,6 +119,7 @@ export class SubmodelRegistryClient {
                 success: true,
                 data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -123,6 +127,7 @@ export class SubmodelRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -133,17 +138,21 @@ export class SubmodelRegistryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelDescriptorById(options: {
         configuration: Configuration;
         submodelIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRegistryService.Result>> {
-        const { configuration, submodelIdentifier } = options;
+        const { configuration, submodelIdentifier, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -154,13 +163,14 @@ export class SubmodelRegistryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -171,17 +181,21 @@ export class SubmodelRegistryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelDescriptorById(options: {
+    async getSubmodelDescriptorById<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
-    }): Promise<ApiResult<SubmodelDescriptor, SubmodelRegistryService.Result>> {
-        const { configuration, submodelIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<SubmodelDescriptor, SubmodelRegistryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -196,13 +210,20 @@ export class SubmodelRegistryClient {
                 success: true,
                 data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -214,6 +235,8 @@ export class SubmodelRegistryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelDescriptor: Submodel Descriptor object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -221,11 +244,15 @@ export class SubmodelRegistryClient {
         configuration: Configuration;
         submodelIdentifier: string;
         submodelDescriptor: SubmodelDescriptor;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<SubmodelDescriptor | void, SubmodelRegistryService.Result>> {
-        const { configuration, submodelIdentifier, submodelDescriptor } = options;
+        const { configuration, submodelIdentifier, submodelDescriptor, ifMatch, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRegistryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -241,6 +268,7 @@ export class SubmodelRegistryClient {
                     success: true,
                     data: undefined,
                     statusCode: response.raw.status,
+                    etag: getEtag(response.raw),
                 };
             }
 
@@ -250,6 +278,7 @@ export class SubmodelRegistryClient {
                 success: true,
                 data: result ? convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -257,6 +286,7 @@ export class SubmodelRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -279,13 +309,14 @@ export class SubmodelRegistryClient {
             const response = await apiInstance.getSelfDescriptionRaw();
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }

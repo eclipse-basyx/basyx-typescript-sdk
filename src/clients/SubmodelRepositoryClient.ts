@@ -1,9 +1,10 @@
 import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
-import type { ApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult } from '../models/api';
 import { SubmodelRepositoryService } from '../generated'; // Updated import
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
+import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import {
     convertApiSubmodelElementToCoreSubmodelElement,
     convertApiSubmodelToCoreSubmodel,
@@ -94,6 +95,7 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodels },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -101,6 +103,7 @@ export class SubmodelRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -138,13 +141,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -188,13 +192,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -235,13 +240,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -282,13 +288,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -320,6 +327,7 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: convertApiSubmodelToCoreSubmodel(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -327,6 +335,7 @@ export class SubmodelRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -337,17 +346,21 @@ export class SubmodelRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodelById(options: {
         configuration: Configuration;
         submodelIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier } = options;
+        const { configuration, submodelIdentifier, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -358,13 +371,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -377,19 +391,23 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelById(options: {
+    async getSubmodelById<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         level?: SubmodelRepositoryService.GetSubmodelByIdLevelEnum;
         extent?: SubmodelRepositoryService.GetSubmodelByIdExtentEnum;
-    }): Promise<ApiResult<Submodel, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Submodel, SubmodelRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, level, extent, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -406,13 +424,20 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: convertApiSubmodelToCoreSubmodel(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -423,17 +448,23 @@ export class SubmodelRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdReference(options: {
+    async getSubmodelByIdReference<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
-    }): Promise<ApiResult<SubmodelRepositoryService.Reference, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<SubmodelRepositoryService.Reference, SubmodelRepositoryService.Result, IfNoneMatch>
+    > {
+        const { configuration, submodelIdentifier, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -444,13 +475,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -462,18 +499,22 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdPath(options: {
+    async getSubmodelByIdPath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         level?: SubmodelRepositoryService.GetSubmodelByIdPathLevelEnum;
-    }): Promise<ApiResult<string[], SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<string[], SubmodelRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, level, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -485,13 +526,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -503,6 +550,8 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id
      *  - submodel: Submodel object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -510,11 +559,15 @@ export class SubmodelRepositoryClient {
         configuration: Configuration;
         submodelIdentifier: string;
         submodel: Submodel;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<Submodel | void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, submodel } = options;
+        const { configuration, submodelIdentifier, submodel, ifMatch, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -526,7 +579,7 @@ export class SubmodelRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
@@ -535,6 +588,7 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -542,6 +596,7 @@ export class SubmodelRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -554,6 +609,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel's unique id
      *  - submodel: Submodel object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -562,11 +618,14 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         submodel: Submodel;
         level?: SubmodelRepositoryService.PatchSubmodelByIdLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, submodel, level } = options;
+        const { configuration, submodelIdentifier, submodel, level, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -579,13 +638,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -600,29 +660,34 @@ export class SubmodelRepositoryClient {
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElements(options: {
+    async getAllSubmodelElements<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
         level?: SubmodelRepositoryService.GetAllSubmodelElementsLevelEnum;
         extent?: SubmodelRepositoryService.GetAllSubmodelElementsExtentEnum;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: SubmodelRepositoryService.PagedResultPagingMetadata | undefined;
                 result: ISubmodelElement[];
             },
-            SubmodelRepositoryService.Result
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, submodelIdentifier, limit, cursor, level, extent } = options;
+        const { configuration, submodelIdentifier, limit, cursor, level, extent, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -643,13 +708,20 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElements },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -662,21 +734,29 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel's unique id
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsMetadata(options: {
+    async getAllSubmodelElementsMetadata<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<SubmodelRepositoryService.GetSubmodelElementsMetadataResult, SubmodelRepositoryService.Result>
+        ConditionalApiResult<
+            SubmodelRepositoryService.GetSubmodelElementsMetadataResult,
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
+        >
     > {
-        const { configuration, submodelIdentifier, limit, cursor } = options;
+        const { configuration, submodelIdentifier, limit, cursor, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -689,13 +769,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -710,21 +796,31 @@ export class SubmodelRepositoryClient {
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsValueOnly(options: {
+    async getAllSubmodelElementsValueOnly<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
         level?: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoLevelEnum;
         extent?: SubmodelRepositoryService.GetAllSubmodelElementsValueOnlySubmodelRepoExtentEnum;
-    }): Promise<ApiResult<SubmodelRepositoryService.GetSubmodelElementsValueResult, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, limit, cursor, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<
+            SubmodelRepositoryService.GetSubmodelElementsValueResult,
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
+        >
+    > {
+        const { configuration, submodelIdentifier, limit, cursor, level, extent, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -739,13 +835,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -759,20 +861,30 @@ export class SubmodelRepositoryClient {
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsReference(options: {
+    async getAllSubmodelElementsReference<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
         level?: SubmodelRepositoryService.GetAllSubmodelElementsReferenceSubmodelRepoLevelEnum;
-    }): Promise<ApiResult<SubmodelRepositoryService.GetReferencesResult, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, limit, cursor, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<
+            SubmodelRepositoryService.GetReferencesResult,
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
+        >
+    > {
+        const { configuration, submodelIdentifier, limit, cursor, level, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -786,13 +898,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -806,20 +924,30 @@ export class SubmodelRepositoryClient {
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsPath(options: {
+    async getAllSubmodelElementsPath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
         level?: SubmodelRepositoryService.GetAllSubmodelElementsPathSubmodelRepoLevelEnum;
-    }): Promise<ApiResult<SubmodelRepositoryService.GetPathItemsResult, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, limit, cursor, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<
+            SubmodelRepositoryService.GetPathItemsResult,
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
+        >
+    > {
+        const { configuration, submodelIdentifier, limit, cursor, level, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -833,13 +961,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -850,6 +984,7 @@ export class SubmodelRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -857,11 +992,14 @@ export class SubmodelRepositoryClient {
         configuration: Configuration;
         submodelIdentifier: string;
         submodelElement: ISubmodelElement;
+        ifMatch?: string;
     }): Promise<ApiResult<ISubmodelElement, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, submodelElement } = options;
+        const { configuration, submodelIdentifier, submodelElement, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -877,6 +1015,7 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: convertApiSubmodelElementToCoreSubmodelElement(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -884,6 +1023,7 @@ export class SubmodelRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -897,20 +1037,24 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPath(options: {
+    async getSubmodelElementByPath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         level?: SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoLevelEnum;
         extent?: SubmodelRepositoryService.GetSubmodelElementByPathSubmodelRepoExtentEnum;
-    }): Promise<ApiResult<ISubmodelElement, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<ISubmodelElement, SubmodelRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, idShortPath, level, extent, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -928,13 +1072,20 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: convertApiSubmodelElementToCoreSubmodelElement(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -946,18 +1097,28 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathMetadata(options: {
+    async getSubmodelElementByPathMetadata<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
-    }): Promise<ApiResult<SubmodelRepositoryService.SubmodelElementMetadata, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<
+            SubmodelRepositoryService.SubmodelElementMetadata,
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
+        >
+    > {
+        const { configuration, submodelIdentifier, idShortPath, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -969,13 +1130,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -987,18 +1154,24 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathReference(options: {
+    async getSubmodelElementByPathReference<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
-    }): Promise<ApiResult<SubmodelRepositoryService.Reference, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<SubmodelRepositoryService.Reference, SubmodelRepositoryService.Result, IfNoneMatch>
+    > {
+        const { configuration, submodelIdentifier, idShortPath, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1010,13 +1183,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1029,19 +1208,23 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathPath(options: {
+    async getSubmodelElementByPathPath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         level?: SubmodelRepositoryService.GetSubmodelElementByPathPathSubmodelRepoLevelEnum;
-    }): Promise<ApiResult<string[], SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<string[], SubmodelRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, idShortPath, level, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1054,13 +1237,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1073,6 +1262,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1081,11 +1271,14 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         submodelElement: ISubmodelElement;
+        ifMatch?: string;
     }): Promise<ApiResult<ISubmodelElement, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, submodelElement } = options;
+        const { configuration, submodelIdentifier, idShortPath, submodelElement, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1102,6 +1295,7 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: convertApiSubmodelElementToCoreSubmodelElement(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1109,6 +1303,7 @@ export class SubmodelRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1120,6 +1315,7 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options.
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1127,11 +1323,14 @@ export class SubmodelRepositoryClient {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath } = options;
+        const { configuration, submodelIdentifier, idShortPath, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1143,13 +1342,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1163,6 +1363,8 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1172,11 +1374,16 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         submodelElement: ISubmodelElement;
         level?: SubmodelRepositoryService.PutSubmodelElementByPathSubmodelRepoLevelEnum;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<ISubmodelElement | void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, submodelElement, level } = options;
+        const { configuration, submodelIdentifier, idShortPath, submodelElement, level, ifMatch, ifNoneMatch } =
+            options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1190,7 +1397,7 @@ export class SubmodelRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
@@ -1199,6 +1406,7 @@ export class SubmodelRepositoryClient {
                 success: true,
                 data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1206,6 +1414,7 @@ export class SubmodelRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1219,6 +1428,7 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1228,11 +1438,14 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         submodelElement: ISubmodelElement;
         level?: SubmodelRepositoryService.PatchSubmodelElementByPathSubmodelRepoLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, submodelElement, level } = options;
+        const { configuration, submodelIdentifier, idShortPath, submodelElement, level, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1246,13 +1459,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1263,17 +1477,23 @@ export class SubmodelRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdMetadata(options: {
+    async getSubmodelByIdMetadata<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
-    }): Promise<ApiResult<SubmodelRepositoryService.SubmodelMetadata, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<SubmodelRepositoryService.SubmodelMetadata, SubmodelRepositoryService.Result, IfNoneMatch>
+    > {
+        const { configuration, submodelIdentifier, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1284,13 +1504,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1303,6 +1529,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel's unique id
      *  - submodelMetadata: SubmodelMetadata object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1311,11 +1538,14 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         submodelMetadata: SubmodelRepositoryService.SubmodelMetadata;
         level?: SubmodelRepositoryService.PatchSubmodelByIdMetadataLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, submodelMetadata, level } = options;
+        const { configuration, submodelIdentifier, submodelMetadata, level, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1328,13 +1558,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1347,19 +1578,23 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdValueOnly(options: {
+    async getSubmodelByIdValueOnly<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         level?: SubmodelRepositoryService.GetSubmodelByIdValueOnlyLevelEnum;
         extent?: SubmodelRepositoryService.GetSubmodelByIdValueOnlyExtentEnum;
-    }): Promise<ApiResult<object, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<object, SubmodelRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, level, extent, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1372,13 +1607,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1391,6 +1632,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel's unique id
      *  - body: Value-only payload object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1399,11 +1641,14 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         body: object;
         level?: SubmodelRepositoryService.PatchSubmodelByIdValueOnlyLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, body, level } = options;
+        const { configuration, submodelIdentifier, body, level, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1416,13 +1661,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1436,20 +1682,30 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathValueOnly(options: {
+    async getSubmodelElementByPathValueOnly<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
         level?: SubmodelRepositoryService.GetSubmodelElementByPathValueOnlySubmodelRepoLevelEnum;
         extent?: SubmodelRepositoryService.GetSubmodelElementByPathValueOnlySubmodelRepoExtentEnum;
-    }): Promise<ApiResult<SubmodelRepositoryService.SubmodelElementValue, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<
+            SubmodelRepositoryService.SubmodelElementValue,
+            SubmodelRepositoryService.Result,
+            IfNoneMatch
+        >
+    > {
+        const { configuration, submodelIdentifier, idShortPath, level, extent, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1463,13 +1719,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1483,6 +1745,7 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElementValue: SubmodelElementValue object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1492,11 +1755,14 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         submodelElementValue: SubmodelRepositoryService.SubmodelElementValue;
         level?: SubmodelRepositoryService.PatchSubmodelElementByPathValueOnlySubmodelRepoLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, submodelElementValue, level } = options;
+        const { configuration, submodelIdentifier, idShortPath, submodelElementValue, level, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1510,13 +1776,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1529,6 +1796,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElementMetadata: SubmodelElementMetadata object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1537,11 +1805,14 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         submodelElementMetadata: SubmodelRepositoryService.SubmodelElementMetadata;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, submodelElementMetadata } = options;
+        const { configuration, submodelIdentifier, idShortPath, submodelElementMetadata, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1554,13 +1825,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1572,18 +1844,22 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getFileByPath(options: {
+    async getFileByPath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
-    }): Promise<ApiResult<Blob, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Blob, SubmodelRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, submodelIdentifier, idShortPath, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1595,13 +1871,19 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1615,6 +1897,8 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - fileName?: Name of the uploaded file
      *  - file?: File content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1624,11 +1908,15 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         fileName?: string;
         file?: Blob;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, fileName, file } = options;
+        const { configuration, submodelIdentifier, idShortPath, fileName, file, ifMatch, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1642,13 +1930,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1660,6 +1949,7 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1667,11 +1957,14 @@ export class SubmodelRepositoryClient {
         configuration: Configuration;
         submodelIdentifier: string;
         idShortPath: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath } = options;
+        const { configuration, submodelIdentifier, idShortPath, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1683,13 +1976,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1703,6 +1997,7 @@ export class SubmodelRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequest: Operation request object
      *  - async?: Determines whether an operation invocation is performed asynchronously or synchronously
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1712,11 +2007,14 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
         //async?: boolean;
+        ifMatch?: string;
     }): Promise<ApiResult<SubmodelRepositoryService.OperationResult, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, operationRequest } = options;
+        const { configuration, submodelIdentifier, idShortPath, operationRequest, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1730,13 +2028,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1750,6 +2049,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequestValueOnly: Operation request object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1759,11 +2059,15 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequestValueOnly: SubmodelRepositoryService.OperationRequestValueOnly;
+        ifMatch?: string;
     }): Promise<ApiResult<SubmodelRepositoryService.OperationResultValueOnly, SubmodelRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
+            options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedAasIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
@@ -1780,13 +2084,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1799,6 +2104,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequest: Operation request object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1807,11 +2113,14 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, submodelIdentifier, idShortPath, operationRequest } = options;
+        const { configuration, submodelIdentifier, idShortPath, operationRequest, ifMatch } = options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
@@ -1824,13 +2133,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1844,6 +2154,7 @@ export class SubmodelRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequestValueOnly: Operation request object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1853,11 +2164,15 @@ export class SubmodelRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequestValueOnly: SubmodelRepositoryService.OperationRequestValueOnly;
+        ifMatch?: string;
     }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
+            options;
 
         try {
-            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(applyDefaults(configuration));
+            const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
+                applyDefaults(configuration, { ifMatch })
+            );
 
             const encodedAasIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
@@ -1874,13 +2189,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1918,13 +2234,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1962,13 +2279,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2006,13 +2324,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2046,13 +2365,14 @@ export class SubmodelRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2076,13 +2396,14 @@ export class SubmodelRepositoryClient {
             const response = await apiInstance.getSelfDescriptionRaw();
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: SubmodelRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }

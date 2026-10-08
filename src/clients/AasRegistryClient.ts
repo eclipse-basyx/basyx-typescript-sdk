@@ -1,9 +1,10 @@
 //import type { AssetKind } from '@aas-core-works/aas-core3.1-typescript/types';
-import type { ApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult } from '../models/api';
 import { AasRegistryService } from '../generated';
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
+import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import {
     convertApiAasDescriptorToCoreAasDescriptor,
     convertApiSubmodelDescriptorToCoreSubmodelDescriptor,
@@ -90,6 +91,7 @@ export class AasRegistryClient {
                 success: true,
                 data: { pagedResult, result: aasDescriptors },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -97,6 +99,7 @@ export class AasRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -132,6 +135,7 @@ export class AasRegistryClient {
                 success: true,
                 data: convertApiAasDescriptorToCoreAasDescriptor(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -139,6 +143,7 @@ export class AasRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -149,18 +154,20 @@ export class AasRegistryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellDescriptorById(options: {
         configuration: Configuration;
         aasIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        const { configuration, aasIdentifier, ifMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -172,13 +179,14 @@ export class AasRegistryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -189,18 +197,20 @@ export class AasRegistryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAssetAdministrationShellDescriptorById(options: {
+    async getAssetAdministrationShellDescriptorById<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetAdministrationShellDescriptor, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<AssetAdministrationShellDescriptor, AasRegistryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -216,13 +226,20 @@ export class AasRegistryClient {
                 success: true,
                 data: convertApiAasDescriptorToCoreAasDescriptor(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -234,6 +251,8 @@ export class AasRegistryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - assetAdministrationShellDescriptor: Asset Administration Shell Descriptor object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -241,12 +260,14 @@ export class AasRegistryClient {
         configuration: Configuration;
         aasIdentifier: string;
         assetAdministrationShellDescriptor: AssetAdministrationShellDescriptor;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<AssetAdministrationShellDescriptor | void, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier, assetAdministrationShellDescriptor } = options;
+        const { configuration, aasIdentifier, assetAdministrationShellDescriptor, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -261,7 +282,7 @@ export class AasRegistryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
@@ -270,6 +291,7 @@ export class AasRegistryClient {
                 success: true,
                 data: result ? convertApiAasDescriptorToCoreAasDescriptor(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -277,6 +299,7 @@ export class AasRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -289,28 +312,31 @@ export class AasRegistryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelDescriptorsThroughSuperpath(options: {
+    async getAllSubmodelDescriptorsThroughSuperpath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: AasRegistryService.PagedResultPagingMetadata | undefined;
                 result: SubmodelDescriptor[];
             },
-            AasRegistryService.Result
+            AasRegistryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, limit, cursor } = options;
+        const { configuration, aasIdentifier, limit, cursor, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
             const encodedAasIdentifier = base64Encode(
                 AasRegistryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
@@ -329,13 +355,20 @@ export class AasRegistryClient {
                 success: true,
                 data: { pagedResult, result: submodelDescriptors },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -347,6 +380,7 @@ export class AasRegistryClient {
      *  - configuration: The http request options.
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelDescriptor: Submodel Descriptor object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -354,12 +388,13 @@ export class AasRegistryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelDescriptor: SubmodelDescriptor;
+        ifMatch?: string;
     }): Promise<ApiResult<SubmodelDescriptor, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier, submodelDescriptor } = options;
+        const { configuration, aasIdentifier, submodelDescriptor, ifMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -376,6 +411,7 @@ export class AasRegistryClient {
                 success: true,
                 data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -383,6 +419,7 @@ export class AasRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -394,19 +431,21 @@ export class AasRegistryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelDescriptorByIdThroughSuperpath(options: {
+    async getSubmodelDescriptorByIdThroughSuperpath<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
-    }): Promise<ApiResult<SubmodelDescriptor, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<SubmodelDescriptor, AasRegistryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -426,13 +465,20 @@ export class AasRegistryClient {
                 success: true,
                 data: convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -444,6 +490,7 @@ export class AasRegistryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -451,12 +498,13 @@ export class AasRegistryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, ifMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -472,13 +520,14 @@ export class AasRegistryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -491,6 +540,8 @@ export class AasRegistryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelIdentifier: The Submodel’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelDescriptor: Submodel Descriptor object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -499,12 +550,14 @@ export class AasRegistryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         submodelDescriptor: SubmodelDescriptor;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<SubmodelDescriptor | void, AasRegistryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, submodelDescriptor } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, submodelDescriptor, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRegistryService.AssetAdministrationShellRegistryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -521,7 +574,7 @@ export class AasRegistryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
@@ -530,6 +583,7 @@ export class AasRegistryClient {
                 success: true,
                 data: result ? convertApiSubmodelDescriptorToCoreSubmodelDescriptor(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -537,6 +591,7 @@ export class AasRegistryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -559,13 +614,14 @@ export class AasRegistryClient {
             const response = await apiInstance.getSelfDescriptionRaw();
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }

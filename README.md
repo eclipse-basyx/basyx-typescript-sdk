@@ -32,6 +32,9 @@ Clients for the AAS API components:
 - AAS Discovery Service
 - AASX File Service
 
+All clients support [conditional requests](#conditional-requests-etag) (`ETag`, `If-Match`, `If-None-Match`) for
+optimistic concurrency.
+
 Utility functions for working with AAS data:
 
 - Utils for Descriptors
@@ -240,6 +243,56 @@ async function getAllShells() {
 
 `Configuration.accessToken` is applied automatically by the runtime. You only need middleware if you want custom auth
 logic beyond bearer token injection.
+
+### Conditional Requests (ETag)
+
+Clients report the `ETag` of a response as `etag` and accept the conditional request headers of RFC 9110, so that
+concurrent changes are detected instead of silently overwritten. The entity tag is opaque: pass it back unchanged.
+Servers that send no `ETag` leave `etag` `undefined`.
+
+| Option        | Methods                                                                | Header          |
+| ------------- | ---------------------------------------------------------------------- | --------------- |
+| `ifMatch`     | `put*`, `patch*`, `delete*`, `post*` below a resource, operation calls | `If-Match`      |
+| `ifNoneMatch` | `put*` (use `*` to only create), `get*` of a resource or its parts     | `If-None-Match` |
+
+```typescript
+import { Configuration, SubmodelRepositoryClient } from 'basyx-typescript-sdk';
+
+const client = new SubmodelRepositoryClient();
+const configuration = new Configuration({ basePath: 'http://localhost:8082' });
+const submodelIdentifier = 'https://example.com/ids/sm/1';
+
+const read = await client.getSubmodelById({ configuration, submodelIdentifier });
+if (read.success) {
+  const update = await client.patchSubmodelElementByPathValueOnly({
+    configuration,
+    submodelIdentifier,
+    idShortPath: 'Temperature',
+    submodelElementValue: '21.5',
+    ifMatch: read.etag,
+  });
+
+  if (!update.success && update.preconditionFailed) {
+    // 412: the Submodel was changed by someone else. Reload, merge and retry.
+  }
+  // update.etag is the new entity tag for the next conditional write
+}
+
+// Revalidate a cached representation
+const revalidated = await client.getSubmodelById({ configuration, submodelIdentifier, ifNoneMatch: cachedEtag });
+if (revalidated.success && revalidated.notModified) {
+  // 304: keep using the cached Submodel
+}
+```
+
+- Failed results have `preconditionFailed: true` for `412 Precondition Failed` and `preconditionRequired: true` for
+  `428 Precondition Required` (the server requires `If-Match`).
+- A read returns `{ success: true, notModified: true, statusCode: 304 }` without `data` only if `ifNoneMatch` is passed;
+  the result type includes this case only then.
+- `AasService` and `SubmodelService` return the `etag` of the shell or Submodel on reads and accept `ifMatch` for
+  `updateAas`, `deleteAas`, `updateSubmodel` and `deleteSubmodel`. The condition applies to the repository; with
+  `ifMatch`, deletes remove the repository resource before the registry descriptor.
+- Calls without these options behave as before.
 
 ### Using the AasService (High-level API)
 
