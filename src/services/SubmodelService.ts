@@ -6,6 +6,7 @@ import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 import { Configuration } from '../generated/runtime';
 import { base64Decode, base64Encode } from '../lib/base64Url';
+import { pickConditionalErrorFields } from '../lib/conditionalRequests';
 import { SubmodelDescriptor } from '../models/Descriptors';
 
 export interface SubmodelServiceConfig {
@@ -254,7 +255,8 @@ export class SubmodelService {
      *  - useRegistryEndpoint?: Whether to try registry endpoint first (default: true)
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { submodel, descriptor?, conceptDescriptions? } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { submodel, descriptor?, conceptDescriptions? }; etag? }` or `{ success: false; error: ... }`.
+     *  `etag` is the entity tag of the Submodel, if the repository sends one.
      */
     async getSubmodelById(options: {
         submodelIdentifier: string;
@@ -298,6 +300,7 @@ export class SubmodelService {
                                     conceptDescriptions: submodelResult.data.conceptDescriptions,
                                 }),
                             },
+                            etag: submodelResult.etag,
                         };
                     }
                 }
@@ -338,6 +341,7 @@ export class SubmodelService {
                     descriptor: undefined,
                     ...(conceptDescriptions && { conceptDescriptions }),
                 },
+                etag: submodelResult.etag,
             };
         }
 
@@ -406,7 +410,8 @@ export class SubmodelService {
      *  - endpoint: The endpoint URL (format: http://host/submodels/{base64EncodedId})
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
-     * @returns Either `{ success: true; data: { submodel, conceptDescriptions? } }` or `{ success: false; error: ... }`.
+     * @returns Either `{ success: true; data: { submodel, conceptDescriptions? }; etag? }` or `{ success: false; error: ... }`.
+     *  `etag` is the entity tag of the Submodel, if the repository sends one.
      */
     async getSubmodelByEndpoint(options: { endpoint: string; includeConceptDescriptions?: boolean }): Promise<
         ApiResult<
@@ -476,6 +481,7 @@ export class SubmodelService {
                 submodel,
                 ...(conceptDescriptions && { conceptDescriptions }),
             },
+            etag: submodelResult.etag,
         };
     }
 
@@ -591,10 +597,12 @@ export class SubmodelService {
      * @param options Object containing:
      *  - submodel: The updated Submodel
      *  - updateInRegistry?: Whether to update the descriptor in the registry (default: true)
+     *  - ifMatch?: Sent as `If-Match` header with the repository update; if the Submodel has changed, the update fails
+     *    with `preconditionFailed` and the registry is not updated
      *
      * @returns Either `{ success: true; data: { submodel, descriptor? } }` or `{ success: false; error: ... }`.
      */
-    async updateSubmodel(options: { submodel: Submodel; updateInRegistry?: boolean }): Promise<
+    async updateSubmodel(options: { submodel: Submodel; updateInRegistry?: boolean; ifMatch?: string }): Promise<
         ApiResult<
             {
                 submodel: Submodel;
@@ -603,7 +611,7 @@ export class SubmodelService {
             any
         >
     > {
-        const { submodel, updateInRegistry = true } = options;
+        const { submodel, updateInRegistry = true, ifMatch } = options;
 
         if (!this.submodelRepositoryConfig) {
             return {
@@ -620,10 +628,11 @@ export class SubmodelService {
             configuration: this.submodelRepositoryConfig,
             submodelIdentifier: submodel.id,
             submodel: submodel,
+            ifMatch,
         });
 
         if (!submodelResult.success) {
-            return { success: false, error: submodelResult.error };
+            return { success: false, error: submodelResult.error, ...pickConditionalErrorFields(submodelResult) };
         }
 
         // Use the returned submodel if available, otherwise use the input submodel
@@ -667,19 +676,41 @@ export class SubmodelService {
      * Deletes a Submodel and optionally removes it from the registry.
      *
      * This method removes the descriptor from the registry first (if requested),
-     * then deletes the Submodel from the repository.
+     * then deletes the Submodel from the repository. With `ifMatch`, the Submodel is deleted from the repository
+     * first, so that a failed precondition leaves the descriptor in the registry.
      *
      * @param options Object containing:
      *  - submodelIdentifier: The Submodel identifier to remove
      *  - deleteFromRegistry?: Whether to delete from registry (default: true)
+     *  - ifMatch?: Sent as `If-Match` header with the repository delete; if the Submodel has changed, the delete fails
+     *    with `preconditionFailed`. Requires the repository configuration.
      *
      * @returns Either `{ success: true; data: void }` or `{ success: false; error: ... }`.
      */
     async deleteSubmodel(options: {
         submodelIdentifier: string;
         deleteFromRegistry?: boolean;
+        ifMatch?: string;
     }): Promise<ApiResult<void, any>> {
-        const { submodelIdentifier, deleteFromRegistry = true } = options;
+        const { submodelIdentifier, deleteFromRegistry = true, ifMatch } = options;
+
+        // A conditional delete must not remove the descriptor if the precondition fails or cannot be checked
+        if (ifMatch) {
+            if (!this.submodelRepositoryConfig) {
+                return {
+                    success: false,
+                    error: {
+                        errorType: 'ConfigurationError',
+                        message: 'Repository configuration required for a conditional delete',
+                    },
+                };
+            }
+
+            const repositoryResult = await this.deleteSubmodelFromRepository(submodelIdentifier, ifMatch);
+            if (!repositoryResult.success) {
+                return repositoryResult;
+            }
+        }
 
         // Remove from registry first if configured and requested
         if (deleteFromRegistry && this.submodelRegistryConfig) {
@@ -694,14 +725,33 @@ export class SubmodelService {
         }
 
         // Remove from repository
+        if (!ifMatch) {
+            const repositoryResult = await this.deleteSubmodelFromRepository(submodelIdentifier);
+            if (!repositoryResult.success) {
+                return repositoryResult;
+            }
+        }
+
+        return { success: true, data: undefined };
+    }
+
+    private async deleteSubmodelFromRepository(
+        submodelIdentifier: string,
+        ifMatch?: string
+    ): Promise<ApiResult<void, any>> {
         if (this.submodelRepositoryConfig) {
             const repositoryResult = await this.submodelRepositoryClient.deleteSubmodelById({
                 configuration: this.submodelRepositoryConfig,
                 submodelIdentifier,
+                ifMatch,
             });
 
             if (!repositoryResult.success) {
-                return { success: false, error: repositoryResult.error };
+                return {
+                    success: false,
+                    error: repositoryResult.error,
+                    ...pickConditionalErrorFields(repositoryResult),
+                };
             }
         }
 

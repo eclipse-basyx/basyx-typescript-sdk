@@ -7,9 +7,13 @@ type ClientMethodData = {
 };
 
 function parseClientMethodData(clientSource: string): ClientMethodData {
-    const methodRegex = /async\s+([A-Za-z0-9_]+)\s*\(/g;
-    const delegatorRegex =
-        /async\s+([A-Za-z0-9_]+)\s*\(\s*options\s*:\s*\{[\s\S]*?\}\s*\)\s*:\s*Promise<[\s\S]*?>\s*\{\s*return\s+this\.([A-Za-z0-9_]+)\(options\);\s*\}/g;
+    const methodRegex = /async\s+([A-Za-z0-9_]+)\s*(?:<[^<>]*>)?\s*\(/g;
+    // The lazy sections must not cross into the next method, or a method is matched with a later delegation
+    const withinMethod = String.raw`(?:(?!\basync\s)[\s\S])*?`;
+    const delegatorRegex = new RegExp(
+        String.raw`async\s+([A-Za-z0-9_]+)\s*(?:<[^<>]*>)?\s*\(\s*options\s*:\s*\{${withinMethod}\}\s*\)\s*:\s*Promise<${withinMethod}>\s*\{\s*return\s+this\.([A-Za-z0-9_]+)\(options\);\s*\}`,
+        'g'
+    );
     const methodNames = new Set<string>();
     const delegationMap = new Map<string, string>();
 

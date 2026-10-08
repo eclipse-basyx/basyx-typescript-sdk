@@ -5,12 +5,13 @@ import type {
     Reference,
     Submodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import type { ApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import { AasRepositoryService } from '../generated';
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
+import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import {
     convertApiAasToCoreAas,
     convertApiAssetInformationToCoreAssetInformation,
@@ -102,6 +103,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: shells },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -109,6 +111,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -162,6 +165,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: shellReferences },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -169,6 +173,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -198,13 +203,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiAasToCoreAas(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiAasToCoreAas(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -215,18 +226,20 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAssetAdministrationShellById(options: {
         configuration: Configuration;
         aasIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        const { configuration, aasIdentifier, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -238,13 +251,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -255,18 +269,20 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAssetAdministrationShellById(options: {
+    async getAssetAdministrationShellById<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetAdministrationShell, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<AssetAdministrationShell, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -278,13 +294,24 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiAasToCoreAas(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiAasToCoreAas(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -296,6 +323,8 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - assetAdministrationShell: Asset Administration Shell object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -303,12 +332,14 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         assetAdministrationShell: AssetAdministrationShell;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<AssetAdministrationShell | void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, assetAdministrationShell } = options;
+        const { configuration, aasIdentifier, assetAdministrationShell, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -321,7 +352,7 @@ export class AasRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
@@ -330,6 +361,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: result ? convertApiAasToCoreAas(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -337,6 +369,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -347,18 +380,22 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAssetAdministrationShellByIdReferenceAasRepository(options: {
+    async getAssetAdministrationShellByIdReferenceAasRepository<
+        IfNoneMatch extends string | undefined = undefined,
+    >(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Reference, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -374,13 +411,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: convertApiReferenceToCoreReference(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -391,18 +435,20 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAssetInformationAasRepository(options: {
+    async getAssetInformationAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetInformation, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<AssetInformation, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -418,13 +464,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: convertApiAssetInformationToCoreAssetInformation(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -436,6 +489,8 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - assetInformation: Asset Information object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -443,12 +498,14 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, assetInformation } = options;
+        const { configuration, aasIdentifier, assetInformation, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -461,13 +518,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -478,17 +536,19 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteThumbnailAasRepository(options: {
         configuration: Configuration;
         aasIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        const { configuration, aasIdentifier, ifMatch } = options;
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -500,18 +560,19 @@ export class AasRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -522,18 +583,20 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getThumbnailAasRepository(options: {
+    async getThumbnailAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Blob, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -545,13 +608,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -564,6 +633,8 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - fileName: The name of the file
      *  - file: The file to upload
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -572,12 +643,14 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         fileName: string;
         file: Blob;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, fileName, file } = options;
+        const { configuration, aasIdentifier, fileName, file, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -591,13 +664,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -610,25 +684,28 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelReferencesAasRepository(options: {
+    async getAllSubmodelReferencesAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             { pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined; result: Reference[] },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, limit, cursor } = options;
+        const { configuration, aasIdentifier, limit, cursor, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -650,13 +727,20 @@ export class AasRepositoryClient {
                     result: submodelReferences,
                 },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -668,6 +752,7 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelReference: Reference to the Submodel
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -675,12 +760,13 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
+        ifMatch?: string;
     }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelReference } = options;
+        const { configuration, aasIdentifier, submodelReference, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -693,13 +779,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiReferenceToCoreReference(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiReferenceToCoreReference(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -711,6 +803,7 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: Unique ID of the AAS
      *  - submodelIdentifier: The submodel's unique ID
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -718,12 +811,13 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -739,21 +833,23 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
 
-    async getAssetInformation(options: {
+    async getAssetInformation<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<AssetInformation, AasRepositoryService.Result>> {
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<AssetInformation, AasRepositoryService.Result, IfNoneMatch>> {
         return this.getAssetInformationAasRepository(options);
     }
 
@@ -761,6 +857,8 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         assetInformation: AssetInformation;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         return this.putAssetInformationAasRepository(options);
     }
@@ -768,14 +866,16 @@ export class AasRepositoryClient {
     async deleteThumbnail(options: {
         configuration: Configuration;
         aasIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         return this.deleteThumbnailAasRepository(options);
     }
 
-    async getThumbnail(options: {
+    async getThumbnail<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
-    }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Blob, AasRepositoryService.Result, IfNoneMatch>> {
         return this.getThumbnailAasRepository(options);
     }
 
@@ -784,19 +884,23 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         fileName: string;
         file: Blob;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         return this.putThumbnailAasRepository(options);
     }
 
-    async getAllSubmodelReferences(options: {
+    async getAllSubmodelReferences<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         limit?: number;
         cursor?: string;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             { pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined; result: Reference[] },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
         return this.getAllSubmodelReferencesAasRepository(options);
@@ -806,6 +910,7 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelReference: Reference;
+        ifMatch?: string;
     }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
         return this.postSubmodelReferenceAasRepository(options);
     }
@@ -814,6 +919,7 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
         return this.deleteSubmodelReferenceAasRepository(options);
     }
@@ -827,21 +933,23 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The submodel's unique ID
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdAasRepository(options: {
+    async getSubmodelByIdAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         level?: AasRepositoryService.GetSubmodelByIdAasRepositoryLevelEnum;
         extent?: AasRepositoryService.GetSubmodelByIdAasRepositoryExtentEnum;
-    }): Promise<ApiResult<Submodel, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Submodel, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, level, extent, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -859,13 +967,24 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiSubmodelToCoreSubmodel(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiSubmodelToCoreSubmodel(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -878,6 +997,8 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - submodel: Submodel object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -886,12 +1007,14 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         submodel: Submodel;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<Submodel | void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, submodel } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, submodel, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -908,7 +1031,7 @@ export class AasRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             if (response.raw.status === 201) {
@@ -918,10 +1041,16 @@ export class AasRepositoryClient {
                         success: true,
                         data: createdSubmodel ? convertApiSubmodelToCoreSubmodel(createdSubmodel) : undefined,
                         statusCode: response.raw.status,
+                        etag: getEtag(response.raw),
                     };
                 } catch {
                     // Some servers acknowledge creation with an empty or non-JSON body.
-                    return { success: true, data: undefined, statusCode: response.raw.status };
+                    return {
+                        success: true,
+                        data: undefined,
+                        statusCode: response.raw.status,
+                        etag: getEtag(response.raw),
+                    };
                 }
             }
 
@@ -930,6 +1059,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: result ? convertApiSubmodelToCoreSubmodel(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -937,6 +1067,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -948,6 +1079,7 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -955,12 +1087,13 @@ export class AasRepositoryClient {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -976,13 +1109,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -996,6 +1130,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - submodel: Submodel object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1005,12 +1140,13 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         submodel: Submodel;
         level?: AasRepositoryService.PatchSubmodelAasRepositoryLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, submodel, level } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, submodel, level, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1028,13 +1164,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1046,19 +1183,21 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdMetadataAasRepository(options: {
+    async getSubmodelByIdMetadataAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
-    }): Promise<ApiResult<AasRepositoryService.SubmodelMetadata, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<AasRepositoryService.SubmodelMetadata, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1074,13 +1213,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1093,6 +1238,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - submodelMetadata: The Submodel Metadata object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1101,12 +1247,13 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         submodelMetadata: AasRepositoryService.SubmodelMetadata;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, submodelMetadata } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, submodelMetadata, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1123,13 +1270,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1143,21 +1291,23 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdValueOnlyAasRepository(options: {
+    async getSubmodelByIdValueOnlyAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         level?: AasRepositoryService.GetSubmodelByIdValueOnlyAasRepositoryLevelEnum;
         extent?: AasRepositoryService.GetSubmodelByIdValueOnlyAasRepositoryExtentEnum;
-    }): Promise<ApiResult<object, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<object, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, level, extent, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1175,13 +1325,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1194,6 +1350,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1203,12 +1360,13 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         body: object;
         level?: AasRepositoryService.PatchSubmodelByIdValueOnlyAasRepositoryLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, body, level } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, body, level, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1226,13 +1384,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1244,19 +1403,21 @@ export class AasRepositoryClient {
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The submodel's unique ID
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdReferenceAasRepository(options: {
+    async getSubmodelByIdReferenceAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
-    }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Reference, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1272,13 +1433,24 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiReferenceToCoreReference(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiReferenceToCoreReference(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1291,20 +1463,22 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The submodel's unique ID
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelByIdPathAasRepository(options: {
+    async getSubmodelByIdPathAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         level?: AasRepositoryService.GetSubmodelByIdPathAasRepositoryLevelEnum;
-    }): Promise<ApiResult<Array<string>, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Array<string>, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, level, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1321,13 +1495,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1343,10 +1523,11 @@ export class AasRepositoryClient {
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsAasRepository(options: {
+    async getAllSubmodelElementsAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
@@ -1354,20 +1535,22 @@ export class AasRepositoryClient {
         cursor?: string;
         level?: AasRepositoryService.GetAllSubmodelElementsAasRepositoryLevelEnum;
         extent?: AasRepositoryService.GetAllSubmodelElementsAasRepositoryExtentEnum;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
                 result: ISubmodelElement[];
             },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, extent } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, extent, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1392,13 +1575,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElements },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1411,6 +1601,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - submodelElement: The Submodel Element object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1419,12 +1610,13 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         submodelElement: ISubmodelElement;
+        ifMatch?: string;
     }): Promise<ApiResult<ISubmodelElement, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, submodelElement } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, submodelElement, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1445,6 +1637,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: convertApiSubmodelElementToCoreSubmodelElement(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1452,6 +1645,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1465,29 +1659,32 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsMetadataAasRepository(options: {
+    async getAllSubmodelElementsMetadataAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
                 result: AasRepositoryService.SubmodelElementMetadata[];
             },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1511,13 +1708,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElementsMetadata },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1532,30 +1736,33 @@ export class AasRepositoryClient {
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsValueOnlyAasRepository(options: {
+    async getAllSubmodelElementsValueOnlyAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
         level?: AasRepositoryService.GetAllSubmodelElementsValueOnlyAasRepositoryLevelEnum;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
                 result: object;
             },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1580,13 +1787,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElementValues },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1601,30 +1815,33 @@ export class AasRepositoryClient {
      *  - limit?: The maximum number of elements in the response array
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsReferenceAasRepository(options: {
+    async getAllSubmodelElementsReferenceAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         limit?: number;
         cursor?: string;
         level?: AasRepositoryService.GetAllSubmodelElementsReferenceAasRepositoryLevelEnum;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
                 result: Reference[];
             },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1648,13 +1865,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElementReferences },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1670,10 +1894,11 @@ export class AasRepositoryClient {
      *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAllSubmodelElementsPathAasRepository(options: {
+    async getAllSubmodelElementsPathAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
@@ -1681,20 +1906,22 @@ export class AasRepositoryClient {
         cursor?: string;
         level?: AasRepositoryService.GetAllSubmodelElementsPathAasRepositoryLevelEnum;
         extent?: AasRepositoryService.GetAllSubmodelElementsPathAasRepositoryExtentEnum;
+        ifNoneMatch?: IfNoneMatch;
     }): Promise<
-        ApiResult<
+        ConditionalApiResult<
             {
                 pagedResult: AasRepositoryService.PagedResultPagingMetadata | undefined;
                 result: string[];
             },
-            AasRepositoryService.Result
+            AasRepositoryService.Result,
+            IfNoneMatch
         >
     > {
-        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, extent } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, limit, cursor, level, extent, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1720,13 +1947,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: submodelElements },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1741,22 +1975,24 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathAasRepository(options: {
+    async getSubmodelElementByPathAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
         level?: AasRepositoryService.GetSubmodelElementByPathAasRepositoryLevelEnum;
         extent?: AasRepositoryService.GetSubmodelElementByPathAasRepositoryExtentEnum;
-    }): Promise<ApiResult<ISubmodelElement, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<ISubmodelElement, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, extent, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1779,13 +2015,20 @@ export class AasRepositoryClient {
                 success: true,
                 data: convertApiSubmodelElementToCoreSubmodelElement(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1799,6 +2042,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1808,12 +2052,13 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         submodelElement: ISubmodelElement;
+        ifMatch?: string;
     }): Promise<ApiResult<ISubmodelElement, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1835,6 +2080,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: convertApiSubmodelElementToCoreSubmodelElement(result),
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1842,6 +2088,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1854,6 +2101,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1862,12 +2110,13 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1884,13 +2133,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1904,6 +2154,8 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1913,12 +2165,15 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         submodelElement: ISubmodelElement;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<ISubmodelElement | void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement, ifMatch, ifNoneMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -1936,7 +2191,7 @@ export class AasRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             if (response.raw.status === 201) {
@@ -1948,10 +2203,16 @@ export class AasRepositoryClient {
                             ? convertApiSubmodelElementToCoreSubmodelElement(createdSubmodelElement)
                             : undefined,
                         statusCode: response.raw.status,
+                        etag: getEtag(response.raw),
                     };
                 } catch {
                     // Some servers acknowledge creation with an empty or non-JSON body.
-                    return { success: true, data: undefined, statusCode: response.raw.status };
+                    return {
+                        success: true,
+                        data: undefined,
+                        statusCode: response.raw.status,
+                        etag: getEtag(response.raw),
+                    };
                 }
             }
 
@@ -1961,6 +2222,7 @@ export class AasRepositoryClient {
                 success: true,
                 data: result ? convertApiSubmodelElementToCoreSubmodelElement(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -1968,6 +2230,7 @@ export class AasRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -1982,6 +2245,7 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElement: SubmodelElement object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -1992,12 +2256,14 @@ export class AasRepositoryClient {
         idShortPath: string;
         submodelElement: ISubmodelElement;
         level?: AasRepositoryService.PatchSubmodelElementValueByPathAasRepositoryLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement, level } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElement, level, ifMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2016,13 +2282,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2035,20 +2302,24 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathMetadataAasRepository(options: {
+    async getSubmodelElementByPathMetadataAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
-    }): Promise<ApiResult<AasRepositoryService.SubmodelElementMetadata, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<AasRepositoryService.SubmodelElementMetadata, AasRepositoryService.Result, IfNoneMatch>
+    > {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2065,13 +2336,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2085,6 +2362,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - submodelElementMetadata: The Submodel Element Metadata object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2094,12 +2372,14 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         submodelElementMetadata: AasRepositoryService.SubmodelElementMetadata;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElementMetadata } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElementMetadata, ifMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2117,13 +2397,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2138,22 +2419,26 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
      *  - extent?: Determines to which extent the resource is being serialized
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathValueOnlyAasRepository(options: {
+    async getSubmodelElementByPathValueOnlyAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
         level?: AasRepositoryService.GetSubmodelElementByPathValueOnlyAasRepositoryLevelEnum;
         extent?: AasRepositoryService.GetSubmodelElementByPathValueOnlyAasRepositoryExtentEnum;
-    }): Promise<ApiResult<AasRepositoryService.SubmodelElementValue, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, extent } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<
+        ConditionalApiResult<AasRepositoryService.SubmodelElementValue, AasRepositoryService.Result, IfNoneMatch>
+    > {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, extent, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2172,13 +2457,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2193,6 +2484,7 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - SubmodelElementValue: SubmodelElementValue object
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2203,12 +2495,14 @@ export class AasRepositoryClient {
         idShortPath: string;
         submodelElementValue: AasRepositoryService.SubmodelElementValue;
         level?: AasRepositoryService.PatchSubmodelElementValueByPathValueOnlyLevelEnum;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElementValue, level } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, submodelElementValue, level, ifMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2227,13 +2521,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2247,21 +2542,23 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathReferenceAasRepository(options: {
+    async getSubmodelElementByPathReferenceAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
         level?: AasRepositoryService.GetSubmodelElementByPathReferenceAasRepositoryLevelEnum;
-    }): Promise<ApiResult<Reference, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Reference, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2279,13 +2576,24 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiReferenceToCoreReference(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiReferenceToCoreReference(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2299,21 +2607,23 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - level?: Determines the structural depth of the respective resource content
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getSubmodelElementByPathPathAasRepository(options: {
+    async getSubmodelElementByPathPathAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
         level?: AasRepositoryService.GetSubmodelElementByPathPathAasRepositoryLevelEnum;
-    }): Promise<ApiResult<Array<string>, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Array<string>, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, level, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2331,13 +2641,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2350,20 +2666,22 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getFileByPathAasRepository(options: {
+    async getFileByPathAasRepository<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
-    }): Promise<ApiResult<Blob, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Blob, AasRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, ifNoneMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2380,13 +2698,19 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2401,6 +2725,8 @@ export class AasRepositoryClient {
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - fileName: The name of the file
      *  - file: The file to upload
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2411,12 +2737,15 @@ export class AasRepositoryClient {
         idShortPath: string;
         fileName: string;
         file: Blob;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, fileName, file } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, fileName, file, ifMatch, ifNoneMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2435,13 +2764,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2454,6 +2784,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2462,12 +2793,13 @@ export class AasRepositoryClient {
         aasIdentifier: string;
         submodelIdentifier: string;
         idShortPath: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2484,13 +2816,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2504,6 +2837,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequest: Operation request object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2513,12 +2847,13 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: AasRepositoryService.OperationRequest;
+        ifMatch?: string;
     }): Promise<ApiResult<AasRepositoryService.OperationResult, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2536,13 +2871,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2556,6 +2892,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequestValueOnly: OperationRequestValueOnly object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2565,12 +2902,14 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequestValueOnly: AasRepositoryService.OperationRequestValueOnly;
+        ifMatch?: string;
     }): Promise<ApiResult<AasRepositoryService.OperationResultValueOnly, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2588,13 +2927,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2608,6 +2948,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequest: OperationRequest object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2617,12 +2958,13 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequest: AasRepositoryService.OperationRequest;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest, ifMatch } = options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2640,13 +2982,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2660,6 +3003,7 @@ export class AasRepositoryClient {
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequestValueOnly: Operation request object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -2669,12 +3013,14 @@ export class AasRepositoryClient {
         submodelIdentifier: string;
         idShortPath: string;
         operationRequestValueOnly: AasRepositoryService.OperationRequestValueOnly;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly } = options;
+        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
+            options;
 
         try {
             const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedAasIdentifier = base64Encode(
@@ -2692,13 +3038,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2745,13 +3092,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2798,13 +3146,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2851,13 +3200,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2891,13 +3241,14 @@ export class AasRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -2920,13 +3271,14 @@ export class AasRepositoryClient {
             const response = await apiInstance.getSelfDescriptionRaw();
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }

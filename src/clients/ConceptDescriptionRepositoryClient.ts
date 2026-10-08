@@ -1,9 +1,10 @@
 import type { ConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
-import type { ApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult } from '../models/api';
 import { ConceptDescriptionRepositoryService } from '../generated'; // Updated import
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
+import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../lib/convertConceptDescriptionTypes';
 import { handleApiError } from '../lib/errorHandler';
 
@@ -44,18 +45,20 @@ export class ConceptDescriptionRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - cdIdentifier: The Concept Description’s unique id
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getConceptDescriptionById(options: {
+    async getConceptDescriptionById<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         cdIdentifier: string;
-    }): Promise<ApiResult<ConceptDescription, ConceptDescriptionRepositoryService.Result>> {
-        const { configuration, cdIdentifier } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<ConceptDescription, ConceptDescriptionRepositoryService.Result, IfNoneMatch>> {
+        const { configuration, cdIdentifier, ifNoneMatch } = options;
 
         try {
             const apiInstance = new ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifNoneMatch })
             );
 
             const encodedCdIdentifier = base64Encode(
@@ -67,13 +70,24 @@ export class ConceptDescriptionRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiCDToCoreCD(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiCDToCoreCD(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -84,18 +98,20 @@ export class ConceptDescriptionRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - cdIdentifier: The Concept Description’s unique id
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteConceptDescriptionById(options: {
         configuration: Configuration;
         cdIdentifier: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, ConceptDescriptionRepositoryService.Result>> {
-        const { configuration, cdIdentifier } = options;
+        const { configuration, cdIdentifier, ifMatch } = options;
 
         try {
             const apiInstance = new ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch })
             );
 
             const encodedCdIdentifier = base64Encode(
@@ -107,13 +123,14 @@ export class ConceptDescriptionRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -125,6 +142,8 @@ export class ConceptDescriptionRepositoryClient {
      *  - configuration: The http request options
      *  - cdIdentifier: The Concept Description’s unique id
      *  - conceptDescription: Concept Description object
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -132,12 +151,14 @@ export class ConceptDescriptionRepositoryClient {
         configuration: Configuration;
         cdIdentifier: string;
         conceptDescription: ConceptDescription;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<ConceptDescription | void, ConceptDescriptionRepositoryService.Result>> {
-        const { configuration, cdIdentifier, conceptDescription } = options;
+        const { configuration, cdIdentifier, conceptDescription, ifMatch, ifNoneMatch } = options;
 
         try {
             const apiInstance = new ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi(
-                applyDefaults(configuration)
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
             );
 
             const encodedCdIdentifier = base64Encode(
@@ -150,7 +171,7 @@ export class ConceptDescriptionRepositoryClient {
             });
 
             if (response.raw.status === 204) {
-                return { success: true, data: undefined, statusCode: response.raw.status };
+                return { success: true, data: undefined, statusCode: response.raw.status, etag: getEtag(response.raw) };
             }
 
             const result = await response.value();
@@ -159,6 +180,7 @@ export class ConceptDescriptionRepositoryClient {
                 success: true,
                 data: result ? convertApiCDToCoreCD(result) : undefined,
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -166,6 +188,7 @@ export class ConceptDescriptionRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -223,6 +246,7 @@ export class ConceptDescriptionRepositoryClient {
                 success: true,
                 data: { pagedResult, result: conceptDescriptions },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -230,6 +254,7 @@ export class ConceptDescriptionRepositoryClient {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -259,13 +284,19 @@ export class ConceptDescriptionRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: convertApiCDToCoreCD(result), statusCode: response.raw.status };
+            return {
+                success: true,
+                data: convertApiCDToCoreCD(result),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -301,13 +332,14 @@ export class ConceptDescriptionRepositoryClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -332,13 +364,14 @@ export class ConceptDescriptionRepositoryClient {
             const response = await apiInstance.getSelfDescriptionRaw();
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }

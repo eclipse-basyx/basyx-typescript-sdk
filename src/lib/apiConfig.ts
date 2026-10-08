@@ -1,4 +1,6 @@
-export function applyDefaults(configuration: any): any {
+import type { ConditionalRequestHeaders } from '../models/api';
+
+export function applyDefaults(configuration: any, conditionalHeaders?: ConditionalRequestHeaders): any {
     // Extract configuration properties
     const options = {
         basePath: configuration.basePath || undefined,
@@ -9,7 +11,7 @@ export function applyDefaults(configuration: any): any {
         password: configuration.password || undefined,
         apiKey: configuration.apiKey || undefined,
         accessToken: configuration.accessToken || undefined,
-        headers: configuration.headers || undefined,
+        headers: withConditionalHeaders(configuration.headers || undefined, conditionalHeaders),
         credentials: configuration.credentials || undefined,
     };
 
@@ -21,4 +23,34 @@ export function applyDefaults(configuration: any): any {
 function getDefaultFetchApi(): typeof fetch {
     // In Node (>=18) or browser, global fetch is available.
     return fetch.bind(globalThis);
+}
+
+/**
+ * Adds `If-Match` and `If-None-Match` to the configured headers. A passed condition replaces a configured header of
+ * the same name regardless of its case; without conditions the configured headers are returned unchanged.
+ */
+function withConditionalHeaders(
+    headers: Record<string, string> | undefined,
+    conditionalHeaders: ConditionalRequestHeaders | undefined
+): Record<string, string> | undefined {
+    const conditions: Record<string, string | undefined> = {
+        'If-Match': conditionalHeaders?.ifMatch,
+        'If-None-Match': conditionalHeaders?.ifNoneMatch,
+    };
+    const names = Object.keys(conditions).filter((name) => conditions[name]);
+    if (names.length === 0) {
+        return headers;
+    }
+
+    const lowerCaseNames = names.map((name) => name.toLowerCase());
+    const merged: Record<string, string> = {};
+    for (const [name, value] of Object.entries(headers ?? {})) {
+        if (!lowerCaseNames.includes(name.toLowerCase())) {
+            merged[name] = value;
+        }
+    }
+    for (const name of names) {
+        merged[name] = conditions[name] as string;
+    }
+    return merged;
 }

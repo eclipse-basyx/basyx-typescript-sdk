@@ -1,8 +1,9 @@
-import type { ApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult } from '../models/api';
 import { AasxFileService } from '../generated';
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
+import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import { handleApiError } from '../lib/errorHandler';
 
 export class AasxFileClient {
@@ -76,6 +77,7 @@ export class AasxFileClient {
                 success: true,
                 data: { pagedResult, result },
                 statusCode: response.raw.status,
+                etag: getEtag(response.raw),
             };
         } catch (err) {
             const customError = await handleApiError(err);
@@ -83,6 +85,7 @@ export class AasxFileClient {
                 success: false,
                 error: customError,
                 statusCode: AasxFileClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -116,13 +119,14 @@ export class AasxFileClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasxFileClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -133,17 +137,19 @@ export class AasxFileClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - packageId: The package Id (UTF8-BASE64-URL-encoded)
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; returns `{ success: true; notModified: true }` without data if the representation still has this `etag`
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
-    async getAASXByPackageId(options: {
+    async getAASXByPackageId<IfNoneMatch extends string | undefined = undefined>(options: {
         configuration: Configuration;
         packageId: string;
-    }): Promise<ApiResult<Blob, AasxFileService.Result>> {
-        const { configuration, packageId } = options;
+        ifNoneMatch?: IfNoneMatch;
+    }): Promise<ConditionalApiResult<Blob, AasxFileService.Result, IfNoneMatch>> {
+        const { configuration, packageId, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration, { ifNoneMatch }));
 
             const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
 
@@ -152,13 +158,19 @@ export class AasxFileClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
+            const notModified = getNotModifiedResult(err, ifNoneMatch);
+            if (notModified) {
+                return notModified;
+            }
+
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasxFileClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -172,6 +184,8 @@ export class AasxFileClient {
      *  - aasIds?: A list of Asset Administration Shells' unique ids
      *  - file: The file to upload
      *  - fileName: The name of the file
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
+     *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -181,11 +195,15 @@ export class AasxFileClient {
         aasIds?: string[];
         file: Blob;
         fileName: string;
+        ifMatch?: string;
+        ifNoneMatch?: string;
     }): Promise<ApiResult<void, AasxFileService.Result>> {
-        const { configuration, packageId, aasIds, file, fileName } = options;
+        const { configuration, packageId, aasIds, file, fileName, ifMatch, ifNoneMatch } = options;
 
         try {
-            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasxFileService.AASXFileServerAPIApi(
+                applyDefaults(configuration, { ifMatch, ifNoneMatch })
+            );
 
             const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
             const response = await apiInstance.putAASXByPackageIdRaw({
@@ -196,13 +214,14 @@ export class AasxFileClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasxFileClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -213,17 +232,19 @@ export class AasxFileClient {
      * @param options Object containing:
      *  - configuration: The http request options.
      *  - packageId: The package Id (UTF8-BASE64-URL-encoded)
+     *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
     async deleteAASXByPackageId(options: {
         configuration: Configuration;
         packageId: string;
+        ifMatch?: string;
     }): Promise<ApiResult<void, AasxFileService.Result>> {
-        const { configuration, packageId } = options;
+        const { configuration, packageId, ifMatch } = options;
 
         try {
-            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration));
+            const apiInstance = new AasxFileService.AASXFileServerAPIApi(applyDefaults(configuration, { ifMatch }));
 
             const encodedPackageId = base64Encode(AasxFileClient.requireIdentifier(packageId, 'packageId'));
 
@@ -232,13 +253,14 @@ export class AasxFileClient {
             });
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasxFileClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }
@@ -261,13 +283,14 @@ export class AasxFileClient {
             const response = await apiInstance.getSelfDescriptionRaw();
             const result = await response.value();
 
-            return { success: true, data: result, statusCode: response.raw.status };
+            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
                 success: false,
                 error: customError,
                 statusCode: AasxFileClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
             };
         }
     }

@@ -175,6 +175,30 @@ describe('AasDiscoveryClient', () => {
         }
     });
 
+    it('should only encode name and value of asset identifiers', async () => {
+        // Arrange
+        mockApiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw.mockResolvedValue(
+            createRawResponse(200, { result: SHELL_IDS, paging_metadata: {} })
+        );
+
+        const client = new AasDiscoveryClient();
+
+        // Act
+        await client.getAllAssetAdministrationShellIdsByAssetLink({
+            configuration: TEST_CONFIGURATION,
+            assetIds: CORE_SPECIFIC_ASSET_IDS,
+        });
+
+        // Assert
+        expect(mockApiInstance.getAllAssetAdministrationShellIdsByAssetLinkRaw).toHaveBeenCalledWith({
+            assetIds: CORE_SPECIFIC_ASSET_IDS.map(
+                (id) => `encoded_${JSON.stringify({ name: id.name, value: id.value })}`
+            ),
+            limit: undefined,
+            cursor: undefined,
+        });
+    });
+
     it('should handle errors when fetching Asset Administration Shell IDs', async () => {
         // Arrange
         const errorResult: AasDiscoveryService.Result = {
