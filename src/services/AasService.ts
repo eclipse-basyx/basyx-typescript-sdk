@@ -693,7 +693,7 @@ export class AasService {
      *  - aasIdentifier: The AAS identifier to remove
      *  - deleteFromRegistry?: Whether to delete from registry (default: true)
      *  - ifMatch?: Sent as `If-Match` header with the repository delete; if the shell has changed, the delete fails with
-     *    `preconditionFailed`
+     *    `preconditionFailed`. Requires the repository configuration.
      *
      * @returns Either `{ success: true; data: void }` or `{ success: false; error: ... }`.
      */
@@ -704,8 +704,18 @@ export class AasService {
     }): Promise<ApiResult<void, any>> {
         const { aasIdentifier, deleteFromRegistry = true, ifMatch } = options;
 
-        // A conditional delete must not remove the descriptor if the precondition fails
+        // A conditional delete must not remove the descriptor if the precondition fails or cannot be checked
         if (ifMatch) {
+            if (!this.aasRepositoryConfig) {
+                return {
+                    success: false,
+                    error: {
+                        errorType: 'ConfigurationError',
+                        message: 'Repository configuration required for a conditional delete',
+                    },
+                };
+            }
+
             const repoResult = await this.deleteAasFromRepository(aasIdentifier, ifMatch);
             if (!repoResult.success) {
                 return repoResult;

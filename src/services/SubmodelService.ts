@@ -683,7 +683,7 @@ export class SubmodelService {
      *  - submodelIdentifier: The Submodel identifier to remove
      *  - deleteFromRegistry?: Whether to delete from registry (default: true)
      *  - ifMatch?: Sent as `If-Match` header with the repository delete; if the Submodel has changed, the delete fails
-     *    with `preconditionFailed`
+     *    with `preconditionFailed`. Requires the repository configuration.
      *
      * @returns Either `{ success: true; data: void }` or `{ success: false; error: ... }`.
      */
@@ -694,8 +694,18 @@ export class SubmodelService {
     }): Promise<ApiResult<void, any>> {
         const { submodelIdentifier, deleteFromRegistry = true, ifMatch } = options;
 
-        // A conditional delete must not remove the descriptor if the precondition fails
+        // A conditional delete must not remove the descriptor if the precondition fails or cannot be checked
         if (ifMatch) {
+            if (!this.submodelRepositoryConfig) {
+                return {
+                    success: false,
+                    error: {
+                        errorType: 'ConfigurationError',
+                        message: 'Repository configuration required for a conditional delete',
+                    },
+                };
+            }
+
             const repositoryResult = await this.deleteSubmodelFromRepository(submodelIdentifier, ifMatch);
             if (!repositoryResult.success) {
                 return repositoryResult;

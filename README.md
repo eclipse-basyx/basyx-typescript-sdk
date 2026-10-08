@@ -291,7 +291,8 @@ if (revalidated.success && revalidated.notModified) {
   the result type includes this case only then.
 - `AasService` and `SubmodelService` return the `etag` of the shell or Submodel on reads and accept `ifMatch` for
   `updateAas`, `deleteAas`, `updateSubmodel` and `deleteSubmodel`. The condition applies to the repository; with
-  `ifMatch`, deletes remove the repository resource before the registry descriptor.
+  `ifMatch`, deletes remove the repository resource before the registry descriptor and require the repository
+  configuration.
 - Calls without these options behave as before.
 
 ### Using the AasService (High-level API)

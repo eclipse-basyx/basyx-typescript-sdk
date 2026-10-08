@@ -125,6 +125,18 @@ describe('Conditional requests in services', () => {
             expect(calls[1].headers['If-Match']).toBeUndefined();
         });
 
+        it('rejects a conditional delete without repository configuration', async () => {
+            const { calls, fetchApi } = createServer([]);
+            const service = new AasService({
+                aasRegistryConfig: new Configuration({ basePath: REGISTRY, fetchApi }),
+            });
+
+            const result = await service.deleteAas({ aasIdentifier: shell.id, ifMatch: ETAG });
+
+            expect(result).toMatchObject({ success: false, error: { errorType: 'ConfigurationError' } });
+            expect(calls).toHaveLength(0);
+        });
+
         it('deletes from the registry first without ifMatch', async () => {
             const { calls, service } = createService([
                 { method: 'DELETE', url: /^http:\/\/repository\.local\/shells\//, respond: noContent },
@@ -220,6 +232,18 @@ describe('Conditional requests in services', () => {
             expect(result).toMatchObject({ success: false, preconditionFailed: true });
             expect(calls).toHaveLength(1);
             expect(calls[0].headers['If-Match']).toBe(ETAG);
+        });
+
+        it('rejects a conditional delete without repository configuration', async () => {
+            const { calls, fetchApi } = createServer([]);
+            const service = new SubmodelService({
+                submodelRegistryConfig: new Configuration({ basePath: REGISTRY, fetchApi }),
+            });
+
+            const result = await service.deleteSubmodel({ submodelIdentifier: submodel.id, ifMatch: ETAG });
+
+            expect(result).toMatchObject({ success: false, error: { errorType: 'ConfigurationError' } });
+            expect(calls).toHaveLength(0);
         });
 
         it('deletes from the repository first with ifMatch', async () => {
