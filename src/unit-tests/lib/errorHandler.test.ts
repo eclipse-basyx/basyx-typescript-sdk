@@ -8,11 +8,12 @@ describe('handleApiError', () => {
     };
 
     beforeEach(() => {
-        // Mock Date.getTime to return a consistent timestamp for testing
-        vi.spyOn(Date.prototype, 'getTime').mockReturnValue(1744752054631.86);
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2025-04-15T21:20:54.631Z'));
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         vi.restoreAllMocks();
     });
 
@@ -23,7 +24,7 @@ describe('handleApiError', () => {
                     code: '404',
                     messageType: 'Exception',
                     text: 'Resource not found',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -40,7 +41,7 @@ describe('handleApiError', () => {
         expect(result.messages?.[0].code).toBe('400');
         expect(result.messages?.[0].messageType).toBe('Exception');
         expect(result.messages?.[0].text).toContain('Required parameter missing');
-        expect(result.messages?.[0].timestamp).toBe('1744752054.63186');
+        expect(result.messages?.[0].timestamp).toBe('2025-04-15T21:20:54.631Z');
     });
 
     it('should handle generic Error objects', async () => {
@@ -50,7 +51,7 @@ describe('handleApiError', () => {
         expect(result.messages).toHaveLength(1);
         expect(result.messages?.[0].messageType).toBe('Exception');
         expect(result.messages?.[0].text).toBe('Generic error');
-        expect(result.messages?.[0].timestamp).toBe('1744752054.63186');
+        expect(result.messages?.[0].timestamp).toBe('2025-04-15T21:20:54.631Z');
     });
 
     it('should handle ResponseError with parseable JSON response', async () => {
@@ -60,7 +61,7 @@ describe('handleApiError', () => {
                     code: '403',
                     messageType: 'Exception',
                     text: 'Access forbidden',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         });
@@ -157,13 +158,13 @@ describe('handleApiError', () => {
                     code: '422',
                     messageType: 'Validation',
                     text: 'Validation failed',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
                 {
                     code: '422',
                     messageType: 'Validation',
                     text: 'Field is required',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         });
@@ -193,6 +194,26 @@ describe('handleApiError', () => {
             expect(result.messages?.[0].code).toBe('0');
             expect(result.messages?.[0].text).toBe(testCase.message);
             expect(result.messages?.[0].messageType).toBe('Exception');
+        }
+    });
+
+    it('should create timestamps that match the AAS API Message timestamp pattern', async () => {
+        vi.useRealTimers();
+        const specTimestampPattern =
+            /^-?(([1-9][0-9][0-9][0-9]+)|(0[0-9][0-9][0-9]))-((0[1-9])|(1[0-2]))-((0[1-9])|([12][0-9])|(3[01]))T(((([01][0-9])|(2[0-3])):[0-5][0-9]:([0-5][0-9])(\.[0-9]+)?)|24:00:00(\.0+)?)(Z|\+00:00|-00:00)$/;
+        const errors = [
+            new RequiredError('testField', 'Required parameter missing'),
+            new Error('Generic error'),
+            new FetchError(new Error('Network failure'), 'Failed to fetch'),
+            new ResponseError(
+                createMockResponse(500, vi.fn().mockRejectedValue(new Error('Invalid JSON'))),
+                'Server error'
+            ),
+        ];
+
+        for (const error of errors) {
+            const result = await handleApiError(error);
+            expect(result.messages?.[0].timestamp).toMatch(specTimestampPattern);
         }
     });
 });

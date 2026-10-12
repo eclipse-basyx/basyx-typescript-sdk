@@ -131,7 +131,7 @@ describe('SubmodelRegistryClient', () => {
                 code: '400',
                 messageType: 'Exception',
                 text: err.message || 'Error occurred',
-                timestamp: '1744752054.63186',
+                timestamp: '2025-04-15T21:20:54.631Z',
             };
 
             return { messages: [message] };
@@ -186,7 +186,7 @@ describe('SubmodelRegistryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -234,7 +234,7 @@ describe('SubmodelRegistryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -281,7 +281,7 @@ describe('SubmodelRegistryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -332,7 +332,7 @@ describe('SubmodelRegistryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -410,7 +410,7 @@ describe('SubmodelRegistryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -455,7 +455,7 @@ describe('SubmodelRegistryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
