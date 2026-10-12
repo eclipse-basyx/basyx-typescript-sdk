@@ -26,6 +26,14 @@ function isRequiredErrorLike(err: unknown): err is { message?: string; field?: s
     return err instanceof RequiredError || (err as { name?: unknown })?.name === 'RequiredError';
 }
 /**
+ * Returns the current time as a UTC date-time string matching the timestamp
+ * pattern of the AAS API Message schema.
+ */
+function currentTimestamp(): string {
+    return new Date().toISOString();
+}
+
+/**
  * Processes errors from API calls and standardizes them to a Result object
  * with a consistent messages array following the API spec guidelines.
  *
@@ -50,8 +58,7 @@ export async function handleApiError(
             return { messages: errorAny.messages };
         }
 
-        // Get current timestamp with millisecond precision as a string
-        const timestamp = (new Date().getTime() / 1000).toString();
+        const timestamp = currentTimestamp();
 
         let message:
             | AasRepositoryService.Message
@@ -124,8 +131,7 @@ export async function handleApiError(
         // If our error handler throws an error, capture that and return a fallback error
         console.error('Error in error handler:', handlerError);
 
-        // Get current timestamp with millisecond precision as a string for the fallback error
-        const timestamp = (new Date().getTime() / 1000).toString();
+        const timestamp = currentTimestamp();
 
         return {
             messages: [

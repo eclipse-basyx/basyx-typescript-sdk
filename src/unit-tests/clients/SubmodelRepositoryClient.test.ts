@@ -352,7 +352,7 @@ describe('SubmodelRepositoryClient', () => {
             if (err?.messages) return err;
 
             // Create a standard Result with messages
-            const timestamp = (1744752054.63186).toString();
+            const timestamp = '2025-04-15T21:20:54.631Z';
             const message: SubmodelRepositoryService.Message = {
                 code: '400',
                 messageType: 'Exception',
@@ -428,7 +428,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -484,7 +484,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -539,7 +539,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -600,7 +600,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -687,7 +687,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -745,7 +745,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -805,7 +805,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -861,7 +861,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -924,7 +924,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -985,7 +985,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1066,7 +1066,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1126,7 +1126,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1193,7 +1193,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1260,7 +1260,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1321,7 +1321,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1421,7 +1421,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1488,7 +1488,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1551,7 +1551,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1609,7 +1609,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
@@ -1669,7 +1669,7 @@ describe('SubmodelRepositoryClient', () => {
                     code: '400',
                     messageType: 'Exception',
                     text: 'Required parameter missing',
-                    timestamp: '1744752054.63186',
+                    timestamp: '2025-04-15T21:20:54.631Z',
                 },
             ],
         };
