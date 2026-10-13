@@ -28,6 +28,8 @@ import type {
   OperationRequestValueOnly,
   OperationResult,
   OperationResultValueOnly,
+  Query,
+  QueryResultAssetAdministrationShell,
   Reference,
   Result,
   Submodel,
@@ -365,6 +367,12 @@ export interface PutThumbnailAasRepositoryRequest {
     aasIdentifier: string;
     fileName?: string;
     file?: Blob;
+}
+
+export interface QueryAssetAdministrationShellsRequest {
+    limit?: number;
+    cursor?: string;
+    query?: Query;
 }
 
 /**
@@ -2891,6 +2899,43 @@ export class AssetAdministrationShellRepositoryAPIApi extends runtime.BaseAPI {
      */
     async putThumbnailAasRepository(requestParameters: PutThumbnailAasRepositoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.putThumbnailAasRepositoryRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Returns all Asset Administration Shells that conform to the input query
+     */
+    async queryAssetAdministrationShellsRaw(requestParameters: QueryAssetAdministrationShellsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueryResultAssetAdministrationShell>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/query/shells`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters['query'],
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response);
+    }
+
+    /**
+     * Returns all Asset Administration Shells that conform to the input query
+     */
+    async queryAssetAdministrationShells(requestParameters: QueryAssetAdministrationShellsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueryResultAssetAdministrationShell> {
+        const response = await this.queryAssetAdministrationShellsRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
 }

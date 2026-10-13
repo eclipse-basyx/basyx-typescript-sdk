@@ -5,6 +5,7 @@ export * from './MultiLanguagePropertyUtils';
 export * from './ReferableUtils';
 export * from './ReferenceUtil';
 export * from './SemanticIdUtils';
+export * from './ServiceDescriptionUtils';
 
 // Also export as namespaces for organized imports
 export * as DescriptorUtils from './DescriptorUtils';
@@ -13,3 +14,4 @@ export * as MultiLanguagePropertyUtils from './MultiLanguagePropertyUtils';
 export * as ReferableUtils from './ReferableUtils';
 export * as ReferenceUtil from './ReferenceUtil';
 export * as SemanticIdUtils from './SemanticIdUtils';
+export * as ServiceDescriptionUtils from './ServiceDescriptionUtils';

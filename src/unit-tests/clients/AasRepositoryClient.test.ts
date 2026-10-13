@@ -23,6 +23,15 @@ import {
     convertCoreReferenceToApiReference,
 } from '../../lib/convertAasTypes';
 import { handleApiError } from '../../lib/errorHandler';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../../models/Query';
 
 // Mock the dependencies
 //vi.mock('../../generated');
@@ -111,6 +120,7 @@ describe('AasRepositoryClient', () => {
 
     // Create mock for AssetAdministrationShellRepositoryAPIApi
     const mockApiInstance = {
+        queryAssetAdministrationShells: vi.fn(),
         getAllAssetAdministrationShells: vi.fn(),
         getAllAssetAdministrationShellsReference: vi.fn(),
         postAssetAdministrationShell: vi.fn(),
@@ -1156,5 +1166,128 @@ describe('AasRepositoryClient', () => {
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
         }
+    });
+
+    describe('queryAssetAdministrationShells', () => {
+        const QUERY = new Query(new EqualComparison([new FieldOperand('$aas#idShort'), new StringLiteral('Robot')]));
+        const QUERY_JSON = { $condition: { $eq: [{ $field: '$aas#idShort' }, { $strVal: 'Robot' }] } };
+        const queryRaw = () => (mockApiInstance as unknown as Record<string, Mock>).queryAssetAdministrationShellsRaw;
+        const queryResponse = (value: unknown, status = 200) => ({
+            raw: { status },
+            value: vi.fn().mockResolvedValue(value),
+        });
+
+        it('should return Asset Administration Shells that conform to the query', async () => {
+            // Arrange
+            const pagedResult = { cursor: 'next-cursor' };
+            queryRaw().mockResolvedValue(queryResponse({ paging_metadata: pagedResult, result: [API_AAS1, API_AAS2] }));
+
+            const client = new AasRepositoryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShells({
+                configuration: TEST_CONFIGURATION,
+                query: QUERY,
+                limit: 2,
+                cursor: 'current-cursor',
+            });
+
+            // Assert
+            expect(MockAasRepository).toHaveBeenCalledWith(expectConfigurationCall());
+            expect(queryRaw()).toHaveBeenCalledWith({ query: QUERY_JSON, limit: 2, cursor: 'current-cursor' });
+            expect(convertApiAasToCoreAas).toHaveBeenCalledTimes(2);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data.pagedResult).toBe(pagedResult);
+                expect(response.data.resultType).toBe('AssetAdministrationShell');
+                expect(response.data.result).toEqual([CORE_AAS1, CORE_AAS2]);
+            }
+        });
+
+        it('should return identifiers if the query selects them', async () => {
+            // Arrange
+            queryRaw().mockResolvedValue(
+                queryResponse({
+                    paging_metadata: { resultType: 'Identifier' },
+                    result: [API_AAS1.id, API_AAS2.id],
+                })
+            );
+
+            const client = new AasRepositoryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShells({
+                configuration: TEST_CONFIGURATION,
+                query: new Query(QUERY.condition, QuerySelect.Id),
+            });
+
+            // Assert
+            expect(queryRaw()).toHaveBeenCalledWith({
+                query: { $select: 'id', ...QUERY_JSON },
+                limit: undefined,
+                cursor: undefined,
+            });
+            expect(convertApiAasToCoreAas).not.toHaveBeenCalled();
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.data.resultType).toBe('Identifier');
+                expect(response.data.result).toEqual([API_AAS1.id, API_AAS2.id]);
+            }
+        });
+
+        it('should handle errors when querying Asset Administration Shells', async () => {
+            // Arrange
+            const errorResult = {
+                messages: [
+                    {
+                        code: '400',
+                        messageType: 'Error' as const,
+                        text: 'field $and length: must be >= 2',
+                        timestamp: '2025-04-15T21:20:54.631Z',
+                    },
+                ],
+            };
+            queryRaw().mockRejectedValue({ response: { status: 400 } });
+            (handleApiError as Mock).mockResolvedValue(errorResult);
+
+            const client = new AasRepositoryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShells({
+                configuration: TEST_CONFIGURATION,
+                query: new Query(new AndExpression([new BooleanLiteral(true)])),
+            });
+
+            // Assert
+            expect(queryRaw()).toHaveBeenCalledWith({
+                query: { $condition: { $and: [{ $boolean: true }] } },
+                limit: undefined,
+                cursor: undefined,
+            });
+            expect(response.success).toBe(false);
+            if (!response.success) {
+                expect(response.statusCode).toBe(400);
+                expect(response.error).toEqual(errorResult);
+            }
+        });
+
+        it('should fail with bad request without a query', async () => {
+            // Arrange
+            const client = new AasRepositoryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShells({
+                configuration: TEST_CONFIGURATION,
+                query: undefined as unknown as Query,
+            });
+
+            // Assert
+            expect(queryRaw()).not.toHaveBeenCalled();
+            expect(response.success).toBe(false);
+            if (!response.success) {
+                expect(response.statusCode).toBe(400);
+            }
+        });
     });
 });

@@ -20,6 +20,15 @@ import {
     convertCoreSubmodelToApiSubmodel,
 } from '../../lib/convertSubmodelTypes';
 import { handleApiError } from '../../lib/errorHandler';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../../models/Query';
 
 // Mock the dependencies
 //vi.mock('../../generated');
@@ -179,6 +188,7 @@ describe('SubmodelRepositoryClient', () => {
 
     // Create mock for SubmodelRepositoryAPIApi
     const mockApiInstance = {
+        querySubmodelsRaw: vi.fn(),
         getAllSubmodelsRaw: vi.fn(),
         getAllSubmodelsMetadataRaw: vi.fn(),
         getAllSubmodelsValueOnlyRaw: vi.fn(),
@@ -2229,5 +2239,130 @@ describe('SubmodelRepositoryClient', () => {
             expect(response.statusCode).toBe(200);
             expect(response.data).toEqual(SERVICE_DESCRIPTION);
         }
+    });
+
+    describe('querySubmodels', () => {
+        const QUERY = new Query(new EqualComparison([new FieldOperand('$sm#idShort'), new StringLiteral('Nameplate')]));
+        const QUERY_JSON = { $condition: { $eq: [{ $field: '$sm#idShort' }, { $strVal: 'Nameplate' }] } };
+        const queryRaw = () => (mockApiInstance as unknown as Record<string, Mock>).querySubmodelsRaw;
+        const queryResponse = (value: unknown, status = 200) => ({
+            raw: { status },
+            value: vi.fn().mockResolvedValue(value),
+        });
+
+        it('should return Submodels that conform to the query', async () => {
+            // Arrange
+            const pagedResult = { cursor: 'next-cursor' };
+            queryRaw().mockResolvedValue(
+                queryResponse({ paging_metadata: pagedResult, result: [API_SUBMODEL1, API_SUBMODEL2] })
+            );
+
+            const client = new SubmodelRepositoryClient();
+
+            // Act
+            const response = await client.querySubmodels({
+                configuration: TEST_CONFIGURATION,
+                query: QUERY,
+                limit: 2,
+                cursor: 'current-cursor',
+            });
+
+            // Assert
+            expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
+            expect(queryRaw()).toHaveBeenCalledWith({ query: QUERY_JSON, limit: 2, cursor: 'current-cursor' });
+            expect(convertApiSubmodelToCoreSubmodel).toHaveBeenCalledTimes(2);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data.pagedResult).toBe(pagedResult);
+                expect(response.data.resultType).toBe('Submodel');
+                expect(response.data.result).toEqual([CORE_SUBMODEL1, CORE_SUBMODEL2]);
+            }
+        });
+
+        it('should return identifiers if the query selects them', async () => {
+            // Arrange
+            queryRaw().mockResolvedValue(
+                queryResponse({
+                    paging_metadata: { resultType: 'Identifier' },
+                    result: [API_SUBMODEL1.id, API_SUBMODEL2.id],
+                })
+            );
+
+            const client = new SubmodelRepositoryClient();
+
+            // Act
+            const response = await client.querySubmodels({
+                configuration: TEST_CONFIGURATION,
+                query: new Query(QUERY.condition, QuerySelect.Id),
+            });
+
+            // Assert
+            expect(queryRaw()).toHaveBeenCalledWith({
+                query: { $select: 'id', ...QUERY_JSON },
+                limit: undefined,
+                cursor: undefined,
+            });
+            expect(convertApiSubmodelToCoreSubmodel).not.toHaveBeenCalled();
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.data.resultType).toBe('Identifier');
+                expect(response.data.result).toEqual([API_SUBMODEL1.id, API_SUBMODEL2.id]);
+            }
+        });
+
+        it('should handle errors when querying Submodels', async () => {
+            // Arrange
+            const errorResult = {
+                messages: [
+                    {
+                        code: '400',
+                        messageType: 'Error' as const,
+                        text: 'field $and length: must be >= 2',
+                        timestamp: '2025-04-15T21:20:54.631Z',
+                    },
+                ],
+            };
+            queryRaw().mockRejectedValue({ response: { status: 400 } });
+            (handleApiError as Mock).mockResolvedValue(errorResult);
+
+            const client = new SubmodelRepositoryClient();
+
+            // Act
+            const response = await client.querySubmodels({
+                configuration: TEST_CONFIGURATION,
+                query: new Query(new AndExpression([new BooleanLiteral(true)])),
+            });
+
+            // Assert
+            expect(queryRaw()).toHaveBeenCalledWith({
+                query: { $condition: { $and: [{ $boolean: true }] } },
+                limit: undefined,
+                cursor: undefined,
+            });
+            expect(response.success).toBe(false);
+            if (!response.success) {
+                expect(response.statusCode).toBe(400);
+                expect(response.error).toEqual(errorResult);
+            }
+        });
+
+        it('should fail with bad request without a query', async () => {
+            // Arrange
+            const client = new SubmodelRepositoryClient();
+
+            // Act
+            const response = await client.querySubmodels({
+                configuration: TEST_CONFIGURATION,
+                query: undefined as unknown as Query,
+            });
+
+            // Assert
+            expect(queryRaw()).not.toHaveBeenCalled();
+            expect(response.success).toBe(false);
+            if (!response.success) {
+                expect(response.statusCode).toBe(400);
+            }
+        });
     });
 });

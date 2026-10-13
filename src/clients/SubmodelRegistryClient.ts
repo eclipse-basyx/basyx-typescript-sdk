@@ -1,4 +1,6 @@
 import type { ApiResult, ConditionalApiResult } from '../models/api';
+import type { Query } from '../models/Query';
+import type { QueryResult } from '../models/QueryResult';
 import { SubmodelRegistryService } from '../generated';
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
@@ -9,6 +11,7 @@ import {
     convertCoreSubmodelDescriptorToApiSubmodelDescriptor,
 } from '../lib/convertAasDescriptorTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 import { SubmodelDescriptor } from '../models/Descriptors';
 
 export class SubmodelRegistryClient {
@@ -78,6 +81,63 @@ export class SubmodelRegistryClient {
             return {
                 success: true,
                 data: { pagedResult, result: submodelDescriptors },
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return {
+                success: false,
+                error: customError,
+                statusCode: SubmodelRegistryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
+            };
+        }
+    }
+
+    /**
+     * Returns all Submodel Descriptors that conform to the query (AAS Query Language)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - query: The query, e.g. `new Query(new EqualComparison([new FieldOperand('$smdesc#idShort'), new StringLiteral('Nameplate')]))`
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data.resultType` is `'Identifier'` with `result: string[]` if the query selects `QuerySelect.Id`.
+     */
+    async querySubmodelDescriptors(options: {
+        configuration: Configuration;
+        query: Query;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            QueryResult<SubmodelDescriptor, 'SubmodelDescriptor', SubmodelRegistryService.PagedResultPagingMetadata>,
+            SubmodelRegistryService.Result
+        >
+    > {
+        const { configuration, query, limit, cursor } = options;
+
+        try {
+            const apiInstance = new SubmodelRegistryService.SubmodelRegistryAPIApi(applyDefaults(configuration));
+
+            const response = await apiInstance.querySubmodelDescriptorsRaw({
+                query: toQueryRequestBody(query) as unknown as SubmodelRegistryService.Query,
+                limit: limit,
+                cursor: cursor,
+            });
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: convertQueryResult(
+                    result,
+                    query,
+                    'SubmodelDescriptor',
+                    convertApiSubmodelDescriptorToCoreSubmodelDescriptor
+                ),
                 statusCode: response.raw.status,
                 etag: getEtag(response.raw),
             };

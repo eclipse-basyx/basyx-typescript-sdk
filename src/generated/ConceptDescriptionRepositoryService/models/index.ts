@@ -1505,6 +1505,182 @@ export interface LevelType {
 /**
  * 
  * @export
+ * @interface LogicalExpression
+ */
+export interface LogicalExpression {
+    /**
+     * 
+     * @type {Array<LogicalExpression>}
+     * @memberof LogicalExpression
+     */
+    $and?: Array<LogicalExpression>;
+    /**
+     * 
+     * @type {Array<MatchExpression>}
+     * @memberof LogicalExpression
+     */
+    $match?: Array<MatchExpression>;
+    /**
+     * 
+     * @type {Array<LogicalExpression>}
+     * @memberof LogicalExpression
+     */
+    $or?: Array<LogicalExpression>;
+    /**
+     * 
+     * @type {LogicalExpression}
+     * @memberof LogicalExpression
+     */
+    $not?: LogicalExpression | null;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof LogicalExpression
+     */
+    $eq?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof LogicalExpression
+     */
+    $ne?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof LogicalExpression
+     */
+    $gt?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof LogicalExpression
+     */
+    $ge?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof LogicalExpression
+     */
+    $lt?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof LogicalExpression
+     */
+    $le?: Array<Value>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof LogicalExpression
+     */
+    $contains?: Array<StringValue>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof LogicalExpression
+     */
+    '$starts-with'?: Array<StringValue>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof LogicalExpression
+     */
+    '$ends-with'?: Array<StringValue>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof LogicalExpression
+     */
+    $regex?: Array<StringValue>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof LogicalExpression
+     */
+    $boolean?: boolean;
+}
+/**
+ * 
+ * @export
+ * @interface MatchExpression
+ */
+export interface MatchExpression {
+    /**
+     * 
+     * @type {Array<MatchExpression>}
+     * @memberof MatchExpression
+     */
+    $match?: Array<MatchExpression>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof MatchExpression
+     */
+    $eq?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof MatchExpression
+     */
+    $ne?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof MatchExpression
+     */
+    $gt?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof MatchExpression
+     */
+    $ge?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof MatchExpression
+     */
+    $lt?: Array<Value>;
+    /**
+     * 
+     * @type {Array<Value>}
+     * @memberof MatchExpression
+     */
+    $le?: Array<Value>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof MatchExpression
+     */
+    $contains?: Array<StringValue>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof MatchExpression
+     */
+    '$starts-with'?: Array<StringValue>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof MatchExpression
+     */
+    '$ends-with'?: Array<StringValue>;
+    /**
+     * 
+     * @type {Array<StringValue>}
+     * @memberof MatchExpression
+     */
+    $regex?: Array<StringValue>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof MatchExpression
+     */
+    $boolean?: boolean;
+}
+/**
+ * 
+ * @export
  * @interface Message
  */
 export interface Message {
@@ -2047,6 +2223,80 @@ export type QualifierKind = typeof QualifierKind[keyof typeof QualifierKind];
 /**
  * 
  * @export
+ * @interface Query
+ */
+export interface Query {
+    /**
+     * 
+     * @type {string}
+     * @memberof Query
+     */
+    $select?: string;
+    /**
+     * 
+     * @type {LogicalExpression}
+     * @memberof Query
+     */
+    $condition: LogicalExpression | null;
+}
+/**
+ * 
+ * @export
+ * @interface QueryResultConceptDescription
+ */
+export interface QueryResultConceptDescription {
+    /**
+     * 
+     * @type {QueryResultConceptDescriptionPagingMetadata}
+     * @memberof QueryResultConceptDescription
+     */
+    paging_metadata: QueryResultConceptDescriptionPagingMetadata;
+    /**
+     * 
+     * @type {Array<QueryResultConceptDescriptionResultInner>}
+     * @memberof QueryResultConceptDescription
+     */
+    result?: Array<QueryResultConceptDescriptionResultInner>;
+}
+/**
+ * 
+ * @export
+ * @interface QueryResultConceptDescriptionPagingMetadata
+ */
+export interface QueryResultConceptDescriptionPagingMetadata {
+    /**
+     * 
+     * @type {string}
+     * @memberof QueryResultConceptDescriptionPagingMetadata
+     */
+    cursor?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof QueryResultConceptDescriptionPagingMetadata
+     */
+    resultType?: QueryResultConceptDescriptionPagingMetadataResultTypeEnum;
+}
+
+
+/**
+ * @export
+ */
+export const QueryResultConceptDescriptionPagingMetadataResultTypeEnum = {
+    ConceptDescription: 'ConceptDescription',
+    Identifier: 'Identifier'
+} as const;
+export type QueryResultConceptDescriptionPagingMetadataResultTypeEnum = typeof QueryResultConceptDescriptionPagingMetadataResultTypeEnum[keyof typeof QueryResultConceptDescriptionPagingMetadataResultTypeEnum];
+
+/**
+ * @type QueryResultConceptDescriptionResultInner
+ * 
+ * @export
+ */
+export type QueryResultConceptDescriptionResultInner = ConceptDescription | string;
+/**
+ * 
+ * @export
  * @interface Range
  */
 export interface Range {
@@ -2571,6 +2821,31 @@ export type StateOfEvent = typeof StateOfEvent[keyof typeof StateOfEvent];
 /**
  * 
  * @export
+ * @interface StringValue
+ */
+export interface StringValue {
+    /**
+     * 
+     * @type {string}
+     * @memberof StringValue
+     */
+    $field?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StringValue
+     */
+    $strVal?: string;
+    /**
+     * 
+     * @type {Value}
+     * @memberof StringValue
+     */
+    $strCast?: Value | null;
+}
+/**
+ * 
+ * @export
  * @interface Submodel
  */
 export interface Submodel {
@@ -2908,6 +3183,115 @@ export interface SubmodelElementList {
 }
 
 
+/**
+ * 
+ * @export
+ * @interface Value
+ */
+export interface Value {
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $field?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $strVal?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Value
+     */
+    $numVal?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $hexVal?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $dateTimeVal?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $timeVal?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Value
+     */
+    $boolean?: boolean;
+    /**
+     * 
+     * @type {Value}
+     * @memberof Value
+     */
+    $strCast?: Value | null;
+    /**
+     * 
+     * @type {Value}
+     * @memberof Value
+     */
+    $numCast?: Value | null;
+    /**
+     * 
+     * @type {Value}
+     * @memberof Value
+     */
+    $hexCast?: Value | null;
+    /**
+     * 
+     * @type {Value}
+     * @memberof Value
+     */
+    $boolCast?: Value | null;
+    /**
+     * 
+     * @type {Value}
+     * @memberof Value
+     */
+    $dateTimeCast?: Value | null;
+    /**
+     * 
+     * @type {Value}
+     * @memberof Value
+     */
+    $timeCast?: Value | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $dayOfWeek?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $dayOfMonth?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $month?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Value
+     */
+    $year?: string;
+}
 /**
  * 
  * @export

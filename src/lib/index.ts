@@ -35,6 +35,9 @@ export {
     convertCoreSubmodelToApiSubmodel,
 } from './convertSubmodelTypes';
 
+// Query Language Serialization/Deserialization
+export { queryFromJsonable, toJsonableQuery } from './queryJsonization';
+
 // Utilities
 export { applyDefaults } from './apiConfig';
 export { base64Decode, base64Encode } from './base64Url';

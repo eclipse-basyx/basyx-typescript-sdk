@@ -1,6 +1,15 @@
 import { SubmodelRegistryClient } from '../clients/SubmodelRegistryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../models/Query';
 import { createDisplayName, createTestSubmodelDescriptor } from './fixtures/aasregistryFixtures';
 import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
@@ -406,6 +415,100 @@ describe('Submodel Registry Integration Tests', () => {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
             expect(Array.isArray(response.data.profiles)).toBe(true);
+        }
+    });
+
+    const createQueryIdShort = (): string => `Query${uniqueSuffix().replace(/[^A-Za-z0-9]/g, '')}`;
+
+    async function createSubmodelDescriptorWithIdShort(idShort: string): Promise<string> {
+        const submodelDescriptor = createUniqueSubmodelDescriptor();
+        submodelDescriptor.idShort = idShort;
+        const response = await client.postSubmodelDescriptor({ configuration, submodelDescriptor });
+        assertApiResult(response);
+        return submodelDescriptor.id;
+    }
+
+    /**
+     * @operation QuerySubmodelDescriptors
+     * @status 200
+     */
+    test('should query Submodel Descriptors page by page', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        createdIds.push(await createSubmodelDescriptorWithIdShort(idShort));
+        createdIds.push(await createSubmodelDescriptorWithIdShort(idShort));
+        const query = new Query(new EqualComparison([new FieldOperand('$smdesc#idShort'), new StringLiteral(idShort)]));
+
+        const firstPage = await client.querySubmodelDescriptors({ configuration, query, limit: 1 });
+
+        assertApiResult(firstPage);
+        if (!firstPage.success) {
+            return;
+        }
+        expect(firstPage.statusCode).toBe(200);
+        expect(firstPage.data.resultType).toBe('SubmodelDescriptor');
+        expect(firstPage.data.result).toHaveLength(1);
+        expect(firstPage.data.pagedResult?.cursor).toBeDefined();
+
+        const secondPage = await client.querySubmodelDescriptors({
+            configuration,
+            query,
+            limit: 1,
+            cursor: firstPage.data.pagedResult?.cursor,
+        });
+
+        assertApiResult(secondPage);
+        if (!secondPage.success) {
+            return;
+        }
+        expect(secondPage.statusCode).toBe(200);
+        expect(secondPage.data.resultType).toBe('SubmodelDescriptor');
+        const queriedIds = [...firstPage.data.result, ...secondPage.data.result].map((item) =>
+            typeof item === 'string' ? item : item.id
+        );
+        expect(queriedIds.sort()).toEqual([...createdIds].sort());
+    });
+
+    /**
+     * @operation QuerySubmodelDescriptors
+     * @status 400
+     */
+    test('should reject an invalid query with bad request', async () => {
+        // $and requires at least two operands
+        const query = new Query(new AndExpression([new BooleanLiteral(true)]));
+
+        const response = await client.querySubmodelDescriptors({ configuration, query });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation QuerySubmodelDescriptors
+     * @status 200 [known-backend-bug]
+     *
+     * BaSyx Go expects `$select` as an array of field paths and ignores it, so it rejects the `"$select": "id"` of
+     * IDTA-01002-3 with 400 and never returns identifiers.
+     */
+    test.skip('should return only identifiers if the query selects them', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        createdIds.push(await createSubmodelDescriptorWithIdShort(idShort));
+        const query = new Query(
+            new EqualComparison([new FieldOperand('$smdesc#idShort'), new StringLiteral(idShort)]),
+            QuerySelect.Id
+        );
+
+        const response = await client.querySubmodelDescriptors({ configuration, query });
+
+        assertApiResult(response);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.resultType).toBe('Identifier');
+            expect(response.data.result).toEqual(createdIds);
         }
     });
 });

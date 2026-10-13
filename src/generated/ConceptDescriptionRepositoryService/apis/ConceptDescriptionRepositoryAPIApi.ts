@@ -17,6 +17,8 @@ import * as runtime from '../../runtime';
 import type {
   ConceptDescription,
   GetConceptDescriptionsResult,
+  Query,
+  QueryResultConceptDescription,
   Result,
 } from '../models/index';
 
@@ -43,6 +45,12 @@ export interface PostConceptDescriptionRequest {
 export interface PutConceptDescriptionByIdRequest {
     cdIdentifier: string;
     conceptDescription: ConceptDescription;
+}
+
+export interface QueryConceptDescriptionsRequest {
+    limit?: number;
+    cursor?: string;
+    query?: Query;
 }
 
 /**
@@ -245,6 +253,43 @@ export class ConceptDescriptionRepositoryAPIApi extends runtime.BaseAPI {
             default:
                 return await response.value();
         }
+    }
+
+    /**
+     * Returns all Concept Descriptions that confirm to the input query
+     */
+    async queryConceptDescriptionsRaw(requestParameters: QueryConceptDescriptionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueryResultConceptDescription>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/query/concept-descriptions`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters['query'],
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response);
+    }
+
+    /**
+     * Returns all Concept Descriptions that confirm to the input query
+     */
+    async queryConceptDescriptions(requestParameters: QueryConceptDescriptionsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueryResultConceptDescription> {
+        const response = await this.queryConceptDescriptionsRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
 }

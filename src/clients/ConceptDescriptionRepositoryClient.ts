@@ -1,5 +1,7 @@
 import type { ConceptDescription } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult, ConditionalApiResult } from '../models/api';
+import type { Query } from '../models/Query';
+import type { QueryResult } from '../models/QueryResult';
 import { ConceptDescriptionRepositoryService } from '../generated'; // Updated import
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
@@ -7,6 +9,7 @@ import { base64Encode } from '../lib/base64Url';
 import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import { convertApiCDToCoreCD, convertCoreCDToApiCD } from '../lib/convertConceptDescriptionTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 
 export class ConceptDescriptionRepositoryClient {
     private static requireIdentifier(value: string | null | undefined, field: string): string {
@@ -245,6 +248,64 @@ export class ConceptDescriptionRepositoryClient {
             return {
                 success: true,
                 data: { pagedResult, result: conceptDescriptions },
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return {
+                success: false,
+                error: customError,
+                statusCode: ConceptDescriptionRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
+            };
+        }
+    }
+
+    /**
+     * Returns all Concept Descriptions that conform to the query (AAS Query Language)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - query: The query, e.g. `new Query(new EqualComparison([new FieldOperand('$cd#idShort'), new StringLiteral('Voltage')]))`
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data.resultType` is `'Identifier'` with `result: string[]` if the query selects `QuerySelect.Id`.
+     */
+    async queryConceptDescriptions(options: {
+        configuration: Configuration;
+        query: Query;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            QueryResult<
+                ConceptDescription,
+                'ConceptDescription',
+                ConceptDescriptionRepositoryService.PagedResultPagingMetadata
+            >,
+            ConceptDescriptionRepositoryService.Result
+        >
+    > {
+        const { configuration, query, limit, cursor } = options;
+
+        try {
+            const apiInstance = new ConceptDescriptionRepositoryService.ConceptDescriptionRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const response = await apiInstance.queryConceptDescriptionsRaw({
+                query: toQueryRequestBody(query) as unknown as ConceptDescriptionRepositoryService.Query,
+                limit: limit,
+                cursor: cursor,
+            });
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: convertQueryResult(result, query, 'ConceptDescription', convertApiCDToCoreCD),
                 statusCode: response.raw.status,
                 etag: getEtag(response.raw),
             };

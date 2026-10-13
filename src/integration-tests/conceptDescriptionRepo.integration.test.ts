@@ -1,6 +1,15 @@
 import { ConceptDescriptionRepositoryClient } from '../clients/ConceptDescriptionRepositoryClient';
 import { Configuration } from '../generated';
 import { base64Encode } from '../lib/base64Url';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../models/Query';
 import { assertApiFailure, assertApiResult } from './fixtures/assertionHelpers';
 import { createDescription, createTestCD } from './fixtures/conceptDescriptionFixtures';
 import { createPerTestCleanupRunner } from './fixtures/testCleanup';
@@ -443,6 +452,100 @@ describe('Concept Description Repository Integration Tests', () => {
             expect(response.statusCode).toBe(200);
             expect(response.data).toBeDefined();
             expect(Array.isArray(response.data.profiles)).toBe(true);
+        }
+    });
+
+    const createQueryIdShort = (): string => `Query${uniqueSuffix().replace(/[^A-Za-z0-9]/g, '')}`;
+
+    async function createConceptDescriptionWithIdShort(idShort: string): Promise<string> {
+        const conceptDescription = createUniqueConceptDescription();
+        conceptDescription.idShort = idShort;
+        const response = await client.postConceptDescription({ configuration, conceptDescription });
+        assertApiResult(response);
+        return conceptDescription.id;
+    }
+
+    /**
+     * @operation QueryConceptDescriptions
+     * @status 200
+     */
+    test('should query Concept Descriptions page by page', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        createdIds.push(await createConceptDescriptionWithIdShort(idShort));
+        createdIds.push(await createConceptDescriptionWithIdShort(idShort));
+        const query = new Query(new EqualComparison([new FieldOperand('$cd#idShort'), new StringLiteral(idShort)]));
+
+        const firstPage = await client.queryConceptDescriptions({ configuration, query, limit: 1 });
+
+        assertApiResult(firstPage);
+        if (!firstPage.success) {
+            return;
+        }
+        expect(firstPage.statusCode).toBe(200);
+        expect(firstPage.data.resultType).toBe('ConceptDescription');
+        expect(firstPage.data.result).toHaveLength(1);
+        expect(firstPage.data.pagedResult?.cursor).toBeDefined();
+
+        const secondPage = await client.queryConceptDescriptions({
+            configuration,
+            query,
+            limit: 1,
+            cursor: firstPage.data.pagedResult?.cursor,
+        });
+
+        assertApiResult(secondPage);
+        if (!secondPage.success) {
+            return;
+        }
+        expect(secondPage.statusCode).toBe(200);
+        expect(secondPage.data.resultType).toBe('ConceptDescription');
+        const queriedIds = [...firstPage.data.result, ...secondPage.data.result].map((item) =>
+            typeof item === 'string' ? item : item.id
+        );
+        expect(queriedIds.sort()).toEqual([...createdIds].sort());
+    });
+
+    /**
+     * @operation QueryConceptDescriptions
+     * @status 400
+     */
+    test('should reject an invalid query with bad request', async () => {
+        // $and requires at least two operands
+        const query = new Query(new AndExpression([new BooleanLiteral(true)]));
+
+        const response = await client.queryConceptDescriptions({ configuration, query });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation QueryConceptDescriptions
+     * @status 200 [known-backend-bug]
+     *
+     * BaSyx Go expects `$select` as an array of field paths and ignores it, so it rejects the `"$select": "id"` of
+     * IDTA-01002-3 with 400 and never returns identifiers.
+     */
+    test.skip('should return only identifiers if the query selects them', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        createdIds.push(await createConceptDescriptionWithIdShort(idShort));
+        const query = new Query(
+            new EqualComparison([new FieldOperand('$cd#idShort'), new StringLiteral(idShort)]),
+            QuerySelect.Id
+        );
+
+        const response = await client.queryConceptDescriptions({ configuration, query });
+
+        assertApiResult(response);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.resultType).toBe('Identifier');
+            expect(response.data.result).toEqual(createdIds);
         }
     });
 });

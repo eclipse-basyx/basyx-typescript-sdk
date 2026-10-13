@@ -16,6 +16,8 @@
 import * as runtime from '../../runtime';
 import type {
   GetSubmodelDescriptorsResult,
+  Query,
+  QueryResultSubmodelDescriptor,
   Result,
   SubmodelDescriptor,
 } from '../models/index';
@@ -40,6 +42,12 @@ export interface PostSubmodelDescriptorRequest {
 export interface PutSubmodelDescriptorByIdRequest {
     submodelIdentifier: string;
     submodelDescriptor: SubmodelDescriptor;
+}
+
+export interface QuerySubmodelDescriptorsRequest {
+    limit?: number;
+    cursor?: string;
+    query?: Query;
 }
 
 /**
@@ -230,6 +238,43 @@ export class SubmodelRegistryAPIApi extends runtime.BaseAPI {
             default:
                 return await response.value();
         }
+    }
+
+    /**
+     * Returns all Submodel Descriptors that confirm to the input query
+     */
+    async querySubmodelDescriptorsRaw(requestParameters: QuerySubmodelDescriptorsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueryResultSubmodelDescriptor>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/query/submodel-descriptors`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters['query'],
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response);
+    }
+
+    /**
+     * Returns all Submodel Descriptors that confirm to the input query
+     */
+    async querySubmodelDescriptors(requestParameters: QuerySubmodelDescriptorsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueryResultSubmodelDescriptor> {
+        const response = await this.querySubmodelDescriptorsRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
 }
