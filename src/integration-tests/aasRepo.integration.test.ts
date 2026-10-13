@@ -10,6 +10,7 @@ import {
     createTestSubmodel,
     createTestSubmodelElement,
     createTestSubmodelElementCollection,
+    createValue,
 } from './fixtures/submodelFixtures';
 import { getIntegrationBasePath } from './testEngineConfig';
 
@@ -2988,7 +2989,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: shell.id,
             submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
-            submodelElementValue: 'coverage-value',
+            submodelElementValue: createValue(),
         });
 
         try {
@@ -3013,7 +3014,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: shell.id,
             submodelIdentifier: submodel.id,
             idShortPath: 'testProperty',
-            submodelElementValue: 'coverage-value',
+            submodelElementValue: createValue(),
         });
 
         try {
@@ -3038,7 +3039,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: shell.id,
             submodelIdentifier: submodel.id,
             idShortPath: `missing-path-${uniqueSuffix()}`,
-            submodelElementValue: 'coverage-value',
+            submodelElementValue: createValue(),
         });
 
         try {
@@ -3061,7 +3062,7 @@ describe('AAS Repository Integration Tests', () => {
             aasIdentifier: undefined as unknown as string,
             submodelIdentifier: `missing-id-${uniqueSuffix()}`,
             idShortPath: 'testProperty',
-            submodelElementValue: 'coverage-value',
+            submodelElementValue: createValue(),
         });
 
         assertApiFailureCode(response, '400');

@@ -103,8 +103,12 @@ export function createTestSubmodelElementCollection(): ISubmodelElement {
 export function createDescription(): LangStringTextType {
     return new LangStringTextType('en', 'Test Description for SubmodelElement');
 }
+/**
+ * Creates a ValueOnly value for the `xs:integer` Properties of the fixtures.
+ * Servers validate ValueOnly values against the `valueType` and serialize numeric types as JSON numbers.
+ */
 export function createValue(): PropertyValue {
-    return 'updatedPropertyValue';
+    return 1985;
 }
 export function createSemanticId(): string {
     return 'https://example.com/ids/sm/123';
