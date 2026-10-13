@@ -7,12 +7,23 @@ import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 import { Configuration } from '../generated/runtime';
 import { base64Decode, base64Encode } from '../lib/base64Url';
 import { pickConditionalErrorFields } from '../lib/conditionalRequests';
+import {
+    createEndpointConfiguration,
+    type EndpointConfigurationResolver,
+    resolveDescriptorEndpoint,
+    splitResourceHref,
+} from '../lib/endpointConfiguration';
 import { SubmodelDescriptor } from '../models/Descriptors';
 
 export interface SubmodelServiceConfig {
     submodelRegistryConfig?: Configuration;
     submodelRepositoryConfig?: Configuration;
     conceptDescriptionRepositoryConfig?: Configuration;
+    /**
+     * Returns the configuration for requests to a descriptor endpoint, or `null` to reject it.
+     * Without it, endpoint requests use the auth, fetch and middleware settings of `submodelRepositoryConfig`.
+     */
+    endpointConfiguration?: EndpointConfigurationResolver;
 }
 
 export interface SubmodelListResolutionWarning {
@@ -37,6 +48,7 @@ export class SubmodelService {
     private submodelRegistryConfig?: Configuration;
     private submodelRepositoryConfig?: Configuration;
     private conceptDescriptionRepositoryConfig?: Configuration;
+    private endpointConfiguration?: EndpointConfigurationResolver;
 
     constructor(config: SubmodelServiceConfig) {
         this.submodelRegistryClient = new SubmodelRegistryClient();
@@ -45,6 +57,7 @@ export class SubmodelService {
         this.submodelRegistryConfig = config.submodelRegistryConfig;
         this.submodelRepositoryConfig = config.submodelRepositoryConfig;
         this.conceptDescriptionRepositoryConfig = config.conceptDescriptionRepositoryConfig;
+        this.endpointConfiguration = config.endpointConfiguration;
     }
 
     /**
@@ -120,14 +133,15 @@ export class SubmodelService {
                                 };
                             }
 
-                            const endpoint = descriptor.endpoints?.[0]?.protocolInformation?.href;
+                            const endpoint = resolveDescriptorEndpoint(descriptor, 'SUBMODEL')?.href;
                             if (!endpoint) {
                                 return {
                                     submodel: null,
                                     warning: {
                                         submodelIdentifier: descriptor.id,
                                         errorType: 'MissingEndpoint',
-                                        message: 'Submodel descriptor has no endpoint and cannot be resolved',
+                                        message:
+                                            'Submodel descriptor has no SUBMODEL-3.x endpoint and cannot be resolved',
                                     },
                                 };
                             }
@@ -283,7 +297,7 @@ export class SubmodelService {
 
             if (descriptorResult.success) {
                 const descriptor = descriptorResult.data;
-                const endpoint = descriptor.endpoints?.[0]?.protocolInformation?.href;
+                const endpoint = resolveDescriptorEndpoint(descriptor, 'SUBMODEL')?.href;
 
                 if (endpoint) {
                     const submodelResult = await this.getSubmodelByEndpoint({
@@ -375,7 +389,7 @@ export class SubmodelService {
             });
 
             if (descriptorResult.success) {
-                const endpoint = descriptorResult.data.endpoints?.[0]?.protocolInformation?.href;
+                const endpoint = resolveDescriptorEndpoint(descriptorResult.data, 'SUBMODEL')?.href;
                 if (endpoint) {
                     return { success: true, data: endpoint };
                 }
@@ -405,9 +419,10 @@ export class SubmodelService {
      *
      * Extracts the base URL and base64url-encoded Submodel identifier from the endpoint,
      * decodes the identifier, and fetches the submodel from the repository.
+     * If an `endpointConfiguration` hook is configured, it decides whether and how the endpoint is contacted.
      *
      * @param options Object containing:
-     *  - endpoint: The endpoint URL (format: http://host/submodels/{base64EncodedId})
+     *  - endpoint: The endpoint URL (format: http://host[/basePath]/submodels/{base64EncodedId})
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
      * @returns Either `{ success: true; data: { submodel, conceptDescriptions? }; etag? }` or `{ success: false; error: ... }`.
@@ -426,9 +441,9 @@ export class SubmodelService {
 
         // Extract base URL and encoded ID from endpoint
         // Expected format: http://localhost:8082/submodels/base64EncodedId
-        const match = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)\/submodels\/([^/]+)$/);
+        const parts = splitResourceHref(endpoint, 'submodels');
 
-        if (!match) {
+        if (!parts) {
             return {
                 success: false,
                 error: {
@@ -438,7 +453,7 @@ export class SubmodelService {
             };
         }
 
-        const [, baseUrl, encodedId] = match;
+        const { basePath: baseUrl, encodedId } = parts;
 
         // Decode the ID
         let submodelIdentifier: string;
@@ -455,11 +470,19 @@ export class SubmodelService {
         }
 
         // Create configuration for the endpoint
-        const config = this.createRepositoryEndpointConfiguration(baseUrl);
+        const configResult = await createEndpointConfiguration(
+            endpoint,
+            baseUrl,
+            this.endpointConfiguration,
+            this.submodelRepositoryConfig
+        );
+        if (!configResult.success) {
+            return { success: false, error: configResult.error };
+        }
 
         // Fetch the submodel
         const submodelResult = await this.submodelRepositoryClient.getSubmodelById({
-            configuration: config,
+            configuration: configResult.configuration,
             submodelIdentifier,
         });
 
@@ -483,31 +506,6 @@ export class SubmodelService {
             },
             etag: submodelResult.etag,
         };
-    }
-
-    /**
-     * Creates a repository configuration for an endpoint while preserving auth and middleware.
-     *
-     * @param basePath The endpoint base path to target
-     * @returns Configuration with endpoint basePath plus repository auth/settings
-     */
-    private createRepositoryEndpointConfiguration(basePath: string): Configuration {
-        if (!this.submodelRepositoryConfig) {
-            return new Configuration({ basePath });
-        }
-
-        return new Configuration({
-            basePath,
-            fetchApi: this.submodelRepositoryConfig.fetchApi,
-            middleware: this.submodelRepositoryConfig.middleware,
-            queryParamsStringify: this.submodelRepositoryConfig.queryParamsStringify,
-            username: this.submodelRepositoryConfig.username,
-            password: this.submodelRepositoryConfig.password,
-            apiKey: this.submodelRepositoryConfig.apiKey,
-            accessToken: this.submodelRepositoryConfig.accessToken,
-            headers: this.submodelRepositoryConfig.headers,
-            credentials: this.submodelRepositoryConfig.credentials,
-        });
     }
 
     /**
