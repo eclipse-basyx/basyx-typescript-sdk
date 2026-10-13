@@ -879,35 +879,7 @@ describe('AAS Registry Integration Tests', () => {
      * @operation QueryAssetAdministrationShellDescriptors
      * @status 200
      */
-    test('should query Asset Administration Shell Descriptors', async () => {
-        const idShort = createQueryIdShort();
-        const createdIds: string[] = [];
-        createdIds.push(await createShellDescriptorWithIdShort(idShort));
-        createdIds.push(await createShellDescriptorWithIdShort(idShort));
-        const query = new Query(
-            new EqualComparison([new FieldOperand('$aasdesc#idShort'), new StringLiteral(idShort)])
-        );
-
-        const response = await client.queryAssetAdministrationShellDescriptors({ configuration, query });
-
-        assertApiResult(response);
-        if (response.success) {
-            expect(response.statusCode).toBe(200);
-            expect(response.data.resultType).toBe('AssetAdministrationShellDescriptor');
-            const queriedIds = response.data.result.map((item) => (typeof item === 'string' ? item : item.id));
-            expect(queriedIds.sort()).toEqual([...createdIds].sort());
-        }
-    });
-
-    /**
-     * @operation QueryAssetAdministrationShellDescriptors
-     * @status 200 [known-backend-bug]
-     *
-     * BaSyx Go returns an empty page for the cursor of a query, although the same cursor continues the listing of
-     * GetAllAssetAdministrationShellDescriptors.
-     * See https://github.com/eclipse-basyx/basyx-go-components/issues/753
-     */
-    test.skip('should query Asset Administration Shell Descriptors page by page', async () => {
+    test('should query Asset Administration Shell Descriptors page by page', async () => {
         const idShort = createQueryIdShort();
         const createdIds: string[] = [];
         createdIds.push(await createShellDescriptorWithIdShort(idShort));
@@ -965,13 +937,9 @@ describe('AAS Registry Integration Tests', () => {
 
     /**
      * @operation QueryAssetAdministrationShellDescriptors
-     * @status 200 [known-backend-bug]
-     *
-     * BaSyx Go expects `$select` as an array of field paths and ignores it, so it rejects the `"$select": "id"` of
-     * IDTA-01002-3 with 400 and never returns identifiers.
-     * See https://github.com/eclipse-basyx/basyx-go-components/issues/752
+     * @status 200
      */
-    test.skip('should return only identifiers if the query selects them', async () => {
+    test('should return only identifiers if the query selects them', async () => {
         const idShort = createQueryIdShort();
         const createdIds: string[] = [];
         createdIds.push(await createShellDescriptorWithIdShort(idShort));

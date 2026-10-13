@@ -166,14 +166,6 @@ Observed and tracked:
 - `submodel-repository` `GetAllSubmodels-Path` can return an empty `result` array even when a fresh submodel has been
   created in the same run. The test now validates success and response shape, but does not require `result.length > 0`.
 - `submodel-repository` value-only cursor not-found behavior is tracked as `known-specification-bug`.
-- All query endpoints (`/query/*`) of BaSyx Go expect `$select` as an array of field paths and ignore it, so the
-  `"$select": "id"` of IDTA-01002-3 is rejected with 400 and no identifiers are returned. The identifier tests are
-  tracked as `known-backend-bug`
-  ([eclipse-basyx/basyx-go-components#752](https://github.com/eclipse-basyx/basyx-go-components/issues/752)).
-- `aas-registry` `QueryAssetAdministrationShellDescriptors` returns an empty page for the cursor of a query, although
-  the same cursor continues `GetAllAssetAdministrationShellDescriptors`. The paging test is tracked as
-  `known-backend-bug`; the other query endpoints page correctly
-  ([eclipse-basyx/basyx-go-components#753](https://github.com/eclipse-basyx/basyx-go-components/issues/753)).
 
 Maintenance rule for new findings:
 
