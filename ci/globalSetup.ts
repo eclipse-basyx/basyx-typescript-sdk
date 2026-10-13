@@ -55,6 +55,7 @@ export default async () => {
         await waitForContainer('sm-registry');
         await waitForContainer('aas-discovery');
         await waitForContainer('aasx-file-server');
+        await waitForContainer('aas-env-registry-sync');
     } catch (error) {
         console.error('Error starting Docker containers:', error);
         process.exit(1);

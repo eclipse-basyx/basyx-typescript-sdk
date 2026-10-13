@@ -12,9 +12,14 @@ import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
 import { base64Decode, base64Encode } from '../lib/base64Url';
 import { pickConditionalErrorFields } from '../lib/conditionalRequests';
+import {
+    createEndpointConfiguration,
+    type EndpointConfigurationResolver,
+    resolveDescriptorEndpoint,
+    splitResourceHref,
+} from '../lib/endpointConfiguration';
 import { AssetId } from '../models/AssetId';
 import { AssetAdministrationShellDescriptor } from '../models/Descriptors';
-import { extractEndpointHref } from '../utils/DescriptorUtils';
 import { SubmodelService } from './SubmodelService';
 
 export interface AasServiceConfig {
@@ -24,6 +29,12 @@ export interface AasServiceConfig {
     submodelRepositoryConfig?: Configuration;
     conceptDescriptionRepositoryConfig?: Configuration;
     discoveryConfig?: Configuration;
+    /**
+     * Returns the configuration for requests to a descriptor endpoint, or `null` to reject it.
+     * Used for AAS and Submodel endpoints. Without it, endpoint requests use the auth, fetch and middleware settings
+     * of the respective repository configuration.
+     */
+    endpointConfiguration?: EndpointConfigurationResolver;
 }
 
 export interface AasListResolutionWarning {
@@ -50,6 +61,7 @@ export class AasService {
     private aasRegistryConfig?: Configuration;
     private aasRepositoryConfig?: Configuration;
     private discoveryConfig?: Configuration;
+    private endpointConfiguration?: EndpointConfigurationResolver;
     private submodelService: SubmodelService;
 
     constructor(config: AasServiceConfig) {
@@ -59,12 +71,14 @@ export class AasService {
         this.aasRegistryConfig = config.aasRegistryConfig;
         this.aasRepositoryConfig = config.aasRepositoryConfig;
         this.discoveryConfig = config.discoveryConfig;
+        this.endpointConfiguration = config.endpointConfiguration;
 
         // Use separate submodel configs if provided, otherwise fall back to AAS configs
         this.submodelService = new SubmodelService({
             submodelRegistryConfig: config.submodelRegistryConfig ?? config.aasRegistryConfig,
             submodelRepositoryConfig: config.submodelRepositoryConfig ?? config.aasRepositoryConfig,
             conceptDescriptionRepositoryConfig: config.conceptDescriptionRepositoryConfig,
+            endpointConfiguration: config.endpointConfiguration,
         });
     }
 
@@ -134,21 +148,25 @@ export class AasService {
                         continue;
                     }
 
-                    const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
-                    if (!endpoint) {
+                    const resolvedEndpoint = resolveDescriptorEndpoint(descriptor, 'AAS');
+                    if (!resolvedEndpoint) {
                         warnings.push({
                             descriptorId: descriptor.id,
                             errorType: 'MissingEndpoint',
-                            message: 'AAS descriptor has no AAS-3.0 endpoint and cannot be resolved',
+                            message: 'AAS descriptor has no AAS-3.x endpoint and cannot be resolved',
                         });
                         continue;
                     }
 
-                    // Extract base URL from endpoint (remove /shells/{id} part)
-                    const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
-                    const config = this.createRepositoryEndpointConfiguration(baseUrl);
+                    const endpoint = resolvedEndpoint.href;
+                    const configResult = await this.createEndpointConfiguration(endpoint, resolvedEndpoint.basePath);
+                    if (!configResult.success) {
+                        warnings.push({ descriptorId: descriptor.id, endpoint, ...configResult.error });
+                        continue;
+                    }
+
                     const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
-                        configuration: config,
+                        configuration: configResult.configuration,
                         aasIdentifier: descriptor.id,
                     });
                     if (shellResult.success) {
@@ -291,15 +309,16 @@ export class AasService {
 
             if (descriptorResult.success) {
                 const descriptor = descriptorResult.data;
-                const endpoint = extractEndpointHref(descriptor, 'AAS-3.0');
+                const resolvedEndpoint = resolveDescriptorEndpoint(descriptor, 'AAS');
+                const configResult = resolvedEndpoint
+                    ? await this.createEndpointConfiguration(resolvedEndpoint.href, resolvedEndpoint.basePath)
+                    : undefined;
 
-                if (endpoint) {
-                    // Extract base URL from endpoint (remove /shells/{id} part)
-                    const baseUrl = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)/)?.[1] || endpoint;
+                // A rejected endpoint is not contacted; fall through to the repository
+                if (configResult?.success) {
                     // Try to fetch from descriptor endpoint
-                    const config = this.createRepositoryEndpointConfiguration(baseUrl);
                     const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
-                        configuration: config,
+                        configuration: configResult.configuration,
                         aasIdentifier,
                     });
 
@@ -397,7 +416,7 @@ export class AasService {
             });
 
             if (descriptorResult.success) {
-                const endpoint = extractEndpointHref(descriptorResult.data, 'AAS-3.0');
+                const endpoint = resolveDescriptorEndpoint(descriptorResult.data, 'AAS')?.href;
                 if (endpoint) {
                     return { success: true, data: endpoint };
                 }
@@ -427,9 +446,10 @@ export class AasService {
      *
      * Extracts the base URL and base64url-encoded AAS identifier from the endpoint,
      * decodes the identifier, and fetches the shell from the repository.
+     * If an `endpointConfiguration` hook is configured, it decides whether and how the endpoint is contacted.
      *
      * @param options Object containing:
-     *  - endpoint: The endpoint URL (format: http://host/shells/{base64EncodedId})
+     *  - endpoint: The endpoint URL (format: http://host[/basePath]/shells/{base64EncodedId})
      *  - includeSubmodels?: Whether to fetch submodels for the shell (default: false)
      *  - includeConceptDescriptions?: Whether to fetch concept descriptions (default: false)
      *
@@ -453,9 +473,9 @@ export class AasService {
 
         // Extract base URL and encoded ID from endpoint
         // Expected format: http://localhost:8081/shells/base64EncodedId
-        const match = endpoint.match(/^(https?:\/\/[^/]+(?::\d+)?)\/shells\/([^/]+)$/);
+        const parts = splitResourceHref(endpoint, 'shells');
 
-        if (!match) {
+        if (!parts) {
             return {
                 success: false,
                 error: {
@@ -465,7 +485,7 @@ export class AasService {
             };
         }
 
-        const [, baseUrl, encodedId] = match;
+        const { basePath: baseUrl, encodedId } = parts;
 
         // Decode the ID
         let aasIdentifier: string;
@@ -482,11 +502,14 @@ export class AasService {
         }
 
         // Create configuration for the endpoint
-        const config = this.createRepositoryEndpointConfiguration(baseUrl);
+        const configResult = await this.createEndpointConfiguration(endpoint, baseUrl);
+        if (!configResult.success) {
+            return { success: false, error: configResult.error };
+        }
 
         // Fetch the shell
         const shellResult = await this.aasRepositoryClient.getAssetAdministrationShellById({
-            configuration: config,
+            configuration: configResult.configuration,
             aasIdentifier,
         });
 
@@ -993,28 +1016,15 @@ export class AasService {
     }
 
     /**
-     * Creates a repository configuration for an endpoint while preserving auth and middleware.
+     * Determines the configuration for a request to an AAS endpoint, using the `endpointConfiguration` hook if
+     * configured and the repository settings otherwise.
      *
+     * @param href The full endpoint URL
      * @param basePath The endpoint base path to target
-     * @returns Configuration with endpoint basePath plus repository auth/settings
+     * @returns The configuration, or an `EndpointRejected` error
      */
-    private createRepositoryEndpointConfiguration(basePath: string): Configuration {
-        if (!this.aasRepositoryConfig) {
-            return new Configuration({ basePath });
-        }
-
-        return new Configuration({
-            basePath,
-            fetchApi: this.aasRepositoryConfig.fetchApi,
-            middleware: this.aasRepositoryConfig.middleware,
-            queryParamsStringify: this.aasRepositoryConfig.queryParamsStringify,
-            username: this.aasRepositoryConfig.username,
-            password: this.aasRepositoryConfig.password,
-            apiKey: this.aasRepositoryConfig.apiKey,
-            accessToken: this.aasRepositoryConfig.accessToken,
-            headers: this.aasRepositoryConfig.headers,
-            credentials: this.aasRepositoryConfig.credentials,
-        });
+    private createEndpointConfiguration(href: string, basePath: string) {
+        return createEndpointConfiguration(href, basePath, this.endpointConfiguration, this.aasRepositoryConfig);
     }
 
     /**

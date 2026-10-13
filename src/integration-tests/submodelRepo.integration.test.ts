@@ -1253,10 +1253,11 @@ describe('Submodel Repository Integration Tests', () => {
         assertApiResult(response);
         if (response.success) {
             expect(response.statusCode).toBe(200);
-            const newPropertyElement = seededElement as { value?: unknown };
+            const newPropertyElement = seededElement as { value?: string };
 
+            // xs:integer values are serialized as JSON numbers in the ValueOnly representation
             expect(response.data).toBeDefined();
-            expect(response.data).toEqual(newPropertyElement.value);
+            expect(response.data).toEqual(Number(newPropertyElement.value));
         }
     });
 
