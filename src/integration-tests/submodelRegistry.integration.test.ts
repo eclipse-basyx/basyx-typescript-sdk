@@ -492,6 +492,7 @@ describe('Submodel Registry Integration Tests', () => {
      *
      * BaSyx Go expects `$select` as an array of field paths and ignores it, so it rejects the `"$select": "id"` of
      * IDTA-01002-3 with 400 and never returns identifiers.
+     * See https://github.com/eclipse-basyx/basyx-go-components/issues/752
      */
     test.skip('should return only identifiers if the query selects them', async () => {
         const idShort = createQueryIdShort();
