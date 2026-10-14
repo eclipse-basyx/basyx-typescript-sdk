@@ -92,7 +92,7 @@ const FULL_QUERY = new Query(
     [new QueryFilter('$sm#supplementalSemanticIds[]', new BooleanLiteral(true))]
 );
 
-const FULL_QUERY_JSON = {
+const FULL_QUERY_JSON: JsonValue = {
     $select: 'id',
     $condition: {
         $and: [
@@ -273,6 +273,24 @@ describe('queryFromJsonable', () => {
         expect(result.error?.message).toContain(message);
         expect(result.error?.path.toString()).toBe(path);
     });
+
+    it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'])(
+        'reports the inherited property name %s as an unknown operator',
+        (name) => {
+            const jsonables = [
+                `{"$condition":{"${name}":[]}}`,
+                `{"$condition":{"$eq":[{"${name}":[]},{"$strVal":"x"}]}}`,
+                `{"$condition":{"$eq":[{"$attribute":{"${name}":"x"}},{"$strVal":"x"}]}}`,
+            ];
+
+            for (const json of jsonables) {
+                const result = queryFromJsonable(JSON.parse(json));
+
+                expect(result.value).toBeNull();
+                expect(result.error?.message).toContain('Expected exactly one of the properties');
+            }
+        }
+    );
 
     it('rethrows unexpected errors', () => {
         const throwing = {

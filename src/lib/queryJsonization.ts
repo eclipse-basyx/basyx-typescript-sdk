@@ -327,7 +327,8 @@ function oneOf<T>(typeName: string, parsers: () => Parsers<T>): Parse<T> {
         const jsonObject = asObject(jsonable);
         const available = parsers();
         const names = Object.keys(jsonObject);
-        if (names.length !== 1 || available[names[0]] === undefined) {
+        // Only own properties name a parser, so that keys like `__proto__` or `constructor` are rejected
+        if (names.length !== 1 || !Object.hasOwn(available, names[0])) {
             fail(
                 `Expected exactly one of the properties ${Object.keys(available).join(', ')} for ${typeName}, ` +
                     `but got: ${names.join(', ') || 'none'}`

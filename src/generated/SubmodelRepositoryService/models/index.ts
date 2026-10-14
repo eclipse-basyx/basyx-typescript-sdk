@@ -2346,28 +2346,28 @@ export interface LogicalExpression {
     $le?: Array<Value>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof LogicalExpression
      */
-    $contains?: Array<string>;
+    $contains?: Array<StringValue>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof LogicalExpression
      */
-    '$starts-with'?: Array<string>;
+    '$starts-with'?: Array<StringValue>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof LogicalExpression
      */
-    '$ends-with'?: Array<string>;
+    '$ends-with'?: Array<StringValue>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof LogicalExpression
      */
-    $regex?: Array<string>;
+    $regex?: Array<StringValue>;
     /**
      * 
      * @type {boolean}
@@ -2425,28 +2425,28 @@ export interface MatchExpression {
     $le?: Array<Value>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof MatchExpression
      */
-    $contains?: Array<string>;
+    $contains?: Array<StringValue>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof MatchExpression
      */
-    '$starts-with'?: Array<string>;
+    '$starts-with'?: Array<StringValue>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof MatchExpression
      */
-    '$ends-with'?: Array<string>;
+    '$ends-with'?: Array<StringValue>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<StringValue>}
      * @memberof MatchExpression
      */
-    $regex?: Array<string>;
+    $regex?: Array<StringValue>;
     /**
      * 
      * @type {boolean}
@@ -4270,6 +4270,31 @@ export const StateOfEvent = {
 } as const;
 export type StateOfEvent = typeof StateOfEvent[keyof typeof StateOfEvent];
 
+/**
+ * 
+ * @export
+ * @interface StringValue
+ */
+export interface StringValue {
+    /**
+     * 
+     * @type {string}
+     * @memberof StringValue
+     */
+    $field?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StringValue
+     */
+    $strVal?: string;
+    /**
+     * 
+     * @type {Value}
+     * @memberof StringValue
+     */
+    $strCast?: Value | null;
+}
 /**
  * 
  * @export

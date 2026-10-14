@@ -63,8 +63,13 @@ describe('convertQueryResult', () => {
     });
 
     it('throws for an identifier query result without identifiers', () => {
-        expect(() => convertQueryResult({ result: [{ idShort: 'a' }] }, ID_QUERY, 'Item', toUpperCase)).toThrow(
-            'Expected an identifier in the query result'
-        );
+        expect(() =>
+            convertQueryResult(
+                { result: [{ idShort: 'a' } as unknown as { id: string }] },
+                ID_QUERY,
+                'Item',
+                toUpperCase
+            )
+        ).toThrow('Expected an identifier in the query result');
     });
 });
