@@ -7,6 +7,8 @@ import type {
 } from '@aas-core-works/aas-core3.1-typescript/types';
 import type { ApiResult, ConditionalApiResult } from '../models/api';
 import type { AssetId } from '../models/AssetId';
+import type { Query } from '../models/Query';
+import type { QueryResult } from '../models/QueryResult';
 import { AasRepositoryService } from '../generated';
 import { Configuration, RequiredError } from '../generated/runtime';
 import { applyDefaults } from '../lib/apiConfig';
@@ -27,6 +29,7 @@ import {
     convertCoreSubmodelToApiSubmodel,
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 
 export class AasRepositoryClient {
     private static requireIdentifier(value: string | null | undefined, field: string): string {
@@ -102,6 +105,64 @@ export class AasRepositoryClient {
             return {
                 success: true,
                 data: { pagedResult: result.paging_metadata, result: shells },
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
+        } catch (err) {
+            const customError = await handleApiError(err);
+            return {
+                success: false,
+                error: customError,
+                statusCode: AasRepositoryClient.extractStatusCode(err, customError),
+                ...getConditionalErrorFields(err),
+            };
+        }
+    }
+
+    /**
+     * Returns all Asset Administration Shells that conform to the query (AAS Query Language)
+     *
+     * @param options Object containing:
+     *  - configuration: The http request options
+     *  - query: The query, e.g. `new Query(new EqualComparison([new FieldOperand('$aas#idShort'), new StringLiteral('Robot')]))`
+     *  - limit?: The maximum number of elements in the response array
+     *  - cursor?: A server-generated identifier retrieved from paging_metadata that specifies from which position the result listing should continue
+     *
+     * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data.resultType` is `'Identifier'` with `result: string[]` if the query selects `QuerySelect.Id`.
+     */
+    async queryAssetAdministrationShells(options: {
+        configuration: Configuration;
+        query: Query;
+        limit?: number;
+        cursor?: string;
+    }): Promise<
+        ApiResult<
+            QueryResult<
+                AssetAdministrationShell,
+                'AssetAdministrationShell',
+                AasRepositoryService.PagedResultPagingMetadata
+            >,
+            AasRepositoryService.Result
+        >
+    > {
+        const { configuration, query, limit, cursor } = options;
+
+        try {
+            const apiInstance = new AasRepositoryService.AssetAdministrationShellRepositoryAPIApi(
+                applyDefaults(configuration)
+            );
+
+            const response = await apiInstance.queryAssetAdministrationShellsRaw({
+                query: toQueryRequestBody(query) as unknown as AasRepositoryService.Query,
+                limit: limit,
+                cursor: cursor,
+            });
+            const result = await response.value();
+
+            return {
+                success: true,
+                data: convertQueryResult(result, query, 'AssetAdministrationShell', convertApiAasToCoreAas),
                 statusCode: response.raw.status,
                 etag: getEtag(response.raw),
             };

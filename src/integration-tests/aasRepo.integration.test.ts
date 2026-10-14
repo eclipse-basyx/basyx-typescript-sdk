@@ -1,5 +1,14 @@
 import { AasRepositoryClient } from '../clients/AasRepositoryClient';
 import { Configuration } from '../generated';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../models/Query';
 import { createDescription, createGlobalAssetId, createTestShell } from './fixtures/aasFixtures';
 import { assertApiFailureCode, assertApiResult } from './fixtures/assertionHelpers';
 import { createAasRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
@@ -4260,6 +4269,107 @@ describe('AAS Repository Integration Tests', () => {
             }
         } finally {
             await cleanupShell(shell.id);
+        }
+    });
+
+    const createQueryIdShort = (): string => `Query${uniqueSuffix().replace(/[^A-Za-z0-9]/g, '')}`;
+
+    async function createShellWithIdShort(idShort: string): Promise<string> {
+        const shell = createUniqueShell();
+        shell.idShort = idShort;
+        const response = await client.postAssetAdministrationShell({ configuration, assetAdministrationShell: shell });
+        assertApiResult(response);
+        return shell.id;
+    }
+
+    /**
+     * @operation QueryAssetAdministrationShells
+     * @status 200
+     */
+    test('should query Asset Administration Shells page by page', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        try {
+            createdIds.push(await createShellWithIdShort(idShort));
+            createdIds.push(await createShellWithIdShort(idShort));
+            const query = new Query(
+                new EqualComparison([new FieldOperand('$aas#idShort'), new StringLiteral(idShort)])
+            );
+
+            const firstPage = await client.queryAssetAdministrationShells({ configuration, query, limit: 1 });
+
+            assertApiResult(firstPage);
+            if (!firstPage.success) {
+                return;
+            }
+            expect(firstPage.statusCode).toBe(200);
+            expect(firstPage.data.resultType).toBe('AssetAdministrationShell');
+            expect(firstPage.data.result).toHaveLength(1);
+            expect(firstPage.data.pagedResult?.cursor).toBeDefined();
+
+            const secondPage = await client.queryAssetAdministrationShells({
+                configuration,
+                query,
+                limit: 1,
+                cursor: firstPage.data.pagedResult?.cursor,
+            });
+
+            assertApiResult(secondPage);
+            if (!secondPage.success) {
+                return;
+            }
+            expect(secondPage.statusCode).toBe(200);
+            expect(secondPage.data.resultType).toBe('AssetAdministrationShell');
+            const queriedIds = [...firstPage.data.result, ...secondPage.data.result].map((item) =>
+                typeof item === 'string' ? item : item.id
+            );
+            expect(queriedIds.sort()).toEqual([...createdIds].sort());
+        } finally {
+            await Promise.all(createdIds.map((id) => cleanupShell(id)));
+        }
+    });
+
+    /**
+     * @operation QueryAssetAdministrationShells
+     * @status 400
+     */
+    test('should reject an invalid query with bad request', async () => {
+        // $and requires at least two operands
+        const query = new Query(new AndExpression([new BooleanLiteral(true)]));
+
+        const response = await client.queryAssetAdministrationShells({ configuration, query });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation QueryAssetAdministrationShells
+     * @status 200
+     */
+    test('should return only identifiers if the query selects them', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        try {
+            createdIds.push(await createShellWithIdShort(idShort));
+            const query = new Query(
+                new EqualComparison([new FieldOperand('$aas#idShort'), new StringLiteral(idShort)]),
+                QuerySelect.Id
+            );
+
+            const response = await client.queryAssetAdministrationShells({ configuration, query });
+
+            assertApiResult(response);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data.resultType).toBe('Identifier');
+                expect(response.data.result).toEqual(createdIds);
+            }
+        } finally {
+            await Promise.all(createdIds.map((id) => cleanupShell(id)));
         }
     });
 });

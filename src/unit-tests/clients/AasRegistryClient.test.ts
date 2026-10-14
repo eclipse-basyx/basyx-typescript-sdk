@@ -16,6 +16,15 @@ import {
     AssetAdministrationShellDescriptor as CoreAssetAdministrationShellDescriptor,
     SubmodelDescriptor as CoreSubmodelDescriptor,
 } from '../../models/Descriptors';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../../models/Query';
 
 // Mock the dependencies
 vi.mock('../../generated');
@@ -123,6 +132,7 @@ describe('AasRegistryClient', () => {
 
     // Create mock for AssetAdministrationShellRegistryAPIApi
     const mockApiInstance = {
+        queryAssetAdministrationShellDescriptorsRaw: vi.fn(),
         getAllAssetAdministrationShellDescriptorsRaw: vi.fn(),
         postAssetAdministrationShellDescriptorRaw: vi.fn(),
         deleteAssetAdministrationShellDescriptorByIdRaw: vi.fn(),
@@ -927,5 +937,133 @@ describe('AasRegistryClient', () => {
         if (!response.success) {
             expect(response.error).toEqual(errorResult);
         }
+    });
+
+    describe('queryAssetAdministrationShellDescriptors', () => {
+        const QUERY = new Query(
+            new EqualComparison([new FieldOperand('$aasdesc#idShort'), new StringLiteral('Robot')])
+        );
+        const QUERY_JSON = { $condition: { $eq: [{ $field: '$aasdesc#idShort' }, { $strVal: 'Robot' }] } };
+        const queryRaw = () =>
+            (mockApiInstance as unknown as Record<string, Mock>).queryAssetAdministrationShellDescriptorsRaw;
+        const queryResponse = (value: unknown, status = 200) => ({
+            raw: { status },
+            value: vi.fn().mockResolvedValue(value),
+        });
+
+        it('should return Asset Administration Shell Descriptors that conform to the query', async () => {
+            // Arrange
+            const pagedResult = { cursor: 'next-cursor' };
+            queryRaw().mockResolvedValue(
+                queryResponse({ paging_metadata: pagedResult, result: [API_AAS_DESCRIPTOR1, API_AAS_DESCRIPTOR2] })
+            );
+
+            const client = new AasRegistryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShellDescriptors({
+                configuration: TEST_CONFIGURATION,
+                query: QUERY,
+                limit: 2,
+                cursor: 'current-cursor',
+            });
+
+            // Assert
+            expect(MockAasRegistry).toHaveBeenCalledWith(expectConfigurationCall());
+            expect(queryRaw()).toHaveBeenCalledWith({ query: QUERY_JSON, limit: 2, cursor: 'current-cursor' });
+            expect(convertApiAasDescriptorToCoreAasDescriptor).toHaveBeenCalledTimes(2);
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.statusCode).toBe(200);
+                expect(response.data.pagedResult).toBe(pagedResult);
+                expect(response.data.resultType).toBe('AssetAdministrationShellDescriptor');
+                expect(response.data.result).toEqual([CORE_AAS_DESCRIPTOR1, CORE_AAS_DESCRIPTOR2]);
+            }
+        });
+
+        it('should return identifiers if the query selects them', async () => {
+            // Arrange
+            queryRaw().mockResolvedValue(
+                queryResponse({
+                    paging_metadata: { resultType: 'Identifier' },
+                    result: [API_AAS_DESCRIPTOR1.id, API_AAS_DESCRIPTOR2.id],
+                })
+            );
+
+            const client = new AasRegistryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShellDescriptors({
+                configuration: TEST_CONFIGURATION,
+                query: new Query(QUERY.condition, QuerySelect.Id),
+            });
+
+            // Assert
+            expect(queryRaw()).toHaveBeenCalledWith({
+                query: { $select: 'id', ...QUERY_JSON },
+                limit: undefined,
+                cursor: undefined,
+            });
+            expect(convertApiAasDescriptorToCoreAasDescriptor).not.toHaveBeenCalled();
+            expect(response.success).toBe(true);
+            if (response.success) {
+                expect(response.data.resultType).toBe('Identifier');
+                expect(response.data.result).toEqual([API_AAS_DESCRIPTOR1.id, API_AAS_DESCRIPTOR2.id]);
+            }
+        });
+
+        it('should handle errors when querying Asset Administration Shell Descriptors', async () => {
+            // Arrange
+            const errorResult = {
+                messages: [
+                    {
+                        code: '400',
+                        messageType: 'Error' as const,
+                        text: 'field $and length: must be >= 2',
+                        timestamp: '2025-04-15T21:20:54.631Z',
+                    },
+                ],
+            };
+            queryRaw().mockRejectedValue({ response: { status: 400 } });
+            (handleApiError as Mock).mockResolvedValue(errorResult);
+
+            const client = new AasRegistryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShellDescriptors({
+                configuration: TEST_CONFIGURATION,
+                query: new Query(new AndExpression([new BooleanLiteral(true)])),
+            });
+
+            // Assert
+            expect(queryRaw()).toHaveBeenCalledWith({
+                query: { $condition: { $and: [{ $boolean: true }] } },
+                limit: undefined,
+                cursor: undefined,
+            });
+            expect(response.success).toBe(false);
+            if (!response.success) {
+                expect(response.statusCode).toBe(400);
+                expect(response.error).toEqual(errorResult);
+            }
+        });
+
+        it('should fail with bad request without a query', async () => {
+            // Arrange
+            const client = new AasRegistryClient();
+
+            // Act
+            const response = await client.queryAssetAdministrationShellDescriptors({
+                configuration: TEST_CONFIGURATION,
+                query: undefined as unknown as Query,
+            });
+
+            // Assert
+            expect(queryRaw()).not.toHaveBeenCalled();
+            expect(response.success).toBe(false);
+            if (!response.success) {
+                expect(response.statusCode).toBe(400);
+            }
+        });
     });
 });

@@ -28,6 +28,8 @@ import type {
   OperationRequestValueOnly,
   OperationResult,
   OperationResultValueOnly,
+  Query,
+  QueryResultSubmodel,
   Reference,
   Result,
   Submodel,
@@ -302,6 +304,12 @@ export interface PutSubmodelElementByPathSubmodelRepoRequest {
     idShortPath: string;
     submodelElement: SubmodelElement;
     level?: PutSubmodelElementByPathSubmodelRepoLevelEnum;
+}
+
+export interface QuerySubmodelsRequest {
+    limit?: number;
+    cursor?: string;
+    query?: Query;
 }
 
 /**
@@ -2275,6 +2283,43 @@ export class SubmodelRepositoryAPIApi extends runtime.BaseAPI {
             default:
                 return await response.value();
         }
+    }
+
+    /**
+     * Returns all Submodels that confirm to the input query
+     */
+    async querySubmodelsRaw(requestParameters: QuerySubmodelsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueryResultSubmodel>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/query/submodels`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters['query'],
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response);
+    }
+
+    /**
+     * Returns all Submodels that confirm to the input query
+     */
+    async querySubmodels(requestParameters: QuerySubmodelsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueryResultSubmodel> {
+        const response = await this.querySubmodelsRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
 }

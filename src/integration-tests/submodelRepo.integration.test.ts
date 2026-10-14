@@ -1,6 +1,15 @@
 import { SubmodelRepositoryClient } from '../clients/SubmodelRepositoryClient';
 //import { Configuration } from '../generated';
 import { Configuration } from '../generated';
+import {
+    AndExpression,
+    BooleanLiteral,
+    EqualComparison,
+    FieldOperand,
+    Query,
+    QuerySelect,
+    StringLiteral,
+} from '../models/Query';
 import { assertApiFailureCode, assertApiResult } from './fixtures/assertionHelpers';
 import { createSubmodelRepositoryPayloadFixtures } from './fixtures/requestPayloadFixtures';
 import {
@@ -3148,6 +3157,97 @@ describe('Submodel Repository Integration Tests', () => {
         assertApiFailureCode(response, '404');
         if (!response.success) {
             expect(response.statusCode).toBe(404);
+        }
+    });
+
+    const createQueryIdShort = (): string => `Query${uniqueSuffix().replace(/[^A-Za-z0-9]/g, '')}`;
+
+    async function createSubmodelWithIdShort(idShort: string): Promise<string> {
+        const submodel = createUniqueSubmodelFixture();
+        submodel.idShort = idShort;
+        const response = await client.postSubmodel({ configuration, submodel });
+        assertApiResult(response);
+        return submodel.id;
+    }
+
+    /**
+     * @operation QuerySubmodels
+     * @status 200
+     */
+    test('should query Submodels page by page', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        createdIds.push(await createSubmodelWithIdShort(idShort));
+        createdIds.push(await createSubmodelWithIdShort(idShort));
+        const query = new Query(new EqualComparison([new FieldOperand('$sm#idShort'), new StringLiteral(idShort)]));
+
+        const firstPage = await client.querySubmodels({ configuration, query, limit: 1 });
+
+        assertApiResult(firstPage);
+        if (!firstPage.success) {
+            return;
+        }
+        expect(firstPage.statusCode).toBe(200);
+        expect(firstPage.data.resultType).toBe('Submodel');
+        expect(firstPage.data.result).toHaveLength(1);
+        expect(firstPage.data.pagedResult?.cursor).toBeDefined();
+
+        const secondPage = await client.querySubmodels({
+            configuration,
+            query,
+            limit: 1,
+            cursor: firstPage.data.pagedResult?.cursor,
+        });
+
+        assertApiResult(secondPage);
+        if (!secondPage.success) {
+            return;
+        }
+        expect(secondPage.statusCode).toBe(200);
+        expect(secondPage.data.resultType).toBe('Submodel');
+        const queriedIds = [...firstPage.data.result, ...secondPage.data.result].map((item) =>
+            typeof item === 'string' ? item : item.id
+        );
+        expect(queriedIds.sort()).toEqual([...createdIds].sort());
+    });
+
+    /**
+     * @operation QuerySubmodels
+     * @status 400
+     */
+    test('should reject an invalid query with bad request', async () => {
+        // $and requires at least two operands
+        const query = new Query(new AndExpression([new BooleanLiteral(true)]));
+
+        const response = await client.querySubmodels({ configuration, query });
+
+        expect(response.success).toBe(false);
+        if (!response.success) {
+            expect(response.statusCode).toBe(400);
+            expect(response.error.messages?.[0]?.code).toBe('400');
+        }
+    });
+
+    /**
+     * @operation QuerySubmodels
+     * @status 200
+     */
+    test('should return only identifiers if the query selects them', async () => {
+        const idShort = createQueryIdShort();
+        const createdIds: string[] = [];
+        createdIds.push(await createSubmodelWithIdShort(idShort));
+        const query = new Query(
+            new EqualComparison([new FieldOperand('$sm#idShort'), new StringLiteral(idShort)]),
+            QuerySelect.Id
+        );
+
+        const response = await client.querySubmodels({ configuration, query });
+
+        assertApiResult(response);
+        if (response.success) {
+            expect(response.statusCode).toBe(200);
+            expect(response.data.resultType).toBe('Identifier');
+            expect(response.data.result).toEqual(createdIds);
         }
     });
 });

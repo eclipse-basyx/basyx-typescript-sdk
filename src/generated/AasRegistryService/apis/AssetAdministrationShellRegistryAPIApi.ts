@@ -19,6 +19,8 @@ import type {
   AssetKind,
   GetAssetAdministrationShellDescriptorsResult,
   GetSubmodelDescriptorsResult,
+  Query,
+  QueryResultAssetAdministrationShellDescriptor,
   Result,
   SubmodelDescriptor,
 } from '../models/index';
@@ -72,6 +74,12 @@ export interface PutSubmodelDescriptorByIdThroughSuperpathRequest {
     aasIdentifier: string;
     submodelIdentifier: string;
     submodelDescriptor: SubmodelDescriptor;
+}
+
+export interface QueryAssetAdministrationShellDescriptorsRequest {
+    limit?: number;
+    cursor?: string;
+    query?: Query;
 }
 
 /**
@@ -490,6 +498,43 @@ export class AssetAdministrationShellRegistryAPIApi extends runtime.BaseAPI {
             default:
                 return await response.value();
         }
+    }
+
+    /**
+     * Returns all Asset Administration Shell Descriptors that confirm to the input query
+     */
+    async queryAssetAdministrationShellDescriptorsRaw(requestParameters: QueryAssetAdministrationShellDescriptorsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueryResultAssetAdministrationShellDescriptor>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/query/shell-descriptors`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters['query'],
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response);
+    }
+
+    /**
+     * Returns all Asset Administration Shell Descriptors that confirm to the input query
+     */
+    async queryAssetAdministrationShellDescriptors(requestParameters: QueryAssetAdministrationShellDescriptorsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueryResultAssetAdministrationShellDescriptor> {
+        const response = await this.queryAssetAdministrationShellDescriptorsRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
 }

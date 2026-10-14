@@ -33,7 +33,8 @@ Clients for the AAS API components:
 - AASX File Service
 
 All clients support [conditional requests](#conditional-requests-etag) (`ETag`, `If-Match`, `If-None-Match`) for
-optimistic concurrency.
+optimistic concurrency. The repository and registry clients support server-side search with the
+[AAS Query Language](#querying-with-the-aas-query-language).
 
 Utility functions for working with AAS data:
 
@@ -43,6 +44,7 @@ Utility functions for working with AAS data:
 - Utils for Referables
 - Utils for References
 - Utils for SemanticIds
+- Utils for ServiceDescriptions (query support)
 
 ## Installation
 
@@ -294,6 +296,71 @@ if (revalidated.success && revalidated.notModified) {
   `ifMatch`, deletes remove the repository resource before the registry descriptor and require the repository
   configuration.
 - Calls without these options behave as before.
+
+### Querying with the AAS Query Language
+
+The repository and registry clients search on the server with the AAS Query Language (IDTA-01002-3):
+
+| Client                               | Method                                     | Endpoint                           |
+| ------------------------------------ | ------------------------------------------ | ---------------------------------- |
+| `AasRepositoryClient`                | `queryAssetAdministrationShells`           | `POST /query/shells`               |
+| `SubmodelRepositoryClient`           | `querySubmodels`                           | `POST /query/submodels`            |
+| `ConceptDescriptionRepositoryClient` | `queryConceptDescriptions`                 | `POST /query/concept-descriptions` |
+| `AasRegistryClient`                  | `queryAssetAdministrationShellDescriptors` | `POST /query/shell-descriptors`    |
+| `SubmodelRegistryClient`             | `querySubmodelDescriptors`                 | `POST /query/submodel-descriptors` |
+
+Queries are built from the classes of the query model. Their names follow the V3.2 meta-model of
+[aas-core-meta](https://github.com/aas-core-works/aas-core-meta), and the clients serialize them to the JSON of the
+query language (e.g. `StringLiteral` becomes `{ "$strVal": ... }`).
+
+```typescript
+import {
+  AasRepositoryClient,
+  Configuration,
+  ContainsComparison,
+  EqualComparison,
+  FieldOperand,
+  OrExpression,
+  Query,
+  StringLiteral,
+} from 'basyx-typescript-sdk';
+
+const client = new AasRepositoryClient();
+const configuration = new Configuration({ basePath: 'http://localhost:8081' });
+
+// $aas#idShort == "Robot" or $aas#id contains "robot"
+const query = new Query(
+  new OrExpression([
+    new EqualComparison([new FieldOperand('$aas#idShort'), new StringLiteral('Robot')]),
+    new ContainsComparison([new FieldOperand('$aas#id'), new StringLiteral('robot')]),
+  ])
+);
+
+let cursor: string | undefined;
+do {
+  const response = await client.queryAssetAdministrationShells({ configuration, query, limit: 50, cursor });
+  if (!response.success) {
+    // 400 for an invalid query, with the server's messages in response.error.messages
+    break;
+  }
+  if (response.data.resultType === 'AssetAdministrationShell') {
+    console.log(response.data.result.map((shell) => shell.idShort));
+  }
+  cursor = response.data.pagedResult?.cursor;
+} while (cursor);
+```
+
+- `data.resultType` is the type of the returned objects, e.g. `'AssetAdministrationShell'`, with `result` holding the
+  deserialized aas-core instances or descriptors. With `new Query(condition, QuerySelect.Id)` it is `'Identifier'` and
+  `result` holds the identifiers (`string[]`).
+- `filters` (`$filters`) restrict fragments of the returned objects:
+  `new Query(condition, null, [new QueryFilter('$sm#supplementalSemanticIds[]', fragmentCondition)])`.
+- `queryFromJsonable` parses query JSON (e.g. from a query editor) into the query model and reports the path to an
+  invalid value; `toJsonableQuery` serializes a query.
+- `supportsQuery(serviceDescription, 'shells')` and `getQueryEndpoints(serviceDescription)` read the query profiles from
+  the result of `getSelfDescription`. Profiles are matched regardless of host and API version
+  (`https://admin-shell.io/aas/API/3/2/...`, `https://basyx.org/aas/API/3/2/...`). This is a hint only: a server can
+  serve query endpoints without advertising their profile.
 
 ### Using the AasService (High-level API)
 
