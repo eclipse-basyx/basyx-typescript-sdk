@@ -1,9 +1,6 @@
 // Import necessary types
 //import type { PagedResultPagingMetadata, Result } from '../../generated';
 import {
-    AssetAdministrationShell as CoreAssetAdministrationShell,
-    AssetInformation as CoreAssetInformation,
-    AssetKind,
     ISubmodelElement as CoreSubmodelElement,
     Submodel as CoreSubmodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
@@ -149,10 +146,6 @@ const OPERATION_RESULT: SubmodelRepositoryService.OperationResult = {
         },
     ],
 };
-const CORE_AAS: CoreAssetAdministrationShell = new CoreAssetAdministrationShell(
-    'https://example.com/ids/aas/7600_5912_3951_6917',
-    new CoreAssetInformation(AssetKind.Instance)
-);
 const OPERATION_REQUEST_VALUEONLY: SubmodelRepositoryService.OperationRequestValueOnly = {
     inputArguments: {
         temperature: '25',
@@ -1531,7 +1524,6 @@ describe('SubmodelRepositoryClient', () => {
         // Act
         const response = await client.postInvokeOperationValueOnly({
             configuration: TEST_CONFIGURATION,
-            aasIdentifier: CORE_AAS.id,
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
@@ -1539,10 +1531,8 @@ describe('SubmodelRepositoryClient', () => {
 
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationValueOnly).toHaveBeenCalledWith({
-            aasIdentifier: `encoded_${CORE_AAS.id}`,
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
@@ -1573,7 +1563,6 @@ describe('SubmodelRepositoryClient', () => {
         // Act
         const response = await client.postInvokeOperationValueOnly({
             configuration: TEST_CONFIGURATION,
-            aasIdentifier: CORE_AAS.id,
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
@@ -1652,7 +1641,6 @@ describe('SubmodelRepositoryClient', () => {
         // Act
         const response = await client.postInvokeOperationAsyncValueOnly({
             configuration: TEST_CONFIGURATION,
-            aasIdentifier: CORE_AAS.id,
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
@@ -1660,10 +1648,8 @@ describe('SubmodelRepositoryClient', () => {
 
         // Assert
         expect(MockSubmodelRepository).toHaveBeenCalledWith(expectConfigurationCall());
-        expect(base64Encode).toHaveBeenCalledWith(CORE_AAS.id);
         expect(base64Encode).toHaveBeenCalledWith(CORE_SUBMODEL1.id);
         expect(mockApiInstance.invokeOperationAsyncValueOnly).toHaveBeenCalledWith({
-            aasIdentifier: `encoded_${CORE_AAS.id}`,
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,
@@ -1691,7 +1677,6 @@ describe('SubmodelRepositoryClient', () => {
         // Act
         const response = await client.postInvokeOperationAsyncValueOnly({
             configuration: TEST_CONFIGURATION,
-            aasIdentifier: CORE_AAS.id,
             submodelIdentifier: CORE_SUBMODEL1.id,
             idShortPath: ID_SHORT_PATH,
             operationRequestValueOnly: OPERATION_REQUEST_VALUEONLY,

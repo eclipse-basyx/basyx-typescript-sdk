@@ -41,6 +41,17 @@ export type ConditionalApiResult<T, E, IfNoneMatch extends string | undefined = 
     | (IfNoneMatch extends undefined ? never : NotModifiedResult);
 
 /**
+ * Handle of an asynchronously invoked Operation, taken from the `Location` header of the `202 Accepted` response.
+ *
+ * - `handleId`: the id to pass to `getOperationAsyncStatus` and `getOperationAsyncResult`
+ * - `location`: the `Location` header as sent by the server, i.e. the URL of the Operation status
+ */
+export type OperationHandle = {
+    handleId: string;
+    location: string;
+};
+
+/**
  * Conditional request headers (RFC 9110). Entity tags are opaque and sent unchanged.
  */
 export type ConditionalRequestHeaders = {

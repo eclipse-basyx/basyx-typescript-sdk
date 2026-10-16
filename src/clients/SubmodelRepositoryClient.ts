@@ -1,5 +1,5 @@
 import type { ISubmodelElement, Submodel } from '@aas-core-works/aas-core3.1-typescript/types';
-import type { ApiResult, ConditionalApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult, OperationHandle } from '../models/api';
 import type { Query } from '../models/Query';
 import type { QueryResult } from '../models/QueryResult';
 import { SubmodelRepositoryService } from '../generated'; // Updated import
@@ -14,6 +14,7 @@ import {
     convertCoreSubmodelToApiSubmodel,
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { getOperationHandle } from '../lib/operationHandle';
 import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
 
@@ -2100,7 +2101,6 @@ export class SubmodelRepositoryClient {
      *
      * @param options Object containing:
      *  - configuration: The http request options.
-     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequestValueOnly: Operation request object
@@ -2110,29 +2110,25 @@ export class SubmodelRepositoryClient {
      */
     async postInvokeOperationValueOnly(options: {
         configuration: Configuration;
-        aasIdentifier: string;
+        /** @deprecated Not part of the Submodel Repository API and ignored */
+        aasIdentifier?: string;
         submodelIdentifier: string;
         idShortPath: string;
         operationRequestValueOnly: SubmodelRepositoryService.OperationRequestValueOnly;
         ifMatch?: string;
     }): Promise<ApiResult<SubmodelRepositoryService.OperationResultValueOnly, SubmodelRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
-            options;
+        const { configuration, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } = options;
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
                 applyDefaults(configuration, { ifMatch })
             );
 
-            const encodedAasIdentifier = base64Encode(
-                SubmodelRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
-            );
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
             );
 
             const response = await apiInstance.invokeOperationValueOnlyRaw({
-                aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
@@ -2162,6 +2158,9 @@ export class SubmodelRepositoryClient {
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data` is the handle of the invocation, taken from the `Location` header, for `getOperationAsyncStatus` and
+     * `getOperationAsyncResult`. It is `undefined` if the server sends no `Location` header or the client cannot read it
+     * (in browsers, the server must list `Location` in `Access-Control-Expose-Headers`).
      */
     async postInvokeOperationAsync(options: {
         configuration: Configuration;
@@ -2169,7 +2168,7 @@ export class SubmodelRepositoryClient {
         idShortPath: string;
         operationRequest: SubmodelRepositoryService.OperationRequest;
         ifMatch?: string;
-    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
+    }): Promise<ApiResult<OperationHandle | undefined, SubmodelRepositoryService.Result>> {
         const { configuration, submodelIdentifier, idShortPath, operationRequest, ifMatch } = options;
 
         try {
@@ -2186,9 +2185,12 @@ export class SubmodelRepositoryClient {
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
             });
-            const result = await response.value();
-
-            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
+            return {
+                success: true,
+                data: getOperationHandle(response.raw),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
@@ -2205,46 +2207,47 @@ export class SubmodelRepositoryClient {
      *
      * @param options Object containing:
      *  - configuration: The http request options.
-     *  - aasIdentifier: The Asset Administration Shell’s unique id (UTF8-BASE64-URL-encoded)
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
      *  - operationRequestValueOnly: Operation request object
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data` is the handle of the invocation, taken from the `Location` header, for `getOperationAsyncStatus` and
+     * `getOperationAsyncResult`. It is `undefined` if the server sends no `Location` header or the client cannot read it
+     * (in browsers, the server must list `Location` in `Access-Control-Expose-Headers`).
      */
     async postInvokeOperationAsyncValueOnly(options: {
         configuration: Configuration;
-        aasIdentifier: string;
+        /** @deprecated Not part of the Submodel Repository API and ignored */
+        aasIdentifier?: string;
         submodelIdentifier: string;
         idShortPath: string;
         operationRequestValueOnly: SubmodelRepositoryService.OperationRequestValueOnly;
         ifMatch?: string;
-    }): Promise<ApiResult<void, SubmodelRepositoryService.Result>> {
-        const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
-            options;
+    }): Promise<ApiResult<OperationHandle | undefined, SubmodelRepositoryService.Result>> {
+        const { configuration, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } = options;
 
         try {
             const apiInstance = new SubmodelRepositoryService.SubmodelRepositoryAPIApi(
                 applyDefaults(configuration, { ifMatch })
             );
 
-            const encodedAasIdentifier = base64Encode(
-                SubmodelRepositoryClient.requireIdentifier(aasIdentifier, 'aasIdentifier')
-            );
             const encodedSubmodelIdentifier = base64Encode(
                 SubmodelRepositoryClient.requireIdentifier(submodelIdentifier, 'submodelIdentifier')
             );
 
             const response = await apiInstance.invokeOperationAsyncValueOnlyRaw({
-                aasIdentifier: encodedAasIdentifier,
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
-            const result = await response.value();
-
-            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
+            return {
+                success: true,
+                data: getOperationHandle(response.raw),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
