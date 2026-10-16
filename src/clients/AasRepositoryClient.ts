@@ -5,7 +5,7 @@ import type {
     Reference,
     Submodel,
 } from '@aas-core-works/aas-core3.1-typescript/types';
-import type { ApiResult, ConditionalApiResult } from '../models/api';
+import type { ApiResult, ConditionalApiResult, OperationHandle } from '../models/api';
 import type { AssetId } from '../models/AssetId';
 import type { Query } from '../models/Query';
 import type { QueryResult } from '../models/QueryResult';
@@ -29,6 +29,7 @@ import {
     convertCoreSubmodelToApiSubmodel,
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { getOperationHandle } from '../lib/operationHandle';
 import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 
 export class AasRepositoryClient {
@@ -3012,6 +3013,10 @@ export class AasRepositoryClient {
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data` is the handle of the invocation, taken from the `Location` header, for
+     * `getOperationAsyncStatusAasRepository` and `getOperationAsyncResultAasRepository`. It is `undefined` if the server
+     * sends no `Location` header or the client cannot read it (in browsers, the server must list `Location` in
+     * `Access-Control-Expose-Headers`).
      */
     async invokeOperationAsyncAasRepository(options: {
         configuration: Configuration;
@@ -3020,7 +3025,7 @@ export class AasRepositoryClient {
         idShortPath: string;
         operationRequest: AasRepositoryService.OperationRequest;
         ifMatch?: string;
-    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+    }): Promise<ApiResult<OperationHandle | undefined, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequest, ifMatch } = options;
 
         try {
@@ -3041,9 +3046,12 @@ export class AasRepositoryClient {
                 idShortPath: idShortPath,
                 operationRequest: operationRequest,
             });
-            const result = await response.value();
-
-            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
+            return {
+                success: true,
+                data: getOperationHandle(response.raw),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {
@@ -3067,6 +3075,10 @@ export class AasRepositoryClient {
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
+     * `data` is the handle of the invocation, taken from the `Location` header, for
+     * `getOperationAsyncStatusAasRepository` and `getOperationAsyncResultAasRepository`. It is `undefined` if the server
+     * sends no `Location` header or the client cannot read it (in browsers, the server must list `Location` in
+     * `Access-Control-Expose-Headers`).
      */
     async invokeOperationAsyncValueOnlyAasRepository(options: {
         configuration: Configuration;
@@ -3075,7 +3087,7 @@ export class AasRepositoryClient {
         idShortPath: string;
         operationRequestValueOnly: AasRepositoryService.OperationRequestValueOnly;
         ifMatch?: string;
-    }): Promise<ApiResult<void, AasRepositoryService.Result>> {
+    }): Promise<ApiResult<OperationHandle | undefined, AasRepositoryService.Result>> {
         const { configuration, aasIdentifier, submodelIdentifier, idShortPath, operationRequestValueOnly, ifMatch } =
             options;
 
@@ -3097,9 +3109,12 @@ export class AasRepositoryClient {
                 idShortPath: idShortPath,
                 operationRequestValueOnly: operationRequestValueOnly,
             });
-            const result = await response.value();
-
-            return { success: true, data: result, statusCode: response.raw.status, etag: getEtag(response.raw) };
+            return {
+                success: true,
+                data: getOperationHandle(response.raw),
+                statusCode: response.raw.status,
+                etag: getEtag(response.raw),
+            };
         } catch (err) {
             const customError = await handleApiError(err);
             return {

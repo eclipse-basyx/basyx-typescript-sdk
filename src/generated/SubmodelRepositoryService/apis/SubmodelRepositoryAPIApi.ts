@@ -215,7 +215,6 @@ export interface InvokeOperationAsyncRequest {
 }
 
 export interface InvokeOperationAsyncValueOnlyRequest {
-    aasIdentifier: string;
     submodelIdentifier: string;
     idShortPath: string;
     operationRequestValueOnly: OperationRequestValueOnly;
@@ -228,7 +227,6 @@ export interface InvokeOperationSubmodelRepoRequest {
 }
 
 export interface InvokeOperationValueOnlyRequest {
-    aasIdentifier: string;
     submodelIdentifier: string;
     idShortPath: string;
     operationRequestValueOnly: OperationRequestValueOnly;
@@ -1529,13 +1527,6 @@ export class SubmodelRepositoryAPIApi extends runtime.BaseAPI {
      * Asynchronously invokes an Operation at a specified path
      */
     async invokeOperationAsyncValueOnlyRaw(requestParameters: InvokeOperationAsyncValueOnlyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['aasIdentifier'] == null) {
-            throw new runtime.RequiredError(
-                'aasIdentifier',
-                'Required parameter "aasIdentifier" was null or undefined when calling invokeOperationAsyncValueOnly().'
-            );
-        }
-
         if (requestParameters['submodelIdentifier'] == null) {
             throw new runtime.RequiredError(
                 'submodelIdentifier',
@@ -1564,7 +1555,7 @@ export class SubmodelRepositoryAPIApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async/$value`.replace(`{${"aasIdentifier"}}`, encodeURIComponent(String(requestParameters['aasIdentifier']))).replace(`{${"submodelIdentifier"}}`, encodeURIComponent(String(requestParameters['submodelIdentifier']))).replace(`{${"idShortPath"}}`, encodeURIComponent(String(requestParameters['idShortPath']))),
+            path: `/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async/$value`.replace(`{${"submodelIdentifier"}}`, encodeURIComponent(String(requestParameters['submodelIdentifier']))).replace(`{${"idShortPath"}}`, encodeURIComponent(String(requestParameters['idShortPath']))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -1635,13 +1626,6 @@ export class SubmodelRepositoryAPIApi extends runtime.BaseAPI {
      * Synchronously invokes an Operation at a specified path
      */
     async invokeOperationValueOnlyRaw(requestParameters: InvokeOperationValueOnlyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<OperationResultValueOnly>> {
-        if (requestParameters['aasIdentifier'] == null) {
-            throw new runtime.RequiredError(
-                'aasIdentifier',
-                'Required parameter "aasIdentifier" was null or undefined when calling invokeOperationValueOnly().'
-            );
-        }
-
         if (requestParameters['submodelIdentifier'] == null) {
             throw new runtime.RequiredError(
                 'submodelIdentifier',
@@ -1670,7 +1654,7 @@ export class SubmodelRepositoryAPIApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value`.replace(`{${"aasIdentifier"}}`, encodeURIComponent(String(requestParameters['aasIdentifier']))).replace(`{${"submodelIdentifier"}}`, encodeURIComponent(String(requestParameters['submodelIdentifier']))).replace(`{${"idShortPath"}}`, encodeURIComponent(String(requestParameters['idShortPath']))),
+            path: `/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value`.replace(`{${"submodelIdentifier"}}`, encodeURIComponent(String(requestParameters['submodelIdentifier']))).replace(`{${"idShortPath"}}`, encodeURIComponent(String(requestParameters['idShortPath']))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
