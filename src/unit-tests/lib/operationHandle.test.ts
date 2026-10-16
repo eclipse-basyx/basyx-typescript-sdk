@@ -18,6 +18,12 @@ describe('getOperationHandle', () => {
         expect(getOperationHandle(accepted(location))).toEqual({ handleId: HANDLE_ID, location });
     });
 
+    it('returns the handle id of a path-relative location', () => {
+        for (const location of [`operation-status/${HANDLE_ID}`, `./operation-status/${HANDLE_ID}`]) {
+            expect(getOperationHandle(accepted(location))).toEqual({ handleId: HANDLE_ID, location });
+        }
+    });
+
     it('ignores a trailing slash, query and fragment', () => {
         expect(getOperationHandle(accepted(`${STATUS_PATH}/${HANDLE_ID}/`))?.handleId).toBe(HANDLE_ID);
         expect(getOperationHandle(accepted(`${STATUS_PATH}/${HANDLE_ID}?level=core`))?.handleId).toBe(HANDLE_ID);
@@ -39,6 +45,7 @@ describe('getOperationHandle', () => {
     it('returns undefined for a Location header without an operation-status segment', () => {
         expect(getOperationHandle(accepted('/submodels/c20/submodel-elements/calculate'))).toBeUndefined();
         expect(getOperationHandle(accepted(`${STATUS_PATH}/`))).toBeUndefined();
+        expect(getOperationHandle(accepted(`/calculate-operation-status/${HANDLE_ID}`))).toBeUndefined();
     });
 
     it('returns undefined for responses without headers', () => {

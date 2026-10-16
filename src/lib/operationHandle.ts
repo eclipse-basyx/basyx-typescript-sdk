@@ -2,14 +2,15 @@ import type { OperationHandle } from '../models/api';
 
 type ResponseLike = { headers?: { get?: (name: string) => string | null } };
 
-const OPERATION_STATUS_SEGMENT = /\/operation-status\/([^/?#]+)\/?(?:[?#].*)?$/;
+const OPERATION_STATUS_SEGMENT = /(?:^|\/)operation-status\/([^/?#]+)\/?(?:[?#].*)?$/;
 
 /**
  * Returns the handle of an asynchronously invoked Operation from the `Location` header of the `202 Accepted`
  * response, or `undefined` if the header is missing or does not point to an `operation-status` resource.
  *
- * The `Location` header is returned unchanged. The handle id is URL-decoded, so it can be passed to
- * `getOperationAsyncStatus` and `getOperationAsyncResult` as is.
+ * The `Location` header may be absolute or a relative reference (RFC 9110, section 10.2.2), e.g.
+ * `operation-status/{handleId}` relative to the invocation URL. It is returned unchanged. The handle id is
+ * URL-decoded, so it can be passed to `getOperationAsyncStatus` and `getOperationAsyncResult` as is.
  */
 export function getOperationHandle(response: unknown): OperationHandle | undefined {
     const headers = (response as ResponseLike | undefined)?.headers;

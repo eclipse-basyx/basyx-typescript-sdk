@@ -91,6 +91,20 @@ describe('Asynchronous operation invocation', () => {
             expect(result).toMatchObject({ success: true, statusCode: 200 });
         });
 
+        it('returns the handle of a path-relative Location header', async () => {
+            const location = `operation-status/${HANDLE_ID}`;
+            const { configuration } = createFetchMock(() => acceptedResponse(location));
+
+            const result = await client.postInvokeOperationAsync({
+                configuration,
+                submodelIdentifier: SUBMODEL_ID,
+                idShortPath: ID_SHORT_PATH,
+                operationRequest: OPERATION_REQUEST,
+            });
+
+            expect(result).toMatchObject({ success: true, data: { handleId: HANDLE_ID, location }, statusCode: 202 });
+        });
+
         it('returns no handle when the server sends no Location header', async () => {
             const { configuration } = createFetchMock(() => acceptedResponse());
 
