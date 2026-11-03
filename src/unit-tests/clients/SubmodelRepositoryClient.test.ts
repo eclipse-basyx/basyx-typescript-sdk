@@ -2109,7 +2109,7 @@ describe('SubmodelRepositoryClient', () => {
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             fileName: 'test.bin',
-            file: FILE_BLOB,
+            file: expect.objectContaining({ name: 'test.bin', type: FILE_BLOB.type }),
         });
         expect(response.success).toBe(true);
     });

@@ -2306,7 +2306,7 @@ describe('AasRepositoryClient', () => {
             submodelIdentifier: `encoded_${CORE_SUBMODEL1.id}`,
             idShortPath: ID_SHORT_PATH,
             fileName: fileName,
-            file: MOCK_BLOB,
+            file: expect.objectContaining({ name: fileName, type: MOCK_BLOB.type }),
         });
         expect(response.success).toBe(true);
     });

@@ -20,5 +20,5 @@ export default async () => {
     }
 
     const composeFilePath = path.join(process.cwd(), 'ci/docker-compose.yml');
-    execSync(`docker-compose -f ${composeFilePath} down`, { stdio: 'inherit' });
+    execSync(`docker compose -f ${composeFilePath} down`, { stdio: 'inherit' });
 };

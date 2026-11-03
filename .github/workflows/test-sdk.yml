@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-          sudo apt-get update && sudo apt-get install -y docker-compose
+          sudo apt-get update && sudo apt-get install -y docker-compose-v2
 
       - name: Restore Docker Image Cache
         id: restore-cache
@@ -62,7 +62,7 @@ jobs:
         run: pnpm exec tsc -p src/integration-tests/tsconfig.json --noEmit
 
       - name: Pull Docker Images
-        run: docker-compose -f ci/docker-compose.yml pull
+        run: docker compose -f ci/docker-compose.yml pull
 
       - name: Save Docker Images to Cache
         run: |

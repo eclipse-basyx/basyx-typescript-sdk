@@ -45,7 +45,7 @@ export default async () => {
 
     try {
         const composeFilePath = path.join(process.cwd(), 'ci/docker-compose.yml');
-        execSync(`docker-compose -f ${composeFilePath} up -d`, { stdio: 'inherit' });
+        execSync(`docker compose -f ${composeFilePath} up -d`, { stdio: 'inherit' });
 
         // Wait for the desired containers to be healthy.
         await waitForContainer('aas-registry');
