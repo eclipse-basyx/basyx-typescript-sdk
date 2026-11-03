@@ -844,7 +844,7 @@ describe('AasRepositoryClient', () => {
         expect(mockApiInstance.putThumbnailAasRepository).toHaveBeenCalledWith({
             aasIdentifier: `encoded_${CORE_AAS1.id}`,
             fileName: fileName,
-            file: MOCK_BLOB,
+            file: expect.objectContaining({ name: fileName, type: MOCK_BLOB.type }),
         });
         expect(response.success).toBe(true);
     });

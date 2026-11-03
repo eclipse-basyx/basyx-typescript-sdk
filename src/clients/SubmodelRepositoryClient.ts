@@ -14,6 +14,7 @@ import {
     convertCoreSubmodelToApiSubmodel,
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { withFileName } from '../lib/multipartFile';
 import { getOperationHandle } from '../lib/operationHandle';
 import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 //import { SubmodelElement } from 'src/generated/SubmodelRepositoryService';
@@ -1951,7 +1952,7 @@ export class SubmodelRepositoryClient {
      *  - configuration: The http request options
      *  - submodelIdentifier: The Submodel's unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-     *  - fileName?: Name of the uploaded file
+     *  - fileName?: Name of the uploaded file, sent as filename of the file part and as `fileName` field
      *  - file?: File content
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
@@ -1982,7 +1983,7 @@ export class SubmodelRepositoryClient {
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 fileName: fileName,
-                file: file,
+                file: file && withFileName(file, fileName),
             });
             const result = await response.value();
 

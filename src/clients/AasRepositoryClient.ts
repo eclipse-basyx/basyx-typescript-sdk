@@ -29,6 +29,7 @@ import {
     convertCoreSubmodelToApiSubmodel,
 } from '../lib/convertSubmodelTypes';
 import { handleApiError } from '../lib/errorHandler';
+import { withFileName } from '../lib/multipartFile';
 import { getOperationHandle } from '../lib/operationHandle';
 import { convertQueryResult, toQueryRequestBody } from '../lib/queryRequests';
 
@@ -693,7 +694,7 @@ export class AasRepositoryClient {
      * @param options Object containing:
      *  - configuration: The http request options
      *  - aasIdentifier: The Asset Administration Shell’s unique id
-     *  - fileName: The name of the file
+     *  - fileName: The name of the file, sent as filename of the file part and as `fileName` field
      *  - file: The file to upload
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
@@ -722,7 +723,7 @@ export class AasRepositoryClient {
             const response = await apiInstance.putThumbnailAasRepositoryRaw({
                 aasIdentifier: encodedAasIdentifier,
                 fileName: fileName,
-                file: file,
+                file: withFileName(file, fileName),
             });
             const result = await response.value();
 
@@ -2785,7 +2786,7 @@ export class AasRepositoryClient {
      *  - aasIdentifier: The Asset Administration Shell’s unique id
      *  - submodelIdentifier: The Submodel’s unique id
      *  - idShortPath: IdShort path to the submodel element (dot-separated)
-     *  - fileName: The name of the file
+     *  - fileName: The name of the file, sent as filename of the file part and as `fileName` field
      *  - file: The file to upload
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
@@ -2822,7 +2823,7 @@ export class AasRepositoryClient {
                 submodelIdentifier: encodedSubmodelIdentifier,
                 idShortPath: idShortPath,
                 fileName: fileName,
-                file: file,
+                file: withFileName(file, fileName),
             });
             const result = await response.value();
 

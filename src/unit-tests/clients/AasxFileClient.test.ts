@@ -192,7 +192,7 @@ describe('AasxFileClient', () => {
         expect(base64Encode).not.toHaveBeenCalled();
         expect(mockApiInstance.postAASXPackageRaw).toHaveBeenCalledWith({
             aasIds: [CORE_AAS1.id],
-            file: MOCK_BLOB,
+            file: expect.objectContaining({ name: fileName, type: MOCK_BLOB.type }),
             fileName: fileName,
         });
         expect(response.success).toBe(true);
@@ -365,7 +365,7 @@ describe('AasxFileClient', () => {
         expect(mockApiInstance.putAASXByPackageIdRaw).toHaveBeenCalledWith({
             packageId: `encoded_${PACKAGE_ID}`,
             aasIds: [CORE_AAS1.id],
-            file: MOCK_BLOB,
+            file: expect.objectContaining({ name: fileName, type: MOCK_BLOB.type }),
             fileName: fileName,
         });
         expect(response.success).toBe(true);

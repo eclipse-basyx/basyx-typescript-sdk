@@ -5,6 +5,7 @@ import { applyDefaults } from '../lib/apiConfig';
 import { base64Encode } from '../lib/base64Url';
 import { getConditionalErrorFields, getEtag, getNotModifiedResult } from '../lib/conditionalRequests';
 import { handleApiError } from '../lib/errorHandler';
+import { withFileName } from '../lib/multipartFile';
 
 export class AasxFileClient {
     private static requireIdentifier(value: string | null | undefined, field: string): string {
@@ -97,7 +98,7 @@ export class AasxFileClient {
      *  - configuration: The http request options.
      *  - aasIds?: A list of Asset Administration Shells' unique ids
      *  - file: The file to upload
-     *  - fileName: The name of the file
+     *  - fileName: The name of the file, sent as filename of the file part and as `fileName` field
      *
      * @returns Either `{ success: true; data: ... }` or `{ success: false; error: ... }`.
      */
@@ -114,7 +115,7 @@ export class AasxFileClient {
 
             const response = await apiInstance.postAASXPackageRaw({
                 aasIds: aasIds,
-                file: file,
+                file: withFileName(file, fileName),
                 fileName: fileName,
             });
             const result = await response.value();
@@ -183,7 +184,7 @@ export class AasxFileClient {
      *  - packageId: The package Id (UTF8-BASE64-URL-encoded)
      *  - aasIds?: A list of Asset Administration Shells' unique ids
      *  - file: The file to upload
-     *  - fileName: The name of the file
+     *  - fileName: The name of the file, sent as filename of the file part and as `fileName` field
      *  - ifMatch?: Sent as `If-Match` header; the request fails with `preconditionFailed` if the resource has changed since the `etag` was issued
      *  - ifNoneMatch?: Sent as `If-None-Match` header; use `*` to only create the resource (fails with `preconditionFailed` if it exists)
      *
@@ -209,7 +210,7 @@ export class AasxFileClient {
             const response = await apiInstance.putAASXByPackageIdRaw({
                 packageId: encodedPackageId,
                 aasIds: aasIds,
-                file: file,
+                file: withFileName(file, fileName),
                 fileName: fileName,
             });
             const result = await response.value();
