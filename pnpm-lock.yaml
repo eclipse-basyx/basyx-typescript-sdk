@@ -195,7 +195,7 @@ importers:
     devDependencies:
       '@aas-core-works/aas-core3.1-typescript':
         specifier: ^1.0.0
-        version: 1.0.0
+        version: 1.0.1
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.2.1(jiti@2.6.1))
@@ -256,8 +256,8 @@ importers:
 
 packages:
 
-  '@aas-core-works/aas-core3.1-typescript@1.0.0':
-    resolution: {integrity: sha512-7Ou6nJg4jHXOyEbegQFsOmkKhp/v73hUZB8TTe50ZGtaWzFxURkWTU/sxWeyqgd4X19dNIZkLANzffDvp45OQg==}
+  '@aas-core-works/aas-core3.1-typescript@1.0.1':
+    resolution: {integrity: sha512-77GX4Y8pFP+Rv9o3ZDECDBm4HDHdZOhw0AhNTfzSlm3fWIOIb4KNh7Bt5s9UsqDADPPAi4EF7/nT3JDVtl6SaQ==}
 
   '@babel/helper-string-parser@7.27.1':
     resolution: {integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==}
@@ -2014,6 +2014,10 @@ packages:
     resolution: {integrity: sha512-BBGgdaguLxMEwCYlOVORDJobGjD7PW7JH3XOQUiXwxxWTuz/26F0RzLkoCdHTks5LnXpC48O0swjBK0Fs3LBvg==}
     engines: {node: '>=20'}
 
+  xmlsax-typescript@1.0.0-rc.2:
+    resolution: {integrity: sha512-6eoT6BVhCsX7F3KI3FFyr0C5aDwSMfyUsw4g5yUIsf4zp7yRZ5kTDWrM+QHRzQkjNUoJpGEGnUbUT/UcKsorXQ==}
+    engines: {node: '>=20'}
+
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
@@ -2041,7 +2045,9 @@ packages:
 
 snapshots:
 
-  '@aas-core-works/aas-core3.1-typescript@1.0.0': {}
+  '@aas-core-works/aas-core3.1-typescript@1.0.1':
+    dependencies:
+      xmlsax-typescript: 1.0.0-rc.2
 
   '@babel/helper-string-parser@7.27.1': {}
 
@@ -3721,6 +3727,8 @@ snapshots:
       strip-ansi: 6.0.1
 
   xmlsax-typescript@1.0.0-rc.1: {}
+
+  xmlsax-typescript@1.0.0-rc.2: {}
 
   y18n@5.0.8: {}
 
