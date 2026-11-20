@@ -3310,14 +3310,7 @@ describe('AAS Repository Integration Tests', () => {
                 expect(response.data).toBeDefined();
                 expect(response.data.size).toBeGreaterThan(0);
 
-                const downloadedText = await response.data.text();
-                const parsedPayload = JSON.parse(downloadedText) as {
-                    Content?: string;
-                };
-
-                expect(parsedPayload.Content).toBeDefined();
-                const decodedContent = Buffer.from(parsedPayload.Content ?? '', 'base64').toString('utf-8');
-                expect(decodedContent).toContain('coverage-attachment');
+                await expect(response.data.text()).resolves.toBe(deterministicPayload);
             }
         } finally {
             await cleanupShell(shell.id);
