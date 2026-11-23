@@ -37,8 +37,7 @@ export type NotModifiedResult = {
  * it is, so only callers who opt in have to handle `notModified`.
  */
 export type ConditionalApiResult<T, E, IfNoneMatch extends string | undefined = string> =
-    | ApiResult<T, E>
-    | (IfNoneMatch extends undefined ? never : NotModifiedResult);
+    ApiResult<T, E> | (IfNoneMatch extends undefined ? never : NotModifiedResult);
 
 /**
  * Handle of an asynchronously invoked Operation, taken from the `Location` header of the `202 Accepted` response.

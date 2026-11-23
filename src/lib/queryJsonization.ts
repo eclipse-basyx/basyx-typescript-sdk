@@ -105,12 +105,7 @@ const PROPERTY_JSON_NAMES: Array<[string, string]> = [
 ];
 
 type QueryExpression =
-    | LogicalExpression
-    | Value
-    | AttributeItem
-    | DateTimeAttributeItem
-    | DateTimeAttributeOperand
-    | TimeCastOperand;
+    LogicalExpression | Value | AttributeItem | DateTimeAttributeItem | DateTimeAttributeOperand | TimeCastOperand;
 
 /**
  * Serialize a query to the JSON of the AAS Query Language, as sent in the body of the `/query/*` endpoints.

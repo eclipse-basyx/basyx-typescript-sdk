@@ -378,13 +378,7 @@ export type TimeOperand = TimeLiteral | TimeCast;
 
 /** Any operand of a comparison */
 export type Value =
-    | StringValue
-    | NumericalOperand
-    | HexOperand
-    | BoolOperand
-    | DateTimeLiteral
-    | DateTimeCast
-    | TimeOperand;
+    StringValue | NumericalOperand | HexOperand | BoolOperand | DateTimeLiteral | DateTimeCast | TimeOperand;
 
 /** An expression which can be nested in a {@link MatchClause} */
 export type MatchExpression =

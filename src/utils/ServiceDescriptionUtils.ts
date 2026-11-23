@@ -2,11 +2,7 @@
  * The query endpoints of the AAS API.
  */
 export type QueryEndpoint =
-    | 'shells'
-    | 'submodels'
-    | 'shell-descriptors'
-    | 'submodel-descriptors'
-    | 'concept-descriptions';
+    'shells' | 'submodels' | 'shell-descriptors' | 'submodel-descriptors' | 'concept-descriptions';
 
 // The service specification profile that adds each query endpoint, the same in API versions 3.1 and 3.2.
 const QUERY_PROFILES: Record<QueryEndpoint, { specification: string; profile: string }> = {
