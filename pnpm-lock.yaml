@@ -191,7 +191,7 @@ importers:
     dependencies:
       xmlsax-typescript:
         specifier: ^1.0.0-rc.1
-        version: 1.0.0-rc.1
+        version: 1.0.0
     devDependencies:
       '@aas-core-works/aas-core3.1-typescript':
         specifier: ^1.0.0
@@ -2039,8 +2039,8 @@ packages:
     resolution: {integrity: sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==}
     engines: {node: '>=18'}
 
-  xmlsax-typescript@1.0.0-rc.1:
-    resolution: {integrity: sha512-BBGgdaguLxMEwCYlOVORDJobGjD7PW7JH3XOQUiXwxxWTuz/26F0RzLkoCdHTks5LnXpC48O0swjBK0Fs3LBvg==}
+  xmlsax-typescript@1.0.0:
+    resolution: {integrity: sha512-ekWO9zwNTxR697YuczP2LRGijmmtilwmTahUPNQtepqw81ACCG45Haq9TRUfLRRaqdIWLTtmdR0HdYk/xD8rFA==}
     engines: {node: '>=20'}
 
   xmlsax-typescript@1.0.0-rc.2:
@@ -3780,7 +3780,7 @@ snapshots:
       string-width: 7.2.0
       strip-ansi: 7.2.0
 
-  xmlsax-typescript@1.0.0-rc.1: {}
+  xmlsax-typescript@1.0.0: {}
 
   xmlsax-typescript@1.0.0-rc.2: {}
 
